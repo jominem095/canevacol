@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CANEVA Admin — Subir Excel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{--g:#c9a96e;--g2:#e8d5aa;--k:#050403;--k2:#0d0b08;--w:#faf9f6;--dim:#8d8675;--b:rgba(201,169,110,.22)}
+*{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at 20% 0%,rgba(201,169,110,.13),transparent 32%),var(--k);color:var(--w);font-family:Inter,sans-serif}
+.wrap{max-width:1120px;margin:0 auto;padding:44px 18px}
+.logo{font-family:"Cormorant Garamond",serif;letter-spacing:.42em;color:var(--g);font-size:32px;margin-bottom:6px}
+h1{font-family:"Cormorant Garamond",serif;font-weight:300;font-size:clamp(36px,6vw,72px);line-height:.95;margin:16px 0 14px}
+p{color:rgba(250,249,246,.62);line-height:1.8;font-size:14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:26px}
+.card{border:1px solid var(--b);background:rgba(255,255,255,.035);padding:22px;box-shadow:0 26px 80px rgba(0,0,0,.25)}
+label{display:block;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--g);margin:0 0 9px}
+input[type=password],input[type=file]{width:100%;border:1px solid var(--b);background:#090705;color:var(--w);padding:14px;font-family:Inter,sans-serif}
+button{border:0;background:var(--g);color:#090705;padding:14px 18px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;cursor:pointer}
+button.secondary{background:transparent;color:var(--g);border:1px solid var(--b)}
+button:disabled{opacity:.45;cursor:not-allowed}
+.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}
+.kpi{border:1px solid var(--b);padding:14px;background:rgba(0,0,0,.16)}
+.kpi b{display:block;font-family:"Cormorant Garamond",serif;font-weight:300;font-size:32px;color:var(--g);line-height:1}
+.kpi span{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim)}
+.table{overflow:auto;max-height:450px;border:1px solid var(--b);margin-top:20px}
+table{border-collapse:collapse;width:100%;min-width:900px;background:#080604}
+th,td{border-bottom:1px solid rgba(201,169,110,.1);padding:10px;text-align:left;font-size:12px;vertical-align:top}
+th{position:sticky;top:0;background:#141009;color:var(--g);font-size:10px;text-transform:uppercase;letter-spacing:.13em}
+td{color:rgba(250,249,246,.72)}
+.bad{color:#ffb4a8}.ok{color:#9de08f}.muted{color:var(--dim)}
+.note{border-left:1px solid var(--g);padding:12px 14px;background:rgba(201,169,110,.06);margin-top:16px}
+pre{white-space:pre-wrap;background:#090705;border:1px solid var(--b);padding:12px;color:#ddd;max-height:180px;overflow:auto}
+@media(max-width:860px){.grid,.kpis{grid-template-columns:1fr}.wrap{padding-top:28px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo">CANEVA</div>
+  <h1>Panel privado<br>para subir catálogo</h1>
+  <p>Sube el Excel de Caneva. El sistema convierte las filas a productos, las publica en Cloudflare KV y el sitio + Caneva AI usan esa base sin tocar código.</p>
+
+  <div class="grid">
+    <section class="card">
+      <label>1. Token privado</label>
+      <input id="token" type="password" placeholder="Pega aquí el ADMIN_TOKEN">
+      <div class="note">
+        <p>Este token no se guarda en el HTML. Solo se envía al Worker para autorizar la publicación.</p>
+      </div>
+    </section>
+
+    <section class="card">
+      <label>2. Archivo Excel</label>
+      <input id="file" type="file" accept=".xlsx,.xls">
+      <div class="actions">
+        <button id="previewBtn" type="button">Previsualizar</button>
+        <button id="publishBtn" type="button" disabled>Publicar catálogo</button>
+      </div>
+      <p class="muted">Columnas esperadas: Categoría, Nombre, Precio, Descripción, Variantes / Tallas, Stock, Imagen Principal, Imágenes Extra, URL Producto.</p>
+    </section>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><b id="kCount">0</b><span>productos leídos</span></div>
+    <div class="kpi"><b id="kImages">0</b><span>con imagen</span></div>
+    <div class="kpi"><b id="kCats">0</b><span>categorías</span></div>
+  </div>
+
+  <div id="status" class="note"><p>Esperando Excel...</p></div>
+
+  <div class="table" id="tableWrap" style="display:none">
+    <table>
+      <thead><tr><th>Categoría</th><th>Nombre</th><th>Precio</th><th>Tallas</th><th>Imagen</th><th>URL</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <h3 style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;color:var(--g);margin-top:26px">Respuesta técnica</h3>
+  <pre id="log">—</pre>
+</div>
+
+<script>
+const API_BASE = "https://caneva-ai.canevacol.workers.dev";
+let products = [];
+
+function cleanMoney(v){
+  if(v==null)return "";
+  let s=String(v).trim();
+  if(typeof v==="number") return "$"+Math.round(v).toLocaleString("es-CO");
+  let digits=s.replace(/[^\d]/g,"");
+  if(!digits)return s;
+  if(s.includes(",") && digits.length>2) digits=digits.slice(0,-2);
+  return "$"+Number(digits).toLocaleString("es-CO");
+}
+function extractTallas(desc, variants){
+  for(const raw of [desc, variants]){
+    if(!raw)continue;
+    let t=String(raw).replace(/DESCRIPTION/ig,"").trim();
+    let lines=t.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+    for(let line of lines){
+      if(/Learn more|\+57|Barranquilla|Colombia|JEANS|FALDAS|DOMIC/i.test(line))continue;
+      if(line.length>70)continue;
+      line=line.replace(/^(Tallas|Talla|Sizes?)\s*[:\-]?\s*/i,"").trim();
+      return line;
+    }
+  }
+  return "";
+}
+function productFromRow(row){
+  const p={
+    categoria:String(row["Categoría"]||row["Categoria"]||row["Category"]||"").trim(),
+    nombre:String(row["Nombre"]||row["Name"]||"").trim(),
+    precio:cleanMoney(row["Precio"]||row["Price"]||""),
+    descripcion:String(row["Descripción"]||row["Descripcion"]||row["Description"]||"").replace(/DESCRIPTION/ig,"").trim(),
+    tallas:extractTallas(row["Descripción"]||row["Descripcion"]||row["Description"], row["Variantes / Tallas"]||row["Variantes"]||row["Tallas"]),
+    stock:String(row["Stock"]||"").trim(),
+    imagen:String(row["Imagen Principal"]||row["Imagen"]||row["Image"]||"").trim(),
+    imagenesExtra:String(row["Imágenes Extra"]||row["Imagenes Extra"]||"").trim(),
+    url:String(row["URL Producto"]||row["URL"]||row["Url"]||"").trim()
+  };
+  return p.nombre && p.categoria ? p : null;
+}
+function renderPreview(){
+  document.getElementById("kCount").textContent=products.length;
+  document.getElementById("kImages").textContent=products.filter(p=>/^https?:\/\//.test(p.imagen)).length;
+  document.getElementById("kCats").textContent=new Set(products.map(p=>p.categoria)).size;
+  document.getElementById("tbody").innerHTML=products.slice(0,120).map(p=>`<tr>
+    <td>${escapeHtml(p.categoria)}</td><td>${escapeHtml(p.nombre)}</td><td>${escapeHtml(p.precio)}</td><td>${escapeHtml(p.tallas)}</td>
+    <td class="${p.imagen?'ok':'bad'}">${p.imagen?'sí':'sin imagen'}</td><td>${p.url?'<a style="color:#c9a96e" href="'+escapeAttr(p.url)+'" target="_blank">abrir</a>':'—'}</td>
+  </tr>`).join("");
+  document.getElementById("tableWrap").style.display="block";
+  document.getElementById("publishBtn").disabled=!products.length;
+}
+function escapeHtml(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));}
+function escapeAttr(s){return String(s||"").replace(/"/g,"&quot;");}
+function setStatus(msg, cls){document.getElementById("status").innerHTML='<p class="'+(cls||'')+'">'+msg+'</p>';}
+function log(obj){document.getElementById("log").textContent=typeof obj==="string"?obj:JSON.stringify(obj,null,2);}
+
+document.getElementById("previewBtn").addEventListener("click", async ()=>{
+  const file=document.getElementById("file").files[0];
+  if(!file){setStatus("Selecciona un Excel primero.","bad");return;}
+  const buf=await file.arrayBuffer();
+  const wb=XLSX.read(buf,{type:"array"});
+  const sheetName=wb.SheetNames.includes("Catálogo")?"Catálogo":wb.SheetNames[0];
+  const rows=XLSX.utils.sheet_to_json(wb.Sheets[sheetName],{range:1,defval:""});
+  products=rows.map(productFromRow).filter(Boolean);
+  renderPreview();
+  setStatus("Excel leído correctamente. Revisa la vista previa y luego publica.","ok");
+  log({sheetName, productos:products.length, categorias:[...new Set(products.map(p=>p.categoria))]});
+});
+
+document.getElementById("publishBtn").addEventListener("click", async ()=>{
+  const token=document.getElementById("token").value.trim();
+  if(!token){setStatus("Falta el token privado ADMIN_TOKEN.","bad");return;}
+  if(!products.length){setStatus("Primero previsualiza un Excel válido.","bad");return;}
+  setStatus("Publicando catálogo en Cloudflare KV...","muted");
+  document.getElementById("publishBtn").disabled=true;
+  try{
+    const res=await fetch(API_BASE+"/admin/catalog",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","x-admin-token":token},
+      body:JSON.stringify({products})
+    });
+    const data=await res.json();
+    log(data);
+    if(!res.ok || !data.ok) throw new Error(data.error || "No se pudo publicar");
+    setStatus("Catálogo publicado. Abre el sitio y presiona Ctrl+F5 para ver cambios.","ok");
+  }catch(e){
+    setStatus("Error: "+e.message,"bad");
+  }finally{
+    document.getElementById("publishBtn").disabled=false;
+  }
+});
+</script>
+</body>
+</html>
