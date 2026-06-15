@@ -1016,19 +1016,26 @@ async function sendChat(){
   sending=true;inp.value='';addMsg(msg,'u');addTyp();
   var sendBtn=document.getElementById('csend');sendBtn.disabled=true;sendBtn.textContent='...';
   try{
-    var res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','x-goog-api-key':GK},
-      body:JSON.stringify({
-        system_instruction:{parts:[{text:KB}]},
-        contents:[{role:'user',parts:[{text:msg}]}],
-        generationConfig:{maxOutputTokens:1400,temperature:0.72}
+      var res = await fetch("https://caneva-ai.canevacol.workers.dev/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        message: msg
       })
     });
-    var data=await res.json();rmTyp();
-    if(data.error){addMsg(fallbackAnswer(msg),'a');return;}
-    var rep=data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts[0]?data.candidates[0].content.parts[0].text:fallbackAnswer(msg);
-    addMsg(rep,'a');
+
+    var data = await res.json();
+    rmTyp();
+
+    if (!res.ok || !data.ok) {
+      addMsg(fallbackAnswer(msg), 'a');
+      return;
+    }
+
+    var rep = data.reply || fallbackAnswer(msg);
+    addMsg(rep, 'a');
   }catch(e){
     rmTyp();addMsg(fallbackAnswer(msg),'a');
   }finally{
