@@ -52,6 +52,7 @@ button{border:0;background:var(--g);color:#090705;padding:14px 18px;font-weight:
         <button id="previewBtn" type="button">Previsualizar</button>
         <button id="publishBtn" type="button" disabled>Publicar catálogo</button>
         <button id="migrateBtn" class="secondary" type="button">Migrar URLs a R2</button>
+        <button id="downloadBtn" class="secondary" type="button">Descargar Excel actualizado</button>
       </div>
       <div class="checkrow">
         <input id="autoMigrate" type="checkbox">
@@ -232,10 +233,64 @@ async function migrateImagesLoop(){
   }
 }
 
+
+function todayStamp(){
+  const d=new Date();
+  const pad=n=>String(n).padStart(2,"0");
+  return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}`;
+}
+function productToExcelRow(p){
+  return [
+    p.categoria || "",
+    p.nombre || "",
+    p.precio || "",
+    p.descripcion || "",
+    p.tallas || "",
+    p.stock || "",
+    p.imagen || "",
+    p.imagenesExtra || "",
+    p.url || ""
+  ];
+}
+async function downloadUpdatedExcel(){
+  try{
+    setStatus("Preparando Excel actualizado desde Cloudflare KV...","muted");
+    const res=await fetch(API_BASE+"/catalog?ts="+Date.now());
+    const data=await res.json();
+    if(!res.ok || !data.ok) throw new Error(data.error || "No se pudo leer el catálogo");
+    const list=Array.isArray(data.products)?data.products:[];
+    if(!list.length) throw new Error("El catálogo está vacío");
+
+    const headers=["Categoría","Nombre","Precio","Descripción","Variantes / Tallas","Stock","Imagen Principal","Imágenes Extra","URL Producto"];
+    const aoa=[
+      ["CANEVA - Catálogo actualizado desde Cloudflare", "", "", "", "", "", "Generado", new Date().toLocaleString("es-CO"), ""],
+      headers,
+      ...list.map(productToExcelRow)
+    ];
+
+    const wb=XLSX.utils.book_new();
+    const ws=XLSX.utils.aoa_to_sheet(aoa);
+    ws["!cols"]=[
+      {wch:22},{wch:30},{wch:14},{wch:46},{wch:24},{wch:14},{wch:72},{wch:72},{wch:56}
+    ];
+    ws["!freeze"]={xSplit:0,ySplit:2};
+    XLSX.utils.book_append_sheet(wb, ws, "Catálogo");
+    XLSX.writeFile(wb, `caneva_catalogo_actualizado_${todayStamp()}.xlsx`);
+
+    const hosted=list.filter(p=>String(p.imagen||"").includes("/img/")).length;
+    setStatus(`Excel actualizado descargado. Productos: ${list.length}. Imágenes en Cloudflare R2: ${hosted}.`, "ok");
+    log({ok:true, descargado:true, productos:list.length, imagenesR2:hosted});
+  }catch(e){
+    setStatus("Error descargando Excel actualizado: "+e.message,"bad");
+    log({ok:false,error:e.message});
+  }
+}
+
 document.getElementById("images").addEventListener("change", ()=>{imageFiles=[...document.getElementById("images").files]; if(products.length)renderPreview(); log({imagenesLocales:imageFiles.map(f=>f.name)});});
 document.getElementById("previewBtn").addEventListener("click", readExcel);
 document.getElementById("publishBtn").addEventListener("click", publishCatalog);
 document.getElementById("migrateBtn").addEventListener("click", migrateImagesLoop);
+document.getElementById("downloadBtn").addEventListener("click", downloadUpdatedExcel);
 </script>
 </body>
 </html>
