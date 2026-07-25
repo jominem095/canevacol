@@ -14,6 +14,7 @@
 h1{font-family:"Cormorant Garamond",serif;font-weight:300;font-size:clamp(36px,6vw,72px);line-height:.95;margin:16px 0 14px}p{color:rgba(250,249,246,.62);line-height:1.8;font-size:14px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:26px}.card{border:1px solid var(--b);background:rgba(255,255,255,.035);padding:22px;box-shadow:0 26px 80px rgba(0,0,0,.25)}
 label{display:block;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--g);margin:0 0 9px}input[type=password],input[type=file]{width:100%;border:1px solid var(--b);background:#090705;color:var(--w);padding:14px;font-family:Inter,sans-serif}
+.token-save{display:flex;gap:10px;align-items:center;margin-top:12px;color:rgba(250,249,246,.68);font-size:13px;line-height:1.5}.token-save input{accent-color:var(--g)}
 button{border:0;background:var(--g);color:#090705;padding:14px 18px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;cursor:pointer}button.secondary{background:transparent;color:var(--g);border:1px solid var(--b)}button:disabled{opacity:.45;cursor:not-allowed}.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
 .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:18px}.kpi{border:1px solid var(--b);padding:14px;background:rgba(0,0,0,.16)}.kpi b{display:block;font-family:"Cormorant Garamond",serif;font-weight:300;font-size:32px;color:var(--g);line-height:1}.kpi span{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim)}
 .table{overflow:auto;max-height:480px;border:1px solid var(--b);margin-top:20px}table{border-collapse:collapse;width:100%;min-width:980px;background:#080604}th,td{border-bottom:1px solid rgba(201,169,110,.1);padding:10px;text-align:left;font-size:12px;vertical-align:top}th{position:sticky;top:0;background:#141009;color:var(--g);font-size:10px;text-transform:uppercase;letter-spacing:.13em}td{color:rgba(250,249,246,.72)}
@@ -31,7 +32,11 @@ button{border:0;background:var(--g);color:#090705;padding:14px 18px;font-weight:
     <section class="card">
       <label>1. Token privado</label>
       <input id="token" type="password" placeholder="Pega aquí el ADMIN_TOKEN">
-      <div class="note"><p>El token solo autoriza la publicación. No queda guardado en esta página.</p></div>
+      <label class="token-save">
+        <input id="rememberToken" type="checkbox">
+        <span>Recordar token en esta máquina</span>
+      </label>
+      <div class="note"><p>El token autoriza la publicación. Solo queda guardado en este navegador si marcas <b>Recordar token</b>.</p></div>
     </section>
 
     <section class="card">
@@ -44,6 +49,10 @@ button{border:0;background:var(--g);color:#090705;padding:14px 18px;font-weight:
       <label>3. Imágenes desde el computador</label>
       <input id="images" type="file" accept="image/*" multiple>
       <p class="mini">En el Excel, la columna <b>Imagen Principal</b> puede traer una URL o el nombre del archivo: <b>bota-recta.jpg</b>. Si la celda queda vacía, el sistema intenta emparejar por nombre del producto.</p>
+      <label class="checkrow" style="text-transform:none;letter-spacing:0;color:rgba(250,249,246,.65);margin-top:12px">
+        <input id="replaceUrlWithLocal" type="checkbox">
+        <span>Reemplazar la URL actual si selecciono una foto local que coincida con el nombre del producto.</span>
+      </label>
     </section>
 
     <section class="card">
@@ -127,25 +136,45 @@ function productFromRow(row){
 }
 function fileMaps(){
   const byName=new Map(), byBase=new Map();
-  imageFiles.forEach(f=>{byName.set(f.name.toLowerCase(),f);byBase.set(norm(f.name.replace(/\.[^.]+$/, "")),f);});
+  imageFiles.forEach(f=>{
+    const cleanName=String(f.name||"").trim();
+    byName.set(cleanName.toLowerCase(),f);
+    byBase.set(norm(cleanName.replace(/\.[^.]+$/, "")),f);
+  });
   return {byName, byBase};
 }
+function isHttpUrl(v){return /^https?:\/\//i.test(String(v||"").trim());}
+function isWorkerImageUrl(v){return isHttpUrl(v) && String(v).includes("/img/products/");}
+function replaceUrlWithLocal(){return !!document.getElementById("replaceUrlWithLocal")?.checked;}
 function findLocalImage(p){
   const maps=fileMaps();
   const raw=String(p.imagen||"").trim();
-  if(raw && !/^https?:\/\//i.test(raw)){
-    const just=raw.split(/[\\/]/).pop().toLowerCase();
+
+  // Caso principal y más seguro: Imagen Principal trae el nombre exacto del archivo.
+  if(raw && !isHttpUrl(raw)){
+    const just=raw.split(/[\\/]/).pop().trim().toLowerCase();
     if(maps.byName.has(just))return maps.byName.get(just);
     const base=norm(just.replace(/\.[^.]+$/, ""));
     if(maps.byBase.has(base))return maps.byBase.get(base);
+    return null;
   }
-  return maps.byBase.get(norm(p.nombre)) || null;
+
+  // Si la celda está vacía, o si el usuario marcó reemplazar URLs, intentamos por nombre del producto.
+  if(!raw || replaceUrlWithLocal()){
+    return maps.byBase.get(norm(p.nombre)) || null;
+  }
+
+  return null;
 }
 function imageSourceLabel(p){
-  if(/^https?:\/\//i.test(p.imagen||""))return "URL externa";
+  const raw=String(p.imagen||"").trim();
   const f=findLocalImage(p);
-  if(f)return "foto local: "+f.name;
-  return p.imagen ? "archivo no encontrado" : "sin imagen";
+  if(f && isHttpUrl(raw)) return "foto local reemplaza URL: "+f.name;
+  if(f) return "foto local: "+f.name;
+  if(isWorkerImageUrl(raw)) return "URL propia R2";
+  if(isHttpUrl(raw)) return "URL externa";
+  if(raw) return "archivo no encontrado: "+raw;
+  return "sin imagen";
 }
 function renderPreview(){
   const matches=products.filter(p=>findLocalImage(p)).length;
@@ -171,7 +200,23 @@ function escapeHtml(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;",
 function escapeAttr(s){return String(s||"").replace(/"/g,"&quot;");}
 function setStatus(msg, cls){document.getElementById("status").innerHTML='<p class="'+(cls||'')+'">'+msg+'</p>';}
 function log(obj){document.getElementById("log").textContent=typeof obj==="string"?obj:JSON.stringify(obj,null,2);}
+const TOKEN_KEY = "caneva_admin_token_v1";
 function token(){return document.getElementById("token").value.trim();}
+function loadSavedToken(){
+  const saved = localStorage.getItem(TOKEN_KEY) || "";
+  if(saved){
+    document.getElementById("token").value = saved;
+    document.getElementById("rememberToken").checked = true;
+  }
+}
+function saveTokenPreference(){
+  const remember = document.getElementById("rememberToken").checked;
+  if(remember && token()){
+    localStorage.setItem(TOKEN_KEY, token());
+  }else{
+    localStorage.removeItem(TOKEN_KEY);
+  }
+}
 
 async function readExcel(){
   const file=document.getElementById("file").files[0];
@@ -188,12 +233,14 @@ async function readExcel(){
 
 async function publishCatalog(){
   if(!token()){setStatus("Falta el token privado ADMIN_TOKEN.","bad");return;}
+  saveTokenPreference();
   if(!products.length){setStatus("Primero previsualiza un Excel válido.","bad");return;}
   setStatus("Publicando catálogo e imágenes en Cloudflare...","muted");
   document.getElementById("publishBtn").disabled=true;
   try{
     const fd=new FormData();
     fd.append("products", JSON.stringify(products));
+    fd.append("options", JSON.stringify({ replaceUrlWithLocal: replaceUrlWithLocal() }));
     imageFiles.forEach(f=>fd.append("images", f, f.name));
     const res=await fetch(API_BASE+"/admin/catalog",{method:"POST",headers:{"x-admin-token":token()},body:fd});
     const data=await res.json();
@@ -210,6 +257,7 @@ async function publishCatalog(){
 
 async function migrateImagesLoop(){
   if(!token()){setStatus("Falta el token privado ADMIN_TOKEN.","bad");return;}
+  saveTokenPreference();
   document.getElementById("migrateBtn").disabled=true;
   let total=0, pass=0;
   try{
@@ -286,7 +334,11 @@ async function downloadUpdatedExcel(){
   }
 }
 
+loadSavedToken();
+document.getElementById("rememberToken").addEventListener("change", saveTokenPreference);
+document.getElementById("token").addEventListener("input", ()=>{ if(document.getElementById("rememberToken").checked) saveTokenPreference(); });
 document.getElementById("images").addEventListener("change", ()=>{imageFiles=[...document.getElementById("images").files]; if(products.length)renderPreview(); log({imagenesLocales:imageFiles.map(f=>f.name)});});
+document.getElementById("replaceUrlWithLocal").addEventListener("change", ()=>{ if(products.length)renderPreview(); });
 document.getElementById("previewBtn").addEventListener("click", readExcel);
 document.getElementById("publishBtn").addEventListener("click", publishCatalog);
 document.getElementById("migrateBtn").addEventListener("click", migrateImagesLoop);
