@@ -3,177 +3,1095 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CANEVA Admin — Subir Excel</title>
+<meta name="theme-color" content="#050403">
+<title>CANEVA — Moda Femenina Barranquilla</title>
+<!-- Caneva Cloudflare-ready build: catálogo remoto por KV + admin Excel -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@200;300;400;500&display=swap" rel="stylesheet">
 <style>
-:root{--g:#c9a96e;--g2:#e8d5aa;--k:#050403;--k2:#0d0b08;--w:#faf9f6;--dim:#8d8675;--b:rgba(201,169,110,.22)}
-*{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at 20% 0%,rgba(201,169,110,.13),transparent 32%),var(--k);color:var(--w);font-family:Inter,sans-serif}
-.wrap{max-width:1120px;margin:0 auto;padding:44px 18px}
-.logo{font-family:"Cormorant Garamond",serif;letter-spacing:.42em;color:var(--g);font-size:32px;margin-bottom:6px}
-h1{font-family:"Cormorant Garamond",serif;font-weight:300;font-size:clamp(36px,6vw,72px);line-height:.95;margin:16px 0 14px}
-p{color:rgba(250,249,246,.62);line-height:1.8;font-size:14px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:26px}
-.card{border:1px solid var(--b);background:rgba(255,255,255,.035);padding:22px;box-shadow:0 26px 80px rgba(0,0,0,.25)}
-label{display:block;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--g);margin:0 0 9px}
-input[type=password],input[type=file]{width:100%;border:1px solid var(--b);background:#090705;color:var(--w);padding:14px;font-family:Inter,sans-serif}
-button{border:0;background:var(--g);color:#090705;padding:14px 18px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;cursor:pointer}
-button.secondary{background:transparent;color:var(--g);border:1px solid var(--b)}
-button:disabled{opacity:.45;cursor:not-allowed}
-.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
-.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}
-.kpi{border:1px solid var(--b);padding:14px;background:rgba(0,0,0,.16)}
-.kpi b{display:block;font-family:"Cormorant Garamond",serif;font-weight:300;font-size:32px;color:var(--g);line-height:1}
-.kpi span{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim)}
-.table{overflow:auto;max-height:450px;border:1px solid var(--b);margin-top:20px}
-table{border-collapse:collapse;width:100%;min-width:900px;background:#080604}
-th,td{border-bottom:1px solid rgba(201,169,110,.1);padding:10px;text-align:left;font-size:12px;vertical-align:top}
-th{position:sticky;top:0;background:#141009;color:var(--g);font-size:10px;text-transform:uppercase;letter-spacing:.13em}
-td{color:rgba(250,249,246,.72)}
-.bad{color:#ffb4a8}.ok{color:#9de08f}.muted{color:var(--dim)}
-.note{border-left:1px solid var(--g);padding:12px 14px;background:rgba(201,169,110,.06);margin-top:16px}
-pre{white-space:pre-wrap;background:#090705;border:1px solid var(--b);padding:12px;color:#ddd;max-height:180px;overflow:auto}
-@media(max-width:860px){.grid,.kpis{grid-template-columns:1fr}.wrap{padding-top:28px}}
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --g:#c9a96e;--g2:#e8d5aa;--g3:#f5edd8;
+  --k:#050403;--k2:#0d0b08;--k3:#141209;
+  --w:#faf9f6;--dim:#6b6b66;
+  --bdr:rgba(201,169,110,.12);--bdr2:rgba(201,169,110,.28)
+}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{background:var(--k);color:var(--w);font-family:'Inter',sans-serif;font-weight:300;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+::selection{background:var(--g);color:#000}
+
+/* SCROLL REVEAL */
+.reveal{opacity:0;transform:translateY(40px);transition:opacity 1s cubic-bezier(.16,1,.3,1),transform 1s cubic-bezier(.16,1,.3,1)}
+.reveal.in{opacity:1;transform:translateY(0)}
+.reveal-d1{transition-delay:.1s}
+.reveal-d2{transition-delay:.2s}
+.reveal-d3{transition-delay:.3s}
+
+/* CURSOR */
+.cur,.cur-r{position:fixed;border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);mix-blend-mode:difference}
+.cur{width:6px;height:6px;background:var(--g);transition:transform .08s}
+.cur-r{width:38px;height:38px;border:1px solid rgba(201,169,110,.4);transition:all .2s}
+.cur-r.h{width:64px;height:64px;border-color:var(--g);background:rgba(201,169,110,.04)}
+@media(hover:none){.cur,.cur-r{display:none}}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:900;display:flex;align-items:center;justify-content:space-between;padding:1.8rem 4rem;transition:all .5s cubic-bezier(.16,1,.3,1)}
+nav.s{background:rgba(5,4,3,.85);backdrop-filter:blur(30px) saturate(1.2);-webkit-backdrop-filter:blur(30px) saturate(1.2);padding:1rem 4rem;border-bottom:1px solid var(--bdr)}
+.nlogo{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:300;letter-spacing:.5em;color:var(--g);text-decoration:none;transition:letter-spacing .4s}
+.nlogo:hover{letter-spacing:.6em}
+.nlinks{display:flex;gap:3rem;list-style:none}
+.nlinks a{font-size:.62rem;letter-spacing:.3em;text-transform:uppercase;color:rgba(250,249,246,.5);text-decoration:none;transition:color .3s;position:relative}
+.nlinks a::after{content:'';position:absolute;bottom:-4px;left:0;width:0;height:1px;background:var(--g);transition:width .4s cubic-bezier(.16,1,.3,1)}
+.nlinks a:hover{color:var(--g)}
+.nlinks a:hover::after{width:100%}
+.nwa{display:flex;align-items:center;gap:.5rem;padding:.55rem 1.4rem;border:1px solid rgba(201,169,110,.35);color:var(--g);text-decoration:none;font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;transition:all .35s;overflow:hidden;position:relative}
+.nwa::before{content:'';position:absolute;inset:0;background:var(--g);transform:translateX(-101%);transition:transform .4s cubic-bezier(.16,1,.3,1);z-index:-1}
+.nwa:hover{color:#000;border-color:var(--g)}
+.nwa:hover::before{transform:translateX(0)}
+.nwa span,.nwa svg{position:relative;z-index:1}
+.burger{display:none;flex-direction:column;gap:5px;cursor:pointer;border:none;background:none;padding:4px;z-index:1001}
+.burger b{display:block;width:26px;height:1.5px;background:var(--g);transition:all .4s cubic-bezier(.16,1,.3,1);transform-origin:center}
+.burger.o b:first-child{transform:translateY(6.5px) rotate(45deg)}
+.burger.o b:nth-child(2){opacity:0;transform:scaleX(0)}
+.burger.o b:last-child{transform:translateY(-6.5px) rotate(-45deg)}
+
+/* MOBILE MENU */
+.mmenu{position:fixed;inset:0;background:rgba(5,4,3,.99);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);z-index:880;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.6rem;opacity:0;pointer-events:none;transition:opacity .4s}
+.mmenu.o{opacity:1;pointer-events:all}
+.mmenu a{font-family:'Cormorant Garamond',serif;font-size:1.9rem;font-weight:300;letter-spacing:.2em;color:rgba(250,249,246,.55);text-decoration:none;transition:all .3s;text-transform:uppercase;opacity:0;transform:translateY(20px)}
+.mmenu.o a{opacity:1;transform:translateY(0)}
+.mmenu.o a:nth-child(1){transition-delay:.1s}
+.mmenu.o a:nth-child(2){transition-delay:.15s}
+.mmenu.o a:nth-child(3){transition-delay:.2s}
+.mmenu.o a:nth-child(4){transition-delay:.25s}
+.mmenu.o .mwa{transition-delay:.3s}
+.mmenu a:active{color:var(--g)}
+.mwa{display:inline-flex;align-items:center;gap:.6rem;padding:.8rem 2.2rem;border:1px solid var(--g);color:var(--g);text-decoration:none;font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;margin-top:1rem;font-family:'Inter',sans-serif}
+
+/* HERO - FLOATING GALLERY */
+.hero{position:relative;height:100vh;min-height:640px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--k)}
+.hero-glow{position:absolute;width:120%;height:120%;top:-10%;left:-10%;background:radial-gradient(ellipse 40% 50% at 50% 45%,#241a0a 0%,transparent 60%);pointer-events:none;animation:glowpulse 8s ease-in-out infinite}
+@keyframes glowpulse{0%,100%{opacity:.7}50%{opacity:1}}
+.float-layer{position:absolute;inset:0;z-index:1;pointer-events:none}
+.float-img{position:absolute;overflow:hidden;opacity:.32;filter:grayscale(.3) brightness(.85);border:1px solid rgba(201,169,110,.1)}
+.float-img img{width:100%;height:100%;object-fit:cover}
+.fi1{width:160px;height:220px;top:12%;left:8%;animation:float1 18s ease-in-out infinite}
+.fi2{width:130px;height:175px;top:58%;left:14%;animation:float2 22s ease-in-out infinite}
+.fi3{width:145px;height:195px;top:18%;right:10%;animation:float3 20s ease-in-out infinite}
+.fi4{width:120px;height:160px;top:62%;right:13%;animation:float1 24s ease-in-out infinite reverse}
+.fi5{width:110px;height:150px;top:38%;left:4%;animation:float2 26s ease-in-out infinite}
+.fi6{width:115px;height:155px;top:40%;right:4%;animation:float3 19s ease-in-out infinite reverse}
+@keyframes float1{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-30px) rotate(1deg)}}
+@keyframes float2{0%,100%{transform:translateY(0) rotate(2deg)}50%{transform:translateY(28px) rotate(-1deg)}}
+@keyframes float3{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-24px) rotate(2deg)}}
+.hero-center{position:relative;z-index:3;text-align:center;padding:2rem}
+.hero-pre{font-size:.55rem;letter-spacing:.7em;text-transform:uppercase;color:var(--g);opacity:0;animation:fu 1s .3s forwards;margin-bottom:2.5rem}
+.hero-name{font-family:'Cormorant Garamond',serif;font-size:clamp(5rem,15vw,13rem);font-weight:300;line-height:.82;letter-spacing:.1em;color:var(--g);opacity:0;animation:heroIn 1.2s .5s forwards;position:relative}
+.hero-name::after{content:'';position:absolute;left:50%;bottom:-12px;width:0;height:1px;background:linear-gradient(90deg,transparent,var(--g),transparent);transform:translateX(-50%);animation:lineGrow 1.2s 1.4s forwards}
+@keyframes lineGrow{to{width:70%}}
+@keyframes heroIn{0%{opacity:0;transform:translateY(40px) scale(.95);filter:blur(8px)}100%{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+.hero-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(1rem,2vw,1.4rem);color:rgba(250,249,246,.4);letter-spacing:.12em;margin-top:2rem;opacity:0;animation:fu 1s 1s forwards}
+.hero-btns{display:flex;gap:1.2rem;justify-content:center;margin-top:3rem;opacity:0;animation:fu 1s 1.2s forwards;flex-wrap:wrap}
+.btn-p{display:inline-flex;align-items:center;padding:1rem 2.8rem;background:var(--g);color:#000;font-size:.62rem;letter-spacing:.3em;text-transform:uppercase;text-decoration:none;font-family:'Inter',sans-serif;font-weight:500;transition:all .35s;border:none;cursor:pointer;position:relative;overflow:hidden}
+.btn-p::before{content:'';position:absolute;inset:0;background:var(--g2);transform:translateY(101%);transition:transform .4s cubic-bezier(.16,1,.3,1)}
+.btn-p:hover::before{transform:translateY(0)}
+.btn-p span{position:relative;z-index:1}
+.btn-o{display:inline-flex;align-items:center;padding:1rem 2.8rem;background:transparent;color:var(--g);font-size:.62rem;letter-spacing:.3em;text-transform:uppercase;text-decoration:none;font-family:'Inter',sans-serif;border:1px solid rgba(201,169,110,.4);transition:all .35s;cursor:pointer}
+.btn-o:hover{background:rgba(201,169,110,.08);border-color:var(--g)}
+.hero-scroll{position:absolute;bottom:2.5rem;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:.7rem;z-index:3;opacity:0;animation:fu 1s 1.6s forwards}
+.hero-scroll span{font-size:.5rem;letter-spacing:.5em;text-transform:uppercase;color:rgba(201,169,110,.4)}
+.sdot{width:5px;height:5px;border-radius:50%;background:var(--g);animation:sbounce 1.8s ease-in-out infinite}
+@keyframes sbounce{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(10px);opacity:1}}
+@keyframes fu{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+
+/* MARQUEE */
+.mq{overflow:hidden;border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr);padding:1rem 0;background:var(--k2)}
+.mq-t{display:flex;white-space:nowrap;animation:mq 30s linear infinite}
+.mq-t span{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.1rem;letter-spacing:.1em;color:var(--g);opacity:.45;padding:0 2.5rem}
+.mq-t .dot{font-style:normal;opacity:.2;padding:0 .3rem;font-size:.7rem}
+@keyframes mq{to{transform:translateX(-50%)}}
+
+/* STATS */
+.stats{padding:5.5rem 4rem;background:var(--k2);border-bottom:1px solid var(--bdr)}
+.stats-g{max-width:1000px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+.st{text-align:center;padding:1.5rem;border-right:1px solid var(--bdr)}
+.st:last-child{border:none}
+.st-n{font-family:'Cormorant Garamond',serif;font-size:4rem;font-weight:300;color:var(--g);line-height:1}
+.st-l{font-size:.54rem;letter-spacing:.4em;text-transform:uppercase;color:var(--dim);margin-top:.6rem}
+
+/* LOOKBOOK */
+.lookbook{padding:7rem 4rem;background:var(--k)}
+.lb-head{max-width:1300px;margin:0 auto 3.5rem;text-align:center}
+.lb-grid{max-width:1300px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;height:600px}
+.lb-item{position:relative;overflow:hidden;cursor:pointer}
+.lb-item img{width:100%;height:100%;object-fit:cover;transition:transform 1.2s cubic-bezier(.16,1,.3,1);filter:brightness(.85)}
+.lb-item:hover img{transform:scale(1.06);filter:brightness(1)}
+.lb-ov{position:absolute;inset:0;background:linear-gradient(to top,rgba(5,4,3,.85) 0%,transparent 50%);transition:opacity .4s}
+.lb-label{position:absolute;bottom:2rem;left:2rem;right:2rem}
+.lb-cat{display:block;font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:300;color:var(--w);margin-bottom:.5rem;letter-spacing:.03em}
+.lb-cta{font-size:.6rem;letter-spacing:.25em;text-transform:uppercase;color:var(--g);text-decoration:none;opacity:0;transform:translateY(10px);transition:all .4s;display:inline-block}
+.lb-item:hover .lb-cta{opacity:1;transform:translateY(0)}
+.lb1{grid-row:span 2}
+
+/* CATALOG */
+#catalogo{padding:7rem 4rem;background:var(--k2);border-top:1px solid var(--bdr)}
+.cat-head{max-width:1300px;margin:0 auto 3rem}
+.eyebrow{font-size:.54rem;letter-spacing:.55em;text-transform:uppercase;color:var(--g);opacity:.7;margin-bottom:.85rem}
+.sh{font-family:'Cormorant Garamond',serif;font-size:clamp(2.2rem,4.5vw,3.8rem);font-weight:300;color:var(--w);line-height:1.02}
+.sh em{color:var(--g);font-style:italic}
+.fbar{max-width:1300px;margin:0 auto;display:flex;border-bottom:1px solid var(--bdr);overflow-x:auto;scrollbar-width:none}
+.fbar::-webkit-scrollbar{display:none}
+.fb{padding:.8rem 1.7rem;font-size:.58rem;letter-spacing:.22em;text-transform:uppercase;background:transparent;color:rgba(250,249,246,.4);border:none;border-bottom:2px solid transparent;cursor:pointer;font-family:'Inter',sans-serif;margin-bottom:-1px;white-space:nowrap;flex-shrink:0;transition:all .25s}
+.fb.on,.fb:hover{color:var(--g);border-bottom-color:var(--g)}
+.sbar{max-width:1300px;margin:2rem auto 2.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.srch{background:transparent;border:none;border-bottom:1px solid var(--bdr);padding:.6rem .3rem;color:var(--w);font-family:'Inter',sans-serif;font-size:.8rem;outline:none;width:260px;transition:border-color .3s}
+.srch:focus{border-bottom-color:var(--g)}
+.srch::placeholder{color:rgba(250,249,246,.18)}
+.cnt{font-size:.56rem;letter-spacing:.2em;color:var(--dim)}
+.pgrid{max-width:1300px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:1px;background:var(--bdr)}
+.pc{background:var(--k2);cursor:pointer;position:relative;overflow:hidden;opacity:0;transform:translateY(30px);transition:opacity .7s,transform .7s}
+.pc.show{opacity:1;transform:translateY(0)}
+.pimg{aspect-ratio:3/4;background:var(--k3);overflow:hidden;position:relative}
+.pimg img{width:100%;height:100%;object-fit:cover;transition:transform .8s cubic-bezier(.16,1,.3,1)}
+.pc:hover .pimg img{transform:scale(1.08)}
+.pph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:3rem;color:rgba(201,169,110,.07)}
+.pov{position:absolute;inset:0;background:linear-gradient(to top,rgba(5,4,3,.92) 0%,transparent 50%);opacity:0;transition:opacity .45s}
+.pc:hover .pov{opacity:1}
+.pact{position:absolute;bottom:1.1rem;left:50%;transform:translateX(-50%) translateY(10px);opacity:0;transition:all .4s cubic-bezier(.16,1,.3,1);font-size:.54rem;letter-spacing:.26em;text-transform:uppercase;color:var(--g);border:1px solid rgba(201,169,110,.45);padding:.5rem 1.3rem;white-space:nowrap;background:rgba(5,4,3,.4);backdrop-filter:blur(6px)}
+.pc:hover .pact{opacity:1;transform:translateX(-50%) translateY(0)}
+.pbadge{position:absolute;top:.7rem;left:.7rem;font-size:.44rem;letter-spacing:.2em;text-transform:uppercase;background:rgba(5,4,3,.78);color:var(--g);padding:.25rem .6rem;border:1px solid var(--bdr);backdrop-filter:blur(6px)}
+.pinfo{padding:1rem 1.1rem 1.2rem;background:var(--k2)}
+.pname{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:300;color:var(--w);line-height:1.2;margin-bottom:.3rem}
+.pprice{font-size:.78rem;color:var(--g);letter-spacing:.06em}
+.ptallas{font-size:.52rem;color:var(--dim);margin-top:.3rem;letter-spacing:.07em}
+.nor{grid-column:1/-1;text-align:center;padding:5rem;color:var(--dim)}
+
+/* NOSOTROS */
+.nos{display:grid;grid-template-columns:1fr 1fr;min-height:600px;border-top:1px solid var(--bdr)}
+.nos-l{background:var(--k);padding:7rem 5rem;display:flex;flex-direction:column;justify-content:center}
+.nos-r{position:relative;overflow:hidden;background:var(--k3)}
+.nos-r img{width:100%;height:100%;object-fit:cover;transition:transform 8s ease}
+.nos-r:hover img{transform:scale(1.05)}
+.nos-ov{position:absolute;inset:0;background:linear-gradient(120deg,rgba(5,4,3,.55) 0%,transparent 55%)}
+.nos-body{font-size:.82rem;color:rgba(250,249,246,.46);line-height:2.15;margin-top:1.5rem}
+.nos-items{margin-top:2.5rem;display:flex;flex-direction:column;gap:1rem}
+.nos-item{font-size:.68rem;color:rgba(250,249,246,.34);padding-left:1.8rem;position:relative;letter-spacing:.08em}
+.nos-item::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:24px;height:1px;background:var(--g);transition:width .3s}
+.nos-item:hover::before{width:32px}
+
+/* AGENT — CANEVA AI MAGIC */
+#agente{padding:7rem 4rem;background:
+  radial-gradient(circle at 22% 20%,rgba(201,169,110,.12),transparent 34%),
+  radial-gradient(circle at 78% 64%,rgba(232,213,170,.07),transparent 30%),
+  var(--k);border-top:1px solid var(--bdr);position:relative;overflow:hidden}
+#agente::before{content:'';position:absolute;inset:0;background:
+  linear-gradient(115deg,transparent 0%,rgba(201,169,110,.04) 42%,transparent 62%);
+  opacity:.8;pointer-events:none}
+.ag{max-width:1180px;margin:0 auto;position:relative;z-index:2}
+.ai-showcase{display:grid;grid-template-columns:1.05fr .95fr;gap:3.2rem;align-items:center;margin-top:2.5rem}
+.ai-copy{max-width:560px}
+.ai-copy p{font-size:.83rem;color:rgba(250,249,246,.5);line-height:2;margin-top:1rem}
+.ai-actions{display:flex;gap:.85rem;flex-wrap:wrap;margin-top:2rem}
+.ai-mini{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;margin-top:2rem}
+.ai-mini div{border:1px solid var(--bdr);background:rgba(255,255,255,.025);padding:1rem;min-height:92px;position:relative;overflow:hidden}
+.ai-mini div::after{content:'';position:absolute;right:-30px;top:-30px;width:70px;height:70px;border-radius:50%;background:rgba(201,169,110,.08)}
+.ai-mini b{display:block;font-family:'Cormorant Garamond',serif;font-size:1.25rem;color:var(--g);font-weight:300;margin-bottom:.35rem}
+.ai-mini span{font-size:.55rem;letter-spacing:.13em;line-height:1.7;text-transform:uppercase;color:rgba(250,249,246,.34)}
+.ai-preview{position:relative;min-height:520px;display:flex;align-items:center;justify-content:center}
+.ai-phone{width:min(390px,100%);border:1px solid rgba(201,169,110,.32);background:linear-gradient(145deg,rgba(20,18,9,.96),rgba(5,4,3,.96));box-shadow:0 40px 100px -40px #000,0 0 0 1px rgba(255,255,255,.03) inset;overflow:hidden;position:relative}
+.ai-phone::before{content:'';position:absolute;inset:-1px;background:linear-gradient(130deg,rgba(201,169,110,.38),transparent 28%,transparent 68%,rgba(232,213,170,.16));pointer-events:none}
+.ai-phone-head{padding:1rem 1.1rem;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1}
+.ai-brand{display:flex;align-items:center;gap:.75rem}
+.ai-avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 20%,var(--g3),var(--g));color:#000;font-family:'Cormorant Garamond',serif;font-size:1.3rem;box-shadow:0 0 24px rgba(201,169,110,.28)}
+.ai-brand strong{display:block;font-family:'Cormorant Garamond',serif;font-weight:300;color:var(--w);font-size:1.15rem;line-height:1}
+.ai-brand small{font-size:.45rem;letter-spacing:.22em;color:#7fb069;text-transform:uppercase}
+.ai-badge{font-size:.45rem;letter-spacing:.22em;color:var(--g);border:1px solid var(--bdr);padding:.28rem .55rem;text-transform:uppercase}
+.ai-demo-body{padding:1.2rem;position:relative;z-index:1}
+.ai-demo-msg{display:flex;gap:.7rem;margin-bottom:.9rem;animation:msgIn .65s cubic-bezier(.16,1,.3,1) both}
+.ai-demo-msg:nth-child(2){animation-delay:.18s}.ai-demo-msg:nth-child(3){animation-delay:.36s}
+.ai-demo-bub{background:rgba(255,255,255,.045);border:1px solid var(--bdr);padding:.85rem .95rem;color:rgba(250,249,246,.74);font-size:.76rem;line-height:1.7;box-shadow:0 20px 55px -38px rgba(0,0,0,.8)}
+.ai-demo-bub em{color:var(--g);font-style:normal}
+.ai-demo-row{display:flex;gap:.55rem;overflow:hidden;margin-top:1rem}
+.ai-demo-card{min-width:112px;border:1px solid var(--bdr);background:rgba(5,4,3,.62);animation:float1 9s ease-in-out infinite}
+.ai-demo-card:nth-child(2){animation-delay:-2s}.ai-demo-card:nth-child(3){animation-delay:-4s}
+.ai-demo-img{height:130px;background:linear-gradient(135deg,rgba(201,169,110,.08),rgba(255,255,255,.025));display:grid;place-items:center;font-family:'Cormorant Garamond',serif;color:rgba(201,169,110,.18);font-size:2.4rem}
+.ai-demo-info{padding:.55rem}
+.ai-demo-info b{font-family:'Cormorant Garamond',serif;font-weight:300;color:var(--w);font-size:.8rem}
+.ai-demo-info span{display:block;color:var(--g);font-size:.58rem;margin-top:.12rem}
+.ai-glow-ring{position:absolute;width:470px;height:470px;border:1px solid rgba(201,169,110,.12);border-radius:50%;animation:spinSlow 24s linear infinite}
+.ai-glow-ring::before,.ai-glow-ring::after{content:'';position:absolute;border-radius:50%;inset:38px;border:1px dashed rgba(201,169,110,.08)}
+.ai-glow-ring::after{inset:88px;border-style:solid;border-color:rgba(232,213,170,.08)}
+@keyframes spinSlow{to{transform:rotate(360deg)}}
+
+.ai-dock{position:fixed;right:24px;bottom:24px;z-index:960;font-family:'Inter',sans-serif}
+.ai-orb{width:76px;height:76px;border-radius:50%;border:1px solid rgba(201,169,110,.55);background:
+  radial-gradient(circle at 34% 24%,#fff7df 0%,var(--g2) 22%,var(--g) 58%,#7d5f2b 100%);
+  color:#080604;display:grid;place-items:center;cursor:pointer;box-shadow:0 22px 70px rgba(0,0,0,.55),0 0 42px rgba(201,169,110,.28);position:relative;transition:transform .35s cubic-bezier(.16,1,.3,1)}
+.ai-orb:hover{transform:translateY(-5px) scale(1.04)}
+.ai-orb::before{content:'';position:absolute;inset:-10px;border-radius:50%;border:1px solid rgba(201,169,110,.28);animation:pulseOrb 2.4s infinite}
+.ai-orb::after{content:'Asistente AI';position:absolute;right:88px;white-space:nowrap;background:rgba(5,4,3,.88);border:1px solid var(--bdr2);color:var(--g);padding:.55rem .85rem;font-size:.54rem;letter-spacing:.18em;text-transform:uppercase;backdrop-filter:blur(12px);opacity:.95;box-shadow:0 18px 48px -28px #000}
+.ai-orb-mark{font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-weight:300;line-height:1}
+.ai-orb-dot{position:absolute;right:10px;top:10px;width:10px;height:10px;border-radius:50%;background:#7fb069;box-shadow:0 0 14px #7fb069}
+@keyframes pulseOrb{0%{transform:scale(.88);opacity:.7}70%,100%{transform:scale(1.25);opacity:0}}
+.ai-tease{position:absolute;right:0;bottom:92px;width:250px;background:rgba(5,4,3,.9);border:1px solid var(--bdr2);padding:.9rem 1rem;color:rgba(250,249,246,.72);font-size:.72rem;line-height:1.65;box-shadow:0 22px 70px rgba(0,0,0,.5);backdrop-filter:blur(20px);transform:translateY(12px);opacity:0;pointer-events:none;transition:all .35s}
+.ai-tease.show{opacity:1;transform:translateY(0)}
+.ai-tease strong{color:var(--g);font-weight:400}
+
+.ai-panel{position:absolute;right:0;bottom:96px;width:min(420px,calc(100vw - 32px));height:min(690px,calc(100vh - 126px));display:flex;flex-direction:column;border:1px solid rgba(201,169,110,.32);background:linear-gradient(160deg,rgba(13,11,8,.96),rgba(5,4,3,.98));box-shadow:0 32px 120px rgba(0,0,0,.72),0 0 0 1px rgba(255,255,255,.025) inset;backdrop-filter:blur(28px) saturate(1.15);-webkit-backdrop-filter:blur(28px) saturate(1.15);opacity:0;transform:translateY(18px) scale(.96);pointer-events:none;transition:opacity .35s,transform .35s;overflow:hidden}
+.ai-dock.open .ai-panel{opacity:1;transform:translateY(0) scale(1);pointer-events:all}
+.ai-dock.open .ai-orb{transform:scale(.72);opacity:.15;pointer-events:none}
+.ai-panel::before{content:'';position:absolute;inset:0;background:
+  radial-gradient(circle at 24% 0%,rgba(201,169,110,.15),transparent 34%),
+  radial-gradient(circle at 96% 16%,rgba(232,213,170,.08),transparent 26%);
+  pointer-events:none}
+.ai-panel-head{padding:1rem 1.05rem;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1}
+.ai-close{width:34px;height:34px;border:1px solid var(--bdr);background:transparent;color:var(--g);cursor:pointer;font-size:1.1rem;line-height:1;transition:.25s}
+.ai-close:hover{background:rgba(201,169,110,.08);border-color:var(--g)}
+.ai-panel-sub{padding:.85rem 1rem;border-bottom:1px solid var(--bdr);position:relative;z-index:1}
+.ai-panel-sub p{font-size:.65rem;line-height:1.7;color:rgba(250,249,246,.45)}
+.ai-chips{display:flex;gap:.45rem;overflow-x:auto;padding-top:.65rem;scrollbar-width:none}
+.ai-chips::-webkit-scrollbar{display:none}
+.ai-chip,.qb{padding:.48rem .78rem;font-size:.55rem;letter-spacing:.08em;background:rgba(255,255,255,.025);color:rgba(201,169,110,.75);border:1px solid var(--bdr);cursor:pointer;font-family:'Inter',sans-serif;transition:all .25s;white-space:nowrap}
+.ai-chip:hover,.qb:hover{background:rgba(201,169,110,.08);border-color:rgba(201,169,110,.38);color:var(--g);transform:translateY(-1px)}
+.cmsgs{flex:1;min-height:0;overflow-y:auto;padding:1.05rem;display:flex;flex-direction:column;gap:1rem;scrollbar-width:thin;scrollbar-color:rgba(201,169,110,.28) transparent;position:relative;z-index:1}
+.cmsgs::-webkit-scrollbar{width:3px}
+.cmsgs::-webkit-scrollbar-thumb{background:rgba(201,169,110,.35)}
+.cm{display:flex;gap:.72rem;align-items:flex-start;flex-wrap:wrap;animation:msgIn .44s cubic-bezier(.16,1,.3,1)}
+.cm.u{justify-content:flex-end}
+@keyframes msgIn{from{opacity:0;transform:translateY(10px) scale(.98);filter:blur(4px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+.cav{width:32px;height:32px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.55rem;font-weight:500;margin-top:2px;border-radius:50%}
+.cav.a{background:radial-gradient(circle at 35% 20%,var(--g3),var(--g));color:#000;box-shadow:0 0 18px rgba(201,169,110,.18)}
+.cav.u{background:rgba(255,255,255,.05);color:var(--dim);border:1px solid var(--bdr);order:2}
+.cbub{font-size:.79rem;line-height:1.85;max-width:calc(100% - 48px);padding:.78rem .9rem;border:1px solid var(--bdr);position:relative}
+.cbub.a{color:rgba(250,249,246,.82);background:rgba(255,255,255,.038);box-shadow:0 18px 58px -42px rgba(0,0,0,.8)}
+.cbub.u{color:rgba(250,249,246,.72);background:rgba(201,169,110,.09);border-color:rgba(201,169,110,.18);text-align:right;order:1}
+.cbub a{color:var(--g);text-decoration:none;border-bottom:1px solid rgba(201,169,110,.3)}
+.cbub a:hover{border-bottom-color:var(--g)}
+.cbub strong{color:var(--g2);font-weight:400}
+.typ{display:flex;gap:5px;align-items:center;padding:.25rem 0}
+.typ span{width:5px;height:5px;border-radius:50%;background:var(--g);opacity:.2;animation:td 1.3s infinite}
+.typ span:nth-child(2){animation-delay:.22s}
+.typ span:nth-child(3){animation-delay:.44s}
+@keyframes td{0%,100%{opacity:.15;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
+.rcards{display:flex;gap:9px;overflow-x:auto;margin-left:44px;padding:.1rem 0 .35rem;width:calc(100% - 44px);scrollbar-width:none}
+.rcards::-webkit-scrollbar{display:none}
+.rc{width:136px;cursor:pointer;border:1px solid var(--bdr);background:rgba(20,18,9,.85);transition:all .3s cubic-bezier(.16,1,.3,1);flex:0 0 auto}
+.rc:hover{border-color:var(--g);transform:translateY(-4px)}
+.rc-img{width:136px;height:176px;overflow:hidden;background:var(--k2)}
+.rc-img img{width:100%;height:100%;object-fit:cover;transition:transform .5s}
+.rc:hover .rc-img img{transform:scale(1.06)}
+.rc-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:rgba(201,169,110,.1)}
+.rc-info{padding:.6rem .65rem .72rem}
+.rc-name{font-family:'Cormorant Garamond',serif;font-size:.82rem;color:#e8e4dc;line-height:1.3;margin-bottom:.24rem}
+.rc-price{font-size:.62rem;color:var(--g);letter-spacing:.04em}
+.rc-tallas{font-size:.46rem;color:var(--dim);margin-top:.18rem}
+.cbar{display:flex;border-top:1px solid var(--bdr);position:relative;z-index:1;background:rgba(5,4,3,.66)}
+.cinput{flex:1;background:transparent;border:none;padding:1rem 1rem;color:var(--w);font-family:'Inter',sans-serif;font-size:.8rem;outline:none;min-width:0}
+.cinput::placeholder{color:rgba(250,249,246,.18)}
+.csend{padding:1rem 1.15rem;background:var(--g);color:#000;border:none;cursor:pointer;font-size:.53rem;letter-spacing:.2em;text-transform:uppercase;font-family:'Inter',sans-serif;font-weight:500;flex-shrink:0;transition:background .25s}
+.csend:hover{background:var(--g2)}
+.qrow{display:flex;gap:.55rem;flex-wrap:wrap;margin-top:1.25rem}
+.ai-spark{position:fixed;width:6px;height:6px;border-radius:50%;background:var(--g);pointer-events:none;z-index:970;animation:sparkFly .9s ease-out forwards}
+@keyframes sparkFly{to{transform:translate(var(--x),var(--y)) scale(.1);opacity:0}}
+
+
+
+@media(max-width:1000px){
+  .ai-showcase{grid-template-columns:1fr;gap:2rem}
+  .ai-preview{min-height:430px}
+}
+@media(max-width:600px){
+  #agente{padding:4rem 1.2rem}
+  .ai-mini{grid-template-columns:1fr}
+  .ai-preview{min-height:390px}
+  .ai-phone{width:100%}
+  .ai-dock{right:14px;bottom:14px}
+  .ai-orb{width:66px;height:66px}
+  .ai-orb::after{display:none}
+  .ai-panel{position:fixed;inset:10px;width:auto;height:auto;bottom:10px;right:10px}
+  .ai-dock.open .ai-orb{display:none}
+  .cbub{font-size:.76rem}
+  .rc{width:128px}.rc-img{width:128px;height:160px}
+}
+
+/* FOOTER */
+footer{padding:7rem 4rem 3rem;background:var(--k2);border-top:1px solid var(--bdr)}
+.fcta{max-width:1300px;margin:0 auto 5rem;text-align:center;padding-bottom:5rem;border-bottom:1px solid var(--bdr)}
+.fcta-h{font-family:'Cormorant Garamond',serif;font-size:clamp(2.5rem,5vw,4.5rem);font-weight:300;color:var(--w);line-height:1.05;margin-bottom:2rem}
+.fcta-h em{color:var(--g);font-style:italic}
+.fi-grid{max-width:1300px;margin:0 auto;display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:4rem;padding-bottom:3.5rem;border-bottom:1px solid var(--bdr)}
+.flogo{font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-weight:300;letter-spacing:.42em;color:var(--g);margin-bottom:1.4rem;display:block}
+.fdesc{font-size:.7rem;color:var(--dim);line-height:2}
+.ftit{font-size:.5rem;letter-spacing:.45em;text-transform:uppercase;color:var(--g);opacity:.6;margin-bottom:1.4rem}
+.fls{display:flex;flex-direction:column;gap:.8rem}
+.fls a{font-size:.7rem;color:var(--dim);text-decoration:none;transition:color .25s;letter-spacing:.06em}
+.fls a:hover{color:var(--g)}
+.fbot{max-width:1300px;margin:2.5rem auto 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+.fcopy{font-size:.5rem;color:rgba(250,249,246,.13);letter-spacing:.22em;text-transform:uppercase}
+.fwa{display:inline-flex;align-items:center;gap:.55rem;padding:.7rem 1.8rem;border:1px solid rgba(201,169,110,.3);color:var(--g);text-decoration:none;font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;transition:all .3s}
+.fwa:hover{background:var(--g);color:#000}
+
+
+
+/* PRODUCT MODAL — CANEVA LUXURY QUICK VIEW */
+body.product-open{overflow:hidden}
+.pmodal{position:fixed;inset:0;z-index:980;display:grid;place-items:center;padding:28px;background:rgba(5,4,3,.72);backdrop-filter:blur(22px) saturate(1.12);-webkit-backdrop-filter:blur(22px) saturate(1.12);opacity:0;pointer-events:none;transition:opacity .32s cubic-bezier(.16,1,.3,1)}
+.pmodal.open{opacity:1;pointer-events:all}
+.pmodal::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 22% 16%,rgba(201,169,110,.2),transparent 33%),radial-gradient(circle at 86% 80%,rgba(232,213,170,.1),transparent 28%);pointer-events:none}
+.pm-shell{width:min(1120px,100%);max-height:min(760px,calc(100vh - 56px));display:grid;grid-template-columns:minmax(320px,.9fr) 1.1fr;background:linear-gradient(145deg,rgba(13,11,8,.98),rgba(5,4,3,.98));border:1px solid rgba(201,169,110,.34);box-shadow:0 44px 150px rgba(0,0,0,.72),0 0 0 1px rgba(255,255,255,.025) inset;position:relative;overflow:hidden;transform:translateY(24px) scale(.97);transition:transform .38s cubic-bezier(.16,1,.3,1)}
+.pmodal.open .pm-shell{transform:translateY(0) scale(1)}
+.pm-shell::before{content:'';position:absolute;inset:-1px;background:linear-gradient(125deg,rgba(201,169,110,.42),transparent 20%,transparent 72%,rgba(232,213,170,.18));opacity:.58;pointer-events:none}
+.pm-media{position:relative;background:var(--k3);min-height:560px;overflow:hidden}
+.pm-media img{width:100%;height:100%;object-fit:cover;display:block;filter:brightness(.92);transform:scale(1.02);transition:transform 1.2s cubic-bezier(.16,1,.3,1),filter .8s}
+.pmodal.open .pm-media img{transform:scale(1);filter:brightness(1)}
+.pm-media::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(5,4,3,.62),transparent 42%),linear-gradient(90deg,transparent,rgba(201,169,110,.08),transparent);pointer-events:none}
+.pm-photo-fallback{height:100%;display:grid;place-items:center;font-family:'Cormorant Garamond',serif;font-size:8rem;color:rgba(201,169,110,.09)}
+.pm-float-badge{position:absolute;left:1.1rem;top:1.1rem;z-index:2;border:1px solid rgba(201,169,110,.34);background:rgba(5,4,3,.66);backdrop-filter:blur(14px);padding:.55rem .78rem;color:var(--g);font-size:.48rem;letter-spacing:.24em;text-transform:uppercase}
+.pm-content{position:relative;z-index:1;padding:3.2rem;display:flex;flex-direction:column;min-height:560px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(201,169,110,.28) transparent}
+.pm-close{position:absolute;right:1rem;top:1rem;z-index:4;width:42px;height:42px;border:1px solid var(--bdr2);background:rgba(5,4,3,.5);color:var(--g);font-size:1.4rem;cursor:pointer;transition:.25s;backdrop-filter:blur(12px)}
+.pm-close:hover{background:rgba(201,169,110,.1);border-color:var(--g);transform:rotate(90deg)}
+.pm-kicker{font-size:.52rem;letter-spacing:.42em;text-transform:uppercase;color:var(--g);margin-bottom:1.1rem}
+.pm-name{font-family:'Cormorant Garamond',serif;font-size:clamp(2.5rem,5vw,4.9rem);font-weight:300;line-height:.94;color:var(--w);letter-spacing:.02em;margin-bottom:1rem}
+.pm-price{font-family:'Cormorant Garamond',serif;font-size:2.25rem;color:var(--g);font-weight:300;margin-bottom:1.3rem}
+.pm-desc{font-size:.82rem;line-height:2;color:rgba(250,249,246,.56);max-width:560px;margin-bottom:1.35rem}
+.pm-tags{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.6rem}
+.pm-tag{border:1px solid var(--bdr);background:rgba(255,255,255,.025);color:rgba(250,249,246,.62);font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;padding:.48rem .68rem}
+.pm-tag.gold{color:var(--g);border-color:rgba(201,169,110,.32);background:rgba(201,169,110,.055)}
+.pm-actions{display:flex;gap:.75rem;flex-wrap:wrap;margin:1rem 0 1.5rem}
+.pm-actions .btn-p,.pm-actions .btn-o{padding:.95rem 1.55rem;font-size:.56rem;letter-spacing:.2em}
+.pm-note{border-left:1px solid var(--g);padding:1rem 0 1rem 1.2rem;margin-top:.2rem;color:rgba(250,249,246,.56);font-size:.76rem;line-height:1.9;background:linear-gradient(90deg,rgba(201,169,110,.045),transparent)}
+.pm-note strong{color:var(--g2);font-weight:400}
+.pm-trust{display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem;margin-top:1.4rem}
+.pm-trust div{border:1px solid var(--bdr);background:rgba(255,255,255,.02);padding:.82rem .75rem;min-height:74px}
+.pm-trust b{display:block;color:var(--g);font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:300;margin-bottom:.22rem}
+.pm-trust span{display:block;font-size:.5rem;letter-spacing:.14em;line-height:1.55;text-transform:uppercase;color:rgba(250,249,246,.36)}
+.pm-related-title{font-size:.52rem;letter-spacing:.34em;text-transform:uppercase;color:rgba(201,169,110,.72);margin:1.8rem 0 .8rem}
+.pm-related{display:flex;gap:.65rem;overflow-x:auto;padding-bottom:.2rem;scrollbar-width:none}
+.pm-related::-webkit-scrollbar{display:none}
+.pm-rel{min-width:128px;border:1px solid var(--bdr);background:rgba(255,255,255,.025);cursor:pointer;transition:.25s;overflow:hidden}
+.pm-rel:hover{border-color:var(--g);transform:translateY(-3px)}
+.pm-rel-img{height:132px;background:var(--k3);display:grid;place-items:center;color:rgba(201,169,110,.1);font-family:'Cormorant Garamond',serif;font-size:2rem;overflow:hidden}
+.pm-rel-img img{width:100%;height:100%;object-fit:cover;transition:.55s}
+.pm-rel:hover img{transform:scale(1.06)}
+.pm-rel-info{padding:.55rem .62rem .65rem}
+.pm-rel-name{font-family:'Cormorant Garamond',serif;font-size:.86rem;line-height:1.15;color:rgba(250,249,246,.84)}
+.pm-rel-price{font-size:.58rem;color:var(--g);margin-top:.18rem}
+.pc::after{content:'';position:absolute;inset:0;background:linear-gradient(120deg,transparent 0%,rgba(255,255,255,.06) 45%,transparent 70%);transform:translateX(-120%);transition:transform .72s cubic-bezier(.16,1,.3,1);pointer-events:none}
+.pc:hover::after{transform:translateX(120%)}
+.ai-spark.pm{background:var(--g2);box-shadow:0 0 16px rgba(232,213,170,.55)}
+@media(max-width:860px){
+  .pmodal{padding:12px;align-items:end}
+  .pm-shell{grid-template-columns:1fr;max-height:calc(100vh - 24px)}
+  .pm-media{min-height:330px;max-height:45vh}
+  .pm-content{min-height:auto;padding:2rem 1.25rem 1.35rem}
+  .pm-name{font-size:2.8rem}
+  .pm-price{font-size:1.8rem}
+  .pm-trust{grid-template-columns:1fr}
+  .pm-actions .btn-p,.pm-actions .btn-o{width:100%;justify-content:center}
+}
+
+@media(max-width:1000px){
+  nav{padding:1.3rem 2rem}
+  nav.s{padding:.9rem 2rem}
+  .nlinks,.nwa{display:none}
+  .burger{display:flex}
+  .float-img{display:none}
+  .fi1,.fi3{display:block;opacity:.18}
+  .stats{padding:4rem 2rem}
+  .stats-g{grid-template-columns:repeat(2,1fr)}
+  .st:nth-child(2){border-right:none}
+  .st:nth-child(3){border-top:1px solid var(--bdr);border-right:1px solid var(--bdr)}
+  .st:nth-child(4){border-top:1px solid var(--bdr)}
+  .lookbook{padding:5rem 2rem}
+  .lb-grid{grid-template-columns:1fr 1fr;height:auto}
+  .lb1{grid-row:span 1;grid-column:span 2;height:380px}
+  .lb-item{height:320px}
+  #catalogo{padding:5rem 2rem}
+  .nos{grid-template-columns:1fr}
+  .nos-l{padding:5rem 2rem}
+  .nos-r{height:400px;order:-1}
+  #agente{padding:5rem 2rem}
+  footer{padding:5rem 2rem 2.5rem}
+  .fi-grid{grid-template-columns:1fr;gap:2.5rem}
+  .fbot{flex-direction:column;align-items:flex-start}
+}
+@media(max-width:600px){
+  nav{padding:1rem 1.4rem}
+  nav.s{padding:.8rem 1.4rem}
+  .nlogo{font-size:1.2rem;letter-spacing:.4em}
+  .hero{min-height:580px}
+  .fi1,.fi3{width:90px;height:120px;opacity:.12}
+  .hero-pre{font-size:.46rem;letter-spacing:.5em}
+  .hero-name{font-size:clamp(3.5rem,20vw,6rem)}
+  .hero-sub{font-size:1rem}
+  .hero-btns{flex-direction:column;align-items:center;gap:.7rem;width:100%}
+  .btn-p,.btn-o{width:100%;max-width:280px;justify-content:center}
+  .mq-t span{font-size:.9rem}
+  .stats{padding:3rem 1.4rem}
+  .st-n{font-size:2.8rem}
+  .lookbook{padding:4rem 1.2rem}
+  .lb-grid{grid-template-columns:1fr;gap:1rem}
+  .lb1{grid-column:span 1;height:340px}
+  .lb-item{height:300px}
+  .lb-cat{font-size:1.6rem}
+  #catalogo{padding:4rem 1.2rem}
+  .pgrid{grid-template-columns:repeat(2,1fr)}
+  .pact{display:none}
+  .nos-l{padding:4rem 1.4rem}
+  .nos-r{height:300px}
+  #agente{padding:4rem 1.2rem}
+  .cf::after{display:none}
+  .cmsgs{padding:2.2rem 1rem 1rem;min-height:300px;max-height:380px}
+  .cinput{padding:.9rem 1rem;font-size:.74rem}
+  .csend{padding:.9rem 1.1rem;font-size:.52rem}
+  .cav{width:26px;height:26px;font-size:.5rem}
+  .cbub{font-size:.76rem;width:calc(100% - 38px)}
+  .rc{width:calc(50% - 5px)}
+  .rc-img{width:100%;height:150px}
+  footer{padding:4rem 1.2rem 2rem}
+  .flogo{font-size:1.6rem}
+  .mmenu a{font-size:1.7rem}
+}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="logo">CANEVA</div>
-  <h1>Panel privado<br>para subir catálogo</h1>
-  <p>Sube el Excel de Caneva. El sistema convierte las filas a productos, las publica en Cloudflare KV y el sitio + Caneva AI usan esa base sin tocar código.</p>
+<script type="application/json" id="pdata">[{"categoria":"Jeans / pants","nombre":"Bota recta","precio":"$90.000","descripcion":"","tallas":"6-8-10-12-14","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FF7A11936-3A07-4C65-9606-FFB2C7D53B05.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/bota-recta/1628621144895-zClNk"},{"categoria":"Jeans / pants","nombre":"Cargo drill","precio":"$85.000","descripcion":"","tallas":"6-8-10-12-14-16","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F5F17461B-1E58-43B6-B31A-C31FE614474C.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/cargo-drill/1688923535660-zClNk"},{"categoria":"Jeans / pants","nombre":"Cargo Liz","precio":"$85.000","descripcion":"","tallas":"6-8-10-12-14-16","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F6B47496C-2D84-4D06-A2E9-53AF0D204BDC.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/cargo-liz/1727454462073-zClNk"},{"categoria":"Jeans / pants","nombre":"Cargo negro","precio":"$85.000","descripcion":"","tallas":"6-8-10-12-14-16","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F592080BF-A74E-4853-AB4A-32B8080E2E27.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/cargo-negro/1691635577815-zClNk"},{"categoria":"Jeans / pants","nombre":"Flare Ana","precio":"$80.000","descripcion":"","tallas":"6-8-10-12-14-16 tres tonos","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FDE8454FE-82B9-4A96-A83C-E5592F24531E.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/flare-ana/1654712477689-zClNk"},{"categoria":"Jeans / pants","nombre":"Flare diamante","precio":"$85.000","descripcion":"","tallas":"","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FB3A88672-CA55-464B-8B1C-5AA2D983EE41.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/flare-diamante/1729797142856-zClNk"},{"categoria":"Jeans / pants","nombre":"Flare gris","precio":"$85.000","descripcion":"","tallas":"6-8-10-12-14-16","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FFBE1EAEF-21E5-4FF9-B518-1F13DB0F0BEC.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/flare-gris/1729797823583-zClNk"},{"categoria":"Jeans / pants","nombre":"Flare oscuro","precio":"$95.000","descripcion":"","tallas":"6-8-10-12-14-16","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FA9F01F8F-CAA1-4856-8AD6-E14D6699794A.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/flare-oscuro/1728410597241-zClNk"},{"categoria":"Jeans / pants","nombre":"Flare oscuro","precio":"$95.000","descripcion":"","tallas":"6-8","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F3F277DB4-671D-40E7-A098-76C1EE13C185.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/flare-oscuro/1729250470115-zClNk"},{"categoria":"Jeans / pants","nombre":"Flare primienta","precio":"$95.000","descripcion":"","tallas":"4-6-8-10-12-14-16","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F92F9B51E-E07A-4CF8-A8F6-D3EC6CED52CC.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/flare-primienta/1731791840460-zClNk"},{"categoria":"Jeans / pants","nombre":"Jean flare lauren","precio":"$95.000","descripcion":"","tallas":"8","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F1684F838-188D-4F91-BEF9-1C84A01E1C60.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/jean-flare-lauren/1729250425734-zClNk"},{"categoria":"Jeans / pants","nombre":"Jean print","precio":"$135.000","descripcion":"","tallas":"S m l","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F0AC8C2ED-7A72-451A-95ED-1E922B2C19A6.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/jean-print/1729460004221-zClNk"},{"categoria":"Jeans / pants","nombre":"Jeans strech","precio":"$135.000","descripcion":"","tallas":"S m l","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FF6050C16-A537-4CCC-AF21-D3C7DFF824DA.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/jeans-strech/1729459963603-zClNk"},{"categoria":"Jeans / pants","nombre":"Pants","precio":"$85.000","descripcion":"Pregunta tallas y tonos","tallas":"Pregunta tallas y tonos","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F3ABDD63E-96A2-49A8-A58A-18A6DEA3E74D.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/pants/1727959150259-zClNk"},{"categoria":"Jeans / pants","nombre":"Pants estampados","precio":"$95.000","descripcion":"","tallas":"S m l","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F8739390B-09BE-4DC4-BD4A-8440DEB51766.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/pants-estampados/1726170418291-zClNk"},{"categoria":"Jeans / pants","nombre":"Pants noche viena","precio":"$120.000","descripcion":"","tallas":"","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F75AE18BF-B4A4-4D08-B1B4-AECA1408A2CD.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/pants-noche-viena/1726712256987-zClNk"},{"categoria":"Jeans / pants","nombre":"Pants print","precio":"$95.000","descripcion":"","tallas":"S m l","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F42D9D1A6-7646-4022-9FB5-037E10A1A794.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/pants-print/1728146111227-zClNk"},{"categoria":"Jeans / pants","nombre":"Pants print","precio":"$95.000","descripcion":"","tallas":"S m l","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FFB1C5752-AE7F-41B0-9DA3-A104133F6852.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/pants-print/1728410745089-zClNk"},{"categoria":"Jeans / pants","nombre":"Jeans al mayor","precio":"$62.000","descripcion":"","tallas":"","stock":"","imagen":"","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/jeans-al-mayor/1729197948524-zClNk"},{"categoria":"Short / faldas","nombre":"Bermuda","precio":"$75.000","descripcion":"","tallas":"6-8-10-12-14-16","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FFA58E12E-62DA-48E7-8149-6DBEABFD6A1E.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/bermuda/1726711428669-zClNk"},{"categoria":"Short / faldas","nombre":"Bermuda larga","precio":"$76.000","descripcion":"","tallas":"6-8-10-12-14-16","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FCD70D61F-3EAE-4CAB-9D3D-F9AFE85D8130.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/bermuda-larga/1727454623199-zClNk"},{"categoria":"Short / faldas","nombre":"Carla","precio":"$65.000","descripcion":"","tallas":"6-8-10-12-14-16","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F807B9FF6-2746-4A54-A686-8E9F95D94986.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/carla/1726175200099-zClNk"},{"categoria":"Short / faldas","nombre":"Falda","precio":"$65.000","descripcion":"","tallas":"6-8-10-12-14-16","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FA89028A1-5EDF-4FAC-B282-CB14A6C77572.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/falda/1726710315304-zClNk"},{"categoria":"Short / faldas","nombre":"Falda","precio":"$65.000","descripcion":"","tallas":"6-8-10-12-14-16","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FA89028A1-5EDF-4FAC-B282-CB14A6C77572.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/falda/1726710318932-zClNk"},{"categoria":"Short / faldas","nombre":"Falda cargo jean","precio":"$65.000","descripcion":"","tallas":"6-8-10-12-14-16","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FE86C0769-EF94-4DB3-BE00-FF957BD52F81.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/falda-cargo-jean/1727454057233-zClNk"},{"categoria":"Short / faldas","nombre":"Falda cargo negra","precio":"$65.000","descripcion":"","tallas":"10-12","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F3E49DC5B-D5CF-46D3-A1AE-9D1D79193791.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/falda-cargo-negra/1727057448709-zClNk"},{"categoria":"Short / faldas","nombre":"Falda globo","precio":"$85.000","descripcion":"","tallas":"","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FB70256B7-BCDD-4690-A001-54B7676E6975.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/falda-globo/1726165358302-zClNk"},{"categoria":"Short / faldas","nombre":"Falda print","precio":"$125.000","descripcion":"","tallas":"","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F1DB3B31B-C93F-46A5-AC34-4F5BFD65398F.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/falda-print/1729460044380-zClNk"},{"categoria":"Short / faldas","nombre":"Falda print","precio":"$95.000","descripcion":"","tallas":"","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F5C5AD315-7B5C-4C24-A612-0B76BD330EF9.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/falda-print/1729459898943-zClNk"},{"categoria":"Short / faldas","nombre":"Falda print","precio":"$95.000","descripcion":"","tallas":"","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F70BCFC2C-8EE8-41DC-A345-8FAAE1332366.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/falda-print/1729459862278-zClNk"},{"categoria":"Short / faldas","nombre":"Falda print","precio":"$85.000","descripcion":"Talla unica","tallas":"unica","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F57B3AE85-B86F-4EA1-9B81-9836FAE6DF77.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/falda-print/1728410505989-zClNk"},{"categoria":"Short / faldas","nombre":"Falda print","precio":"$85.000","descripcion":"Talla unica","tallas":"unica","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F9F8257F7-1967-4F07-98A3-B83DE9206451.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/falda-print/1728410473299-zClNk"},{"categoria":"Short / faldas","nombre":"Falda short","precio":"$65.000","descripcion":"","tallas":"6-8-10-12-14-16","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F5CB5F5BA-BAEE-4005-A973-B021DAF24709.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/falda-short/1729453596203-zClNk"},{"categoria":"Short / faldas","nombre":"Falda short","precio":"$65.000","descripcion":"","tallas":"6-8-10-12-14-16","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FB094A000-563B-438F-8977-C812A725B07B.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/falda-short/1729459778776-zClNk"},{"categoria":"Short / faldas","nombre":"Falda short","precio":"$65.000","descripcion":"","tallas":"6-8-10-12-14-16","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F423A2CC1-CBFC-40EA-8DC4-25CB19B24FEA.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/falda-short/1726173848568-zClNk"},{"categoria":"Short / faldas","nombre":"Falda short nude","precio":"$85.000","descripcion":"","tallas":"S y l","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FB61AE3B8-96C5-469C-A780-69219A98B33C.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/falda-short-nude/1727057541482-zClNk"},{"categoria":"Short / faldas","nombre":"Mom short clásico","precio":"$65.000","descripcion":"","tallas":"6-8-10-12-14-16","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F3810565C-BCA6-488A-A6D1-28AC10E6B4A6.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/mom-short-clasico/1726162584114-zClNk"},{"categoria":"Short / faldas","nombre":"Short abertura","precio":"$65.000","descripcion":"","tallas":"6-8-10-12-14-16","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FFA36D1C5-7AAC-4DE3-8F64-16F8990B3FEA.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/short-abertura/1726711463368-zClNk"},{"categoria":"Short / faldas","nombre":"Short básico","precio":"$65.000","descripcion":"","tallas":"6-8-10-12-14-16","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F223A17AC-43FC-46D5-A2EA-92B712D9720F.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/short-basico/1727455969145-zClNk"},{"categoria":"Short / faldas","nombre":"Short lino","precio":"$85.000","descripcion":"Bajo pedido s m l","tallas":"Bajo pedido s m l","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F55684683-4886-4E24-B347-F83B9D2C4E3C.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/short-lino/1693758787458-zClNk"},{"categoria":"Short / faldas","nombre":"Short negro","precio":"$65.000","descripcion":"","tallas":"6-8-10-12-14-16","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F2CB15261-3545-440F-BE90-E6D6947C9D18.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/short-negro/1726710218158-zClNk"},{"categoria":"Short / faldas","nombre":"Short bob","precio":"$65.000","descripcion":"","tallas":"6-8-10-12-14-16","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FCFCB1E5F-8772-4029-A93F-DBB392A8AF13.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/short-bob/1726710266924-zClNk"},{"categoria":"Camisas / crop tops","nombre":"Body americano","precio":"$75.000","descripcion":"","tallas":"","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FD0DBAF26-07B1-4683-B08D-B8F2986B210E.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/body-americano/1733753098177-zClNk"},{"categoria":"Camisas / crop tops","nombre":"Body jeans","precio":"$78.000","descripcion":"","tallas":"","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F15ED19B2-E829-4FA4-A908-1C1E35C900F3.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/body-jeans/1733752932124-zClNk"},{"categoria":"Camisas / crop tops","nombre":"Body Luciana","precio":"$50.000","descripcion":"Talla única","tallas":"única","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F1A410EE0-8964-45BD-B918-27B04407E588.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/body-luciana/1727454771509-zClNk"},{"categoria":"Camisas / crop tops","nombre":"Camisa","precio":"$65.000","descripcion":"","tallas":"","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F9A1DC60A-879A-4794-8FAC-49EE24E77C2C.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/camisa/1726168166396-zClNk"},{"categoria":"Camisas / crop tops","nombre":"Camisa globo","precio":"$80.000","descripcion":"Sm /lxl","tallas":"Sm /lxl","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FB8C7E122-A694-47DB-B9DE-F5AD10C78F28.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/camisa-globo/1726165408491-zClNk"},{"categoria":"Camisas / crop tops","nombre":"Camisa globo","precio":"$85.000","descripcion":"Sm. / lxl","tallas":"Sm. / lxl","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FDA3FB422-D0E5-4AE1-B364-BE6AA4460AC6.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/camisa-globo/1726165780012-zClNk"},{"categoria":"Camisas / crop tops","nombre":"Camisa lino","precio":"$85.000","descripcion":"","tallas":"S m l","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F36EC5C01-6E68-42B7-899A-9BE4FF24146D.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/camisa-lino/1727959106678-zClNk"},{"categoria":"Camisas / crop tops","nombre":"Camisa ojalillo","precio":"$95.000","descripcion":"Unica","tallas":"Unica","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FCBE40879-D733-47D4-9918-31EC35DF135C.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/camisa-ojalillo/1729459819392-zClNk"},{"categoria":"Camisas / crop tops","nombre":"Camisa ojalillo","precio":"$85.000","descripcion":"Talla s","tallas":"s","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F677CE8F3-F0BA-43E3-8C3E-5E204302CF1F.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/camisa-ojalillo/1726174161597-zClNk"},{"categoria":"Camisas / crop tops","nombre":"Camisa print","precio":"$75.000","descripcion":"S","tallas":"S","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FA1FE2446-9C14-435C-BAB0-E4CD90D7089F.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/camisa-print/1733752885348-zClNk"},{"categoria":"Camisas / crop tops","nombre":"Camisas OVERSIZE","precio":"$36.000","descripcion":"Talla unica","tallas":"unica","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FF1EB6E91-5657-4943-AAAB-692C745A71C5.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/camisas-oversize/1726162692751-zClNk"},{"categoria":"Camisas / crop tops","nombre":"Camisas vintage","precio":"$36.000","descripcion":"","tallas":"","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FFB5493E2-50E6-4D1B-8106-3B3697F59103.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/camisas-vintage/1726166158324-zClNk"},{"categoria":"Camisas / crop tops","nombre":"Carlotta","precio":"$85.000","descripcion":"","tallas":"","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F45BB857A-C824-4F57-A9AD-66EFE62F1C39.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/carlotta/1726710854037-zClNk"},{"categoria":"Camisas / crop tops","nombre":"Corset ana","precio":"$65.000","descripcion":"PRE ORDENA TALLA UNICA","tallas":"PRE ORDENA TALLA UNICA","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FAE3F32F2-9FA6-48FD-9706-B8BB2345E852.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/corset-ana/1727488209479-zClNk"},{"categoria":"Camisas / crop tops","nombre":"Corset Lucy","precio":"$65.000","descripcion":"PREORDENA","tallas":"PREORDENA","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F9C8E1D31-4E28-4BC6-B94D-B79C8DAA3F8B.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/corset-lucy/1727488246705-zClNk"},{"categoria":"Camisas / crop tops","nombre":"Crío top negro","precio":"$65.000","descripcion":"Talla única","tallas":"única","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F8ED6C37D-4CD3-4606-8531-C4B68D26BD2B.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/crio-top-negro/1726174004402-zClNk"},{"categoria":"Camisas / crop tops","nombre":"Crop top","precio":"$59.000","descripcion":"","tallas":"S m l","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F2B42A5FE-E35F-4C8B-80C5-E07F0C6AA1D6.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/crop-top/1726710679050-zClNk"},{"categoria":"Camisas / crop tops","nombre":"Crop top print","precio":"$65.000","descripcion":"Talla única","tallas":"única","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F81FD2809-4173-416A-A78E-A567D3897DFB.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/crop-top-print/1729020227204-zClNk"},{"categoria":"Camisas / crop tops","nombre":"Lazo manga larga","precio":"$140.000","descripcion":"En tono talla solicitada bajo pedido","tallas":"En tono talla solicitada bajo pedido","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F82310FA3-5A9C-4A19-AB10-45580ECC02B8.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/lazo-manga-larga/1726173794294-zClNk"},{"categoria":"Camisas / crop tops","nombre":"Luciana","precio":"$65.000","descripcion":"","tallas":"","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FD7D5A626-2044-475E-8131-6F1969058EFD.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/luciana/1726712099867-zClNk"},{"categoria":"Camisas / crop tops","nombre":"Malla","precio":"$70.000","descripcion":"Única","tallas":"Única","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FE7915288-5E9A-4488-8C72-4848BC3A990A.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/malla/1726166279156-zClNk"},{"categoria":"Camisas / crop tops","nombre":"Mallas","precio":"$70.000","descripcion":"Talla única","tallas":"única","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F6802F6AE-0753-4CDB-82C9-4DA33810C2EF.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/mallas/1726165705778-zClNk"},{"categoria":"Camisas / crop tops","nombre":"Pañoleta","precio":"$35.000","descripcion":"Talla única","tallas":"única","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F0E16F001-70F8-4CDD-8465-E7057B95D6DA.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/panoleta/1729020284690-zClNk"},{"categoria":"Camisas / crop tops","nombre":"Pañoletas","precio":"$65.000","descripcion":"","tallas":"","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FC5E108F2-81EF-40DE-BCBD-1C553463E9AD.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/panoletas/1726710364160-zClNk"},{"categoria":"Camisas / crop tops","nombre":"Print","precio":"$55.000","descripcion":"Talla única","tallas":"única","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F653AAB61-59FE-4D36-B526-02A23779EEE6.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/print/1727454729847-zClNk"},{"categoria":"Camisas / crop tops","nombre":"Rebeca","precio":"$85.000","descripcion":"Sm / lxl","tallas":"Sm / lxl","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F4C55F3E3-66D8-4829-9EB9-11BF1324C9FC.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/rebeca/1726165841637-zClNk"},{"categoria":"Camisas / crop tops","nombre":"Top asimétrico","precio":"$65.000","descripcion":"Talla única","tallas":"única","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FA109CBB2-791D-45F4-815E-062662D2F51A.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/top-asimetrico/1726174906333-zClNk"},{"categoria":"Camisas / crop tops","nombre":"Top básicos","precio":"$65.000","descripcion":"Talla única","tallas":"única","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FF8CFEDF7-605E-4309-B42B-EE847CAE773F.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/top-basicos/1726168841840-zClNk"},{"categoria":"Camisas / crop tops","nombre":"Top nalory","precio":"$65.000","descripcion":"PREORDENA","tallas":"PREORDENA","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FDB082BCD-57CD-4223-B799-78CA9E10DE1E.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/top-nalory/1727488294498-zClNk"},{"categoria":"Camisas / crop tops","nombre":"Camisa Eva","precio":"$90.000","descripcion":"","tallas":"","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FA8EABEFD-31D1-485D-98CA-B2F513247C47.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/camisa-eva/1762884174475-zClNk"},{"categoria":"Camisas / crop tops","nombre":"Navidad","precio":"$90.000","descripcion":"","tallas":"","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F4CF63ADC-FE16-4C6C-BA57-1E50312B3DCB.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/navidad/1762884216007-zClNk"},{"categoria":"Vestidos / sets","nombre":"Conjunto Amelia","precio":"$100.000","descripcion":"Única","tallas":"Única","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F0C6CA808-54E4-4943-B5E2-C4D6131A066E.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/conjunto-amelia/1728849134891-zClNk"},{"categoria":"Vestidos / sets","nombre":"Enterizo","precio":"$160.000","descripcion":"","tallas":"S m l","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F7926E111-8CDB-4C2A-9A1D-F40B47DB0840.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/enterizo/1726166335062-zClNk"},{"categoria":"Vestidos / sets","nombre":"Olvia","precio":"$135.000","descripcion":"","tallas":"S m l","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F574D69E6-23B2-4B26-84AA-2EEE50B007D3.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/olvia/1729798794770-zClNk"},{"categoria":"Vestidos / sets","nombre":"Set","precio":"$135.000","descripcion":"Sm / lxl","tallas":"Sm / lxl","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F4963D26D-4BE8-43CE-BFEA-5408A50FC076.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/set/1726166420638-zClNk"},{"categoria":"Vestidos / sets","nombre":"Set coretty","precio":"$170.000","descripcion":"S m l xl","tallas":"S m l xl","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F6B0D7562-1C2C-4256-B352-672413CF2BAB.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/set-coretty/1729003074590-zClNk"},{"categoria":"Vestidos / sets","nombre":"Set estilo","precio":"$145.000","descripcion":"","tallas":"S m l","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F0B60EC08-7875-48D2-9F72-9C21C350BE25.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/set-estilo/1726711260064-zClNk"},{"categoria":"Vestidos / sets","nombre":"Set farah","precio":"$120.000","descripcion":"Talla unica","tallas":"unica","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F3E131ED2-EB27-440C-BEF4-476CCF9C9CCB.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/set-farah/1726164711902-zClNk"},{"categoria":"Vestidos / sets","nombre":"Set jeans","precio":"$155.000","descripcion":"","tallas":"","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F78D8759C-2862-495C-9A72-26CCAA9D2E96.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/set-jeans/1733245381811-zClNk"},{"categoria":"Vestidos / sets","nombre":"Set lirio","precio":"$120.000","descripcion":"","tallas":"S m l","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F992FD7B3-7488-4585-918C-4C094CF9E071.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/set-lirio/1729798700652-zClNk"},{"categoria":"Vestidos / sets","nombre":"Set lizzy","precio":"$140.000","descripcion":"Sm lxl","tallas":"Sm lxl","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F3F7807D0-FABD-437D-A47C-9993C8F5F3C5.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/set-lizzy/1726712035096-zClNk"},{"categoria":"Vestidos / sets","nombre":"Set ojalillo","precio":"$160.000","descripcion":"Sm lxl xxl","tallas":"Sm lxl xxl","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F30B19A3B-F2EE-4292-A83C-D4467CB90D29.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/set-ojalillo/1731784117671-zClNk"},{"categoria":"Vestidos / sets","nombre":"Set paula","precio":"$155.000","descripcion":"Blanco ,negro, nude","tallas":"Bajo pedido 6-8-10-12 tela bengalina","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FDBDAD5AD-C30D-4791-AF1A-7EB808FF93C0.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/set-paula/1729264427412-zClNk"},{"categoria":"Vestidos / sets","nombre":"Set sof","precio":"$120.000","descripcion":"","tallas":"S m l","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FCEA51679-EA4B-4B64-97C1-C84A4453A84D.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/set-sof/1726168767795-zClNk"},{"categoria":"Vestidos / sets","nombre":"Vestido","precio":"$145.000","descripcion":"","tallas":"S m l","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F24F8A57B-AB3F-4777-A105-0F0985C9E8F1.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/vestido/1726710399856-zClNk"},{"categoria":"Vestidos / sets","nombre":"Vestido","precio":"$149.000","descripcion":"","tallas":"Sm","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F809444EA-9085-4FD8-8593-B40C10BFE39E.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/vestido/1729111409486-zClNk"},{"categoria":"Vestidos / sets","nombre":"Vestido","precio":"$145.000","descripcion":"","tallas":"S m l","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F24F8A57B-AB3F-4777-A105-0F0985C9E8F1.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/vestido/1726710403193-zClNk"},{"categoria":"Vestidos / sets","nombre":"Vestido","precio":"$145.000","descripcion":"Sm lxl","tallas":"Sm lxl","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F406A1F1B-7C49-4A37-A03A-2FCC24E96C66.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/vestido/1726165627801-zClNk"},{"categoria":"Vestidos / sets","nombre":"Vestido","precio":"$115.000","descripcion":"Sm / l","tallas":"Sm / l","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F785009FB-9E4D-4190-AD27-B2CA08D6E40A.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/vestido/1729870962101-zClNk"},{"categoria":"Vestidos / sets","nombre":"Vestido jean","precio":"$155.000","descripcion":"S m l xl","tallas":"S m l xl","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F3FCC5589-EC2A-4D84-BC82-47BD10BC2143.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/vestido-jean/1729798829509-zClNk"},{"categoria":"Vestidos / sets","nombre":"Vestido jean","precio":"$155.000","descripcion":"","tallas":"S m l","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F7377F559-4659-4305-9182-EFA9417DA35B.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/vestido-jean/1733752992971-zClNk"},{"categoria":"Vestidos / sets","nombre":"Vestido jean","precio":"$155.000","descripcion":"Talla s","tallas":"s","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FCF720A41-3A2D-4071-ACFC-3FBE3F6FEA6D.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/vestido-jean/1733752832469-zClNk"},{"categoria":"Vestidos / sets","nombre":"Vestido jean","precio":"$155.000","descripcion":"","tallas":"S m l","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F69B99860-7E97-45F3-9A0B-C7D708A5FA82.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/vestido-jean/1726174567815-zClNk"},{"categoria":"Vestidos / sets","nombre":"Vestido loma","precio":"$125.000","descripcion":"Sm / l","tallas":"Sm / l","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FE8B0D80A-F0A5-455C-9483-6F17715F5C07.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/vestido-loma/1729798628752-zClNk"},{"categoria":"Vestidos / sets","nombre":"Vestido ojalillo","precio":"$180.000","descripcion":"Sm /lXl","tallas":"Sm /lXl","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FE843FDF7-BB53-415A-A2CC-9BCD45CBE3F8.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/vestido-ojalillo/1727057142593-zClNk"},{"categoria":"Vestidos / sets","nombre":"Vestido princesa","precio":"$145.000","descripcion":"Sm / lxl","tallas":"Sm / lxl","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F30F43CF5-7D4C-46F4-869A-2503F7856EBF.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/vestido-princesa/1726165519822-zClNk"},{"categoria":"Vestidos / sets","nombre":"Vestido print","precio":"$65.000","descripcion":"Talla única pre ordena","tallas":"única pre ordena","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F479D70A5-E27F-4624-A0C5-D9EFD8E3063C.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/vestido-print/1728149106115-zClNk"},{"categoria":"Vestidos / sets","nombre":"Vestido","precio":"$115.000","descripcion":"","tallas":"","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FFF11B0BB-D5F6-4734-9663-7053BF6C9261.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/vestido/1729871000086-zClNk"},{"categoria":"Deportivo","nombre":"Buzo","precio":"$75.000","descripcion":"","tallas":"","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FCE046417-D46B-446A-A884-FEB0C4602144.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/buzo/1751949345917-zClNk"},{"categoria":"Deportivo","nombre":"Cami buzo","precio":"$46.000","descripcion":"Talla única todo lo deportivo es bajo pedido","tallas":"única todo lo deportivo es bajo pedido","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FCC416C30-37A8-4D84-A92A-4751C4D10375.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/cami-buzo/1727454173800-zClNk"},{"categoria":"Deportivo","nombre":"Enterizo","precio":"$78.000","descripcion":"Talla única","tallas":"única","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FC35D2943-C7B5-4758-B9CD-1D9D6F092308.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/enterizo/1729799353092-zClNk"},{"categoria":"Deportivo","nombre":"Enterizo","precio":"$78.000","descripcion":"","tallas":"","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F125AF9A7-7601-4258-AE80-E381EB5FA585.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/enterizo/1729799381707-zClNk"},{"categoria":"Deportivo","nombre":"Enterizo","precio":"$78.000","descripcion":"Talla única","tallas":"única","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F2439881D-839E-4526-AA4B-60532DA7903F.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/enterizo/1729799413019-zClNk"},{"categoria":"Deportivo","nombre":"Falda short","precio":"$65.000","descripcion":"Talla única","tallas":"única","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F946E9335-AD0B-4062-9BED-02556424DDB7.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/falda-short/1726176473203-zClNk"},{"categoria":"Deportivo","nombre":"Malla deportiva","precio":"$75.000","descripcion":"","tallas":"","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F4F0BDBF9-3B3A-4A90-96EC-96063514BD5E.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/malla-deportiva/1726164614630-zClNk"},{"categoria":"Deportivo","nombre":"Pantaloneta running","precio":"$75.000","descripcion":"Sm lxl","tallas":"Sm lxl","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FE31945B8-0265-4285-931A-87331C280241.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/pantaloneta-running/1751949306032-zClNk"},{"categoria":"Deportivo","nombre":"Set corto","precio":"$85.000","descripcion":"Talla única bajo pedido","tallas":"única bajo pedido","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FC4788A40-A5EB-4B17-8C74-B2DBFE97AAD3.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/set-corto/1727454304274-zClNk"},{"categoria":"Deportivo","nombre":"Set corto","precio":"$85.000","descripcion":"","tallas":"","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F521FB33B-7613-4455-8B8B-8E4B567D5905.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/set-corto/1729799581150-zClNk"},{"categoria":"Deportivo","nombre":"Set largo","precio":"$98.000","descripcion":"Talla única bajo pedido","tallas":"única bajo pedido","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F7EACCB73-E520-46E5-90ED-D132BD63FE35.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/set-largo/1727454219868-zClNk"},{"categoria":"Deportivo","nombre":"Set largo","precio":"$98.000","descripcion":"Bajo pedido","tallas":"Bajo pedido","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F7A21E64D-950F-45EA-9B0E-13421015884E.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/set-largo/1727454261360-zClNk"},{"categoria":"Deportivo","nombre":"Set largo","precio":"$95.000","descripcion":"","tallas":"","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F35DE5F40-51D5-47AF-95BC-0D1913EC2BAA.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/set-largo/1729799509453-zClNk"},{"categoria":"Deportivo","nombre":"Set largo","precio":"$95.000","descripcion":"","tallas":"","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FD23E086C-F311-486C-AE4D-F4B96CA8FA25.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/set-largo/1729799550294-zClNk"},{"categoria":"Deportivo","nombre":"Short deportivo","precio":"$65.000","descripcion":"","tallas":"","stock":"","imagen":"https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F5B7D5EB6-944B-41FE-9989-0AA12A70F1E6.jpg?alt=media","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/short-deportivo/1729799458824-zClNk"},{"categoria":"Mayorista","nombre":"Jean mayor","precio":"$65.000","descripcion":"","tallas":"","stock":"","imagen":"","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/jean-mayor/1734218475859-zClNk"},{"categoria":"Domicilio","nombre":"Domcilio","precio":"$9.000","descripcion":"","tallas":"","stock":"","imagen":"","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/domcilio/1665758300192-zClNk"},{"categoria":"Domicilio","nombre":"Domcilio Barranquilla","precio":"$6.000","descripcion":"Aplica condiciones promocion","tallas":"Aplica condiciones promocion","stock":"","imagen":"","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/domcilio-barranquilla/1627574859668-zClNk"},{"categoria":"Domicilio","nombre":"Domcilio soledad","precio":"$7.000","descripcion":"Precio promoción aplica condiciones y restricciones","tallas":"Precio promoción aplica condiciones y restricciones","stock":"","imagen":"","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/domcilio-soledad/1627574882659-zClNk"},{"categoria":"Domicilio","nombre":"Domi","precio":"$8.000","descripcion":"","tallas":"","stock":"","imagen":"","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/domi/1678226209320-zClNk"},{"categoria":"Domicilio","nombre":"Domi","precio":"$9.000","descripcion":"","tallas":"","stock":"","imagen":"","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/domi/1689168762195-zClNk"},{"categoria":"Domicilio","nombre":"Domi","precio":"$12.000","descripcion":"","tallas":"","stock":"","imagen":"","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/domi/1762884247137-zClNk"},{"categoria":"Domicilio","nombre":"Domi","precio":"$13.000","descripcion":"","tallas":"","stock":"","imagen":"","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/domi/1763222658875-zClNk"},{"categoria":"Domicilio","nombre":"Domiclio","precio":"$11.000","descripcion":"","tallas":"","stock":"","imagen":"","imagenesExtra":"","url":"https://canevacol.kyte.site/en/p/domiclio/1680045312620-zClNk"}]</script>
 
-  <div class="grid">
-    <section class="card">
-      <label>1. Token privado</label>
-      <input id="token" type="password" placeholder="Pega aquí el ADMIN_TOKEN">
-      <div class="note">
-        <p>Este token no se guarda en el HTML. Solo se envía al Worker para autorizar la publicación.</p>
-      </div>
-    </section>
+<div class="cur" id="cur"></div>
+<div class="cur-r" id="curR"></div>
 
-    <section class="card">
-      <label>2. Archivo Excel</label>
-      <input id="file" type="file" accept=".xlsx,.xls">
-      <div class="actions">
-        <button id="previewBtn" type="button">Previsualizar</button>
-        <button id="publishBtn" type="button" disabled>Publicar catálogo</button>
-      </div>
-      <p class="muted">Columnas esperadas: Categoría, Nombre, Precio, Descripción, Variantes / Tallas, Stock, Imagen Principal, Imágenes Extra, URL Producto.</p>
-    </section>
-  </div>
+<nav id="nav">
+  <a class="nlogo" href="#inicio">CANEVA</a>
+  <ul class="nlinks">
+    <li><a href="#lookbook">Lookbook</a></li>
+    <li><a href="#catalogo">Colecciones</a></li>
+    <li><a href="#nosotros">Nosotros</a></li>
+    <li><a href="#agente">Asistente</a></li>
+  </ul>
+  <a class="nwa" href="https://wa.me/573057637089?text=Hola!%20Vi%20el%20sitio%20Caneva" target="_blank"><span>Pedir ahora</span> <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>
+  <button class="burger" id="burg" aria-label="Menu"><b></b><b></b><b></b></button>
+</nav>
 
-  <div class="kpis">
-    <div class="kpi"><b id="kCount">0</b><span>productos leídos</span></div>
-    <div class="kpi"><b id="kImages">0</b><span>con imagen</span></div>
-    <div class="kpi"><b id="kCats">0</b><span>categorías</span></div>
-  </div>
-
-  <div id="status" class="note"><p>Esperando Excel...</p></div>
-
-  <div class="table" id="tableWrap" style="display:none">
-    <table>
-      <thead><tr><th>Categoría</th><th>Nombre</th><th>Precio</th><th>Tallas</th><th>Imagen</th><th>URL</th></tr></thead>
-      <tbody id="tbody"></tbody>
-    </table>
-  </div>
-
-  <h3 style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;color:var(--g);margin-top:26px">Respuesta técnica</h3>
-  <pre id="log">—</pre>
+<div class="mmenu" id="mm">
+  <a href="#lookbook">Lookbook</a>
+  <a href="#catalogo">Colecciones</a>
+  <a href="#nosotros">Nosotros</a>
+  <a href="#agente">Asistente</a>
+  <a class="mwa" href="https://wa.me/573057637089" target="_blank"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg> WhatsApp</a>
 </div>
 
+<section class="hero" id="inicio">
+  <div class="hero-glow"></div>
+  <div class="float-layer"><div class="float-img fi1"><img src="https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F0C6CA808-54E4-4943-B5E2-C4D6131A066E.jpg?alt=media" alt="" loading="eager"></div><div class="float-img fi2"><img src="https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F7926E111-8CDB-4C2A-9A1D-F40B47DB0840.jpg?alt=media" alt="" loading="eager"></div><div class="float-img fi3"><img src="https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FD0DBAF26-07B1-4683-B08D-B8F2986B210E.jpg?alt=media" alt="" loading="eager"></div><div class="float-img fi4"><img src="https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F15ED19B2-E829-4FA4-A908-1C1E35C900F3.jpg?alt=media" alt="" loading="eager"></div><div class="float-img fi5"><img src="https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FF7A11936-3A07-4C65-9606-FFB2C7D53B05.jpg?alt=media" alt="" loading="eager"></div><div class="float-img fi6"><img src="https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F5F17461B-1E58-43B6-B31A-C31FE614474C.jpg?alt=media" alt="" loading="eager"></div></div>
+  <div class="hero-center">
+    <div class="hero-pre">Barranquilla &middot; Colombia &middot; Moda Femenina</div>
+    <h1 class="hero-name">CANEVA</h1>
+    <div class="hero-sub">Donde tu estilo cobra vida</div>
+    <div class="hero-btns">
+      <a class="btn-p" href="#catalogo"><span>Explorar colecci&oacute;n</span></a>
+      <a class="btn-o" href="#agente">Hablar con asistente</a>
+    </div>
+  </div>
+  <div class="hero-scroll"><div class="sdot"></div><span>Descubrir</span></div>
+</section>
+
+<div class="mq"><div class="mq-t" id="mqt"></div></div>
+
+<div class="stats">
+  <div class="stats-g">
+    <div class="st reveal"><div class="st-n" id="sn">0</div><div class="st-l">Productos</div></div>
+    <div class="st reveal reveal-d1"><div class="st-n">5</div><div class="st-l">Colecciones</div></div>
+    <div class="st reveal reveal-d2"><div class="st-n">1</div><div class="st-l">D&iacute;a h&aacute;bil</div></div>
+    <div class="st reveal reveal-d3"><div class="st-n">BQ</div><div class="st-l">Barranquilla</div></div>
+  </div>
+</div>
+
+<section class="lookbook" id="lookbook">
+  <div class="lb-head reveal">
+    <div class="eyebrow">Lookbook 2025</div>
+    <h2 class="sh">La nueva <em>colecci&oacute;n</em></h2>
+  </div>
+  <div class="lb-grid reveal reveal-d1"><div class="lb-item lb1">
+      <img src="https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F0C6CA808-54E4-4943-B5E2-C4D6131A066E.jpg?alt=media" alt="Vestidos" loading="lazy">
+      <div class="lb-ov"></div>
+      <div class="lb-label"><span class="lb-cat">Vestidos</span><a href="#catalogo" class="lb-cta">Ver colección →</a></div>
+    </div><div class="lb-item lb2">
+      <img src="https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FD0DBAF26-07B1-4683-B08D-B8F2986B210E.jpg?alt=media" alt="Camisas" loading="lazy">
+      <div class="lb-ov"></div>
+      <div class="lb-label"><span class="lb-cat">Camisas</span><a href="#catalogo" class="lb-cta">Ver colección →</a></div>
+    </div><div class="lb-item lb3">
+      <img src="https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2FFA58E12E-62DA-48E7-8149-6DBEABFD6A1E.jpg?alt=media" alt="Short" loading="lazy">
+      <div class="lb-ov"></div>
+      <div class="lb-label"><span class="lb-cat">Short</span><a href="#catalogo" class="lb-cta">Ver colección →</a></div>
+    </div></div>
+</section>
+
+<section id="catalogo">
+  <div class="cat-head reveal">
+    <div class="eyebrow">Cat&aacute;logo completo</div>
+    <h2 class="sh">Encuentra tu <em>estilo</em></h2>
+  </div>
+  <div class="fbar reveal reveal-d1" id="fbar">
+    <button class="fb on" data-c="Todos">Todos</button>
+  </div>
+  <div class="sbar reveal reveal-d1">
+    <input class="srch" id="srch" type="text" placeholder="Buscar prenda...">
+    <span class="cnt" id="cnt">115 productos</span>
+  </div>
+  <div class="pgrid" id="pgrid"></div>
+</section>
+
+<div class="pmodal" id="pmodal" aria-hidden="true">
+  <div class="pm-shell" role="dialog" aria-modal="true" aria-label="Detalle de producto Caneva">
+    <button class="pm-close" id="pmClose" type="button" aria-label="Cerrar producto">×</button>
+    <div class="pm-media" id="pmMedia"></div>
+    <div class="pm-content">
+      <div class="pm-kicker" id="pmCat">CANEVA</div>
+      <h3 class="pm-name" id="pmName">Producto</h3>
+      <div class="pm-price" id="pmPrice">$0</div>
+      <p class="pm-desc" id="pmDesc">Prenda seleccionada del catálogo Caneva.</p>
+      <div class="pm-tags" id="pmTags"></div>
+      <div class="pm-actions">
+        <a class="btn-p" id="pmWhats" href="#" target="_blank" rel="noopener"><span>Comprar por WhatsApp</span></a>
+        <button class="btn-o" id="pmAsk" type="button">Preguntar a Caneva AI</button>
+      </div>
+      <div class="pm-note" id="pmNote"></div>
+      <div class="pm-trust">
+        <div><b>1 día</b><span>Entrega hábil Barranquilla</span></div>
+        <div><b>Contraentrega</b><span>Compra con confianza</span></div>
+        <div><b>Stylist AI</b><span>Te arma el look completo</span></div>
+      </div>
+      <div class="pm-related-title">También podrías combinarlo con</div>
+      <div class="pm-related" id="pmRelated"></div>
+    </div>
+  </div>
+</div>
+
+<div id="nosotros">
+  <div class="nos">
+    <div class="nos-l">
+      <div class="eyebrow reveal">Nuestra historia</div>
+      <h2 class="sh reveal reveal-d1">Moda que te hace <em>sentir</em></h2>
+      <p class="nos-body reveal reveal-d2">Caneva naci&oacute; en Barranquilla con una misi&oacute;n clara: llevar moda femenina de calidad a precios accesibles. Cada prenda es seleccionada pensando en la mujer colombiana &mdash; su estilo, su calidez, su energ&iacute;a.</p>
+      <div class="nos-items reveal reveal-d3">
+        <div class="nos-item">Entrega en 1 d&iacute;a h&aacute;bil en Barranquilla</div>
+        <div class="nos-item">Env&iacute;os a todo Colombia</div>
+        <div class="nos-item">Pago contraentrega disponible</div>
+        <div class="nos-item">Atenci&oacute;n personalizada por WhatsApp</div>
+      </div>
+    </div>
+    <div class="nos-r" id="nos-r"><div class="nos-ov"></div></div>
+  </div>
+</div>
+
+<section id="agente">
+  <div class="ag">
+    <div class="ai-showcase">
+      <div class="ai-copy">
+        <div class="eyebrow reveal">AI concierge de moda</div>
+        <h2 class="sh reveal reveal-d1">No es un chat. Es una <em>asesora virtual</em>.</h2>
+        <p class="reveal reveal-d2">Caneva AI ahora se abre como un widget premium, recomienda prendas por ocasión, presupuesto y talla, muestra tarjetas del catálogo y lleva la conversación directo a WhatsApp sin hacer que la página crezca hacia abajo.</p>
+        <div class="ai-actions reveal reveal-d3">
+          <button class="btn-p" id="aiHeroBtn" type="button"><span>Probar Caneva AI</span></button>
+          <a class="btn-o" href="#catalogo">Ver catálogo</a>
+        </div>
+        <div class="ai-mini reveal reveal-d3">
+          <div><b>Stylist</b><span>Looks por ocasión, clima y presupuesto</span></div>
+          <div><b>Catálogo</b><span>Conectada a prendas, precios y tallas</span></div>
+          <div><b>Venta</b><span>Cierre elegante por WhatsApp</span></div>
+        </div>
+        <div class="qrow reveal reveal-d3" id="qrow"></div>
+      </div>
+
+      <div class="ai-preview reveal reveal-d2" aria-hidden="true">
+        <div class="ai-glow-ring"></div>
+        <div class="ai-phone">
+          <div class="ai-phone-head">
+            <div class="ai-brand">
+              <div class="ai-avatar">C</div>
+              <div><strong>Caneva AI</strong><small>online boutique</small></div>
+            </div>
+            <div class="ai-badge">LIVE</div>
+          </div>
+          <div class="ai-demo-body">
+            <div class="ai-demo-msg">
+              <div class="ai-avatar">C</div>
+              <div class="ai-demo-bub">Dime tu plan y te armo un look con prendas reales de <em>Caneva</em>.</div>
+            </div>
+            <div class="ai-demo-msg">
+              <div class="ai-demo-bub">Tengo $150.000 para salir de noche.</div>
+            </div>
+            <div class="ai-demo-msg">
+              <div class="ai-avatar">C</div>
+              <div class="ai-demo-bub">Te mostraría 3 opciones: una base elegante, una más atrevida y una cómoda para Barranquilla.</div>
+            </div>
+            <div class="ai-demo-row">
+              <div class="ai-demo-card"><div class="ai-demo-img">C</div><div class="ai-demo-info"><b>Look noche</b><span>desde $85.000</span></div></div>
+              <div class="ai-demo-card"><div class="ai-demo-img">A</div><div class="ai-demo-info"><b>Casual chic</b><span>shorts + top</span></div></div>
+              <div class="ai-demo-card"><div class="ai-demo-img">I</div><div class="ai-demo-info"><b>Jeans fit</b><span>tallas 6-16</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ai-dock" id="aiDock">
+    <div class="ai-tease" id="aiTease"><strong>Caneva AI:</strong> te puedo armar un look completo según tu ocasión, talla y presupuesto.</div>
+    <button class="ai-orb" id="aiOrb" type="button" aria-label="Abrir Caneva AI">
+      <span class="ai-orb-mark">C</span><span class="ai-orb-dot"></span>
+    </button>
+    <div class="ai-panel" role="dialog" aria-label="Caneva AI">
+      <div class="ai-panel-head">
+        <div class="ai-brand">
+          <div class="ai-avatar">C</div>
+          <div><strong>Caneva AI</strong><small>asesora online</small></div>
+        </div>
+        <button class="ai-close" id="aiClose" type="button" aria-label="Cerrar">×</button>
+      </div>
+      <div class="ai-panel-sub">
+        <p>Cuéntame ocasión, talla, color o presupuesto. Te respondo con opciones reales del catálogo.</p>
+        <div class="ai-chips" id="qchips"></div>
+      </div>
+      <div class="cmsgs" id="cmsgs"></div>
+      <div class="cbar">
+        <input class="cinput" id="cinput" type="text" placeholder="Ej: quiero un look para salir de noche">
+        <button class="csend" id="csend" type="button">Enviar</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer id="contacto">
+  <div class="fcta reveal">
+    <h2 class="fcta-h">&iquest;Lista para <em>renovar</em><br>tu armario?</h2>
+    <a class="btn-p" href="https://wa.me/573057637089?text=Hola%20Caneva!%20Quiero%20hacer%20un%20pedido" target="_blank"><span>Hacer mi pedido</span></a>
+  </div>
+  <div class="fi-grid">
+    <div>
+      <span class="flogo">CANEVA</span>
+      <p class="fdesc">Moda femenina en Barranquilla, Colombia. Prendas seleccionadas con estilo, calidad y amor por la mujer colombiana.</p>
+    </div>
+    <div>
+      <div class="ftit">Contacto</div>
+      <div class="fls">
+        <a href="https://wa.me/573057637089" target="_blank">+57 305 763 7089</a>
+        <a href="mailto:canevamayra@gmail.com">canevamayra@gmail.com</a>
+        <a href="https://instagram.com/caneva.col" target="_blank">@Caneva.col</a>
+      </div>
+    </div>
+    <div>
+      <div class="ftit">Pagos y Env&iacute;os</div>
+      <div class="fls">
+        <a href="#">Efectivo contraentrega</a>
+        <a href="#">Bancolombia &middot; 0831271463</a>
+        <a href="#">Barranquilla &middot; Soledad</a>
+        <a href="#">Env&iacute;os nacionales</a>
+      </div>
+    </div>
+  </div>
+  <div class="fbot">
+    <div class="fcopy">&copy; 2025 Caneva &mdash; Todos los derechos reservados</div>
+    <a class="fwa" href="https://wa.me/573057637089" target="_blank"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg> WhatsApp</a>
+  </div>
+</footer>
+
 <script>
-const API_BASE = "https://caneva-ai.canevacol.workers.dev";
-let products = [];
+var API_BASE = "https://caneva-ai.canevacol.workers.dev";
+var P_FALLBACK = JSON.parse(document.getElementById('pdata').textContent);
+var P = P_FALLBACK.slice();
+var GK = ""; // No usar API key en el HTML. Gemini vive seguro en Cloudflare Worker.
 
-function cleanMoney(v){
-  if(v==null)return "";
-  let s=String(v).trim();
-  if(typeof v==="number") return "$"+Math.round(v).toLocaleString("es-CO");
-  let digits=s.replace(/[^\d]/g,"");
-  if(!digits)return s;
-  if(s.includes(",") && digits.length>2) digits=digits.slice(0,-2);
-  return "$"+Number(digits).toLocaleString("es-CO");
+function normCat(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
+function isCatalogProduct(p){
+  var c=normCat(p&&p.categoria);
+  return c.indexOf('domicilio')<0 && c.indexOf('domicl')<0 && c.indexOf('mayorista')<0 && c.indexOf('others')<0;
 }
-function extractTallas(desc, variants){
-  for(const raw of [desc, variants]){
-    if(!raw)continue;
-    let t=String(raw).replace(/DESCRIPTION/ig,"").trim();
-    let lines=t.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
-    for(let line of lines){
-      if(/Learn more|\+57|Barranquilla|Colombia|JEANS|FALDAS|DOMIC/i.test(line))continue;
-      if(line.length>70)continue;
-      line=line.replace(/^(Tallas|Talla|Sizes?)\s*[:\-]?\s*/i,"").trim();
-      return line;
-    }
-  }
-  return "";
-}
-function productFromRow(row){
-  const p={
-    categoria:String(row["Categoría"]||row["Categoria"]||row["Category"]||"").trim(),
-    nombre:String(row["Nombre"]||row["Name"]||"").trim(),
-    precio:cleanMoney(row["Precio"]||row["Price"]||""),
-    descripcion:String(row["Descripción"]||row["Descripcion"]||row["Description"]||"").replace(/DESCRIPTION/ig,"").trim(),
-    tallas:extractTallas(row["Descripción"]||row["Descripcion"]||row["Description"], row["Variantes / Tallas"]||row["Variantes"]||row["Tallas"]),
-    stock:String(row["Stock"]||"").trim(),
-    imagen:String(row["Imagen Principal"]||row["Imagen"]||row["Image"]||"").trim(),
-    imagenesExtra:String(row["Imágenes Extra"]||row["Imagenes Extra"]||"").trim(),
-    url:String(row["URL Producto"]||row["URL"]||row["Url"]||"").trim()
+function catalogProducts(){return P.filter(isCatalogProduct);}
+function normalizeProductForSite(p){
+  return {
+    categoria:String(p.categoria||'').trim(),
+    nombre:String(p.nombre||'').trim(),
+    precio:String(p.precio||'').trim(),
+    descripcion:String(p.descripcion||'').trim(),
+    tallas:String(p.tallas||p.variantes||'').trim(),
+    stock:String(p.stock||'').trim(),
+    imagen:String(p.imagen||p.imagenPrincipal||'').trim(),
+    imagenesExtra:String(p.imagenesExtra||'').trim(),
+    url:String(p.url||p.urlProducto||'').trim()
   };
-  return p.nombre && p.categoria ? p : null;
 }
-function renderPreview(){
-  document.getElementById("kCount").textContent=products.length;
-  document.getElementById("kImages").textContent=products.filter(p=>/^https?:\/\//.test(p.imagen)).length;
-  document.getElementById("kCats").textContent=new Set(products.map(p=>p.categoria)).size;
-  document.getElementById("tbody").innerHTML=products.slice(0,120).map(p=>`<tr>
-    <td>${escapeHtml(p.categoria)}</td><td>${escapeHtml(p.nombre)}</td><td>${escapeHtml(p.precio)}</td><td>${escapeHtml(p.tallas)}</td>
-    <td class="${p.imagen?'ok':'bad'}">${p.imagen?'sí':'sin imagen'}</td><td>${p.url?'<a style="color:#c9a96e" href="'+escapeAttr(p.url)+'" target="_blank">abrir</a>':'—'}</td>
-  </tr>`).join("");
-  document.getElementById("tableWrap").style.display="block";
-  document.getElementById("publishBtn").disabled=!products.length;
+function renderFilters(){
+  var fbar=document.getElementById('fbar'); if(!fbar)return;
+  var counts={};
+  catalogProducts().forEach(function(p){counts[p.categoria]=(counts[p.categoria]||0)+1;});
+  var cats=Object.keys(counts).sort(function(a,b){return counts[b]-counts[a] || a.localeCompare(b);});
+  var label=function(c){return c.replace('Jeans / pants','Jeans · Pants').replace('Short / faldas','Shorts · Faldas').replace('Camisas / crop tops','Camisas · Crop Tops').replace('Vestidos / sets','Vestidos · Sets');};
+  var total=catalogProducts().length;
+  fbar.innerHTML='<button class="fb '+(acat==='Todos'?'on':'')+'" data-c="Todos">Todos ('+total+')</button>'+
+    cats.map(function(c){return '<button class="fb '+(acat===c?'on':'')+'" data-c="'+escAttr(c)+'">'+label(c)+' ('+counts[c]+')</button>';}).join('');
 }
-function escapeHtml(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));}
-function escapeAttr(s){return String(s||"").replace(/"/g,"&quot;");}
-function setStatus(msg, cls){document.getElementById("status").innerHTML='<p class="'+(cls||'')+'">'+msg+'</p>';}
-function log(obj){document.getElementById("log").textContent=typeof obj==="string"?obj:JSON.stringify(obj,null,2);}
-
-document.getElementById("previewBtn").addEventListener("click", async ()=>{
-  const file=document.getElementById("file").files[0];
-  if(!file){setStatus("Selecciona un Excel primero.","bad");return;}
-  const buf=await file.arrayBuffer();
-  const wb=XLSX.read(buf,{type:"array"});
-  const sheetName=wb.SheetNames.includes("Catálogo")?"Catálogo":wb.SheetNames[0];
-  const rows=XLSX.utils.sheet_to_json(wb.Sheets[sheetName],{range:1,defval:""});
-  products=rows.map(productFromRow).filter(Boolean);
-  renderPreview();
-  setStatus("Excel leído correctamente. Revisa la vista previa y luego publica.","ok");
-  log({sheetName, productos:products.length, categorias:[...new Set(products.map(p=>p.categoria))]});
-});
-
-document.getElementById("publishBtn").addEventListener("click", async ()=>{
-  const token=document.getElementById("token").value.trim();
-  if(!token){setStatus("Falta el token privado ADMIN_TOKEN.","bad");return;}
-  if(!products.length){setStatus("Primero previsualiza un Excel válido.","bad");return;}
-  setStatus("Publicando catálogo en Cloudflare KV...","muted");
-  document.getElementById("publishBtn").disabled=true;
+function setProductCount(){
+  var sn=document.getElementById('sn'); if(sn)sn.textContent=catalogProducts().length;
+}
+async function loadRemoteCatalog(){
   try{
-    const res=await fetch(API_BASE+"/admin/catalog",{
-      method:"POST",
-      headers:{"Content-Type":"application/json","x-admin-token":token},
-      body:JSON.stringify({products})
-    });
-    const data=await res.json();
-    log(data);
-    if(!res.ok || !data.ok) throw new Error(data.error || "No se pudo publicar");
-    setStatus("Catálogo publicado. Abre el sitio y presiona Ctrl+F5 para ver cambios.","ok");
+    var res=await fetch(API_BASE + "/catalog", {cache:"no-store"});
+    if(!res.ok)return;
+    var data=await res.json();
+    var list=Array.isArray(data.products)?data.products:[];
+    if(list.length){
+      P=list.map(normalizeProductForSite);
+      renderFilters();
+      render();
+      setProductCount();
+    }
   }catch(e){
-    setStatus("Error: "+e.message,"bad");
-  }finally{
-    document.getElementById("publishBtn").disabled=false;
+    console.warn("Caneva catálogo remoto no disponible, usando fallback local.", e);
   }
+}
+
+
+// CANEVA PRODUCT EXPERIENCE — evita salir al Kyte y abre detalle premium dentro del sitio
+var WA_PHONE='573057637089';
+var currentProductIndex=-1;
+function productTone(p){
+  var n=norm(p.nombre), c=norm(p.categoria);
+  if(c.indexOf('jeans')>=0||n.indexOf('flare')>=0||n.indexOf('cargo')>=0)return 'Ideal para construir un look con presencia: combínalo con un top limpio, camisa globo o body para elevarlo sin perder comodidad.';
+  if(c.indexOf('short')>=0||n.indexOf('falda')>=0)return 'Tiene vibra fresca y muy Barranquilla: úsalo con camisa, crop top o body según quieras verte casual, chic o más de noche.';
+  if(c.indexOf('camisas')>=0||n.indexOf('top')>=0||n.indexOf('body')>=0||n.indexOf('corset')>=0)return 'Funciona como pieza protagonista del outfit: va perfecto con jeans flare, cargo o falda para marcar estilo sin sobrecargar.';
+  if(c.indexOf('vestidos')>=0||n.indexOf('vestido')>=0||n.indexOf('set')>=0)return 'Es de esas prendas que resuelven el look completo: perfecta para salir lista, femenina y con impacto.';
+  return 'Prenda seleccionada de Caneva para armar un look femenino, actual y fácil de comprar por WhatsApp.';
+}
+function waLinkFor(p){
+  return 'https://wa.me/'+WA_PHONE+'?text='+encodeURIComponent('Hola Caneva ✨ Vi en la página este producto: '+p.nombre+' - '+p.precio+(p.tallas?' | Tallas: '+p.tallas:'')+'. ¿Me confirmas disponibilidad?');
+}
+function productTags(p){
+  var tags=['Caneva Boutique'];
+  if(p.tallas)tags.push('Tallas '+p.tallas);
+  tags.push(p.categoria.replace(' / ',' · '));
+  if(priceNum(p.precio)<=80000)tags.push('Menos de $80k');
+  if(priceNum(p.precio)>=120000)tags.push('Premium look');
+  return tags.slice(0,5);
+}
+function productRelatives(p,idx){
+  var rel=P.map(function(x,i){return {p:x,i:i,score:(x.categoria===p.categoria?20:0)+(x.imagen?4:0)-Math.abs(priceNum(x.precio)-priceNum(p.precio))/100000};})
+    .filter(function(x){return x.i!==idx&&x.p.imagen&&x.p.imagen.indexOf('http')===0&&x.score>0;})
+    .sort(function(a,b){return b.score-a.score;});
+  return rel.slice(0,6);
+}
+function openProductModal(idx){
+  var p=P[idx]; if(!p)return;
+  currentProductIndex=idx;
+  var modal=document.getElementById('pmodal');
+  var img=p.imagen&&p.imagen.indexOf('http')===0?'<img src="'+p.imagen+'" alt="'+escAttr(p.nombre)+'">':'<div class="pm-photo-fallback">C</div>';
+  document.getElementById('pmMedia').innerHTML='<div class="pm-float-badge">Vista boutique</div>'+img;
+  document.getElementById('pmCat').textContent=p.categoria;
+  document.getElementById('pmName').textContent=p.nombre;
+  document.getElementById('pmPrice').textContent=p.precio;
+  document.getElementById('pmDesc').textContent=productTone(p);
+  document.getElementById('pmTags').innerHTML=productTags(p).map(function(t,i){return '<span class="pm-tag '+(i===0?'gold':'')+'">'+escHtml(t)+'</span>';}).join('');
+  document.getElementById('pmWhats').href=waLinkFor(p);
+  document.getElementById('pmNote').innerHTML='<strong>Tip Caneva AI:</strong> si me dices tu talla, ocasión y presupuesto, te armo una combinación completa con esta prenda y opciones del catálogo.';
+  document.getElementById('pmRelated').innerHTML=productRelatives(p,idx).map(function(x){
+    var r=x.p, ih=r.imagen?'<img src="'+r.imagen+'" alt="'+escAttr(r.nombre)+'" loading="lazy">':'C';
+    return '<div class="pm-rel" data-pid="'+x.i+'"><div class="pm-rel-img">'+ih+'</div><div class="pm-rel-info"><div class="pm-rel-name">'+escHtml(r.nombre)+'</div><div class="pm-rel-price">'+escHtml(r.precio)+'</div></div></div>';
+  }).join('');
+  document.querySelectorAll('#pmRelated .pm-rel').forEach(function(el){el.addEventListener('click',function(){openProductModal(parseInt(el.dataset.pid,10));});});
+  modal.classList.add('open');modal.setAttribute('aria-hidden','false');document.body.classList.add('product-open');
+  productSparkles();
+  if(window.rebindCursor)window.rebindCursor();
+}
+function closeProductModal(){
+  var modal=document.getElementById('pmodal');
+  modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.classList.remove('product-open');
+}
+function productSparkles(){
+  for(var i=0;i<14;i++){
+    var s=document.createElement('i');s.className='ai-spark pm';
+    var cx=window.innerWidth*.5, cy=window.innerHeight*.5, a=(Math.PI*2/14)*i, d=80+Math.random()*130;
+    s.style.left=cx+'px';s.style.top=cy+'px';
+    s.style.setProperty('--x',Math.cos(a)*d+'px');s.style.setProperty('--y',Math.sin(a)*d+'px');
+    document.body.appendChild(s);setTimeout(function(x){return function(){x.remove();};}(s),900);
+  }
+}
+function bindInternalProductLinks(scope){
+  (scope||document).querySelectorAll('a[href]').forEach(function(a){
+    var href=a.getAttribute('href')||'';
+    var idx=P.findIndex(function(p){return p.url===href;});
+    if(idx>=0){a.addEventListener('click',function(e){e.preventDefault();openProductModal(idx);});}
+  });
+}
+document.addEventListener('click',function(e){
+  if(e.target&&e.target.id==='pmodal')closeProductModal();
 });
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeProductModal();closeAI&&closeAI();}});
+setTimeout(function(){
+  var c=document.getElementById('pmClose'); if(c)c.addEventListener('click',closeProductModal);
+  var a=document.getElementById('pmAsk'); if(a)a.addEventListener('click',function(){
+    var p=P[currentProductIndex]; if(!p)return;
+    closeProductModal();openAI(true,true);
+    var inp=document.getElementById('cinput');inp.value='Estoy viendo '+p.nombre+' de '+p.precio+'. ¿Cómo lo combino y qué talla me recomiendas?';
+    sendChat();
+  });
+},0);
+
+
+// CURSOR
+(function(){
+  var cu=document.getElementById('cur'),cr=document.getElementById('curR');
+  if(!cu)return;
+  document.addEventListener('mousemove',function(e){
+    cu.style.left=e.clientX+'px';cu.style.top=e.clientY+'px';
+    cr.style.left=e.clientX+'px';cr.style.top=e.clientY+'px';
+  });
+  function bind(){document.querySelectorAll('a,button,.pc,.rc,.lb-item,.pm-rel').forEach(function(el){el.onmouseenter=function(){cr.classList.add('h');};el.onmouseleave=function(){cr.classList.remove('h');};});}
+  bind();window.rebindCursor=bind;
+})();
+
+// MOBILE MENU
+var mo=false,bg=document.getElementById('burg'),mm=document.getElementById('mm');
+bg.addEventListener('click',function(){mo=!mo;bg.classList.toggle('o',mo);mm.classList.toggle('o',mo);document.body.style.overflow=mo?'hidden':'';});
+mm.querySelectorAll('a').forEach(function(a){a.addEventListener('click',function(){mo=false;bg.classList.remove('o');mm.classList.remove('o');document.body.style.overflow='';});});
+
+// NAV SCROLL
+window.addEventListener('scroll',function(){document.getElementById('nav').classList.toggle('s',window.scrollY>70);},{passive:true});
+
+// MARQUEE
+(function(){
+  var it=['Nueva Colecci\u00F3n','Env\u00EDos Nacionales','Moda Femenina','Contraentrega','Barranquilla','Calidad Premium','Domicilios BQ'];
+  var s=it.map(function(i){return'<span>'+i+'</span><span class="dot">\u2756</span>';}).join('');
+  document.getElementById('mqt').innerHTML=s+s+s+s;
+})();
+
+// SCROLL REVEAL
+(function(){
+  var obs=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');obs.unobserve(e.target);}});},{threshold:.12});
+  document.querySelectorAll('.reveal').forEach(function(el){obs.observe(el);});
+})();
+
+// COUNTER
+(function(){
+  var el=document.getElementById('sn'),done=false;
+  new IntersectionObserver(function(en){
+    if(en[0].isIntersecting&&!done){done=true;var s=null;function st(ts){if(!s)s=ts;var p=Math.min((ts-s)/1500,1);el.textContent=Math.round(p*catalogProducts().length);if(p<1)requestAnimationFrame(st);}requestAnimationFrame(st);}
+  }).observe(el);
+})();
+
+// NOSOTROS IMG
+(function(){
+  var p=P.find(function(x){return x.categoria==='Camisas / crop tops'&&x.imagen&&x.imagen.indexOf('http')===0;})||P.find(function(x){return x.imagen&&x.imagen.indexOf('http')===0;});
+  if(p){var img=document.createElement('img');img.src=p.imagen;img.alt='Caneva';img.loading='lazy';var el=document.getElementById('nos-r');el.insertBefore(img,el.firstChild);}
+})();
+
+// CATALOG
+var acat='Todos',sq='';
+function render(){
+  var f=catalogProducts().filter(function(p){return(acat==='Todos'||p.categoria===acat)&&(!sq||p.nombre.toLowerCase().indexOf(sq)>=0);});
+  document.getElementById('cnt').textContent=f.length+' productos';
+  var g=document.getElementById('pgrid');
+  if(!f.length){g.innerHTML='<div class="nor">No se encontraron productos</div>';return;}
+  g.innerHTML=f.map(function(p){
+    var ih=p.imagen&&p.imagen.indexOf('http')===0?'<img src="'+p.imagen+'" alt="'+p.nombre.replace(/"/g,'&quot;')+'" loading="lazy">':'<div class="pph">C</div>';
+    var th=p.tallas?'<div class="ptallas">Tallas: '+p.tallas+'</div>':'';
+    var pid=P.indexOf(p);
+    return '<div class="pc" data-pid="'+pid+'"><div class="pimg">'+ih+'<div class="pbadge">'+p.categoria+'</div><div class="pov"></div><div class="pact">Ver en Caneva ✨</div></div><div class="pinfo"><div class="pname">'+p.nombre+'</div><div class="pprice">'+p.precio+'</div>'+th+'</div></div>';
+  }).join('');
+  var cards=document.querySelectorAll('.pc');
+  cards.forEach(function(c,i){c.addEventListener('click',function(){openProductModal(parseInt(c.dataset.pid,10));});setTimeout(function(){c.classList.add('show');},Math.min(i*25,400));});
+  if(window.rebindCursor)window.rebindCursor();
+}
+document.getElementById('fbar').addEventListener('click',function(e){var b=e.target.closest('.fb');if(!b)return;document.querySelectorAll('.fb').forEach(function(x){x.classList.remove('on');});b.classList.add('on');acat=b.dataset.c;render();});
+document.getElementById('srch').addEventListener('input',function(e){sq=e.target.value.toLowerCase().trim();render();});
+renderFilters();render();loadRemoteCatalog();
+
+// LOOKBOOK clicks
+document.querySelectorAll('.lb-item').forEach(function(el){el.addEventListener('click',function(){document.getElementById('catalogo').scrollIntoView({behavior:'smooth'});});});
+
+// QUICK BTNS + AI WIDGET
+var qq=[
+  ['Quiero un look para salir de noche en Barranquilla con presupuesto de $150.000','Look noche'],
+  ['Muéstrame jeans disponibles en talla 10','Jeans talla 10'],
+  ['Qué prendas tienes por menos de $80.000?','Menos de $80k'],
+  ['Arma un outfit casual chic con shorts o falda','Casual chic'],
+  ['Qué crop tops o camisas recomiendas?','Tops'],
+  ['Cómo compro por WhatsApp y cuánto vale el domicilio?','Comprar']
+];
+
+function putQuick(id,extraClass){
+  var el=document.getElementById(id); if(!el)return;
+  el.innerHTML=qq.map(function(b){return'<button class="'+extraClass+'" type="button" data-q="'+escAttr(b[0])+'">'+b[1]+'</button>';}).join('');
+  el.addEventListener('click',function(e){
+    var b=e.target.closest('button[data-q]'); if(!b)return;
+    openAI(true);
+    document.getElementById('cinput').value=b.dataset.q;
+    sendChat();
+  });
+}
+function escAttr(s){return String(s).replace(/"/g,'&quot;');}
+putQuick('qrow','qb');
+putQuick('qchips','ai-chip');
+
+// CANEVA AI KNOWLEDGE BASE
+var KB='Eres Caneva AI, asesora virtual premium de CANEVA, tienda de moda femenina en Barranquilla, Colombia. Tu tono es elegante, cálido, directo, vendedor y con magia de boutique. Siempre respondes en español.\n\n'+
+'OBJETIVO: No seas un chat genérico. Actúa como stylist: pregunta ocasión, talla, presupuesto, color o estilo cuando falte información. Recomienda prendas reales del catálogo, arma combinaciones y guía al pedido por WhatsApp.\n\n'+
+'TIENDA: WhatsApp +573057637089 | Instagram @Caneva.col | Email canevamayra@gmail.com\n'+
+'ENTREGA: 1 día hábil en Barranquilla | Envíos nacionales\n'+
+'DOMICILIOS: Barranquilla $6.000 | Otros sectores $8.000-$9.000 | Soledad $7.000\n'+
+'PAGOS: Efectivo contraentrega | Bancolombia Ahorros 0831271463\n'+
+'TALLAS: 6=XS, 8=S, 10=M, 12=L, 14=XL, 16=XXL\n\n'+
+'CATÁLOGO REAL ('+P.length+' productos):\n'+
+P.map(function(p){return '- '+p.nombre+' | '+p.precio+' | '+p.categoria+(p.tallas?' | Tallas: '+p.tallas:'')+' | '+p.url;}).join('\n')+
+'\n\nREGLAS DE RESPUESTA:\n'+
+'1) Máximo 6 líneas salvo que estés armando un look.\n'+
+'2) Cuando recomiendes productos, usa el nombre exacto del catálogo para que aparezcan tarjetas.\n'+
+'3) Pon precios en <strong>negrita</strong>.\n'+
+'4) Usa links así: <a href="URL">nombre de la prenda</a>. En el sitio se abrirán como vista boutique interna.\n'+
+'5) Cierra con una acción suave: escribir a WhatsApp, pedir talla, o ver opciones.\n'+
+'6) No inventes disponibilidad si no hay talla; di “confirmo disponibilidad por WhatsApp”.';
+
+var cmsgs=document.getElementById('cmsgs');
+var aiDock=document.getElementById('aiDock');
+var aiOrb=document.getElementById('aiOrb');
+var aiClose=document.getElementById('aiClose');
+var aiTease=document.getElementById('aiTease');
+var hasWelcomed=false;
+var sending=false;
+
+function escHtml(t){return String(t).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+function rmd(t,allowHtml){
+  var s=allowHtml?String(t):escHtml(t);
+  s=s.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,'<a href="$2" target="_blank">$1</a>');
+  s=s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/\n/g,'<br>');
+  return s;
+}
+function norm(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
+function priceNum(p){var n=String(p||'').replace(/[^\d]/g,'');return n?parseInt(n,10):999999999;}
+function uniqueByName(arr){
+  var seen={}; return arr.filter(function(p){var k=norm(p.nombre); if(seen[k])return false; seen[k]=true; return true;});
+}
+function findMatches(txt){
+  var q=norm(txt), scored=[];
+  var budgetMatch=q.match(/(?:\$|menos de|hasta|maximo|max|presupuesto de)\s*([\d\.\,]+)/);
+  var budget=budgetMatch?parseInt(budgetMatch[1].replace(/[^\d]/g,''),10):null;
+  P.forEach(function(p){
+    var score=0,n=norm(p.nombre),c=norm(p.categoria),t=norm(p.tallas);
+    if(q.indexOf(n)>=0)score+=90;
+    n.split(/\s+/).forEach(function(w){if(w.length>3&&q.indexOf(w)>=0)score+=8;});
+    if(q.indexOf('jean')>=0 && c.indexOf('jeans')>=0)score+=35;
+    if((q.indexOf('pantalon')>=0||q.indexOf('pants')>=0||q.indexOf('bota')>=0||q.indexOf('flare')>=0) && c.indexOf('jeans')>=0)score+=26;
+    if((q.indexOf('short')>=0||q.indexOf('falda')>=0||q.indexOf('bermuda')>=0) && c.indexOf('short')>=0)score+=35;
+    if((q.indexOf('camisa')>=0||q.indexOf('crop')>=0||q.indexOf('top')>=0||q.indexOf('body')>=0||q.indexOf('corset')>=0) && c.indexOf('camisas')>=0)score+=35;
+    if((q.indexOf('vestido')>=0||q.indexOf('set')>=0||q.indexOf('enterizo')>=0) && (c.indexOf('vestidos')>=0||n.indexOf('vestido')>=0||n.indexOf('set')>=0))score+=35;
+    if(q.indexOf('deport')>=0 && (c.indexOf('deportivo')>=0||n.indexOf('deport')>=0))score+=35;
+    if(q.indexOf('noche')>=0 && (n.indexOf('print')>=0||n.indexOf('lazo')>=0||n.indexOf('corset')>=0||n.indexOf('flare')>=0))score+=12;
+    if(q.indexOf('casual')>=0 && (c.indexOf('jeans')>=0||c.indexOf('short')>=0||n.indexOf('basico')>=0))score+=10;
+    var talla=q.match(/talla\s*(\d+)/); if(talla&&t.indexOf(talla[1])>=0)score+=22;
+    if(budget && priceNum(p.precio)<=budget)score+=18;
+    if(score>0 && p.imagen && p.imagen.indexOf('http')===0)scored.push({p:p,score:score});
+  });
+  scored.sort(function(a,b){return b.score-a.score || priceNum(a.p.precio)-priceNum(b.p.precio);});
+  return uniqueByName(scored.map(function(x){return x.p;})).slice(0,6);
+}
+function exP(txt){return findMatches(txt);}
+
+function cardHtml(products){
+  if(!products.length)return '';
+  return '<div class="rcards">'+products.map(function(p){
+    var ih=p.imagen&&p.imagen.indexOf('http')===0?'<img src="'+p.imagen+'" alt="'+escAttr(p.nombre)+'" loading="lazy">':'<div class="rc-ph">C</div>';
+    var pid=P.indexOf(p);
+    return '<div class="rc" data-pid="'+pid+'"><div class="rc-img">'+ih+'</div><div class="rc-info"><div class="rc-name">'+p.nombre+'</div><div class="rc-price">'+p.precio+'</div>'+(p.tallas?'<div class="rc-tallas">'+p.tallas+'</div>':'')+'</div></div>';
+  }).join('')+'</div>';
+}
+function addMsg(t,r){
+  var d=document.createElement('div');d.className='cm '+r;
+  var ps=r==='a'?exP(t):[];
+  d.innerHTML='<div class="cav '+r+'">'+(r==='a'?'C':'Tú')+'</div><div class="cbub '+r+'">'+rmd(t,r==='a')+'</div>'+cardHtml(ps);
+  cmsgs.appendChild(d);
+  d.querySelectorAll('.rc').forEach(function(c){c.addEventListener('click',function(){openProductModal(parseInt(c.dataset.pid,10));});});
+  bindInternalProductLinks(d);
+  if(window.rebindCursor)window.rebindCursor();
+  cmsgs.scrollTop=cmsgs.scrollHeight;
+}
+function addTyp(){
+  var d=document.createElement('div');d.className='cm a';d.id='ty';
+  d.innerHTML='<div class="cav a">C</div><div class="cbub a"><div class="typ"><span></span><span></span><span></span></div></div>';
+  cmsgs.appendChild(d);cmsgs.scrollTop=cmsgs.scrollHeight;
+}
+function rmTyp(){var t=document.getElementById('ty');if(t)t.remove();}
+
+function fallbackAnswer(msg){
+  var ps=findMatches(msg);
+  if(ps.length){
+    return 'Encontré estas opciones que pueden servirte ✨\n'+ps.slice(0,4).map(function(p){return '• <a href="'+p.url+'" target="_blank">'+p.nombre+'</a> — <strong>'+p.precio+'</strong>'+(p.tallas?' | tallas '+p.tallas:'');}).join('\n')+'\n¿Quieres que te arme una combinación completa o la mandamos a WhatsApp?';
+  }
+  return 'Puedo ayudarte a elegir por ocasión, talla o presupuesto ✨\nEjemplo: “quiero un look para salir de noche en talla 10”.\nTambién puedes escribir directo a <a href="https://wa.me/573057637089" target="_blank">WhatsApp Caneva</a>.';
+}
+
+function shootSparkles(){
+  var rect=aiOrb.getBoundingClientRect(), cx=rect.left+rect.width/2, cy=rect.top+rect.height/2;
+  for(var i=0;i<16;i++){
+    var s=document.createElement('i');s.className='ai-spark';
+    var a=(Math.PI*2/16)*i, d=45+Math.random()*65;
+    s.style.left=cx+'px';s.style.top=cy+'px';
+    s.style.setProperty('--x',Math.cos(a)*d+'px');s.style.setProperty('--y',Math.sin(a)*d+'px');
+    document.body.appendChild(s);setTimeout(function(x){return function(){x.remove();};}(s),900);
+  }
+}
+function welcome(){
+  if(hasWelcomed)return; hasWelcomed=true;
+  setTimeout(function(){addMsg('Hola ✨ Soy <strong>Caneva AI</strong>, tu asesora virtual. Puedo armarte looks por <strong>ocasión</strong>, <strong>talla</strong> y <strong>presupuesto</strong>. ¿Qué plan tienes hoy?','a');},240);
+}
+function openAI(magic){
+  aiDock.classList.add('open');
+  aiTease.classList.remove('show');
+  welcome();
+  if(magic)shootSparkles();
+  setTimeout(function(){var i=document.getElementById('cinput');if(i)i.focus();},260);
+}
+function closeAI(){aiDock.classList.remove('open');}
+
+aiOrb.addEventListener('click',function(){openAI(true);});
+aiClose.addEventListener('click',closeAI);
+var heroBtn=document.getElementById('aiHeroBtn'); if(heroBtn)heroBtn.addEventListener('click',function(){openAI(true);});
+setTimeout(function(){if(!aiDock.classList.contains('open'))aiTease.classList.add('show');},2300);
+setTimeout(function(){aiTease.classList.remove('show');},8000);
+
+async function sendChat(){
+  var inp=document.getElementById('cinput'),msg=inp.value.trim();if(!msg||sending)return;
+  openAI(false);
+  sending=true;inp.value='';addMsg(msg,'u');addTyp();
+  var sendBtn=document.getElementById('csend');sendBtn.disabled=true;sendBtn.textContent='...';
+  try{
+      var res = await fetch(API_BASE + "/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        message: msg
+      })
+    });
+
+    var data = await res.json();
+    rmTyp();
+
+    if (!res.ok || !data.ok) {
+      addMsg(fallbackAnswer(msg), 'a');
+      return;
+    }
+
+    var rep = data.reply || fallbackAnswer(msg);
+    addMsg(rep, 'a');
+  }catch(e){
+    rmTyp();addMsg(fallbackAnswer(msg),'a');
+  }finally{
+    sending=false;sendBtn.disabled=false;sendBtn.textContent='Enviar';
+  }
+}
+document.getElementById('cinput').addEventListener('keydown',function(e){if(e.key==='Enter')sendChat();});
+document.getElementById('csend').addEventListener('click',sendChat);
+
 </script>
 </body>
 </html>
