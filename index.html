@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#050403">
 <title>CANEVA — Moda Femenina Barranquilla</title>
-<!-- Caneva Cloudflare-ready build: catálogo remoto por KV + admin Excel -->
+<!-- Caneva Cloudflare-ready build: catálogo remoto por KV + admin Excel + carrito test -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@200;300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -335,37 +335,68 @@ footer{padding:7rem 4rem 3rem;background:var(--k2);border-top:1px solid var(--bd
 
 /* PRODUCT MODAL — CANEVA LUXURY QUICK VIEW */
 body.product-open{overflow:hidden}
-.pmodal{position:fixed;inset:0;z-index:980;display:grid;place-items:center;padding:28px;background:rgba(5,4,3,.72);backdrop-filter:blur(22px) saturate(1.12);-webkit-backdrop-filter:blur(22px) saturate(1.12);opacity:0;pointer-events:none;transition:opacity .32s cubic-bezier(.16,1,.3,1)}
+.pmodal{position:fixed;inset:0;z-index:980;display:grid;place-items:center;padding:18px;background:rgba(5,4,3,.72);backdrop-filter:blur(22px) saturate(1.12);-webkit-backdrop-filter:blur(22px) saturate(1.12);opacity:0;pointer-events:none;transition:opacity .32s cubic-bezier(.16,1,.3,1)}
 .pmodal.open{opacity:1;pointer-events:all}
 .pmodal::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 22% 16%,rgba(201,169,110,.2),transparent 33%),radial-gradient(circle at 86% 80%,rgba(232,213,170,.1),transparent 28%);pointer-events:none}
-.pm-shell{width:min(1120px,100%);max-height:min(760px,calc(100vh - 56px));display:grid;grid-template-columns:minmax(320px,.9fr) 1.1fr;background:linear-gradient(145deg,rgba(13,11,8,.98),rgba(5,4,3,.98));border:1px solid rgba(201,169,110,.34);box-shadow:0 44px 150px rgba(0,0,0,.72),0 0 0 1px rgba(255,255,255,.025) inset;position:relative;overflow:hidden;transform:translateY(24px) scale(.97);transition:transform .38s cubic-bezier(.16,1,.3,1)}
+.pm-shell{width:min(1220px,calc(100vw - 36px));height:min(820px,calc(100vh - 36px));max-height:calc(100vh - 36px);display:grid;grid-template-columns:minmax(310px,.96fr) 1.04fr;background:linear-gradient(145deg,rgba(13,11,8,.98),rgba(5,4,3,.98));border:1px solid rgba(201,169,110,.34);box-shadow:0 44px 150px rgba(0,0,0,.72),0 0 0 1px rgba(255,255,255,.025) inset;position:relative;overflow:hidden;transform:translateY(24px) scale(.97);transition:transform .38s cubic-bezier(.16,1,.3,1)}
 .pmodal.open .pm-shell{transform:translateY(0) scale(1)}
 .pm-shell::before{content:'';position:absolute;inset:-1px;background:linear-gradient(125deg,rgba(201,169,110,.42),transparent 20%,transparent 72%,rgba(232,213,170,.18));opacity:.58;pointer-events:none}
-.pm-media{position:relative;background:var(--k3);min-height:560px;overflow:hidden}
-.pm-media img{width:100%;height:100%;object-fit:cover;display:block;filter:brightness(.92);transform:scale(1.02);transition:transform 1.2s cubic-bezier(.16,1,.3,1),filter .8s}
+.pm-media{position:relative;background:#050403;min-height:0;height:100%;overflow:hidden;display:grid;place-items:center}
+.pm-media img{width:100%;height:100%;object-fit:contain;display:block;filter:brightness(.94);transform:scale(1);transition:transform 1.2s cubic-bezier(.16,1,.3,1),filter .8s}
 .pmodal.open .pm-media img{transform:scale(1);filter:brightness(1)}
 .pm-media::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(5,4,3,.62),transparent 42%),linear-gradient(90deg,transparent,rgba(201,169,110,.08),transparent);pointer-events:none}
+
+.pm-media.has-zoom{cursor:zoom-in}
+.pm-zoom-btn{position:absolute;right:1.05rem;bottom:1.05rem;z-index:5;display:inline-flex;align-items:center;gap:.55rem;border:1px solid rgba(201,169,110,.46);background:rgba(5,4,3,.62);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:var(--g);padding:.68rem .9rem;cursor:pointer;font-family:'Inter',sans-serif;font-size:.52rem;letter-spacing:.18em;text-transform:uppercase;transition:all .28s cubic-bezier(.16,1,.3,1);box-shadow:0 18px 52px rgba(0,0,0,.36)}
+.pm-zoom-btn svg{width:15px;height:15px;flex:0 0 auto}
+.pm-zoom-btn:hover{background:var(--g);color:#000;border-color:var(--g);transform:translateY(-2px)}
+.photo-zoom-open{overflow:hidden}
+.photo-zoom{position:fixed;inset:0;z-index:1200;display:grid;grid-template-rows:auto 1fr;background:rgba(5,4,3,.94);backdrop-filter:blur(24px) saturate(1.1);-webkit-backdrop-filter:blur(24px) saturate(1.1);opacity:0;pointer-events:none;transition:opacity .28s cubic-bezier(.16,1,.3,1)}
+.photo-zoom.open{opacity:1;pointer-events:all}
+.photo-zoom::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 18% 12%,rgba(201,169,110,.18),transparent 32%),radial-gradient(circle at 85% 75%,rgba(232,213,170,.08),transparent 30%);pointer-events:none}
+.pz-head{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1.05rem 1.25rem;border-bottom:1px solid var(--bdr);background:rgba(5,4,3,.62)}
+.pz-title small{display:block;color:var(--g);font-size:.48rem;letter-spacing:.42em;text-transform:uppercase;margin-bottom:.26rem}
+.pz-title strong{display:block;font-family:'Cormorant Garamond',serif;font-size:1.7rem;font-weight:300;color:var(--w);line-height:1.05}
+.pz-hint{font-size:.52rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(250,249,246,.34);white-space:nowrap}
+.pz-close{width:42px;height:42px;border:1px solid rgba(201,169,110,.35);background:rgba(5,4,3,.5);color:var(--g);font-size:1.4rem;cursor:pointer;transition:.25s;flex-shrink:0}
+.pz-close:hover{background:rgba(201,169,110,.1);border-color:var(--g);transform:rotate(90deg)}
+.pz-stage{position:relative;z-index:1;display:grid;place-items:center;overflow:hidden;padding:1.2rem;cursor:zoom-in}
+.pz-stage img{max-width:100%;max-height:calc(100vh - 106px);object-fit:contain;box-shadow:0 34px 110px rgba(0,0,0,.72);border:1px solid rgba(201,169,110,.16);transition:transform .24s ease,transform-origin .06s linear;user-select:none;-webkit-user-drag:none}
+.pz-stage.zoomed{cursor:zoom-out}
+.pz-stage.zoomed img{transform:scale(1.95)}
+@media(max-width:720px){.pm-zoom-btn span{display:none}.pm-zoom-btn{padding:.7rem}.pz-head{align-items:flex-start}.pz-hint{display:none}.pz-title strong{font-size:1.35rem}.pz-stage{padding:.65rem}.pz-stage img{max-height:calc(100vh - 86px)}}
 .pm-photo-fallback{height:100%;display:grid;place-items:center;font-family:'Cormorant Garamond',serif;font-size:8rem;color:rgba(201,169,110,.09)}
 .pm-float-badge{position:absolute;left:1.1rem;top:1.1rem;z-index:2;border:1px solid rgba(201,169,110,.34);background:rgba(5,4,3,.66);backdrop-filter:blur(14px);padding:.55rem .78rem;color:var(--g);font-size:.48rem;letter-spacing:.24em;text-transform:uppercase}
-.pm-content{position:relative;z-index:1;padding:3.2rem;display:flex;flex-direction:column;min-height:560px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(201,169,110,.28) transparent}
+.pm-content{position:relative;z-index:1;padding:2.45rem 3rem 2.25rem;display:flex;flex-direction:column;min-height:0;height:100%;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(201,169,110,.38) transparent;scroll-padding-bottom:2rem}
 .pm-close{position:absolute;right:1rem;top:1rem;z-index:4;width:42px;height:42px;border:1px solid var(--bdr2);background:rgba(5,4,3,.5);color:var(--g);font-size:1.4rem;cursor:pointer;transition:.25s;backdrop-filter:blur(12px)}
 .pm-close:hover{background:rgba(201,169,110,.1);border-color:var(--g);transform:rotate(90deg)}
 .pm-kicker{font-size:.52rem;letter-spacing:.42em;text-transform:uppercase;color:var(--g);margin-bottom:1.1rem}
-.pm-name{font-family:'Cormorant Garamond',serif;font-size:clamp(2.5rem,5vw,4.9rem);font-weight:300;line-height:.94;color:var(--w);letter-spacing:.02em;margin-bottom:1rem}
-.pm-price{font-family:'Cormorant Garamond',serif;font-size:2.25rem;color:var(--g);font-weight:300;margin-bottom:1.3rem}
-.pm-desc{font-size:.82rem;line-height:2;color:rgba(250,249,246,.56);max-width:560px;margin-bottom:1.35rem}
-.pm-tags{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.6rem}
+.pm-name{font-family:'Cormorant Garamond',serif;font-size:clamp(2.35rem,4.4vw,4.35rem);font-weight:300;line-height:.94;color:var(--w);letter-spacing:.02em;margin-bottom:.85rem}
+.pm-price{font-family:'Cormorant Garamond',serif;font-size:2.05rem;color:var(--g);font-weight:300;margin-bottom:1rem}
+.pm-desc{font-size:.8rem;line-height:1.85;color:rgba(250,249,246,.56);max-width:560px;margin-bottom:1rem}
+.pm-tags{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.15rem}
 .pm-tag{border:1px solid var(--bdr);background:rgba(255,255,255,.025);color:rgba(250,249,246,.62);font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;padding:.48rem .68rem}
 .pm-tag.gold{color:var(--g);border-color:rgba(201,169,110,.32);background:rgba(201,169,110,.055)}
-.pm-actions{display:flex;gap:.75rem;flex-wrap:wrap;margin:1rem 0 1.5rem}
+.pm-size-wrap{display:none;margin:-.2rem 0 1.25rem;padding:1rem;border:1px solid var(--bdr);background:linear-gradient(135deg,rgba(255,255,255,.026),rgba(201,169,110,.035));position:relative;overflow:hidden}
+.pm-size-wrap.show{display:block;animation:pmCartIn .32s cubic-bezier(.16,1,.3,1)}
+.pm-size-wrap.need{border-color:rgba(232,213,170,.7);box-shadow:0 0 0 1px rgba(232,213,170,.12),0 18px 60px -45px rgba(232,213,170,.65)}
+.pm-size-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.72rem}
+.pm-size-title{font-size:.52rem;letter-spacing:.34em;text-transform:uppercase;color:var(--g)}
+.pm-size-help{font-size:.56rem;color:rgba(250,249,246,.34);letter-spacing:.08em}
+.pm-size-options{display:flex;gap:.48rem;flex-wrap:wrap}
+.pm-size-btn{min-width:44px;height:38px;border:1px solid rgba(201,169,110,.26);background:rgba(5,4,3,.44);color:rgba(250,249,246,.62);cursor:pointer;font-family:'Inter',sans-serif;font-size:.66rem;letter-spacing:.11em;text-transform:uppercase;transition:all .22s cubic-bezier(.16,1,.3,1)}
+.pm-size-btn:hover{border-color:var(--g);color:var(--g);transform:translateY(-2px)}
+.pm-size-btn.on{background:linear-gradient(135deg,var(--g2),var(--g));border-color:var(--g);color:#070604;font-weight:600;box-shadow:0 14px 38px rgba(201,169,110,.14)}
+.pm-size-note{margin-top:.7rem;color:rgba(250,249,246,.38);font-size:.6rem;line-height:1.65}
+.pm-actions{display:flex;gap:.75rem;flex-wrap:wrap;margin:.75rem 0 1.05rem}
 .pm-actions .btn-p,.pm-actions .btn-o{padding:.95rem 1.55rem;font-size:.56rem;letter-spacing:.2em}
-.pm-note{border-left:1px solid var(--g);padding:1rem 0 1rem 1.2rem;margin-top:.2rem;color:rgba(250,249,246,.56);font-size:.76rem;line-height:1.9;background:linear-gradient(90deg,rgba(201,169,110,.045),transparent)}
+.pm-note{border-left:1px solid var(--g);padding:.85rem 0 .85rem 1.05rem;margin-top:.15rem;color:rgba(250,249,246,.56);font-size:.74rem;line-height:1.75;background:linear-gradient(90deg,rgba(201,169,110,.045),transparent)}
 .pm-note strong{color:var(--g2);font-weight:400}
-.pm-trust{display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem;margin-top:1.4rem}
+.pm-trust{display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem;margin-top:1rem}
 .pm-trust div{border:1px solid var(--bdr);background:rgba(255,255,255,.02);padding:.82rem .75rem;min-height:74px}
 .pm-trust b{display:block;color:var(--g);font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:300;margin-bottom:.22rem}
 .pm-trust span{display:block;font-size:.5rem;letter-spacing:.14em;line-height:1.55;text-transform:uppercase;color:rgba(250,249,246,.36)}
-.pm-related-title{font-size:.52rem;letter-spacing:.34em;text-transform:uppercase;color:rgba(201,169,110,.72);margin:1.8rem 0 .8rem}
+.pm-related-title{font-size:.52rem;letter-spacing:.34em;text-transform:uppercase;color:rgba(201,169,110,.72);margin:1.15rem 0 .7rem}
 .pm-related{display:flex;gap:.65rem;overflow-x:auto;padding-bottom:.2rem;scrollbar-width:none}
 .pm-related::-webkit-scrollbar{display:none}
 .pm-rel{min-width:128px;border:1px solid var(--bdr);background:rgba(255,255,255,.025);cursor:pointer;transition:.25s;overflow:hidden}
@@ -379,13 +410,79 @@ body.product-open{overflow:hidden}
 .pc::after{content:'';position:absolute;inset:0;background:linear-gradient(120deg,transparent 0%,rgba(255,255,255,.06) 45%,transparent 70%);transform:translateX(-120%);transition:transform .72s cubic-bezier(.16,1,.3,1);pointer-events:none}
 .pc:hover::after{transform:translateX(120%)}
 .ai-spark.pm{background:var(--g2);box-shadow:0 0 16px rgba(232,213,170,.55)}
+
+/* CART — CANEVA LUXURY CHECKOUT */
+body.cart-open{overflow:hidden}
+.cart-fab{position:fixed;right:24px;bottom:118px;z-index:955;display:flex;align-items:center;gap:.72rem;border:1px solid rgba(201,169,110,.45);background:rgba(5,4,3,.86);color:var(--g);padding:.78rem 1rem .78rem 1.08rem;cursor:pointer;font-family:'Inter',sans-serif;text-transform:uppercase;letter-spacing:.18em;font-size:.52rem;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 24px 70px rgba(0,0,0,.48);transition:all .28s cubic-bezier(.16,1,.3,1)}
+.cart-fab:hover{transform:translateY(-3px);border-color:var(--g);background:rgba(13,11,8,.96);box-shadow:0 30px 90px rgba(0,0,0,.62),0 0 34px rgba(201,169,110,.14)}
+.cart-fab svg{width:17px;height:17px;flex:0 0 auto}
+.cart-count{min-width:22px;height:22px;border-radius:50%;display:inline-grid;place-items:center;background:var(--g);color:#000;font-size:.58rem;letter-spacing:0;font-weight:600;box-shadow:0 0 0 1px rgba(255,255,255,.08) inset}
+.cart-backdrop{position:fixed;inset:0;z-index:985;background:rgba(5,4,3,.68);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);opacity:0;pointer-events:none;transition:opacity .3s cubic-bezier(.16,1,.3,1)}
+.cart-drawer{position:fixed;top:0;right:0;bottom:0;width:min(460px,calc(100vw - 18px));z-index:990;background:linear-gradient(160deg,rgba(13,11,8,.98),rgba(5,4,3,.99));border-left:1px solid rgba(201,169,110,.32);box-shadow:-42px 0 120px rgba(0,0,0,.72),0 0 0 1px rgba(255,255,255,.025) inset;transform:translateX(105%);transition:transform .38s cubic-bezier(.16,1,.3,1);display:flex;flex-direction:column;overflow:hidden}
+.cart-drawer::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 22% 0%,rgba(201,169,110,.16),transparent 34%),radial-gradient(circle at 94% 68%,rgba(232,213,170,.07),transparent 28%);pointer-events:none}
+.cart-open .cart-backdrop{opacity:1;pointer-events:all}
+.cart-open .cart-drawer{transform:translateX(0)}
+.cart-head{position:relative;z-index:1;padding:1.35rem 1.25rem;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.cart-title small{display:block;color:var(--g);font-size:.48rem;letter-spacing:.42em;text-transform:uppercase;margin-bottom:.3rem}
+.cart-title strong{display:block;font-family:'Cormorant Garamond',serif;font-size:2rem;line-height:1;color:var(--w);font-weight:300}
+.cart-close{width:40px;height:40px;border:1px solid var(--bdr2);background:rgba(5,4,3,.44);color:var(--g);font-size:1.25rem;cursor:pointer;transition:.25s}
+.cart-close:hover{background:rgba(201,169,110,.1);border-color:var(--g);transform:rotate(90deg)}
+.cart-items{position:relative;z-index:1;flex:1;overflow:auto;padding:1rem;scrollbar-width:thin;scrollbar-color:rgba(201,169,110,.28) transparent}
+.cart-empty{height:100%;min-height:260px;display:grid;place-items:center;text-align:center;color:rgba(250,249,246,.45);font-size:.78rem;line-height:1.8;padding:2rem}
+.cart-empty b{display:block;font-family:'Cormorant Garamond',serif;font-size:2.1rem;color:var(--g);font-weight:300;margin-bottom:.55rem}
+.cart-item{display:grid;grid-template-columns:78px 1fr auto;gap:.85rem;padding:.85rem;border:1px solid var(--bdr);background:rgba(255,255,255,.025);margin-bottom:.75rem;position:relative;overflow:hidden;animation:cartIn .32s cubic-bezier(.16,1,.3,1)}
+@keyframes cartIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.cart-thumb{width:78px;height:104px;background:var(--k3);overflow:hidden;display:grid;place-items:center;font-family:'Cormorant Garamond',serif;font-size:2rem;color:rgba(201,169,110,.12)}
+.cart-thumb img{width:100%;height:100%;object-fit:cover}
+.cart-meta{min-width:0;padding-top:.08rem}
+.cart-name{font-family:'Cormorant Garamond',serif;color:var(--w);font-size:1.12rem;line-height:1.08;margin-bottom:.3rem}
+.cart-cat{font-size:.48rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(201,169,110,.72);margin-bottom:.44rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cart-size{font-size:.58rem;color:rgba(250,249,246,.38);line-height:1.4;margin-bottom:.55rem}
+.cart-price{font-size:.78rem;color:var(--g)}
+.cart-line{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;gap:.65rem}
+.cart-remove{border:none;background:transparent;color:rgba(250,249,246,.35);font-size:1.05rem;cursor:pointer;padding:.15rem .25rem;transition:.2s}
+.cart-remove:hover{color:var(--g);transform:scale(1.1)}
+.cart-qty{display:flex;align-items:center;border:1px solid var(--bdr);background:rgba(5,4,3,.45)}
+.cart-qty button{width:28px;height:28px;border:none;background:transparent;color:var(--g);cursor:pointer;font-size:.95rem}
+.cart-qty span{min-width:26px;text-align:center;font-size:.72rem;color:var(--w)}
+.cart-foot{position:relative;z-index:1;border-top:1px solid var(--bdr);padding:1rem 1rem 1.1rem;background:rgba(5,4,3,.76);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.cart-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.85rem;color:rgba(250,249,246,.55);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase}
+.cart-total{font-family:'Cormorant Garamond',serif;font-size:2rem;color:var(--g);font-weight:300;letter-spacing:.02em}
+.cart-actions{display:grid;gap:.68rem}
+.cart-pay,.cart-wa,.cart-keep{width:100%;border:none;cursor:pointer;font-family:'Inter',sans-serif;text-transform:uppercase;letter-spacing:.22em;font-size:.58rem;transition:all .28s cubic-bezier(.16,1,.3,1)}
+.cart-pay{padding:1rem 1.15rem;background:linear-gradient(135deg,var(--g2),var(--g));color:#070604;font-weight:600;box-shadow:0 18px 45px rgba(201,169,110,.14)}
+.cart-pay:hover{transform:translateY(-2px);box-shadow:0 24px 60px rgba(201,169,110,.22)}
+.cart-wa{padding:.88rem 1.05rem;background:rgba(255,255,255,.025);color:var(--g);border:1px solid rgba(201,169,110,.35)}
+.cart-wa:hover{background:rgba(201,169,110,.08);border-color:var(--g)}
+.cart-keep{padding:.72rem 1rem;background:transparent;color:rgba(250,249,246,.42);border:1px solid transparent}
+.cart-keep:hover{color:var(--g)}
+.cart-mini-note{margin-top:.72rem;color:rgba(250,249,246,.34);font-size:.58rem;line-height:1.65;text-align:center}
+.cart-toast{position:fixed;left:50%;bottom:28px;z-index:999;transform:translate(-50%,18px);opacity:0;pointer-events:none;border:1px solid rgba(201,169,110,.36);background:rgba(5,4,3,.92);color:var(--g);padding:.78rem 1rem;font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;backdrop-filter:blur(16px);box-shadow:0 26px 80px rgba(0,0,0,.58);transition:all .32s cubic-bezier(.16,1,.3,1)}
+.cart-toast.show{opacity:1;transform:translate(-50%,0)}
+.pm-actions .cart-add{min-width:210px}
+.pm-actions .cart-add.added{background:linear-gradient(135deg,var(--g2),var(--g));color:#070604;box-shadow:0 18px 50px rgba(201,169,110,.16)}
+.pm-actions .cart-add.bump{animation:cartBtnBump .42s cubic-bezier(.16,1,.3,1)}
+@keyframes cartBtnBump{0%{transform:scale(1)}45%{transform:scale(1.035)}100%{transform:scale(1)}}
+.pm-cart-state{display:none;margin:-.15rem 0 1.15rem;border:1px solid rgba(201,169,110,.34);background:linear-gradient(135deg,rgba(201,169,110,.105),rgba(255,255,255,.018));box-shadow:0 24px 70px -52px rgba(201,169,110,.52);padding:.95rem 1rem;align-items:center;justify-content:space-between;gap:1rem;position:relative;overflow:hidden}
+.pm-cart-state::before{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent,rgba(232,213,170,.09),transparent);transform:translateX(-115%)}
+.pm-cart-state.show{display:flex;animation:pmCartIn .36s cubic-bezier(.16,1,.3,1)}
+.pm-cart-state.show::before{animation:pmShine .9s cubic-bezier(.16,1,.3,1)}
+@keyframes pmCartIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pmShine{to{transform:translateX(115%)}}
+.pm-cart-copy{position:relative;z-index:1;min-width:0}
+.pm-cart-copy strong{display:block;color:var(--g2);font-family:'Cormorant Garamond',serif;font-size:1.22rem;font-weight:300;line-height:1.1}
+.pm-cart-copy span{display:block;margin-top:.28rem;color:rgba(250,249,246,.46);font-size:.56rem;letter-spacing:.14em;text-transform:uppercase;line-height:1.55}
+.pm-view-cart{position:relative;z-index:1;flex-shrink:0;border:1px solid rgba(201,169,110,.42);background:rgba(5,4,3,.38);color:var(--g);padding:.68rem .9rem;cursor:pointer;font-family:'Inter',sans-serif;font-size:.52rem;letter-spacing:.18em;text-transform:uppercase;transition:.25s}
+.pm-view-cart:hover{background:var(--g);color:#000;border-color:var(--g)}
+@media(max-width:860px){.cart-fab{right:14px;bottom:92px;padding:.72rem .85rem}.cart-fab span:first-of-type{display:none}.cart-drawer{width:calc(100vw - 10px)}.cart-item{grid-template-columns:68px 1fr;gap:.72rem}.cart-thumb{width:68px;height:92px}.cart-line{grid-column:1/-1;flex-direction:row;align-items:center}.cart-title strong{font-size:1.75rem}.pm-cart-state{flex-direction:column;align-items:flex-start}.pm-view-cart{width:100%;text-align:center}}
+
 @media(max-width:860px){
-  .pmodal{padding:12px;align-items:end}
-  .pm-shell{grid-template-columns:1fr;max-height:calc(100vh - 24px)}
-  .pm-media{min-height:330px;max-height:45vh}
-  .pm-content{min-height:auto;padding:2rem 1.25rem 1.35rem}
-  .pm-name{font-size:2.8rem}
-  .pm-price{font-size:1.8rem}
+  .pmodal{padding:10px;align-items:end}
+  .pm-shell{grid-template-columns:1fr;width:calc(100vw - 20px);height:calc(100vh - 20px);max-height:calc(100vh - 20px)}
+  .pm-media{min-height:0;height:42vh;max-height:42vh}
+  .pm-content{min-height:0;height:58vh;padding:1.65rem 1.25rem 1.8rem}
+  .pm-name{font-size:2.65rem}
+  .pm-price{font-size:1.75rem}
   .pm-trust{grid-template-columns:1fr}
   .pm-actions .btn-p,.pm-actions .btn-o{width:100%;justify-content:center}
 }
@@ -452,6 +549,75 @@ body.product-open{overflow:hidden}
   .flogo{font-size:1.6rem}
   .mmenu a{font-size:1.7rem}
 }
+
+
+/* V7 — AJUSTE FINO MODAL PRODUCTO: detalle completo sin corte */
+@media (min-width:861px){
+  .pmodal{padding:14px!important;overflow:hidden!important}
+  .pm-shell{width:min(1240px,calc(100vw - 28px))!important;height:calc(100vh - 28px)!important;max-height:calc(100vh - 28px)!important;grid-template-columns:minmax(360px,.95fr) 1.05fr!important}
+  .pm-content{padding:1.65rem 2.65rem 2.15rem!important;min-height:0!important;height:100%!important;overflow-y:auto!important;scrollbar-gutter:stable;scroll-padding-bottom:2rem}
+  .pm-media{height:100%!important;min-height:0!important}
+  .pm-media img{object-fit:contain!important}
+  .pm-kicker{margin-bottom:.65rem!important}
+  .pm-name{font-size:clamp(2.15rem,4.1vw,3.95rem)!important;line-height:.94!important;margin-bottom:.62rem!important}
+  .pm-price{font-size:1.85rem!important;margin-bottom:.72rem!important}
+  .pm-desc{font-size:.76rem!important;line-height:1.65!important;margin-bottom:.72rem!important;max-width:620px!important}
+  .pm-tags{margin-bottom:.72rem!important;gap:.45rem!important}
+  .pm-tag{padding:.36rem .58rem!important;font-size:.49rem!important}
+  .pm-size-wrap{margin:0 0 .72rem!important;padding:.7rem .82rem!important;overflow:visible!important}
+  .pm-size-head{margin-bottom:.52rem!important}
+  .pm-size-title{font-size:.49rem!important}
+  .pm-size-help{font-size:.52rem!important}
+  .pm-size-options{gap:.38rem!important}
+  .pm-size-btn{height:30px!important;min-width:38px!important;font-size:.58rem!important}
+  .pm-size-note{display:none!important}
+  .pm-actions{margin:.65rem 0 .72rem!important;gap:.6rem!important}
+  .pm-actions .btn-p,.pm-actions .btn-o{padding:.82rem 1.3rem!important;font-size:.52rem!important}
+  .pm-actions .cart-add{min-width:218px!important}
+  .pm-cart-state{margin:.05rem 0 .72rem!important;padding:.72rem .82rem!important}
+  .pm-cart-copy strong{font-size:1.1rem!important}
+  .pm-cart-copy span{font-size:.5rem!important;line-height:1.35!important}
+  .pm-view-cart{padding:.58rem .8rem!important;font-size:.48rem!important}
+  .pm-note{padding:.72rem 0 .72rem .95rem!important;line-height:1.55!important;font-size:.7rem!important;margin:.08rem 0 .72rem!important}
+  .pm-trust{gap:.55rem!important;margin-top:.35rem!important}
+  .pm-trust div{padding:.62rem!important;min-height:58px!important}
+  .pm-trust b{font-size:.95rem!important;margin-bottom:.12rem!important}
+  .pm-trust span{font-size:.44rem!important;line-height:1.32!important}
+  .pm-related-title{margin:.72rem 0 .55rem!important;font-size:.48rem!important}
+  .pm-related{padding-bottom:1.15rem!important;margin-bottom:.1rem!important}
+  .pm-rel{min-width:112px!important}
+  .pm-rel-img{height:92px!important}
+  .pm-rel-info{padding:.43rem .5rem .5rem!important}
+  .pm-rel-name{font-size:.76rem!important}
+  .pm-rel-price{font-size:.52rem!important}
+}
+@media (max-width:860px){
+  .pmodal{overflow:hidden!important}
+  .pm-shell{height:calc(100vh - 20px)!important;max-height:calc(100vh - 20px)!important}
+  .pm-content{height:58vh!important;min-height:0!important;overflow-y:auto!important;padding-bottom:2.4rem!important}
+  .pm-size-wrap{overflow:visible!important}
+  .pm-related{padding-bottom:1.4rem!important}
+}
+
+
+
+/* V8 — MEGA WAO: Bolsa Caneva, look completo, carrito premium sin tocar Excel/Cloudflare */
+.nav-actions{display:flex;align-items:center;gap:.75rem}
+.ncart{display:inline-flex;align-items:center;gap:.62rem;padding:.55rem 1.05rem;border:1px solid rgba(201,169,110,.34);background:rgba(5,4,3,.18);color:var(--g);font-family:'Inter',sans-serif;font-size:.58rem;letter-spacing:.22em;text-transform:uppercase;cursor:pointer;transition:all .32s cubic-bezier(.16,1,.3,1);position:relative;overflow:hidden}
+.ncart::before{content:'';position:absolute;inset:0;background:linear-gradient(115deg,transparent,rgba(201,169,110,.16),transparent);transform:translateX(-120%);transition:transform .55s cubic-bezier(.16,1,.3,1)}
+.ncart:hover::before{transform:translateX(120%)}
+.ncart:hover{border-color:var(--g);background:rgba(201,169,110,.07);transform:translateY(-1px)}
+.ncart svg{width:15px;height:15px;position:relative;z-index:1}.ncart span,.ncart b{position:relative;z-index:1}
+.ncart b{min-width:20px;height:20px;border-radius:50%;display:inline-grid;place-items:center;background:var(--g);color:#000;font-size:.55rem;letter-spacing:0;font-weight:650}
+.mcart{margin-top:.4rem;display:inline-flex;align-items:center;justify-content:center;gap:.55rem;padding:.78rem 1.8rem;border:1px solid var(--g);background:rgba(201,169,110,.06);color:var(--g);font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;font-family:'Inter',sans-serif;cursor:pointer}.mcart b{min-width:20px;height:20px;border-radius:50%;display:inline-grid;place-items:center;background:var(--g);color:#000;letter-spacing:0}
+@media(max-width:1000px){.nav-actions{display:none}}
+.pm-look-kit{margin:.75rem 0 .9rem;border:1px solid rgba(201,169,110,.28);background:linear-gradient(145deg,rgba(201,169,110,.07),rgba(255,255,255,.018));position:relative;overflow:hidden;box-shadow:0 24px 70px -55px rgba(201,169,110,.45)}
+.pm-look-kit::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 0% 0%,rgba(232,213,170,.12),transparent 34%),linear-gradient(110deg,transparent,rgba(255,255,255,.035),transparent);pointer-events:none}.pm-look-head{position:relative;z-index:1;padding:.82rem .92rem .68rem;border-bottom:1px solid rgba(201,169,110,.13);display:flex;align-items:end;justify-content:space-between;gap:1rem}.pm-look-head small{font-size:.46rem;letter-spacing:.36em;text-transform:uppercase;color:rgba(201,169,110,.78)}.pm-look-head strong{font-family:'Cormorant Garamond',serif;font-size:1.28rem;font-weight:300;color:var(--w);line-height:1}
+.pm-look-items{position:relative;z-index:1;display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(201,169,110,.11)}.pm-look-item{background:rgba(5,4,3,.56);min-width:0;display:grid;grid-template-columns:48px 1fr;gap:.55rem;padding:.62rem;align-items:center;cursor:pointer;transition:.25s}.pm-look-item:hover{background:rgba(201,169,110,.08)}.pm-look-thumb{width:48px;height:62px;background:var(--k3);overflow:hidden;display:grid;place-items:center;font-family:'Cormorant Garamond',serif;color:rgba(201,169,110,.12)}.pm-look-thumb img{width:100%;height:100%;object-fit:cover}.pm-look-name{font-family:'Cormorant Garamond',serif;font-size:.92rem;line-height:1.05;color:rgba(250,249,246,.86);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pm-look-price{font-size:.56rem;color:var(--g);margin-top:.18rem}.pm-look-add{margin-top:.38rem;border:1px solid rgba(201,169,110,.3);background:transparent;color:var(--g);font-family:'Inter',sans-serif;font-size:.43rem;letter-spacing:.13em;text-transform:uppercase;padding:.34rem .45rem;cursor:pointer;transition:.25s;white-space:nowrap}.pm-look-add:hover{background:var(--g);color:#000;border-color:var(--g)}
+.pm-look-foot{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.72rem .9rem;border-top:1px solid rgba(201,169,110,.13)}.pm-look-total small{display:block;font-size:.44rem;letter-spacing:.26em;text-transform:uppercase;color:rgba(250,249,246,.34);margin-bottom:.12rem}.pm-look-total strong{font-family:'Cormorant Garamond',serif;font-size:1.35rem;color:var(--g);font-weight:300}.pm-add-look{border:1px solid rgba(201,169,110,.44);background:rgba(201,169,110,.12);color:var(--g2);padding:.68rem .86rem;cursor:pointer;font-family:'Inter',sans-serif;font-size:.48rem;letter-spacing:.18em;text-transform:uppercase;transition:.25s;white-space:nowrap}.pm-add-look:hover{background:var(--g);color:#000;border-color:var(--g);transform:translateY(-1px)}
+.cart-title strong{font-size:2.18rem}.cart-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:linear-gradient(var(--g),transparent)}.cart-upsell{margin-top:.9rem;border:1px solid rgba(201,169,110,.22);background:rgba(255,255,255,.018);padding:.82rem;animation:cartIn .35s cubic-bezier(.16,1,.3,1)}.cart-upsell-title{font-size:.48rem;letter-spacing:.32em;text-transform:uppercase;color:rgba(201,169,110,.75);margin-bottom:.65rem}.cart-upsell-list{display:grid;gap:.55rem}.cart-upsell-item{display:grid;grid-template-columns:52px 1fr auto;align-items:center;gap:.65rem;padding:.48rem;background:rgba(5,4,3,.48);border:1px solid rgba(201,169,110,.11)}.cart-upsell-img{width:52px;height:66px;overflow:hidden;background:var(--k3);display:grid;place-items:center;font-family:'Cormorant Garamond',serif;color:rgba(201,169,110,.12)}.cart-upsell-img img{width:100%;height:100%;object-fit:cover}.cart-upsell-name{font-family:'Cormorant Garamond',serif;font-size:.95rem;color:rgba(250,249,246,.84);line-height:1.08}.cart-upsell-price{font-size:.56rem;color:var(--g);margin-top:.14rem}.cart-upsell-btn{border:1px solid rgba(201,169,110,.32);background:transparent;color:var(--g);padding:.5rem .6rem;font-family:'Inter',sans-serif;font-size:.45rem;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;white-space:nowrap;transition:.25s}.cart-upsell-btn:hover{background:var(--g);color:#000;border-color:var(--g)}.cart-bold-off{opacity:.88}.fly-to-bag{position:fixed;z-index:1000;width:58px;height:76px;object-fit:cover;border:1px solid rgba(201,169,110,.5);box-shadow:0 22px 62px rgba(0,0,0,.55);pointer-events:none;border-radius:2px;animation:flyBag .72s cubic-bezier(.16,1,.3,1) forwards}@keyframes flyBag{to{transform:translate(var(--tx),var(--ty)) scale(.18) rotate(10deg);opacity:0}}
+@media(max-width:860px){.pm-look-items{grid-template-columns:1fr}.pm-look-foot{flex-direction:column;align-items:stretch}.pm-add-look{text-align:center}.cart-upsell-item{grid-template-columns:46px 1fr}.cart-upsell-btn{grid-column:1/-1;width:100%}.cart-title strong{font-size:1.85rem}}
+
 </style>
 </head>
 <body>
@@ -468,7 +634,13 @@ body.product-open{overflow:hidden}
     <li><a href="#nosotros">Nosotros</a></li>
     <li><a href="#agente">Asistente</a></li>
   </ul>
-  <a class="nwa" href="https://wa.me/573057637089?text=Hola!%20Vi%20el%20sitio%20Caneva" target="_blank"><span>Pedir ahora</span> <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>
+  <div class="nav-actions">
+    <button class="ncart" id="navCart" type="button" aria-label="Abrir Bolsa Caneva">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8a3 3 0 0 1 6 0"/></svg>
+      <span>Bolsa</span><b id="navCartCount">0</b>
+    </button>
+    <a class="nwa" href="https://wa.me/573057637089?text=Hola!%20Vi%20el%20sitio%20Caneva" target="_blank"><span>Pedir ahora</span> <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>
+  </div>
   <button class="burger" id="burg" aria-label="Menu"><b></b><b></b><b></b></button>
 </nav>
 
@@ -477,6 +649,7 @@ body.product-open{overflow:hidden}
   <a href="#catalogo">Colecciones</a>
   <a href="#nosotros">Nosotros</a>
   <a href="#agente">Asistente</a>
+  <button class="mcart" id="mobileCart" type="button">Bolsa · <b id="mobileCartCount">0</b></button>
   <a class="mwa" href="https://wa.me/573057637089" target="_blank"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg> WhatsApp</a>
 </div>
 
@@ -551,9 +724,19 @@ body.product-open{overflow:hidden}
       <div class="pm-price" id="pmPrice">$0</div>
       <p class="pm-desc" id="pmDesc">Prenda seleccionada del catálogo Caneva.</p>
       <div class="pm-tags" id="pmTags"></div>
+      <div class="pm-size-wrap" id="pmSizeWrap" aria-live="polite">
+        <div class="pm-size-head"><div class="pm-size-title">Selecciona talla</div><div class="pm-size-help" id="pmSizeHelp">Obligatorio</div></div>
+        <div class="pm-size-options" id="pmSizeOptions"></div>
+        <div class="pm-size-note" id="pmSizeNote">Elige una talla para agregar esta prenda al carrito.</div>
+      </div>
       <div class="pm-actions">
-        <a class="btn-p" id="pmWhats" href="#" target="_blank" rel="noopener"><span>Comprar por WhatsApp</span></a>
+        <button class="btn-p cart-add" id="pmAddCart" type="button"><span>Agregar al carrito</span></button>
+        <a class="btn-o" id="pmWhats" href="#" target="_blank" rel="noopener"><span>Comprar por WhatsApp</span></a>
         <button class="btn-o" id="pmAsk" type="button">Preguntar a Caneva AI</button>
+      </div>
+      <div class="pm-cart-state" id="pmCartState" aria-live="polite">
+        <div class="pm-cart-copy"><strong id="pmCartTitle">Agregado a tu carrito</strong><span id="pmCartMeta">1 prenda lista para comprar</span></div>
+        <button class="pm-view-cart" id="pmViewCart" type="button">Ver carrito</button>
       </div>
       <div class="pm-note" id="pmNote"></div>
       <div class="pm-trust">
@@ -561,11 +744,57 @@ body.product-open{overflow:hidden}
         <div><b>Contraentrega</b><span>Compra con confianza</span></div>
         <div><b>Stylist AI</b><span>Te arma el look completo</span></div>
       </div>
-      <div class="pm-related-title">También podrías combinarlo con</div>
+      <div class="pm-look-kit" id="pmLookKit">
+        <div class="pm-look-head"><small>Stylist AI</small><strong>Completa este look</strong></div>
+        <div class="pm-look-items" id="pmLookItems"></div>
+        <div class="pm-look-foot">
+          <div class="pm-look-total"><small>Total estimado del look</small><strong id="pmLookTotal">$0</strong></div>
+          <button class="pm-add-look" id="pmAddLook" type="button">Agregar look completo</button>
+        </div>
+      </div>
+      <div class="pm-related-title">Más combinaciones</div>
       <div class="pm-related" id="pmRelated"></div>
     </div>
   </div>
 </div>
+
+
+<div class="photo-zoom" id="photoZoom" aria-hidden="true">
+  <div class="pz-head">
+    <div class="pz-title"><small id="pzCat">CANEVA</small><strong id="pzName">Vista ampliada</strong></div>
+    <div class="pz-hint">Click en la foto para acercar / alejar</div>
+    <button class="pz-close" id="pzClose" type="button" aria-label="Cerrar imagen ampliada">×</button>
+  </div>
+  <div class="pz-stage" id="pzStage">
+    <img id="pzImg" src="" alt="Vista ampliada Caneva">
+  </div>
+</div>
+
+<button class="cart-fab" id="cartFab" type="button" aria-label="Abrir carrito Caneva">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6h15l-1.5 8.5H8L6 3H3"/><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/></svg>
+  <span>Carrito</span>
+  <b class="cart-count" id="cartCount">0</b>
+</button>
+<div class="cart-backdrop" id="cartBackdrop"></div>
+<aside class="cart-drawer" id="cartDrawer" aria-hidden="true">
+  <div class="cart-head">
+    <div class="cart-title"><small>Compra segura</small><strong>Bolsa Caneva</strong></div>
+    <button class="cart-close" id="cartClose" type="button" aria-label="Cerrar carrito">×</button>
+  </div>
+  <div class="cart-items" id="cartItems">
+    <div class="cart-empty"><div><b>Caneva</b>Agrega tus prendas favoritas y arma tu pedido con estilo.</div></div>
+  </div>
+  <div class="cart-foot">
+    <div class="cart-row"><span>Subtotal</span><strong class="cart-total" id="cartTotal">$0</strong></div>
+    <div class="cart-actions">
+      <button class="cart-pay cart-bold-off" id="cartBold" type="button">Pagar con Bold</button>
+      <button class="cart-wa" id="cartWhats" type="button">Enviar pedido por WhatsApp</button>
+      <button class="cart-keep" id="cartKeep" type="button">Seguir mirando</button>
+    </div>
+    <div class="cart-mini-note">El pago con Bold se activa desde Cloudflare Worker para proteger las llaves del comercio. Mientras tanto, el pedido por WhatsApp queda listo.</div>
+  </div>
+</aside>
+<div class="cart-toast" id="cartToast">Producto agregado</div>
 
 <div id="nosotros">
   <div class="nos">
@@ -734,6 +963,17 @@ function renderFilters(){
 function setProductCount(){
   var sn=document.getElementById('sn'); if(sn)sn.textContent=catalogProducts().length;
 }
+
+function renderLookbook(){
+  var items=document.querySelectorAll('.lb-item');
+  if(!items.length)return;
+  var products=catalogProducts().filter(function(p){return p.imagen&&p.imagen.indexOf('http')===0;});
+  if(!products.length)return;
+  var rules=[{keys:['vestido','set','enterizo'],fallback:'Vestidos'},{keys:['camisa','crop','top','body','corset'],fallback:'Camisas'},{keys:['short','falda','bermuda'],fallback:'Shorts'}];
+  var used=[];
+  function pick(rule){var hit=products.find(function(p){var c=normCat(p.categoria),n=norm(p.nombre);return used.indexOf(p)<0 && rule.keys.some(function(k){return c.indexOf(k)>=0||n.indexOf(k)>=0;});});if(!hit)hit=products.find(function(p){return used.indexOf(p)<0;});if(hit)used.push(hit);return hit;}
+  items.forEach(function(el,i){var p=pick(rules[i]||rules[0]); if(!p)return;var img=el.querySelector('img'),cat=el.querySelector('.lb-cat');if(img){img.src=p.imagen;img.alt=p.nombre;}if(cat){cat.textContent=(p.categoria||rules[i].fallback||'Caneva').replace(' / ',' · ');}el.dataset.pid=P.indexOf(p);});
+}
 async function loadRemoteCatalog(){
   try{
     var res=await fetch(API_BASE + "/catalog", {cache:"no-store"});
@@ -745,6 +985,7 @@ async function loadRemoteCatalog(){
       renderFilters();
       render();
       setProductCount();
+      renderLookbook();
     }
   }catch(e){
     console.warn("Caneva catálogo remoto no disponible, usando fallback local.", e);
@@ -755,6 +996,7 @@ async function loadRemoteCatalog(){
 // CANEVA PRODUCT EXPERIENCE — evita salir al Kyte y abre detalle premium dentro del sitio
 var WA_PHONE='573057637089';
 var currentProductIndex=-1;
+var currentSelectedSize='';
 function productTone(p){
   var n=norm(p.nombre), c=norm(p.categoria);
   if(c.indexOf('jeans')>=0||n.indexOf('flare')>=0||n.indexOf('cargo')>=0)return 'Ideal para construir un look con presencia: combínalo con un top limpio, camisa globo o body para elevarlo sin perder comodidad.';
@@ -774,30 +1016,146 @@ function productTags(p){
   if(priceNum(p.precio)>=120000)tags.push('Premium look');
   return tags.slice(0,5);
 }
+
+function productSizes(p){
+  var raw=String((p&&p.tallas)||'').trim();
+  if(!raw)return [];
+
+  var txt=raw
+    .replace(/[–—]/g,'-')
+    .replace(/\s+/g,' ')
+    .trim();
+
+  // Si el Excel trae tallas tipo 6-8-10-12-14-16, S m l, XS/S/M, etc.
+  var matches=txt.match(/\b(XXS|XS|S|M|L|XL|XXL|[0-9]{1,2})\b/gi)||[];
+
+  var out=[];
+  matches.forEach(function(x){
+    var v=String(x).toUpperCase();
+    // Evita convertir números que parecen años o textos raros largos.
+    if(/^\d{1,2}$/.test(v) || /^(XXS|XS|S|M|L|XL|XXL)$/.test(v)){
+      if(out.indexOf(v)<0)out.push(v);
+    }
+  });
+
+  // Orden bonito: números de menor a mayor y luego letras.
+  out.sort(function(a,b){
+    var na=parseInt(a,10), nb=parseInt(b,10);
+    var an=!isNaN(na), bn=!isNaN(nb);
+    if(an&&bn)return na-nb;
+    if(an&&!bn)return -1;
+    if(!an&&bn)return 1;
+    var order=['XXS','XS','S','M','L','XL','XXL'];
+    return order.indexOf(a)-order.indexOf(b);
+  });
+
+  return out;
+}
+function getSelectedSize(){return currentSelectedSize||'';}
+function renderSizeSelector(p){
+  var wrap=document.getElementById('pmSizeWrap'),opts=document.getElementById('pmSizeOptions'),help=document.getElementById('pmSizeHelp'),note=document.getElementById('pmSizeNote');
+  currentSelectedSize='';
+  if(!wrap||!opts)return;
+  var sizes=productSizes(p);
+  wrap.classList.remove('need');
+  if(!sizes.length){
+    wrap.classList.remove('show');
+    opts.innerHTML='';
+    if(help)help.textContent='';
+    if(note)note.textContent='';
+    return;
+  }
+  wrap.classList.add('show');
+  if(help)help.textContent='Obligatorio';
+  if(note)note.textContent='Elige la talla antes de agregar al carrito. Si no estás segura, Caneva confirma disponibilidad por WhatsApp.';
+  opts.innerHTML=sizes.map(function(sz){return '<button class="pm-size-btn" type="button" data-size="'+escAttr(sz)+'">'+escHtml(sz)+'</button>';}).join('');
+  opts.querySelectorAll('.pm-size-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      currentSelectedSize=btn.dataset.size||'';
+      wrap.classList.remove('need');
+      opts.querySelectorAll('.pm-size-btn').forEach(function(b){b.classList.remove('on');});
+      btn.classList.add('on');
+      updateProductCartState(currentProductIndex);
+      if(currentProductIndex>=0&&P[currentProductIndex])renderLookKit(P[currentProductIndex],currentProductIndex);
+    });
+  });
+}
+function requireSizeIfNeeded(p){
+  var sizes=productSizes(p);
+  if(!sizes.length)return true;
+  if(getSelectedSize())return true;
+  var wrap=document.getElementById('pmSizeWrap');
+  if(wrap){
+    wrap.classList.add('need');
+    wrap.scrollIntoView({behavior:'smooth',block:'center'});
+    setTimeout(function(){wrap.classList.remove('need');},1500);
+  }
+  toastCart('Selecciona una talla');
+  return false;
+}
 function productRelatives(p,idx){
   var rel=P.map(function(x,i){return {p:x,i:i,score:(x.categoria===p.categoria?20:0)+(x.imagen?4:0)-Math.abs(priceNum(x.precio)-priceNum(p.precio))/100000};})
     .filter(function(x){return x.i!==idx&&x.p.imagen&&x.p.imagen.indexOf('http')===0&&x.score>0;})
     .sort(function(a,b){return b.score-a.score;});
   return rel.slice(0,6);
 }
+
+function lookProductsFor(p,idx){
+  var rel=productRelatives(p,idx).filter(function(x){return x&&x.p;});
+  return rel.slice(0,3);
+}
+function renderLookKit(p,idx){
+  var rel=lookProductsFor(p,idx);
+  var kit=document.getElementById('pmLookKit'),items=document.getElementById('pmLookItems'),total=document.getElementById('pmLookTotal'),add=document.getElementById('pmAddLook'),related=document.getElementById('pmRelated');
+  if(!items||!related)return;
+  var currentPrice=priceNum(p.precio), lookTotal=currentPrice;
+  rel.slice(0,2).forEach(function(x){lookTotal+=priceNum(x.p.precio);});
+  if(total)total.textContent=moneyCOP(lookTotal);
+  if(add){add.dataset.pid=idx;add.disabled=false;add.textContent='Agregar look completo';}
+  var currentImg=p.imagen&&p.imagen.indexOf('http')===0?'<img src="'+escAttr(p.imagen)+'" alt="'+escAttr(p.nombre)+'" loading="lazy">':'C';
+  var currentSize=getSelectedSize()?'<div class="pm-look-price">Talla '+escHtml(getSelectedSize())+' · '+escHtml(p.precio)+'</div>':'<div class="pm-look-price">Prenda base · '+escHtml(p.precio)+'</div>';
+  var base='<div class="pm-look-item" data-pid="'+idx+'"><div class="pm-look-thumb">'+currentImg+'</div><div><div class="pm-look-name">'+escHtml(p.nombre)+'</div>'+currentSize+'</div></div>';
+  var extra=rel.slice(0,2).map(function(x){var r=x.p,ih=r.imagen&&r.imagen.indexOf('http')===0?'<img src="'+escAttr(r.imagen)+'" alt="'+escAttr(r.nombre)+'" loading="lazy">':'C';return '<div class="pm-look-item" data-pid="'+x.i+'"><div class="pm-look-thumb">'+ih+'</div><div><div class="pm-look-name">'+escHtml(r.nombre)+'</div><div class="pm-look-price">'+escHtml(r.precio)+'</div><button class="pm-look-add" type="button" data-add-pid="'+x.i+'">Agregar también</button></div></div>';}).join('');
+  items.innerHTML=base+extra;
+  if(kit)kit.style.display=rel.length?'block':'none';
+  related.innerHTML=rel.slice(2,6).map(function(x){var r=x.p, ih=r.imagen?'<img src="'+escAttr(r.imagen)+'" alt="'+escAttr(r.nombre)+'" loading="lazy">':'C';return '<div class="pm-rel" data-pid="'+x.i+'"><div class="pm-rel-img">'+ih+'</div><div class="pm-rel-info"><div class="pm-rel-name">'+escHtml(r.nombre)+'</div><div class="pm-rel-price">'+escHtml(r.precio)+'</div></div></div>';}).join('');
+  document.querySelectorAll('#pmLookItems .pm-look-item').forEach(function(el){el.addEventListener('click',function(e){if(e.target.closest('button'))return;openProductModal(parseInt(el.dataset.pid,10));});});
+  document.querySelectorAll('#pmLookItems [data-add-pid]').forEach(function(btn){btn.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();addRelatedToCart(parseInt(btn.dataset.addPid,10));});});
+  document.querySelectorAll('#pmRelated .pm-rel').forEach(function(el){el.addEventListener('click',function(){openProductModal(parseInt(el.dataset.pid,10));});});
+  if(add){add.onclick=function(){addLookToCart(idx);};}
+}
+function addRelatedToCart(idx){var p=P[idx]; if(!p)return;var size=productSizes(p).length?'Por confirmar':'';addToCartByIndex(idx,false,size);toastCart('Agregado para combinar');}
+function addLookToCart(idx){var p=P[idx]; if(!p)return;if(!requireSizeIfNeeded(p))return;addToCartByIndex(idx,false,getSelectedSize());lookProductsFor(p,idx).slice(0,2).forEach(function(x){var rp=x.p;addToCartByIndex(x.i,false,productSizes(rp).length?'Por confirmar':'');});renderLookKit(p,idx);toastCart('Look completo agregado');openCart();}
+
 function openProductModal(idx){
   var p=P[idx]; if(!p)return;
   currentProductIndex=idx;
   var modal=document.getElementById('pmodal');
-  var img=p.imagen&&p.imagen.indexOf('http')===0?'<img src="'+p.imagen+'" alt="'+escAttr(p.nombre)+'">':'<div class="pm-photo-fallback">C</div>';
-  document.getElementById('pmMedia').innerHTML='<div class="pm-float-badge">Vista boutique</div>'+img;
+  var hasImg=p.imagen&&p.imagen.indexOf('http')===0;
+  var img=hasImg?'<img src="'+p.imagen+'" alt="'+escAttr(p.nombre)+'">':'<div class="pm-photo-fallback">C</div>';
+  var zoomBtn=hasImg?'<button class="pm-zoom-btn" id="pmZoomBtn" type="button" aria-label="Ampliar foto de '+escAttr(p.nombre)+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/><path d="M11 8v6M8 11h6"/></svg><span>Ampliar foto</span></button>':'';
+  var media=document.getElementById('pmMedia');
+  media.classList.toggle('has-zoom',!!hasImg);
+  media.innerHTML='<div class="pm-float-badge">Vista boutique</div>'+img+zoomBtn;
+  media.onclick=function(e){
+    if(!hasImg)return;
+    if(e.target&&e.target.closest&&e.target.closest('.pm-zoom-btn'))return;
+    openPhotoZoom(idx);
+  };
+  var zoomEl=document.getElementById('pmZoomBtn');
+  if(zoomEl)zoomEl.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();openPhotoZoom(idx);});
   document.getElementById('pmCat').textContent=p.categoria;
   document.getElementById('pmName').textContent=p.nombre;
   document.getElementById('pmPrice').textContent=p.precio;
   document.getElementById('pmDesc').textContent=productTone(p);
   document.getElementById('pmTags').innerHTML=productTags(p).map(function(t,i){return '<span class="pm-tag '+(i===0?'gold':'')+'">'+escHtml(t)+'</span>';}).join('');
+  renderSizeSelector(p);
   document.getElementById('pmWhats').href=waLinkFor(p);
+  var addBtn=document.getElementById('pmAddCart');
+  if(addBtn){addBtn.dataset.pid=idx;addBtn.classList.remove('bump');}
+  updateProductCartState(idx);
   document.getElementById('pmNote').innerHTML='<strong>Tip Caneva AI:</strong> si me dices tu talla, ocasión y presupuesto, te armo una combinación completa con esta prenda y opciones del catálogo.';
-  document.getElementById('pmRelated').innerHTML=productRelatives(p,idx).map(function(x){
-    var r=x.p, ih=r.imagen?'<img src="'+r.imagen+'" alt="'+escAttr(r.nombre)+'" loading="lazy">':'C';
-    return '<div class="pm-rel" data-pid="'+x.i+'"><div class="pm-rel-img">'+ih+'</div><div class="pm-rel-info"><div class="pm-rel-name">'+escHtml(r.nombre)+'</div><div class="pm-rel-price">'+escHtml(r.precio)+'</div></div></div>';
-  }).join('');
-  document.querySelectorAll('#pmRelated .pm-rel').forEach(function(el){el.addEventListener('click',function(){openProductModal(parseInt(el.dataset.pid,10));});});
+  renderLookKit(p,idx);
   modal.classList.add('open');modal.setAttribute('aria-hidden','false');document.body.classList.add('product-open');
   productSparkles();
   if(window.rebindCursor)window.rebindCursor();
@@ -806,6 +1164,49 @@ function closeProductModal(){
   var modal=document.getElementById('pmodal');
   modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.classList.remove('product-open');
 }
+
+function openPhotoZoom(idx){
+  var p=P[idx];
+  if(!p||!p.imagen||p.imagen.indexOf('http')!==0)return;
+  var z=document.getElementById('photoZoom'),img=document.getElementById('pzImg'),name=document.getElementById('pzName'),cat=document.getElementById('pzCat'),stage=document.getElementById('pzStage');
+  if(!z||!img||!stage)return;
+  img.src=p.imagen;
+  img.alt='Foto ampliada de '+p.nombre;
+  if(name)name.textContent=p.nombre;
+  if(cat)cat.textContent=p.categoria||'CANEVA';
+  stage.classList.remove('zoomed');
+  img.style.transformOrigin='50% 50%';
+  z.classList.add('open');
+  z.setAttribute('aria-hidden','false');
+  document.body.classList.add('photo-zoom-open');
+}
+function closePhotoZoom(){
+  var z=document.getElementById('photoZoom'),img=document.getElementById('pzImg'),stage=document.getElementById('pzStage');
+  if(!z)return;
+  z.classList.remove('open');
+  z.setAttribute('aria-hidden','true');
+  document.body.classList.remove('photo-zoom-open');
+  if(stage)stage.classList.remove('zoomed');
+  if(img){img.style.transformOrigin='50% 50%';setTimeout(function(){if(!z.classList.contains('open'))img.removeAttribute('src');},220);}
+}
+function bindPhotoZoom(){
+  var z=document.getElementById('photoZoom'),close=document.getElementById('pzClose'),stage=document.getElementById('pzStage'),img=document.getElementById('pzImg');
+  if(close)close.addEventListener('click',closePhotoZoom);
+  if(z)z.addEventListener('click',function(e){if(e.target===z)closePhotoZoom();});
+  if(stage){
+    stage.addEventListener('click',function(e){
+      if(e.target&&e.target.id==='pzImg')stage.classList.toggle('zoomed');
+    });
+    stage.addEventListener('mousemove',function(e){
+      if(!stage.classList.contains('zoomed')||!img)return;
+      var r=stage.getBoundingClientRect();
+      var x=((e.clientX-r.left)/r.width)*100;
+      var y=((e.clientY-r.top)/r.height)*100;
+      img.style.transformOrigin=Math.max(0,Math.min(100,x))+'% '+Math.max(0,Math.min(100,y))+'%';
+    });
+  }
+}
+
 function productSparkles(){
   for(var i=0;i<14;i++){
     var s=document.createElement('i');s.className='ai-spark pm';
@@ -825,9 +1226,22 @@ function bindInternalProductLinks(scope){
 document.addEventListener('click',function(e){
   if(e.target&&e.target.id==='pmodal')closeProductModal();
 });
-document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeProductModal();closeAI&&closeAI();}});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){closePhotoZoom&&closePhotoZoom();closeProductModal();closeAI&&closeAI();closeCart&&closeCart();}});
 setTimeout(function(){
   var c=document.getElementById('pmClose'); if(c)c.addEventListener('click',closeProductModal);
+  bindPhotoZoom();
+  var add=document.getElementById('pmAddCart'); if(add)add.addEventListener('click',function(){
+    var pid=parseInt(add.dataset.pid,10);
+    if(!isNaN(pid)){
+      if(!requireSizeIfNeeded(P[pid]))return;
+      addToCartByIndex(pid,false,getSelectedSize());
+      updateProductCartState(pid);
+      add.classList.remove('bump');
+      void add.offsetWidth;
+      add.classList.add('bump');
+    }
+  });
+  var view=document.getElementById('pmViewCart'); if(view)view.addEventListener('click',openCart);
   var a=document.getElementById('pmAsk'); if(a)a.addEventListener('click',function(){
     var p=P[currentProductIndex]; if(!p)return;
     closeProductModal();openAI(true,true);
@@ -845,7 +1259,7 @@ setTimeout(function(){
     cu.style.left=e.clientX+'px';cu.style.top=e.clientY+'px';
     cr.style.left=e.clientX+'px';cr.style.top=e.clientY+'px';
   });
-  function bind(){document.querySelectorAll('a,button,.pc,.rc,.lb-item,.pm-rel').forEach(function(el){el.onmouseenter=function(){cr.classList.add('h');};el.onmouseleave=function(){cr.classList.remove('h');};});}
+  function bind(){document.querySelectorAll('a,button,.pc,.rc,.lb-item,.pm-rel,.pm-look-item,.cart-upsell-item').forEach(function(el){el.onmouseenter=function(){cr.classList.add('h');};el.onmouseleave=function(){cr.classList.remove('h');};});}
   bind();window.rebindCursor=bind;
 })();
 
@@ -895,7 +1309,7 @@ function render(){
     var ih=p.imagen&&p.imagen.indexOf('http')===0?'<img src="'+p.imagen+'" alt="'+p.nombre.replace(/"/g,'&quot;')+'" loading="lazy">':'<div class="pph">C</div>';
     var th=p.tallas?'<div class="ptallas">Tallas: '+p.tallas+'</div>':'';
     var pid=P.indexOf(p);
-    return '<div class="pc" data-pid="'+pid+'"><div class="pimg">'+ih+'<div class="pbadge">'+p.categoria+'</div><div class="pov"></div><div class="pact">Ver en Caneva ✨</div></div><div class="pinfo"><div class="pname">'+p.nombre+'</div><div class="pprice">'+p.precio+'</div>'+th+'</div></div>';
+    return '<div class="pc" data-pid="'+pid+'"><div class="pimg">'+ih+'<div class="pbadge">'+p.categoria+'</div><div class="pov"></div><div class="pact">Ver / agregar ✨</div></div><div class="pinfo"><div class="pname">'+p.nombre+'</div><div class="pprice">'+p.precio+'</div>'+th+'</div></div>';
   }).join('');
   var cards=document.querySelectorAll('.pc');
   cards.forEach(function(c,i){c.addEventListener('click',function(){openProductModal(parseInt(c.dataset.pid,10));});setTimeout(function(){c.classList.add('show');},Math.min(i*25,400));});
@@ -903,10 +1317,10 @@ function render(){
 }
 document.getElementById('fbar').addEventListener('click',function(e){var b=e.target.closest('.fb');if(!b)return;document.querySelectorAll('.fb').forEach(function(x){x.classList.remove('on');});b.classList.add('on');acat=b.dataset.c;render();});
 document.getElementById('srch').addEventListener('input',function(e){sq=e.target.value.toLowerCase().trim();render();});
-renderFilters();render();loadRemoteCatalog();
+renderFilters();render();renderLookbook();loadRemoteCatalog();
 
 // LOOKBOOK clicks
-document.querySelectorAll('.lb-item').forEach(function(el){el.addEventListener('click',function(){document.getElementById('catalogo').scrollIntoView({behavior:'smooth'});});});
+document.querySelectorAll('.lb-item').forEach(function(el){el.addEventListener('click',function(){var pid=parseInt(el.dataset.pid,10);if(!isNaN(pid)&&P[pid]){openProductModal(pid);}else{document.getElementById('catalogo').scrollIntoView({behavior:'smooth'});}});});
 
 // QUICK BTNS + AI WIDGET
 var qq=[
@@ -967,6 +1381,71 @@ function rmd(t,allowHtml){
 }
 function norm(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
 function priceNum(p){var n=String(p||'').replace(/[^\d]/g,'');return n?parseInt(n,10):999999999;}
+
+// CANEVA CART — local, seguro y sin tocar catálogo/Excel
+var CART_KEY='caneva_cart_v2_sizes';
+var CART=[];
+function moneyCOP(n){return '$'+(Number(n)||0).toLocaleString('es-CO');}
+function productBaseKey(p){return String((p&&p.url)||[p.categoria,p.nombre,p.precio,p.tallas].join('|'));}
+function productKey(p,size){return productBaseKey(p)+'|size='+(size||'SIN_TALLA');}
+function productCartItem(idx){var p=P[idx];if(!p)return null;var sizes=productSizes(p);var size=sizes.length?getSelectedSize():'';if(size){var key=productKey(p,size);return CART.find(function(x){return x.key===key;})||null;}var base=productBaseKey(p);return CART.find(function(x){return String(x.key||'').indexOf(base+'|size=')===0;})||null;}
+function updateProductCartState(idx){
+  var state=document.getElementById('pmCartState'),title=document.getElementById('pmCartTitle'),meta=document.getElementById('pmCartMeta'),btn=document.getElementById('pmAddCart');
+  if(!state||!btn)return;
+  var p=P[idx], sizes=productSizes(p), selected=getSelectedSize(), it=productCartItem(idx);
+  if(!it){
+    state.classList.remove('show');
+    btn.classList.remove('added');
+    btn.innerHTML='<span>Agregar al carrito</span>';
+    return;
+  }
+  btn.classList.add('added');
+  btn.innerHTML='<span>Agregado ✓ · sumar otro</span>';
+  if(title)title.textContent='Agregado a tu carrito';
+  var sizeTxt=(it.size||selected)?' · talla '+(it.size||selected):'';
+  if(meta)meta.textContent=(Number(it.qty)||1)+' unidad(es)'+sizeTxt+' · subtotal de esta prenda '+moneyCOP((Number(it.price)||0)*(Number(it.qty)||1));
+  state.classList.add('show');
+}
+function loadCart(){try{CART=JSON.parse(localStorage.getItem(CART_KEY)||'[]')||[];}catch(e){CART=[];}renderCart();}
+function saveCart(){localStorage.setItem(CART_KEY,JSON.stringify(CART));renderCart();if(currentProductIndex>=0)updateProductCartState(currentProductIndex);}
+function cartTotal(){return CART.reduce(function(s,it){return s+(Number(it.price)||0)*(Number(it.qty)||1);},0);}
+function cartQty(){return CART.reduce(function(s,it){return s+(Number(it.qty)||1);},0);}
+function toastCart(msg){var t=document.getElementById('cartToast');if(!t)return;t.textContent=msg||'Producto agregado';t.classList.add('show');setTimeout(function(){t.classList.remove('show');},1700);}
+function addToCartByIndex(idx,open,size){var p=P[idx];if(!p)return;size=size||'';var key=productKey(p,size);var it=CART.find(function(x){return x.key===key;});if(it){it.qty+=1;}else{CART.push({key:key,nombre:p.nombre,categoria:p.categoria,precio:p.precio,price:priceNum(p.precio),tallas:p.tallas||'',size:size,imagen:p.imagen||'',url:p.url||'',qty:1});}saveCart();flyToBag(p);toastCart(size?'Agregado · talla '+size:'Agregado al carrito');if(open)openCart();}
+function changeCartQty(key,delta){var it=CART.find(function(x){return x.key===key;});if(!it)return;it.qty=(Number(it.qty)||1)+delta;if(it.qty<=0){CART=CART.filter(function(x){return x.key!==key;});}saveCart();}
+function removeCartItem(key){CART=CART.filter(function(x){return x.key!==key;});saveCart();}
+
+function updateCartBadges(){var q=cartQty();['cartCount','navCartCount','mobileCartCount'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=q;});}
+function cartUpsellProducts(){var inCart={};CART.forEach(function(it){inCart[norm(it.nombre)]=true;});var seed=CART[0]||{},seedCat=normCat(seed.categoria||'');var all=catalogProducts().filter(function(p){return p.imagen&&p.imagen.indexOf('http')===0&&!inCart[norm(p.nombre)];});all.sort(function(a,b){var sa=(seedCat&&normCat(a.categoria)===seedCat?8:0)+(priceNum(a.precio)<=90000?2:0);var sb=(seedCat&&normCat(b.categoria)===seedCat?8:0)+(priceNum(b.precio)<=90000?2:0);return sb-sa||priceNum(a.precio)-priceNum(b.precio);});return all.slice(0,2);}
+function flyToBag(p){try{if(!p||!p.imagen||p.imagen.indexOf('http')!==0)return;var target=document.getElementById('cartFab')||document.getElementById('navCart');if(!target)return;var img=document.createElement('img');img.src=p.imagen;img.className='fly-to-bag';var start=document.getElementById('pmMedia')||document.body,sr=start.getBoundingClientRect(),tr=target.getBoundingClientRect();img.style.left=(sr.left+sr.width*.5-29)+'px';img.style.top=(sr.top+sr.height*.45-38)+'px';img.style.setProperty('--tx',(tr.left+tr.width*.5-(sr.left+sr.width*.5))+'px');img.style.setProperty('--ty',(tr.top+tr.height*.5-(sr.top+sr.height*.45))+'px');document.body.appendChild(img);setTimeout(function(){img.remove();},760);}catch(e){}}
+function renderCart(){
+  var items=document.getElementById('cartItems'),total=document.getElementById('cartTotal');
+  updateCartBadges();
+  if(total)total.textContent=moneyCOP(cartTotal());
+  if(!items)return;
+  if(!CART.length){items.innerHTML='<div class="cart-empty"><div><b>Bolsa Caneva</b>Agrega tus prendas favoritas y arma tu pedido con estilo.</div></div>';return;}
+  var list=CART.map(function(it){
+    var img=it.imagen&&it.imagen.indexOf('http')===0?'<img src="'+escAttr(it.imagen)+'" alt="'+escAttr(it.nombre)+'" loading="lazy">':'C';
+    var sizeLine=it.size?'<div class="cart-size"><strong>Talla:</strong> '+escHtml(it.size)+'</div>':(it.tallas?'<div class="cart-size">Tallas disponibles: '+escHtml(it.tallas)+'</div>':'');
+    return '<div class="cart-item" data-key="'+escAttr(it.key)+'"><div class="cart-thumb">'+img+'</div><div class="cart-meta"><div class="cart-name">'+escHtml(it.nombre)+'</div><div class="cart-cat">'+escHtml(it.categoria)+'</div>'+sizeLine+'<div class="cart-price">'+escHtml(it.precio)+'</div></div><div class="cart-line"><button class="cart-remove" type="button" data-act="remove" aria-label="Quitar">×</button><div class="cart-qty"><button type="button" data-act="minus">−</button><span>'+it.qty+'</span><button type="button" data-act="plus">+</button></div></div></div>';
+  }).join('');
+  var ups=cartUpsellProducts();
+  if(ups.length){list+='<div class="cart-upsell"><div class="cart-upsell-title">Completa tu bolsa</div><div class="cart-upsell-list">'+ups.map(function(p){var pid=P.indexOf(p),ih=p.imagen?'<img src="'+escAttr(p.imagen)+'" alt="'+escAttr(p.nombre)+'" loading="lazy">':'C';return '<div class="cart-upsell-item"><div class="cart-upsell-img">'+ih+'</div><div><div class="cart-upsell-name">'+escHtml(p.nombre)+'</div><div class="cart-upsell-price">'+escHtml(p.precio)+'</div></div><button class="cart-upsell-btn" type="button" data-upsell-pid="'+pid+'">Agregar</button></div>';}).join('')+'</div></div>';}
+  items.innerHTML=list;
+}
+function openCart(){document.body.classList.add('cart-open');var d=document.getElementById('cartDrawer');if(d)d.setAttribute('aria-hidden','false');}
+function closeCart(){document.body.classList.remove('cart-open');var d=document.getElementById('cartDrawer');if(d)d.setAttribute('aria-hidden','true');}
+function cartWhatsText(){if(!CART.length)return 'Hola Caneva ✨ Quiero hacer un pedido.';var lines=CART.map(function(it,i){return (i+1)+'. '+it.nombre+' x'+it.qty+' - '+it.precio+(it.size?' | Talla: '+it.size:(it.tallas?' | Tallas disponibles: '+it.tallas:''));});return 'Hola Caneva ✨ Quiero hacer este pedido:%0A%0A'+lines.join('%0A')+'%0A%0ASubtotal: '+moneyCOP(cartTotal())+'%0A¿Me confirmas disponibilidad y domicilio?';}
+function sendCartWhatsApp(){if(!CART.length){toastCart('Tu carrito está vacío');return;}window.open('https://wa.me/'+WA_PHONE+'?text='+cartWhatsText(),'_blank','noopener');}
+function checkoutBold(){if(!CART.length){toastCart('Tu carrito está vacío');return;}alert('El pago con Bold está temporalmente fuera de servicio. Por ahora finaliza tu pedido por WhatsApp y Caneva te confirma disponibilidad, domicilio y forma de pago.');}
+function bindCartEvents(){
+  var fab=document.getElementById('cartFab'),navCart=document.getElementById('navCart'),mobileCart=document.getElementById('mobileCart'),close=document.getElementById('cartClose'),back=document.getElementById('cartBackdrop'),keep=document.getElementById('cartKeep'),wa=document.getElementById('cartWhats'),bold=document.getElementById('cartBold'),items=document.getElementById('cartItems');
+  [fab,navCart,mobileCart].forEach(function(el){if(el)el.addEventListener('click',function(){openCart();var mm=document.getElementById('mm');if(mm)mm.classList.remove('o');});});
+  if(close)close.addEventListener('click',closeCart);if(back)back.addEventListener('click',closeCart);if(keep)keep.addEventListener('click',closeCart);if(wa)wa.addEventListener('click',sendCartWhatsApp);if(bold)bold.addEventListener('click',checkoutBold);
+  if(items)items.addEventListener('click',function(e){var up=e.target.closest('[data-upsell-pid]');if(up){addRelatedToCart(parseInt(up.dataset.upsellPid,10));return;}var btn=e.target.closest('button[data-act]');if(!btn)return;var row=btn.closest('.cart-item');if(!row)return;var key=row.dataset.key;if(btn.dataset.act==='plus')changeCartQty(key,1);if(btn.dataset.act==='minus')changeCartQty(key,-1);if(btn.dataset.act==='remove')removeCartItem(key);});
+}
+setTimeout(function(){loadCart();bindCartEvents();},0);
+
 function uniqueByName(arr){
   var seen={}; return arr.filter(function(p){var k=norm(p.nombre); if(seen[k])return false; seen[k]=true; return true;});
 }
