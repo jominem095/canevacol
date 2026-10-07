@@ -95,7 +95,10 @@ main{padding:14px 16px 120px}
     <div id="chips" class="chips"></div>
   </header>
   <main>
-    <p id="countLine" class="muted" style="font-size:12px;margin:0 0 10px"></p>
+    <div class="hrow" style="margin:0 0 10px">
+      <p id="countLine" class="muted" style="font-size:12px;margin:0"></p>
+      <button class="iconbtn hidden" id="renameCatBtn">✎ Renombrar categoría</button>
+    </div>
     <div id="grid" class="grid"></div>
   </main>
   <button class="fab" id="newBtn">+ Nuevo</button>
@@ -266,7 +269,11 @@ function renderGrid(){
       <div class="p">${esc(p.precio)||"Sin precio"}${isOutOfStock(p)?'<span class="badge">AGOTADO</span>':""}</div></div>
     </button>`).join("") || `<p class="muted">No hay productos con ese filtro.</p>`;
 }
-function renderAll(){ renderChips(); renderGrid(); }
+function renderAll(){
+  if(activeCat!=="Todos" && !products.some(p=>p.categoria===activeCat)) activeCat="Todos";
+  renderChips(); renderGrid();
+  $("renameCatBtn").classList.toggle("hidden", activeCat==="Todos");
+}
 
 // ---------- Editor ----------
 function setPhotoPreview(src, isNew){
@@ -362,6 +369,28 @@ async function removeProduct(){
     list.splice(i,1); return list;
   }, null, "Producto eliminado");
 }
+// Renames a whole category (or merges it into an existing one) in a single publish.
+const HIDDEN_CAT_WORDS=/domicilio|domicl|mayorista|others/i; // same filter the store and the AI use
+async function renameCategory(){
+  const oldName=activeCat; if(oldName==="Todos") return;
+  const count=products.filter(p=>p.categoria===oldName).length;
+  const input=prompt(`Nuevo nombre para "${oldName}" (${count} productos):`, oldName);
+  if(input===null) return;
+  const newName=input.trim().replace(/\s+/g," ");
+  if(!newName || newName===oldName) return;
+  const existing=categories().map(x=>x.c).find(c=>c.toLowerCase()===newName.toLowerCase() && c!==oldName);
+  if(existing && !confirm(`"${existing}" ya existe. ¿Unir los ${count} productos de "${oldName}" dentro de "${existing}"?`)) return;
+  if(HIDDEN_CAT_WORDS.test(newName) && !confirm(`Ojo: las categorías con "Domicilio", "Mayorista" u "Others" no se muestran en la tienda. ¿Continuar?`)) return;
+  const target=existing||newName;
+  const ok=await applyAndPublish(list=>{
+    let n=0;
+    const next=list.map(p=>p.categoria===oldName?(n++,{...p,categoria:target}):p);
+    if(!n) throw new Error("La categoría ya no existe. Toca Recargar.");
+    return next;
+  }, null, `Categoría renombrada a "${target}" ✓`);
+  if(ok){ activeCat=target; renderAll(); }
+}
+
 async function undoLast(){
   const raw=getLS(UNDO_KEY); if(!raw){ toast("No hay nada para deshacer."); return; }
   busy(true,"Deshaciendo…");
@@ -385,6 +414,7 @@ function showList(){ $("loginView").classList.add("hidden"); $("listView").class
 $("loginBtn").onclick=()=>{ const t=$("tokenInput").value.trim(); if(!t){ toast("Pega el token.",{err:true}); return; } setLS(TOKEN_KEY,t); showList(); };
 $("logoutBtn").onclick=()=>{ if(confirm("¿Cerrar sesión y borrar el token de este celular?")){ delLS(TOKEN_KEY); showLogin(); } };
 $("reloadBtn").onclick=loadList;
+$("renameCatBtn").onclick=renameCategory;
 $("search").oninput=renderGrid;
 $("chips").onclick=e=>{ const b=e.target.closest(".chip"); if(!b) return; activeCat=b.dataset.c; renderAll(); };
 $("grid").onclick=e=>{ const c=e.target.closest(".card"); if(c) openEditor(Number(c.dataset.i)); };
