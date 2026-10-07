@@ -33,6 +33,12 @@ main{padding:14px 16px 120px}
 .card .meta{padding:9px 10px 11px}
 .card .n{font-size:13px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:34px}
 .card .p{font-size:13px;color:var(--dim);margin-top:4px}
+.card{position:relative}
+.card.off .ph img{opacity:.35;filter:grayscale(1)}
+.vis{position:absolute;top:8px;right:8px;z-index:2;border:0;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:600;background:rgba(5,5,5,.75);color:var(--w);backdrop-filter:blur(6px)}
+.card.off .vis{background:var(--bad);color:var(--k)}
+.hint{font-size:12px;color:var(--dim);margin:6px 0 0;line-height:1.5}
+.sect{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin:22px 0 4px;border-top:1px solid var(--b);padding-top:16px}
 .badge{display:inline-block;font-size:10px;letter-spacing:.06em;border:1px solid var(--bad);color:var(--bad);border-radius:6px;padding:1px 5px;margin-left:4px}
 .fab{position:fixed;right:16px;bottom:calc(18px + env(safe-area-inset-bottom));z-index:6;background:var(--w);color:var(--k);border:0;border-radius:999px;padding:15px 20px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.5)}
 .muted{color:var(--dim)}.ok{color:var(--ok)}.bad{color:var(--bad)}
@@ -108,6 +114,7 @@ main{padding:14px 16px 120px}
     <div class="hrow">
       <div class="logo">CΛNEVΛ</div>
       <div style="display:flex;gap:8px">
+        <button class="iconbtn" id="settingsBtn">Ajustes</button>
         <button class="iconbtn" id="reloadBtn">Recargar</button>
         <button class="iconbtn" id="logoutBtn">Salir</button>
       </div>
@@ -141,6 +148,7 @@ main{padding:14px 16px 120px}
     <label>🖼 Agregar fotos<input id="galInput" type="file" accept="image/*" multiple></label>
   </div>
   <p class="muted" style="font-size:12px;margin:8px 0 0">La foto ★ es la principal. Las demás salen en el carrusel del detalle.</p>
+  <label class="checkrow"><input type="checkbox" id="fVisible"><span><b>Visible en la tienda.</b> Apágalo si se agotó; vuelve a prenderlo cuando llegue stock.</span></label>
   <div class="field"><label>Nombre</label><input id="fNombre" type="text"></div>
   <div class="row2">
     <div class="field"><label>Precio</label><input id="fPrecio" type="text" inputmode="numeric" placeholder="85000"></div>
@@ -153,6 +161,29 @@ main{padding:14px 16px 120px}
   <button class="btn" id="saveBtn">Guardar y publicar</button>
   <button class="btn ghost" id="cancelBtn">Cancelar</button>
   <button class="btn danger" id="deleteBtn">Eliminar producto</button>
+</section>
+
+<!-- Settings: social, announcement bar, ad pixels -->
+<div id="sSheetBg" class="sheet-bg hidden"></div>
+<section id="sSheet" class="sheet hidden">
+  <div class="grab"></div>
+  <h2 class="ptitle">Ajustes de la tienda</h2>
+  <div class="sect">Redes sociales</div>
+  <div class="field"><label>Instagram</label><input id="sIg" type="text" placeholder="@caneva.col o enlace"></div>
+  <div class="field"><label>TikTok</label><input id="sTt" type="text" placeholder="@caneva.col o enlace"></div>
+  <div class="field"><label>Facebook</label><input id="sFb" type="text" placeholder="nombre de la página o enlace"></div>
+  <p class="hint">Los íconos salen en el menú, en el celular y al pie de la página. Deja vacío lo que no uses.</p>
+  <div class="sect">Barra de anuncio (arriba de la página)</div>
+  <label class="checkrow"><input type="checkbox" id="sAnnOn"><span><b>Mostrar anuncio</b></span></label>
+  <div class="field"><label>Texto</label><input id="sAnnText" type="text" maxlength="140" placeholder="Envío gratis en Barranquilla hoy ✨"></div>
+  <div class="field"><label>Enlace al tocar (opcional)</label><input id="sAnnLink" type="text" placeholder="https://…"></div>
+  <div class="sect">Pauta y medición</div>
+  <div class="field"><label>Meta Pixel ID (Facebook / Instagram Ads)</label><input id="sMeta" type="text" inputmode="numeric" placeholder="Ej: 123456789012345"></div>
+  <div class="field"><label>TikTok Pixel ID</label><input id="sTtPx" type="text" placeholder="Ej: C1ABCDEF2345GHIJ"></div>
+  <div class="field"><label>Google Analytics (GA4)</label><input id="sGa" type="text" placeholder="Ej: G-ABC123XYZ"></div>
+  <p class="hint">Con esto tus anuncios saben quién vio un producto, quién lo agregó a la bolsa y quién escribió por WhatsApp. Solo pega el ID, no el código completo.</p>
+  <button class="btn" id="sSave">Guardar ajustes</button>
+  <button class="btn ghost" id="sCancel">Cancelar</button>
 </section>
 
 <!-- Home lookbook editor -->
@@ -235,7 +266,9 @@ function findOriginal(list, original, hintIndex){
   return list.findIndex(p=>sameProduct(p, original));
 }
 function isUrl(v){ return /^https?:\/\//i.test(String(v||"")); }
-function isOutOfStock(p){ const s=String(p.stock).trim(); return s!=="" && /^\d+$/.test(s) && Number(s)<=0; }
+// Hidden from the store when stock is 0 or says "agotado"/"oculto" (same rule as the store and the Worker)
+function isHidden(p){ const s=String(p.stock||"").trim().toLowerCase(); return /^0+$/.test(s)||s.startsWith("agotad")||s.startsWith("ocult"); }
+const HIDDEN_CHIP="__ocultos__";
 
 // ---------- UI helpers ----------
 let toastTimer=null;
@@ -306,25 +339,28 @@ function categories(){
 }
 function renderChips(){
   const cats=categories();
-  $("chips").innerHTML=[{c:"Todos",n:products.length},...cats].map(x=>
-    `<button class="chip ${x.c===activeCat?"on":""}" data-c="${esc(x.c)}">${esc(x.c)} (${x.n})</button>`).join("");
+  const hidden=products.filter(isHidden).length;
+  $("chips").innerHTML=[{c:"Todos",n:products.length},...cats].concat(hidden?[{c:HIDDEN_CHIP,n:hidden,label:"Ocultos"}]:[]).map(x=>
+    `<button class="chip ${x.c===activeCat?"on":""}" data-c="${esc(x.c)}">${esc(x.label||x.c)} (${x.n})</button>`).join("");
 }
 function renderGrid(){
   const q=norm($("search").value);
   const rows=products.map((p,i)=>({p,i})).filter(({p})=>
-    (activeCat==="Todos"||p.categoria===activeCat) && (!q || norm(p.nombre+" "+p.categoria).includes(q)));
+    (activeCat==="Todos"||p.categoria===activeCat||(activeCat===HIDDEN_CHIP&&isHidden(p))) && (!q || norm(p.nombre+" "+p.categoria).includes(q)));
   $("countLine").textContent=`${rows.length} de ${products.length} productos`;
   $("grid").innerHTML=rows.map(({p,i})=>`
-    <button class="card" data-i="${i}">
+    <div class="card ${isHidden(p)?"off":""}" data-i="${i}" role="button" tabindex="0">
+      <button type="button" class="vis" data-vis="${i}">${isHidden(p)?"Oculto · Activar":"Visible"}</button>
       <div class="ph">${isUrl(p.imagen)?`<img loading="lazy" src="${esc(p.imagen)}" alt="">`:"Sin foto"}</div>
       <div class="meta"><div class="n">${esc(p.nombre)}</div>
-      <div class="p">${esc(p.precio)||"Sin precio"}${isOutOfStock(p)?'<span class="badge">AGOTADO</span>':""}</div></div>
-    </button>`).join("") || `<p class="muted">No hay productos con ese filtro.</p>`;
+      <div class="p">${esc(p.precio)||"Sin precio"}${isHidden(p)?'<span class="badge">OCULTO</span>':""}</div></div>
+    </div>`).join("") || `<p class="muted">No hay productos con ese filtro.</p>`;
 }
 function renderAll(){
-  if(activeCat!=="Todos" && !products.some(p=>p.categoria===activeCat)) activeCat="Todos";
+  if(activeCat===HIDDEN_CHIP && !products.some(isHidden)) activeCat="Todos";
+  if(activeCat!=="Todos" && activeCat!==HIDDEN_CHIP && !products.some(p=>p.categoria===activeCat)) activeCat="Todos";
   renderChips(); renderGrid();
-  $("renameCatBtn").classList.toggle("hidden", activeCat==="Todos");
+  $("renameCatBtn").classList.toggle("hidden", activeCat==="Todos"||activeCat===HIDDEN_CHIP);
   renderPortadaInfo();
 }
 
@@ -513,6 +549,7 @@ function openEditor(index){
   selPhoto=0;
   $("fNombre").value=p.nombre; $("fPrecio").value=p.precio; $("fStock").value=p.stock;
   $("fTallas").value=p.tallas; $("fDesc").value=p.descripcion;
+  syncVisibleFromStock();
   fillCategorySelect(p.categoria);
   renderPhotos();
   $("deleteBtn").classList.toggle("hidden",isNew);
@@ -599,6 +636,69 @@ async function removeProduct(){
     list.splice(i,1); return list;
   }, null, "Producto eliminado");
 }
+// One-tap hide/show from the product grid
+async function toggleVisible(i){
+  const p=products[i]; if(!p) return;
+  const hide=!isHidden(p);
+  const updated={...p, stock: hide?"0":""};
+  await applyAndPublish(list=>{
+    const k=findOriginal(list, p, i);
+    if(k<0) throw new Error("Este producto cambió en otro lado. Toca Recargar.");
+    list[k]=updated; return list;
+  }, null, hide?`"${p.nombre}" oculto de la tienda`:`"${p.nombre}" visible otra vez ✓`);
+}
+function syncVisibleFromStock(){ $("fVisible").checked=!isHidden({stock:$("fStock").value}); }
+function onVisibleChange(){
+  if(!$("fVisible").checked) $("fStock").value="0";
+  else if(isHidden({stock:$("fStock").value})) $("fStock").value="";
+}
+
+// ---------- Settings (social links, announcement bar, ad pixels) ----------
+function normSocial(v, kind){
+  v=String(v||"").trim(); if(!v) return "";
+  if(/^https?:\/\//i.test(v)) return v.replace(/^http:/i,"https:");
+  const h=v.replace(/^@/,"").replace(/\s+/g,"");
+  if(kind==="instagram") return "https://instagram.com/"+h;
+  if(kind==="tiktok") return "https://www.tiktok.com/@"+h;
+  return "https://facebook.com/"+h;
+}
+async function openSettings(){
+  busy(true,"Cargando ajustes…");
+  try{ siteConfig=await fetchConfig(); }
+  catch(e){ busy(false); toast(e.message,{err:true,ms:9000}); return; }
+  busy(false);
+  const so=siteConfig.social||{}, an=siteConfig.announcement||{}, ad=siteConfig.ads||{};
+  $("sIg").value=so.instagram||""; $("sTt").value=so.tiktok||""; $("sFb").value=so.facebook||"";
+  $("sAnnOn").checked=!!an.enabled; $("sAnnText").value=an.text||""; $("sAnnLink").value=an.link||"";
+  $("sMeta").value=ad.metaPixel||""; $("sTtPx").value=ad.tiktokPixel||""; $("sGa").value=ad.ga4||"";
+  $("sSheetBg").classList.remove("hidden"); $("sSheet").classList.remove("hidden");
+  $("sSheet").scrollTop=0; document.body.style.overflow="hidden";
+}
+function closeSettings(){ $("sSheetBg").classList.add("hidden"); $("sSheet").classList.add("hidden"); document.body.style.overflow=""; }
+async function saveSettings(){
+  const social={instagram:normSocial($("sIg").value,"instagram"), tiktok:normSocial($("sTt").value,"tiktok"), facebook:normSocial($("sFb").value,"facebook")};
+  const annLink=$("sAnnLink").value.trim();
+  const announcement={enabled:$("sAnnOn").checked, text:$("sAnnText").value.trim(), link:annLink?(/^https?:\/\//i.test(annLink)?annLink.replace(/^http:/i,"https:"):"https://"+annLink):""};
+  const ads={metaPixel:$("sMeta").value.replace(/\s+/g,""), tiktokPixel:$("sTtPx").value.replace(/\s+/g,"").toUpperCase(), ga4:$("sGa").value.replace(/\s+/g,"").toUpperCase()};
+  // Validate before sending (the Worker would silently drop invalid values)
+  if(ads.metaPixel && !/^\d{6,20}$/.test(ads.metaPixel)) return toast("El Meta Pixel ID son solo números (15–16 dígitos).",{err:true});
+  if(ads.tiktokPixel && !/^[A-Z0-9]{10,30}$/.test(ads.tiktokPixel)) return toast("El TikTok Pixel ID son letras y números, sin espacios.",{err:true});
+  if(ads.ga4 && !/^G-[A-Z0-9]{4,15}$/.test(ads.ga4)) return toast("El ID de Google Analytics empieza por G-",{err:true});
+  if(announcement.enabled && !announcement.text) return toast("Escribe el texto del anuncio o apágalo.",{err:true});
+  const cfg={...(siteConfig||{}), social, announcement, ads};
+  busy(true,"Guardando ajustes…");
+  try{
+    const res=await api(API_BASE+"/admin/config",{method:"POST",headers:{"x-admin-token":token(),"Content-Type":"application/json"},body:JSON.stringify(cfg)});
+    let data={}; try{ data=await res.json(); }catch(e){}
+    if(res.status===401||res.status===403) throw new Error("Token inválido. Toca Salir y vuelve a entrar.");
+    if(res.status===404) throw new Error("Falta actualizar el Worker de Cloudflare.");
+    if(!res.ok||!data.ok) throw new Error(data.error||("Error "+res.status));
+    siteConfig=data.config;
+    if(social.tiktok && !data.config.social) throw new Error("Tu Worker aún no guarda redes/pauta: actualízalo a la versión 3.");
+    closeSettings(); busy(false); toast("Ajustes publicados ✓");
+  }catch(e){ busy(false); toast("Error: "+e.message,{err:true,ms:9000}); }
+}
+
 // Renames a whole category (or merges it into an existing one) in a single publish.
 const HIDDEN_CAT_WORDS=/domicilio|domicl|mayorista|others/i; // same filter the store and the AI use
 async function renameCategory(){
@@ -653,7 +753,12 @@ $("pSlots").onclick=onSlotsClick; $("pFile").onchange=onSlotFile;
 $("pickClose").onclick=closePicker; $("pickSearch").oninput=renderPicker; $("pickGrid").onclick=onPickProduct;
 $("search").oninput=renderGrid;
 $("chips").onclick=e=>{ const b=e.target.closest(".chip"); if(!b) return; activeCat=b.dataset.c; renderAll(); };
-$("grid").onclick=e=>{ const c=e.target.closest(".card"); if(c) openEditor(Number(c.dataset.i)); };
+$("grid").onclick=e=>{
+  const v=e.target.closest(".vis"); if(v){ e.stopPropagation(); toggleVisible(Number(v.dataset.vis)); return; }
+  const c=e.target.closest(".card"); if(c) openEditor(Number(c.dataset.i));
+};
+$("fVisible").onchange=onVisibleChange; $("fStock").addEventListener("input",syncVisibleFromStock);
+$("settingsBtn").onclick=openSettings; $("sSheetBg").onclick=closeSettings; $("sCancel").onclick=closeSettings; $("sSave").onclick=saveSettings;
 $("newBtn").onclick=()=>openEditor(-1);
 $("sheetBg").onclick=closeEditor; $("cancelBtn").onclick=closeEditor;
 $("saveBtn").onclick=save; $("deleteBtn").onclick=removeProduct;
