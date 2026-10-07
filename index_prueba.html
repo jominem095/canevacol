@@ -2420,6 +2420,7 @@ function cardHtml(products){
 }
 // Caneva AI v2: conversation memory and current product context sent to the Worker
 var CHAT_HISTORY=[],AI_CONTEXT={};
+function lookbookForAI(){return Array.prototype.map.call(document.querySelectorAll('.lb-item'),function(el){var p=P[parseInt(el.dataset.pid,10)];return p?p.nombre+' ('+p.categoria+', '+p.precio+')':'';}).filter(Boolean);}
 function aiPicked(list){return (list||[]).map(function(x){var i=P.findIndex(function(p){return p.nombre===x.nombre&&p.categoria===x.categoria&&p.precio===x.precio;});if(i<0)i=P.findIndex(function(p){return p.nombre===x.nombre&&p.categoria===x.categoria;});if(i<0)i=P.findIndex(function(p){return p.nombre===x.nombre;});return P[i];}).filter(Boolean);}
 function lookWhatsLink(ps){var total=0;var lines=ps.map(function(p){total+=priceNum(p.precio)<999999999?priceNum(p.precio):0;return '• '+p.nombre+' - '+p.precio;});return 'https://wa.me/'+WA_PHONE+'?text='+encodeURIComponent('Hola Caneva ✨ Caneva AI me recomendó:\n'+lines.join('\n')+(ps.length>1?'\nTotal: $'+total.toLocaleString('es-CO'):'')+'\n¿Me confirmas disponibilidad y tallas?');}
 function addMsg(t,r,explicit){
@@ -2490,7 +2491,7 @@ async function sendChat(){
       body: JSON.stringify({
         message: msg,
         history: CHAT_HISTORY.slice(-10),
-        context: AI_CONTEXT
+        context: Object.assign({}, AI_CONTEXT, {portada: lookbookForAI()})
       })
     });
 
