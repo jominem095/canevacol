@@ -1599,7 +1599,7 @@ body.has-ann nav{top:34px}
       </div>
       <div class="pm-note" id="pmNote"></div>
       <div class="pm-trust">
-        <div><b>1 día</b><span>Entrega hábil Barranquilla</span></div>
+        <div><b id="pmTrustDays">1 día</b><span id="pmTrustDaysTxt">Entrega hábil Barranquilla</span></div>
         <div><b>Contraentrega</b><span>Compra con confianza</span></div>
         <div><b>Stylist AI</b><span>Te arma el look completo</span></div>
       </div>
@@ -2080,7 +2080,7 @@ function openProductModal(idx){
   document.getElementById('pmCat').textContent=p.categoria;
   document.getElementById('pmName').textContent=p.nombre;
   document.getElementById('pmPrice').textContent=p.precio;
-  var ownDesc=String(p.descripcion||'').trim();document.getElementById('pmDesc').textContent=(ownDesc&&ownDesc!==p.tallas&&/[a-záéíóúñ]{4,}/i.test(ownDesc))?ownDesc:productTone(p);var fab=document.getElementById('pmFabric');if(fab){fab.hidden=!p.tela;document.getElementById('pmFabricText').textContent=p.tela||'';}
+  var ownDesc=String(p.descripcion||'').trim();document.getElementById('pmDesc').textContent=(ownDesc&&ownDesc!==p.tallas&&/[a-záéíóúñ]{4,}/i.test(ownDesc))?ownDesc:productTone(p);var made=/atelier|bajo pedido|encargo/i.test(p.categoria+' '+(p.descripcion||''));var td=document.getElementById('pmTrustDays'),tt=document.getElementById('pmTrustDaysTxt');if(td){td.textContent=made?'10 días hábiles':'1 día';tt.textContent=made?'Hecho para ti':'Entrega hábil Barranquilla';}var fab=document.getElementById('pmFabric');if(fab){fab.hidden=!p.tela;document.getElementById('pmFabricText').textContent=p.tela||'';}
   document.getElementById('pmTags').innerHTML=productTags(p).map(function(t,i){return '<span class="pm-tag '+(i===0?'gold':'')+'">'+escHtml(t)+'</span>';}).join('');
   renderSizeSelector(p);
   document.getElementById('pmWhats').href=waLinkFor(p);
