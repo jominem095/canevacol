@@ -199,9 +199,9 @@ function busy(on,msg){ $("busy").classList.toggle("hidden",!on); if(msg) $("busy
 async function api(url, opts){
   try{ return await fetch(url, opts); }
   catch(e){
-    throw new Error(location.hostname.endsWith("github.io")
-      ? "Sin conexión con Cloudflare. Revisa tu internet."
-      : "Cloudflare no acepta conexiones desde "+location.hostname+". Abre jominem095.github.io/canevacol/admin_movil.html");
+    throw new Error(navigator.onLine===false
+      ? "Sin internet. Revisa tu conexión."
+      : "Cloudflare bloqueó la conexión desde "+location.hostname+" (CORS). Hay que permitir este dominio en el Worker caneva-ai.");
   }
 }
 async function fetchCatalog(){
