@@ -1415,8 +1415,10 @@ body.cart-open{overflow:hidden}
 .pm-count{position:absolute;right:1.1rem;top:1.1rem;z-index:6;font-size:.62rem;letter-spacing:.18em;color:#f7f7f4;background:rgba(2,2,2,.6);border:1px solid rgba(247,247,244,.26);padding:.45rem .65rem}
 @media(hover:none){.pm-nav{display:none}}
 @media(max-width:720px){.pm-dots{bottom:3.6rem}.pm-count{top:auto;bottom:.9rem;right:.9rem}}
-/* V15 — promo lookbook label */
-.lb-promo .lb-cat{text-transform:none}
+/* V15 — manual lookbook */
+.lb-grid.lb-pending .lb-item img{opacity:0}
+.lb-grid .lb-item img{transition:opacity .5s,transform 1.2s cubic-bezier(.16,1,.3,1),filter .8s}
+.lb-manual .lb-cat{text-transform:none}
 </style>
 </head>
 <body>
@@ -1505,7 +1507,7 @@ body.cart-open{overflow:hidden}
     <div class="eyebrow">Lookbook 2025</div>
     <h2 class="sh">La nueva <em>colecci&oacute;n</em></h2>
   </div>
-  <div class="lb-grid reveal reveal-d1"><div class="lb-item lb1">
+  <div class="lb-grid reveal reveal-d1 lb-pending"><div class="lb-item lb1">
       <img src="https://firebasestorage.googleapis.com/v0/b/kyte-7c484.appspot.com/o/zClNkyd9fma05H1ZqLBqhts0pOu1%2F0C6CA808-54E4-4943-B5E2-C4D6131A066E.jpg?alt=media" alt="Vestidos" loading="lazy">
       <div class="lb-ov"></div>
       <div class="lb-label"><span class="lb-cat">Vestidos</span><a href="#catalogo" class="lb-cta">Ver colección →</a></div>
@@ -1792,40 +1794,56 @@ function setProductCount(){
   var sn=document.getElementById('sn'); if(sn)sn.textContent=catalogProducts().length;
 }
 
-// Lookbook: when a category containing "promo" has products with photos, the section shows them
-// ("La nueva promoción"). Otherwise it keeps the original "La nueva colección" behavior.
-var LB_DEFAULT=null;
-function promoProducts(){return P.filter(function(p){return normCat(p.categoria).indexOf('promo')>=0&&p.imagen&&p.imagen.indexOf('http')===0;});}
+// Lookbook ("La nueva colección"): when the admin saved a manual selection (Worker /config),
+// the section shows exactly those photos. Otherwise it keeps the original automatic picks.
+var LB_DEFAULT=null,SITE_CONFIG=null;
+function lbManual(){var c=SITE_CONFIG&&SITE_CONFIG.lookbook;return c&&c.enabled&&(c.items||[]).some(function(it){return it&&it.imagen&&it.imagen.indexOf('http')===0;})?c:null;}
+function lbTitleHtml(t){var w=escHtml(String(t||'').trim()).split(' ');if(w.length<2)return w.join(' ');var last=w.pop();return w.join(' ')+' <em>'+last+'</em>';}
+function lbFindProduct(it){if(!it||!it.producto)return -1;for(var k=0;k<P.length;k++){if(P[k].nombre===it.producto&&(!it.categoria||P[k].categoria===it.categoria))return k;}for(k=0;k<P.length;k++){if(P[k].nombre===it.producto)return k;}return -1;}
+function lbReveal(){var g=document.querySelector('.lb-grid');if(g)g.classList.remove('lb-pending');}
 function renderLookbook(){
   var items=document.querySelectorAll('.lb-item');
   if(!items.length)return;
   var head=document.querySelector('.lb-head');
   var eb=head&&head.querySelector('.eyebrow'),sh=head&&head.querySelector('.sh');
   if(!LB_DEFAULT){LB_DEFAULT={eb:eb?eb.innerHTML:'',sh:sh?sh.innerHTML:'',cta:Array.prototype.map.call(items,function(el){var a=el.querySelector('.lb-cta');return a?a.innerHTML:'';})};}
-  var promo=promoProducts().slice(0,items.length);
-  if(eb)eb.innerHTML=promo.length?'Promoción':LB_DEFAULT.eb;
-  if(sh)sh.innerHTML=promo.length?'La nueva <em>promoción</em>':LB_DEFAULT.sh;
-  var products=catalogProducts().filter(function(p){return p.imagen&&p.imagen.indexOf('http')===0&&promo.indexOf(p)<0;});
+  var manual=lbManual();
+  if(eb)eb.innerHTML=manual&&manual.eyebrow?escHtml(manual.eyebrow):LB_DEFAULT.eb;
+  if(sh)sh.innerHTML=manual&&manual.title?lbTitleHtml(manual.title):LB_DEFAULT.sh;
+  var chosen=manual?manual.items.map(function(it){return it&&P[lbFindProduct(it)];}):[];
+  var products=catalogProducts().filter(function(p){return p.imagen&&p.imagen.indexOf('http')===0&&chosen.indexOf(p)<0;});
   var rules=[{keys:['vestido','set','enterizo'],fallback:'Vestidos'},{keys:['camisa','crop','top','body','corset'],fallback:'Camisas'},{keys:['short','falda','bermuda'],fallback:'Shorts'}];
   var used=[];
   function pick(rule){var hit=products.find(function(p){var c=normCat(p.categoria),n=norm(p.nombre);return used.indexOf(p)<0 && rule.keys.some(function(k){return c.indexOf(k)>=0||n.indexOf(k)>=0;});});if(!hit)hit=products.find(function(p){return used.indexOf(p)<0;});if(hit)used.push(hit);return hit;}
   items.forEach(function(el,i){
     var img=el.querySelector('img'),cat=el.querySelector('.lb-cat'),cta=el.querySelector('.lb-cta');
-    var p=promo[i];
-    if(p){
-      if(img){img.src=p.imagen;img.alt=p.nombre;}
-      if(cat)cat.textContent=p.nombre;
-      if(cta)cta.innerHTML=(p.precio?escHtml(p.precio)+' · ':'')+'Ver promo →';
-      el.classList.add('lb-promo');el.dataset.pid=P.indexOf(p);return;
+    var it=manual&&manual.items[i];
+    if(it&&it.imagen&&it.imagen.indexOf('http')===0){
+      var pid=lbFindProduct(it);
+      if(img){img.src=it.imagen;img.alt=it.titulo||'Caneva';}
+      if(cat)cat.textContent=it.titulo||'';
+      if(cta)cta.innerHTML=pid>=0?'Ver prenda →':'Ver colección →';
+      el.classList.add('lb-manual');
+      if(pid>=0)el.dataset.pid=pid;else delete el.dataset.pid;
+      if(it.categoria&&pid<0)el.dataset.cat=it.categoria;else delete el.dataset.cat;
+      return;
     }
-    el.classList.remove('lb-promo');
+    el.classList.remove('lb-manual');delete el.dataset.cat;
     if(cta)cta.innerHTML=LB_DEFAULT.cta[i]||'Ver colección →';
     if(!products.length)return;
-    p=pick(rules[i]||rules[0]); if(!p)return;
+    var p=pick(rules[i]||rules[0]); if(!p)return;
     if(img){img.src=p.imagen;img.alt=p.nombre;}
     if(cat){cat.textContent=(p.categoria||rules[i].fallback||'Caneva').replace(' / ',' · ');}
     el.dataset.pid=P.indexOf(p);
   });
+}
+async function loadSiteConfig(){
+  try{
+    var res=await fetch(API_BASE+'/config',{cache:'no-store'});
+    var data=res.ok?await res.json():null;
+    if(data&&data.ok){SITE_CONFIG=data.config;renderLookbook();}
+  }catch(e){}
+  lbReveal();
 }
 async function loadRemoteCatalog(){
   try{
@@ -2193,10 +2211,10 @@ function render(){
 }
 document.getElementById('fbar').addEventListener('click',function(e){var b=e.target.closest('.fb');if(!b)return;document.querySelectorAll('.fb').forEach(function(x){x.classList.remove('on');});b.classList.add('on');acat=b.dataset.c;render();});
 document.getElementById('srch').addEventListener('input',function(e){sq=e.target.value.toLowerCase().trim();render();});
-renderFilters();render();renderLookbook();loadRemoteCatalog();
+renderFilters();render();renderLookbook();loadRemoteCatalog();loadSiteConfig();setTimeout(lbReveal,3500);
 
 // LOOKBOOK clicks
-document.querySelectorAll('.lb-item').forEach(function(el){el.addEventListener('click',function(){var pid=parseInt(el.dataset.pid,10);if(!isNaN(pid)&&P[pid]){openProductModal(pid);}else{document.getElementById('catalogo').scrollIntoView({behavior:'smooth'});}});});
+document.querySelectorAll('.lb-item').forEach(function(el){el.addEventListener('click',function(){var pid=parseInt(el.dataset.pid,10);if(!isNaN(pid)&&P[pid]){openProductModal(pid);}else{var c=el.dataset.cat;if(c){var fb=[].find.call(document.querySelectorAll('#fbar .fb'),function(b){return b.dataset.c===c;});if(fb)fb.click();}document.getElementById('catalogo').scrollIntoView({behavior:'smooth'});}});});
 
 // QUICK BTNS + AI WIDGET
 var qq=[

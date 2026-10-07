@@ -65,7 +65,19 @@ main{padding:14px 16px 120px}
 .thumb .dot{position:absolute;right:3px;top:3px;width:8px;height:8px;border-radius:50%;background:var(--ok)}
 .photoacts{display:flex;gap:10px;margin-top:8px}.photoacts button{flex:1;background:none;border:1px solid var(--b);border-radius:12px;padding:11px;font-size:13px}
 .photoacts button:disabled{opacity:.35}
-.promo{border:1px solid var(--b);border-radius:12px;padding:12px 14px;margin:0 0 12px;font-size:13px;line-height:1.5;background:var(--k2)}
+.promo{display:block;width:100%;text-align:left;border:1px solid var(--b);border-radius:12px;padding:12px 14px;margin:0 0 12px;font-size:13px;line-height:1.5;background:var(--k2)}
+.promo .go{float:right;font-weight:600}
+.ptitle{font-family:"Cormorant Garamond",serif;font-weight:300;font-size:28px;margin:4px 0 6px}
+.checkrow{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.5;margin:10px 0}.checkrow input{width:20px;height:20px;margin-top:2px;accent-color:#f7f7f4}
+.slot{border:1px solid var(--b);border-radius:14px;padding:12px;margin-top:14px;background:var(--k2)}
+.slothead{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-bottom:8px}
+.slotbody{display:grid;grid-template-columns:96px 1fr;gap:12px}
+.slotimg{aspect-ratio:3/4;border-radius:10px;overflow:hidden;background:var(--k3);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--dim)}
+.slotimg img{width:100%;height:100%;object-fit:cover}
+.slot .field{margin-top:0}.slot .field input,.slot .field select{padding:10px 12px;font-size:15px}
+.slotbtns{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.slotbtns button{background:none;border:1px solid var(--b);border-radius:999px;padding:7px 11px;font-size:12px}
+.picker{position:fixed;inset:0;z-index:15;background:var(--k);overflow-y:auto;padding-bottom:40px}
+.pickchoice{position:sticky;bottom:0;background:var(--k);border-top:1px solid var(--b);padding:12px 16px calc(12px + env(safe-area-inset-bottom))}
 .promo b{font-weight:600}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .toast{position:fixed;left:16px;right:16px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:20;background:var(--w);color:var(--k);border-radius:12px;padding:14px 16px;font-size:14px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
@@ -104,7 +116,7 @@ main{padding:14px 16px 120px}
     <div id="chips" class="chips"></div>
   </header>
   <main>
-    <div id="promoInfo" class="promo"></div>
+    <button id="portadaInfo" class="promo" type="button"></button>
     <div class="hrow" style="margin:0 0 10px">
       <p id="countLine" class="muted" style="font-size:12px;margin:0"></p>
       <button class="iconbtn hidden" id="renameCatBtn">✎ Renombrar categoría</button>
@@ -141,6 +153,31 @@ main{padding:14px 16px 120px}
   <button class="btn" id="saveBtn">Guardar y publicar</button>
   <button class="btn ghost" id="cancelBtn">Cancelar</button>
   <button class="btn danger" id="deleteBtn">Eliminar producto</button>
+</section>
+
+<!-- Home lookbook editor -->
+<div id="pSheetBg" class="sheet-bg hidden"></div>
+<section id="pSheet" class="sheet hidden">
+  <div class="grab"></div>
+  <h2 class="ptitle">Portada · La nueva colección</h2>
+  <p class="muted" style="font-size:13px;margin:0">Tú eliges las 3 fotos que salen en la página principal.</p>
+  <label class="checkrow"><input type="checkbox" id="pEnabled"><span><b>Usar mi selección.</b> Si lo apagas, la tienda vuelve a elegir sola.</span></label>
+  <div class="row2">
+    <div class="field"><label>Texto pequeño</label><input id="pEyebrow" type="text" placeholder="Lookbook 2025"></div>
+    <div class="field"><label>Título</label><input id="pTitle" type="text" placeholder="La nueva colección"></div>
+  </div>
+  <div id="pSlots"></div>
+  <button class="btn" id="pSave">Guardar portada</button>
+  <button class="btn ghost" id="pCancel">Cancelar</button>
+  <input id="pFile" type="file" accept="image/*" class="hidden">
+</section>
+<section id="picker" class="picker hidden">
+  <header>
+    <div class="hrow"><div style="font-size:15px;font-weight:600">Elige un producto</div><button class="iconbtn" id="pickClose">Cerrar</button></div>
+    <input id="pickSearch" class="search" type="search" placeholder="Buscar producto…">
+  </header>
+  <main><div id="pickGrid" class="grid"></div></main>
+  <div id="pickChoice" class="pickchoice hidden"></div>
 </section>
 
 <div id="toast" class="toast hidden"></div>
@@ -288,16 +325,152 @@ function renderAll(){
   if(activeCat!=="Todos" && !products.some(p=>p.categoria===activeCat)) activeCat="Todos";
   renderChips(); renderGrid();
   $("renameCatBtn").classList.toggle("hidden", activeCat==="Todos");
-  renderPromoInfo();
+  renderPortadaInfo();
 }
-// The store's "La nueva colección" section switches to promo mode when a category containing "promo" has products with photos.
-function isPromoCat(c){ return norm(c).includes("promo"); }
-function renderPromoInfo(){
-  const promo=products.filter(p=>isPromoCat(p.categoria));
-  const withPhoto=promo.filter(p=>isUrl(p.imagen)).length;
-  $("promoInfo").innerHTML = withPhoto
-    ? `★ <b>Portada en modo promoción</b>: ${withPhoto} producto(s) con foto en "${esc(promo[0].categoria)}". La tienda muestra los 3 primeros.`
-    : `☆ <b>Portada normal</b> ("La nueva colección"). Para mostrar una promoción, pon productos en una categoría llamada <b>Promoción</b>.`;
+
+// ---------- Home lookbook ("La nueva colección") ----------
+// Stored by the Worker under its own KV key (/config, /admin/config); never touches products.
+let siteConfig=null;      // last config read from the Worker (null = unknown / Worker not updated)
+let portada=null;         // working copy while editing
+let pickSlot=-1;
+function emptySlot(){ return {imagen:"",titulo:"",producto:"",categoria:"",file:null,src:""}; }
+async function fetchConfig(){
+  const res=await api(API_BASE+"/config?ts="+Date.now(),{cache:"no-store"});
+  if(res.status===404) throw new Error("Falta actualizar el Worker de Cloudflare (rutas /config).");
+  const data=await res.json();
+  if(!res.ok||!data.ok) throw new Error(data.error||"No se pudo leer la portada");
+  return data.config||{};
+}
+function renderPortadaInfo(){
+  const lb=siteConfig&&siteConfig.lookbook;
+  const n=lb?(lb.items||[]).filter(it=>isUrl(it.imagen)).length:0;
+  $("portadaInfo").innerHTML = (lb&&lb.enabled&&n)
+    ? `★ <b>Portada: tu selección</b> (${n} foto${n>1?"s":""})<span class="go">Editar ›</span>`
+    : `☆ <b>Portada: automática</b> — la tienda elige sola<span class="go">Elegir fotos ›</span>`;
+}
+async function openPortada(){
+  busy(true,"Cargando portada…");
+  try{ siteConfig=await fetchConfig(); }
+  catch(e){ busy(false); toast(e.message,{err:true,ms:9000}); return; }
+  busy(false);
+  const lb=siteConfig.lookbook||{};
+  const items=(lb.items||[]).slice(0,3);
+  portada={
+    enabled: !!lb.enabled || !(lb.items||[]).some(it=>it&&it.imagen), // first time: on by default
+    eyebrow: lb.eyebrow||"Lookbook 2025",
+    title: lb.title||"La nueva colección",
+    items:[0,1,2].map(i=>({...emptySlot(),...(items[i]||{}),src:(items[i]&&items[i].imagen)||""}))
+  };
+  $("pEnabled").checked=portada.enabled; $("pEyebrow").value=portada.eyebrow; $("pTitle").value=portada.title;
+  renderSlots();
+  $("pSheetBg").classList.remove("hidden"); $("pSheet").classList.remove("hidden");
+  $("pSheet").scrollTop=0; document.body.style.overflow="hidden";
+}
+function closePortada(){
+  $("pSheetBg").classList.add("hidden"); $("pSheet").classList.add("hidden");
+  document.body.style.overflow=""; portada=null;
+}
+function renderSlots(){
+  const cats=categories().map(x=>x.c);
+  $("pSlots").innerHTML=portada.items.map((it,i)=>{
+    const opts=[`<option value="">Catálogo completo</option>`]
+      .concat(it.producto?[`<option value="p" selected>La prenda: ${esc(it.producto)}</option>`]:[])
+      .concat(cats.map(c=>`<option value="c:${esc(c)}" ${!it.producto&&it.categoria===c?"selected":""}>Categoría: ${esc(c)}</option>`));
+    return `<div class="slot" data-s="${i}">
+      <div class="slothead">Foto ${i+1}${i===0?" · la grande":""}</div>
+      <div class="slotbody">
+        <div class="slotimg">${it.src?`<img src="${esc(it.src)}" alt="">`:"Vacía"}</div>
+        <div>
+          <div class="field"><label>Texto sobre la foto</label><input class="sTit" data-s="${i}" type="text" value="${esc(it.titulo)}" placeholder="Ej: Denim"></div>
+          <div class="field" style="margin-top:8px"><label>Al tocar la foto</label><select class="sLink" data-s="${i}">${opts.join("")}</select></div>
+          <div class="slotbtns">
+            <button type="button" data-act="pick" data-s="${i}">Elegir de un producto</button>
+            <button type="button" data-act="upload" data-s="${i}">Subir foto</button>
+            ${it.src?`<button type="button" data-act="clear" data-s="${i}">Quitar</button>`:""}
+          </div>
+        </div>
+      </div>
+    </div>`;}).join("");
+}
+function onSlotsInput(e){
+  const i=Number(e.target.dataset.s); if(isNaN(i)||!portada) return;
+  const it=portada.items[i];
+  if(e.target.classList.contains("sTit")) it.titulo=e.target.value;
+  if(e.target.classList.contains("sLink") && e.type==="change"){
+    const v=e.target.value;
+    if(v==="p") return; // keep linked product
+    it.producto=""; it.categoria=v.startsWith("c:")?v.slice(2):"";
+    renderSlots();
+  }
+}
+function onSlotsClick(e){
+  const b=e.target.closest("button[data-act]"); if(!b) return;
+  const i=Number(b.dataset.s), act=b.dataset.act;
+  if(act==="clear"){ portada.items[i]=emptySlot(); renderSlots(); }
+  if(act==="upload"){ pickSlot=i; $("pFile").click(); }
+  if(act==="pick"){ pickSlot=i; openPicker(); }
+}
+async function onSlotFile(e){
+  const f=e.target.files&&e.target.files[0]; e.target.value=""; if(!f||pickSlot<0) return;
+  busy(true,"Preparando foto…");
+  const file=await compressImage(f, `portada-${pickSlot+1}-${stamp()}`);
+  busy(false);
+  Object.assign(portada.items[pickSlot],{file, src:URL.createObjectURL(file), imagen:file.name});
+  $("pEnabled").checked=true; renderSlots();
+}
+// Product picker: choose a product, then which of its photos
+function openPicker(){
+  $("pickSearch").value=""; $("pickChoice").classList.add("hidden");
+  renderPicker(); $("picker").classList.remove("hidden"); $("picker").scrollTop=0;
+}
+function closePicker(){ $("picker").classList.add("hidden"); }
+function renderPicker(){
+  const q=norm($("pickSearch").value);
+  const rows=products.map((p,i)=>({p,i})).filter(({p})=>isUrl(p.imagen)&&(!q||norm(p.nombre+" "+p.categoria).includes(q)));
+  $("pickGrid").innerHTML=rows.map(({p,i})=>`
+    <button class="card" data-i="${i}"><div class="ph"><img loading="lazy" src="${esc(p.imagen)}" alt=""></div>
+    <div class="meta"><div class="n">${esc(p.nombre)}</div><div class="p">${esc(p.categoria)}</div></div></button>`).join("")
+    || `<p class="muted">No hay productos con foto.</p>`;
+}
+function onPickProduct(e){
+  const c=e.target.closest(".card"); if(!c) return;
+  const p=products[Number(c.dataset.i)];
+  const imgs=[p.imagen,...splitImages(p.imagenesExtra)].filter((u,k,a)=>isUrl(u)&&a.indexOf(u)===k);
+  const assign=url=>{
+    const it=portada.items[pickSlot];
+    Object.assign(it,{imagen:url,src:url,file:null,producto:p.nombre,categoria:p.categoria,titulo:it.titulo||p.categoria});
+    $("pEnabled").checked=true; closePicker(); renderSlots();
+  };
+  if(imgs.length===1) return assign(imgs[0]);
+  $("pickChoice").innerHTML=`<div style="font-size:13px;margin-bottom:8px">¿Cuál foto de <b>${esc(p.nombre)}</b>?</div>
+    <div class="thumbs">${imgs.map(u=>`<button type="button" class="thumb" data-u="${esc(u)}"><img src="${esc(u)}" alt=""></button>`).join("")}</div>`;
+  $("pickChoice").classList.remove("hidden");
+  $("pickChoice").onclick=ev=>{ const t=ev.target.closest(".thumb"); if(t) assign(t.dataset.u); };
+}
+async function savePortada(){
+  portada.enabled=$("pEnabled").checked;
+  portada.eyebrow=$("pEyebrow").value.trim();
+  portada.title=$("pTitle").value.trim();
+  const filled=portada.items.filter(it=>it.imagen).length;
+  if(portada.enabled && !filled){ toast("Elige al menos una foto, o apaga “Usar mi selección”.",{err:true}); return; }
+  const enabled=portada.enabled;
+  const cfg={...(siteConfig||{}), lookbook:{
+    enabled, eyebrow:portada.eyebrow, title:portada.title,
+    items:portada.items.map(it=>({imagen:it.imagen,titulo:it.titulo.trim(),producto:it.producto,categoria:it.categoria}))
+  }};
+  const fd=new FormData();
+  fd.append("config", JSON.stringify(cfg));
+  portada.items.forEach(it=>{ if(it.file) fd.append("images", it.file, it.file.name); });
+  busy(true,"Guardando portada…");
+  try{
+    const res=await api(API_BASE+"/admin/config",{method:"POST",headers:{"x-admin-token":token()},body:fd});
+    let data={}; try{ data=await res.json(); }catch(e){}
+    if(res.status===401||res.status===403) throw new Error("Token inválido. Toca Salir y vuelve a entrar.");
+    if(res.status===404) throw new Error("Falta actualizar el Worker de Cloudflare (rutas /config).");
+    if(!res.ok||!data.ok) throw new Error(data.error||("Error "+res.status));
+    siteConfig=data.config; renderPortadaInfo(); closePortada(); busy(false);
+    toast(enabled?"Portada publicada ✓":"Portada automática ✓");
+  }catch(e){ busy(false); toast("Error: "+e.message,{err:true,ms:9000}); }
 }
 
 // ---------- Editor ----------
@@ -464,6 +637,7 @@ async function loadList(){
   try{ products=await fetchCatalog(); renderAll(); }
   catch(e){ toast("Error: "+e.message,{err:true}); }
   busy(false);
+  fetchConfig().then(c=>{ siteConfig=c; renderPortadaInfo(); }).catch(()=>{ siteConfig=null; renderPortadaInfo(); });
 }
 function showLogin(){ $("loginView").classList.remove("hidden"); $("listView").classList.add("hidden"); }
 function showList(){ $("loginView").classList.add("hidden"); $("listView").classList.remove("hidden"); loadList(); }
@@ -472,6 +646,11 @@ $("loginBtn").onclick=()=>{ const t=$("tokenInput").value.trim(); if(!t){ toast(
 $("logoutBtn").onclick=()=>{ if(confirm("¿Cerrar sesión y borrar el token de este celular?")){ delLS(TOKEN_KEY); showLogin(); } };
 $("reloadBtn").onclick=loadList;
 $("renameCatBtn").onclick=renameCategory;
+$("portadaInfo").onclick=openPortada;
+$("pSheetBg").onclick=closePortada; $("pCancel").onclick=closePortada; $("pSave").onclick=savePortada;
+$("pSlots").addEventListener("input",onSlotsInput); $("pSlots").addEventListener("change",onSlotsInput);
+$("pSlots").onclick=onSlotsClick; $("pFile").onchange=onSlotFile;
+$("pickClose").onclick=closePicker; $("pickSearch").oninput=renderPicker; $("pickGrid").onclick=onPickProduct;
 $("search").oninput=renderGrid;
 $("chips").onclick=e=>{ const b=e.target.closest(".chip"); if(!b) return; activeCat=b.dataset.c; renderAll(); };
 $("grid").onclick=e=>{ const c=e.target.closest(".card"); if(c) openEditor(Number(c.dataset.i)); };
