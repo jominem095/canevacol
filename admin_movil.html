@@ -58,6 +58,15 @@ main{padding:14px 16px 120px}
 .photobtns label{flex:1;text-align:center;border:1px solid var(--b);border-radius:12px;padding:13px;font-weight:500;cursor:pointer}
 .photobtns input{display:none}
 .newtag{position:absolute;top:10px;left:10px;background:var(--w);color:var(--k);font-size:11px;font-weight:600;padding:4px 8px;border-radius:6px}
+.thumbs{display:flex;gap:8px;overflow-x:auto;padding:10px 0 2px;scrollbar-width:none}.thumbs::-webkit-scrollbar{display:none}
+.thumb{position:relative;flex:none;width:58px;height:76px;border-radius:8px;overflow:hidden;border:2px solid transparent;padding:0;background:var(--k3)}
+.thumb.on{border-color:var(--w)}.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb .star{position:absolute;left:3px;top:3px;background:var(--w);color:var(--k);font-size:10px;border-radius:4px;padding:0 4px}
+.thumb .dot{position:absolute;right:3px;top:3px;width:8px;height:8px;border-radius:50%;background:var(--ok)}
+.photoacts{display:flex;gap:10px;margin-top:8px}.photoacts button{flex:1;background:none;border:1px solid var(--b);border-radius:12px;padding:11px;font-size:13px}
+.photoacts button:disabled{opacity:.35}
+.promo{border:1px solid var(--b);border-radius:12px;padding:12px 14px;margin:0 0 12px;font-size:13px;line-height:1.5;background:var(--k2)}
+.promo b{font-weight:600}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .toast{position:fixed;left:16px;right:16px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:20;background:var(--w);color:var(--k);border-radius:12px;padding:14px 16px;font-size:14px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
 .toast.err{background:var(--bad)}
@@ -95,6 +104,7 @@ main{padding:14px 16px 120px}
     <div id="chips" class="chips"></div>
   </header>
   <main>
+    <div id="promoInfo" class="promo"></div>
     <div class="hrow" style="margin:0 0 10px">
       <p id="countLine" class="muted" style="font-size:12px;margin:0"></p>
       <button class="iconbtn hidden" id="renameCatBtn">✎ Renombrar categoría</button>
@@ -109,10 +119,16 @@ main{padding:14px 16px 120px}
 <section id="sheet" class="sheet hidden">
   <div class="grab"></div>
   <div class="photo" id="photoBox"></div>
+  <div class="thumbs" id="thumbs"></div>
+  <div class="photoacts hidden" id="photoActs">
+    <button id="makeMainBtn" type="button">★ Hacer principal</button>
+    <button id="removePhotoBtn" type="button">✕ Quitar foto</button>
+  </div>
   <div class="photobtns">
     <label>📷 Tomar foto<input id="camInput" type="file" accept="image/*" capture="environment"></label>
-    <label>🖼 Galería<input id="galInput" type="file" accept="image/*"></label>
+    <label>🖼 Agregar fotos<input id="galInput" type="file" accept="image/*" multiple></label>
   </div>
+  <p class="muted" style="font-size:12px;margin:8px 0 0">La foto ★ es la principal. Las demás salen en el carrusel del detalle.</p>
   <div class="field"><label>Nombre</label><input id="fNombre" type="text"></div>
   <div class="row2">
     <div class="field"><label>Precio</label><input id="fPrecio" type="text" inputmode="numeric" placeholder="85000"></div>
@@ -141,7 +157,6 @@ const NEW_CAT = "__new__";
 let products = [];
 let activeCat = "Todos";
 let editing = null;      // { index, original } ; index = -1 for a new product
-let pendingPhoto = null; // compressed File waiting to be uploaded
 
 const $ = id => document.getElementById(id);
 
@@ -213,11 +228,11 @@ async function fetchCatalog(){
   if(!res.ok || !data.ok) throw new Error(data.error||"No se pudo leer el catálogo");
   return (Array.isArray(data.products)?data.products:[]).map(shape);
 }
-async function publish(list, imageFile){
+async function publish(list, imageFiles){
   const fd=new FormData();
   fd.append("products", JSON.stringify(list));
   fd.append("options", JSON.stringify({ replaceUrlWithLocal:false }));
-  if(imageFile) fd.append("images", imageFile, imageFile.name);
+  (imageFiles||[]).forEach(f=>fd.append("images", f, f.name));
   const res=await api(API_BASE+"/admin/catalog",{method:"POST",headers:{"x-admin-token":token()},body:fd});
   let data={}; try{ data=await res.json(); }catch(e){}
   if(res.status===401 || res.status===403) throw new Error("Token inválido. Toca Salir y vuelve a entrar.");
@@ -273,12 +288,44 @@ function renderAll(){
   if(activeCat!=="Todos" && !products.some(p=>p.categoria===activeCat)) activeCat="Todos";
   renderChips(); renderGrid();
   $("renameCatBtn").classList.toggle("hidden", activeCat==="Todos");
+  renderPromoInfo();
+}
+// The store's "La nueva colección" section switches to promo mode when a category containing "promo" has products with photos.
+function isPromoCat(c){ return norm(c).includes("promo"); }
+function renderPromoInfo(){
+  const promo=products.filter(p=>isPromoCat(p.categoria));
+  const withPhoto=promo.filter(p=>isUrl(p.imagen)).length;
+  $("promoInfo").innerHTML = withPhoto
+    ? `★ <b>Portada en modo promoción</b>: ${withPhoto} producto(s) con foto en "${esc(promo[0].categoria)}". La tienda muestra los 3 primeros.`
+    : `☆ <b>Portada normal</b> ("La nueva colección"). Para mostrar una promoción, pon productos en una categoría llamada <b>Promoción</b>.`;
 }
 
 // ---------- Editor ----------
-function setPhotoPreview(src, isNew){
-  $("photoBox").innerHTML = src ? `<img src="${esc(src)}" alt="">${isNew?'<span class="newtag">FOTO NUEVA</span>':""}` : `<span class="muted">Sin foto</span>`;
+// photos[0] is the main image; the rest go to imagenesExtra (store carousel).
+// Each item: { src: preview URL, url: published http URL or null, file: new File or null }
+let photos=[], selPhoto=0, photoSeq=0;
+function splitImages(v){ return String(v||"").split(/\s*(?:\||\n|;|,)\s*/).map(x=>x.trim()).filter(isUrl); }
+function renderPhotos(){
+  const cur=photos[selPhoto];
+  $("photoBox").innerHTML = cur
+    ? `<img src="${esc(cur.src)}" alt="">${selPhoto===0?'<span class="newtag">★ PRINCIPAL</span>':(cur.file?'<span class="newtag">NUEVA</span>':"")}`
+    : `<span class="muted">Sin foto</span>`;
+  $("thumbs").innerHTML = photos.length>1||photos.some(p=>p.file) ? photos.map((ph,i)=>
+    `<button type="button" class="thumb ${i===selPhoto?"on":""}" data-i="${i}"><img src="${esc(ph.src)}" alt="">${i===0?'<span class="star">★</span>':""}${ph.file?'<span class="dot"></span>':""}</button>`).join("") : "";
+  $("photoActs").classList.toggle("hidden", photos.length<2);
+  $("makeMainBtn").disabled = selPhoto===0;
+  $("removePhotoBtn").disabled = photos.length<2;
 }
+function makeMain(){
+  if(selPhoto<=0) return;
+  const [ph]=photos.splice(selPhoto,1); photos.unshift(ph); selPhoto=0; renderPhotos();
+}
+function removePhoto(){
+  if(photos.length<2) return;
+  if(!confirm("¿Quitar esta foto del producto?")) return;
+  photos.splice(selPhoto,1); selPhoto=Math.min(selPhoto, photos.length-1); renderPhotos();
+}
+function photoRef(ph){ return ph.url || ph.file.name; } // Worker matches file names with uploaded files
 function fillCategorySelect(selected){
   const cats=categories().map(x=>x.c);
   if(selected && !cats.includes(selected)) cats.unshift(selected);
@@ -289,11 +336,12 @@ function openEditor(index){
   const isNew=index<0;
   const p=isNew?shape({categoria:activeCat!=="Todos"?activeCat:(categories()[0]||{}).c}):products[index];
   editing={index, original:isNew?null:{...p}};
-  pendingPhoto=null;
+  photos=[...(isUrl(p.imagen)?[p.imagen]:[]), ...splitImages(p.imagenesExtra)].map(u=>({src:u,url:u,file:null}));
+  selPhoto=0;
   $("fNombre").value=p.nombre; $("fPrecio").value=p.precio; $("fStock").value=p.stock;
   $("fTallas").value=p.tallas; $("fDesc").value=p.descripcion;
   fillCategorySelect(p.categoria);
-  setPhotoPreview(isUrl(p.imagen)?p.imagen:"");
+  renderPhotos();
   $("deleteBtn").classList.toggle("hidden",isNew);
   $("saveBtn").textContent=isNew?"Crear y publicar":"Guardar y publicar";
   $("sheetBg").classList.remove("hidden"); $("sheet").classList.remove("hidden");
@@ -301,16 +349,21 @@ function openEditor(index){
 }
 function closeEditor(){
   $("sheetBg").classList.add("hidden"); $("sheet").classList.add("hidden");
-  document.body.style.overflow=""; editing=null; pendingPhoto=null;
+  document.body.style.overflow=""; editing=null; photos=[]; selPhoto=0;
   $("camInput").value=""; $("galInput").value="";
 }
 async function onPhotoPicked(e){
-  const f=e.target.files&&e.target.files[0]; if(!f) return;
-  busy(true,"Preparando foto…");
+  const files=[...(e.target.files||[])]; e.target.value=""; if(!files.length) return;
+  busy(true, files.length>1?`Preparando ${files.length} fotos…`:"Preparando foto…");
   const name=norm($("fNombre").value)||"producto";
-  pendingPhoto=await compressImage(f, `${name}-${stamp()}`);
+  for(const f of files){
+    const file=await compressImage(f, `${name}-${stamp()}-${++photoSeq}`);
+    photos.push({src:URL.createObjectURL(file), url:null, file});
+  }
   busy(false);
-  setPhotoPreview(URL.createObjectURL(pendingPhoto), true);
+  selPhoto=photos.length-files.length; // show the first new photo
+  renderPhotos();
+  if(selPhoto>0) toast("Foto agregada al carrusel. Toca ★ Hacer principal si quieres que sea la portada.");
 }
 function readForm(base){
   let cat=$("fCategoria").value;
@@ -326,13 +379,13 @@ function readForm(base){
 }
 
 // Applies a change on top of the freshest catalog to avoid overwriting edits made elsewhere.
-async function applyAndPublish(mutate, imageFile, okMsg){
+async function applyAndPublish(mutate, imageFiles, okMsg){
   busy(true,"Publicando…");
   try{
     const fresh=await fetchCatalog();
     const before=JSON.stringify(fresh);
     const next=mutate(fresh);
-    await publish(next, imageFile);
+    await publish(next, imageFiles);
     setLS(UNDO_KEY, before);
     products=await fetchCatalog();
     renderAll(); closeEditor(); busy(false);
@@ -348,7 +401,11 @@ async function save(){
   const updated=readForm(isNew?shape({}):editing.original);
   if(!updated.nombre){ toast("Falta el nombre.",{err:true}); return; }
   if(!updated.categoria){ toast("Falta la categoría.",{err:true}); return; }
-  if(pendingPhoto) updated.imagen=pendingPhoto.name; // Worker matches this name with the uploaded file
+  if(photos.length){
+    updated.imagen=photoRef(photos[0]);
+    updated.imagenesExtra=photos.slice(1).map(photoRef).join(" | ");
+  }
+  const newFiles=photos.filter(ph=>ph.file).map(ph=>ph.file);
   const original=editing.original;
   await applyAndPublish(list=>{
     if(isNew){
@@ -357,7 +414,7 @@ async function save(){
     const i=findOriginal(list, original, editing.index);
     if(i<0) throw new Error("Este producto cambió en otro lado. Toca Recargar e intenta de nuevo.");
     list[i]=updated; return list;
-  }, pendingPhoto, isNew?"Producto creado ✓":"Cambios publicados ✓");
+  }, newFiles, isNew?"Producto creado ✓":"Cambios publicados ✓");
 }
 async function removeProduct(){
   if(!editing||editing.index<0) return;
@@ -421,6 +478,8 @@ $("grid").onclick=e=>{ const c=e.target.closest(".card"); if(c) openEditor(Numbe
 $("newBtn").onclick=()=>openEditor(-1);
 $("sheetBg").onclick=closeEditor; $("cancelBtn").onclick=closeEditor;
 $("saveBtn").onclick=save; $("deleteBtn").onclick=removeProduct;
+$("thumbs").onclick=e=>{ const t=e.target.closest(".thumb"); if(!t) return; selPhoto=Number(t.dataset.i); renderPhotos(); };
+$("makeMainBtn").onclick=makeMain; $("removePhotoBtn").onclick=removePhoto;
 $("camInput").onchange=onPhotoPicked; $("galInput").onchange=onPhotoPicked;
 $("fCategoria").onchange=()=>$("newCatField").classList.toggle("hidden",$("fCategoria").value!==NEW_CAT);
 
