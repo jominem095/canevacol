@@ -172,7 +172,13 @@ function shape(p){
     url:String(p.url||p.urlProducto||"").trim()
   };
 }
-function sameProduct(a,b){ return a && b && a.nombre===b.nombre && a.categoria===b.categoria; }
+// Products can share name+category (e.g. several "Vestido"), so identity = all fields + original position.
+const FIELDS=["categoria","nombre","precio","descripcion","tallas","stock","imagen","imagenesExtra","url"];
+function sameProduct(a,b){ return a && b && FIELDS.every(k=>a[k]===b[k]); }
+function findOriginal(list, original, hintIndex){
+  if(hintIndex>=0 && sameProduct(list[hintIndex], original)) return hintIndex;
+  return list.findIndex(p=>sameProduct(p, original));
+}
 function isUrl(v){ return /^https?:\/\//i.test(String(v||"")); }
 function isOutOfStock(p){ const s=String(p.stock).trim(); return s!=="" && /^\d+$/.test(s) && Number(s)<=0; }
 
@@ -189,8 +195,17 @@ function toast(msg, opts={}){
 function busy(on,msg){ $("busy").classList.toggle("hidden",!on); if(msg) $("busyMsg").textContent=msg; }
 
 // ---------- Catalog I/O ----------
+// Safari says "Load failed", Chrome "Failed to fetch": the request never reached the Worker (usually CORS).
+async function api(url, opts){
+  try{ return await fetch(url, opts); }
+  catch(e){
+    throw new Error(location.hostname.endsWith("github.io")
+      ? "Sin conexión con Cloudflare. Revisa tu internet."
+      : "Cloudflare no acepta conexiones desde "+location.hostname+". Abre jominem095.github.io/canevacol/admin_movil.html");
+  }
+}
 async function fetchCatalog(){
-  const res=await fetch(API_BASE+"/catalog?ts="+Date.now(),{cache:"no-store"});
+  const res=await api(API_BASE+"/catalog?ts="+Date.now(),{cache:"no-store"});
   const data=await res.json();
   if(!res.ok || !data.ok) throw new Error(data.error||"No se pudo leer el catálogo");
   return (Array.isArray(data.products)?data.products:[]).map(shape);
@@ -200,7 +215,7 @@ async function publish(list, imageFile){
   fd.append("products", JSON.stringify(list));
   fd.append("options", JSON.stringify({ replaceUrlWithLocal:false }));
   if(imageFile) fd.append("images", imageFile, imageFile.name);
-  const res=await fetch(API_BASE+"/admin/catalog",{method:"POST",headers:{"x-admin-token":token()},body:fd});
+  const res=await api(API_BASE+"/admin/catalog",{method:"POST",headers:{"x-admin-token":token()},body:fd});
   let data={}; try{ data=await res.json(); }catch(e){}
   if(res.status===401 || res.status===403) throw new Error("Token inválido. Toca Salir y vuelve a entrar.");
   if(!res.ok || !data.ok) throw new Error(data.error||("Error "+res.status));
@@ -330,10 +345,9 @@ async function save(){
   const original=editing.original;
   await applyAndPublish(list=>{
     if(isNew){
-      if(list.some(p=>sameProduct(p,updated))) throw new Error("Ya existe un producto con ese nombre en esa categoría.");
       return [updated,...list];
     }
-    const i=list.findIndex(p=>sameProduct(p,original));
+    const i=findOriginal(list, original, editing.index);
     if(i<0) throw new Error("Este producto cambió en otro lado. Toca Recargar e intenta de nuevo.");
     list[i]=updated; return list;
   }, pendingPhoto, isNew?"Producto creado ✓":"Cambios publicados ✓");
@@ -343,7 +357,7 @@ async function removeProduct(){
   const original=editing.original;
   if(!confirm(`¿Eliminar "${original.nombre}" del catálogo?`)) return;
   await applyAndPublish(list=>{
-    const i=list.findIndex(p=>sameProduct(p,original));
+    const i=findOriginal(list, original, editing.index);
     if(i<0) throw new Error("No se encontró el producto. Toca Recargar.");
     list.splice(i,1); return list;
   }, null, "Producto eliminado");
