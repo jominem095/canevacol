@@ -1443,6 +1443,14 @@ body.has-ann nav{top:34px}
 .ai-wa{display:block;margin:.55rem 0 .2rem 2.6rem;padding:.75rem 1rem;background:#f7f7f4;color:#050505;text-align:center;text-decoration:none;font-family:'Inter',sans-serif;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;font-weight:600;border-radius:2px}
 .ai-wa:hover{background:#fff}
 </style>
+<style id="v18-fabric">
+/* V18 — owner description keeps line breaks; fabric spec block */
+#pmDesc{white-space:pre-line}
+.pm-fabric{display:flex;gap:1rem;align-items:baseline;border-top:1px solid rgba(247,247,244,.14);border-bottom:1px solid rgba(247,247,244,.14);padding:.8rem 0;margin:0 0 1rem;max-width:620px}
+.pm-fabric[hidden]{display:none}
+.pm-fabric span{flex:none;font-size:.52rem;letter-spacing:.28em;text-transform:uppercase;color:rgba(247,247,244,.5);min-width:3.4rem}
+.pm-fabric p{margin:0;font-size:.78rem;line-height:1.6;color:#f7f7f4;white-space:pre-line}
+</style>
 </head>
 <body>
 <div class="bw-preloader" aria-hidden="true"><div class="bw-preloader-mark">C<span>Λ</span>NEV<span>Λ</span></div><div class="bw-preloader-line"></div></div>
@@ -1572,7 +1580,8 @@ body.has-ann nav{top:34px}
       <div class="pm-kicker" id="pmCat">CANEVA</div>
       <h3 class="pm-name" id="pmName">Producto</h3>
       <div class="pm-price" id="pmPrice">$0</div>
-      <p class="pm-desc" id="pmDesc">Prenda seleccionada del catálogo Caneva.</p>
+      <p class="pm-desc" id="pmDesc">Prenda seleccionada del catálogo Caneva.</p>
+      <div class="pm-fabric" id="pmFabric" hidden><span>Tela</span><p id="pmFabricText"></p></div>
       <div class="pm-tags" id="pmTags"></div>
       <div class="pm-size-wrap" id="pmSizeWrap" aria-live="polite">
         <div class="pm-size-head"><div class="pm-size-title">Selecciona talla</div><div class="pm-size-help" id="pmSizeHelp">Obligatorio</div></div>
@@ -1807,7 +1816,8 @@ function normalizeProductForSite(p){
     stock:String(p.stock||'').trim(),
     imagen:String(p.imagen||p.imagenPrincipal||'').trim(),
     imagenesExtra:String(p.imagenesExtra||'').trim(),
-    url:String(p.url||p.urlProducto||'').trim()
+    url:String(p.url||p.urlProducto||'').trim(),
+    tela:String(p.tela||'').trim()
   };
 }
 function renderFilters(){
@@ -2070,7 +2080,7 @@ function openProductModal(idx){
   document.getElementById('pmCat').textContent=p.categoria;
   document.getElementById('pmName').textContent=p.nombre;
   document.getElementById('pmPrice').textContent=p.precio;
-  document.getElementById('pmDesc').textContent=productTone(p);
+  var ownDesc=String(p.descripcion||'').trim();document.getElementById('pmDesc').textContent=(ownDesc&&ownDesc!==p.tallas&&/[a-záéíóúñ]{4,}/i.test(ownDesc))?ownDesc:productTone(p);var fab=document.getElementById('pmFabric');if(fab){fab.hidden=!p.tela;document.getElementById('pmFabricText').textContent=p.tela||'';}
   document.getElementById('pmTags').innerHTML=productTags(p).map(function(t,i){return '<span class="pm-tag '+(i===0?'gold':'')+'">'+escHtml(t)+'</span>';}).join('');
   renderSizeSelector(p);
   document.getElementById('pmWhats').href=waLinkFor(p);

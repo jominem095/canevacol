@@ -42,7 +42,7 @@ button{border:0;background:var(--g);color:#090705;padding:14px 18px;font-weight:
     <section class="card">
       <label>2. Archivo Excel</label>
       <input id="file" type="file" accept=".xlsx,.xls">
-      <p class="mini">Columnas esperadas: Categoría, Nombre, Precio, Descripción, Variantes / Tallas, Stock, Imagen Principal, Imágenes Extra, URL Producto.</p>
+      <p class="mini">Columnas esperadas: Categoría, Nombre, Precio, Descripción, Variantes / Tallas, Stock, Imagen Principal, Imágenes Extra, URL Producto, Tela (opcional).</p>
     </section>
 
     <section class="card">
@@ -130,7 +130,8 @@ function productFromRow(row){
     stock:String(row["Stock"]||"").trim(),
     imagen:String(row["Imagen Principal"]||row["Imagen"]||row["Image"]||"").trim(),
     imagenesExtra:String(row["Imágenes Extra"]||row["Imagenes Extra"]||"").trim(),
-    url:String(row["URL Producto"]||row["URL"]||row["Url"]||"").trim()
+    url:String(row["URL Producto"]||row["URL"]||row["Url"]||"").trim(),
+    tela:String(row["Tela"]||"").trim()
   };
   return p.nombre && p.categoria ? p : null;
 }
@@ -297,7 +298,8 @@ function productToExcelRow(p){
     p.stock || "",
     p.imagen || "",
     p.imagenesExtra || "",
-    p.url || ""
+    p.url || "",
+    p.tela || ""
   ];
 }
 async function downloadUpdatedExcel(){
@@ -309,7 +311,7 @@ async function downloadUpdatedExcel(){
     const list=Array.isArray(data.products)?data.products:[];
     if(!list.length) throw new Error("El catálogo está vacío");
 
-    const headers=["Categoría","Nombre","Precio","Descripción","Variantes / Tallas","Stock","Imagen Principal","Imágenes Extra","URL Producto"];
+    const headers=["Categoría","Nombre","Precio","Descripción","Variantes / Tallas","Stock","Imagen Principal","Imágenes Extra","URL Producto","Tela"];
     const aoa=[
       ["CANEVA - Catálogo actualizado desde Cloudflare", "", "", "", "", "", "Generado", new Date().toLocaleString("es-CO"), ""],
       headers,
@@ -319,7 +321,7 @@ async function downloadUpdatedExcel(){
     const wb=XLSX.utils.book_new();
     const ws=XLSX.utils.aoa_to_sheet(aoa);
     ws["!cols"]=[
-      {wch:22},{wch:30},{wch:14},{wch:46},{wch:24},{wch:14},{wch:72},{wch:72},{wch:56}
+      {wch:22},{wch:30},{wch:14},{wch:46},{wch:24},{wch:14},{wch:72},{wch:72},{wch:56},{wch:40}
     ];
     ws["!freeze"]={xSplit:0,ySplit:2};
     XLSX.utils.book_append_sheet(wb, ws, "Catálogo");

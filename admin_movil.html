@@ -158,6 +158,7 @@ main{padding:14px 16px 120px}
   <div class="field"><label>Tallas</label><input id="fTallas" type="text" placeholder="S, M, L  ·  6, 8, 10  ·  Única"></div>
   <div class="field"><label>Categoría</label><select id="fCategoria"></select></div>
   <div class="field hidden" id="newCatField"><label>Nueva categoría</label><input id="fNewCat" type="text"></div>
+  <div class="field"><label>Tela</label><textarea id="fTela" maxlength="300" style="min-height:70px" placeholder="Ej: Lino 100%, fresco y liviano. Lavar a mano."></textarea></div>
   <div class="field"><label>Descripción</label><textarea id="fDesc"></textarea></div>
   <button class="btn" id="saveBtn">Guardar y publicar</button>
   <button class="btn ghost" id="cancelBtn">Cancelar</button>
@@ -259,11 +260,12 @@ function shape(p){
     stock:String(p.stock||"").trim(),
     imagen:String(p.imagen||p.imagenPrincipal||"").trim(),
     imagenesExtra:String(p.imagenesExtra||"").trim(),
-    url:String(p.url||p.urlProducto||"").trim()
+    url:String(p.url||p.urlProducto||"").trim(),
+    tela:String(p.tela||"").trim()
   };
 }
 // Products can share name+category (e.g. several "Vestido"), so identity = all fields + original position.
-const FIELDS=["categoria","nombre","precio","descripcion","tallas","stock","imagen","imagenesExtra","url"];
+const FIELDS=["categoria","nombre","precio","descripcion","tallas","stock","imagen","imagenesExtra","url","tela"];
 function sameProduct(a,b){ return a && b && FIELDS.every(k=>a[k]===b[k]); }
 function findOriginal(list, original, hintIndex){
   if(hintIndex>=0 && sameProduct(list[hintIndex], original)) return hintIndex;
@@ -552,7 +554,7 @@ function openEditor(index){
   photos=[...(isUrl(p.imagen)?[p.imagen]:[]), ...splitImages(p.imagenesExtra)].map(u=>({src:u,url:u,file:null}));
   selPhoto=0;
   $("fNombre").value=p.nombre; $("fPrecio").value=p.precio; $("fStock").value=p.stock;
-  $("fTallas").value=p.tallas; $("fDesc").value=p.descripcion;
+  $("fTallas").value=p.tallas; $("fDesc").value=p.descripcion; $("fTela").value=p.tela||"";
   syncVisibleFromStock();
   fillCategorySelect(p.categoria);
   renderPhotos();
@@ -588,7 +590,8 @@ function readForm(base){
     stock:$("fStock").value.trim(),
     tallas:$("fTallas").value.trim(),
     categoria:cat,
-    descripcion:$("fDesc").value.trim()
+    descripcion:$("fDesc").value.trim(),
+    tela:$("fTela").value.trim()
   };
 }
 
