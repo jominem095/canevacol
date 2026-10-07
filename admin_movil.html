@@ -37,6 +37,7 @@ main{padding:14px 16px 120px}
 .card.off .ph img{opacity:.35;filter:grayscale(1)}
 .vis{position:absolute;top:8px;right:8px;z-index:2;border:0;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:600;background:rgba(5,5,5,.75);color:var(--w);backdrop-filter:blur(6px)}
 .card.off .vis{background:var(--bad);color:var(--k)}
+@media(max-width:430px){header .logo{font-size:18px;letter-spacing:.28em}header .iconbtn{padding:7px 9px;font-size:11px;letter-spacing:0}}
 .hint{font-size:12px;color:var(--dim);margin:6px 0 0;line-height:1.5}
 .sect{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin:22px 0 4px;border-top:1px solid var(--b);padding-top:16px}
 .badge{display:inline-block;font-size:10px;letter-spacing:.06em;border:1px solid var(--bad);color:var(--bad);border-radius:6px;padding:1px 5px;margin-left:4px}
@@ -177,6 +178,9 @@ main{padding:14px 16px 120px}
   <label class="checkrow"><input type="checkbox" id="sAnnOn"><span><b>Mostrar anuncio</b></span></label>
   <div class="field"><label>Texto</label><input id="sAnnText" type="text" maxlength="140" placeholder="Envío gratis en Barranquilla hoy ✨"></div>
   <div class="field"><label>Enlace al tocar (opcional)</label><input id="sAnnLink" type="text" placeholder="https://…"></div>
+  <div class="sect">Caneva AI</div>
+  <div class="field"><label>Lo que Caneva AI debe saber hoy</label><textarea id="sAiNotes" maxlength="1500" placeholder="Ej: Esta semana 10% de descuento en Denim pagando contraentrega. Los pedidos de Atelier tardan 5 días hábiles. Llegaron vestidos nuevos de lino."></textarea></div>
+  <p class="hint">Promos, novedades, tiempos de entrega o cualquier dato del día. La asesora lo usa para recomendar y vender.</p>
   <div class="sect">Pauta y medición</div>
   <div class="field"><label>Meta Pixel ID (Facebook / Instagram Ads)</label><input id="sMeta" type="text" inputmode="numeric" placeholder="Ej: 123456789012345"></div>
   <div class="field"><label>TikTok Pixel ID</label><input id="sTtPx" type="text" placeholder="Ej: C1ABCDEF2345GHIJ"></div>
@@ -670,6 +674,7 @@ async function openSettings(){
   const so=siteConfig.social||{}, an=siteConfig.announcement||{}, ad=siteConfig.ads||{};
   $("sIg").value=so.instagram||""; $("sTt").value=so.tiktok||""; $("sFb").value=so.facebook||"";
   $("sAnnOn").checked=!!an.enabled; $("sAnnText").value=an.text||""; $("sAnnLink").value=an.link||"";
+  $("sAiNotes").value=(siteConfig.ai&&siteConfig.ai.notes)||"";
   $("sMeta").value=ad.metaPixel||""; $("sTtPx").value=ad.tiktokPixel||""; $("sGa").value=ad.ga4||"";
   $("sSheetBg").classList.remove("hidden"); $("sSheet").classList.remove("hidden");
   $("sSheet").scrollTop=0; document.body.style.overflow="hidden";
@@ -685,7 +690,8 @@ async function saveSettings(){
   if(ads.tiktokPixel && !/^[A-Z0-9]{10,30}$/.test(ads.tiktokPixel)) return toast("El TikTok Pixel ID son letras y números, sin espacios.",{err:true});
   if(ads.ga4 && !/^G-[A-Z0-9]{4,15}$/.test(ads.ga4)) return toast("El ID de Google Analytics empieza por G-",{err:true});
   if(announcement.enabled && !announcement.text) return toast("Escribe el texto del anuncio o apágalo.",{err:true});
-  const cfg={...(siteConfig||{}), social, announcement, ads};
+  const ai={notes:$("sAiNotes").value.trim()};
+  const cfg={...(siteConfig||{}), social, announcement, ads, ai};
   busy(true,"Guardando ajustes…");
   try{
     const res=await api(API_BASE+"/admin/config",{method:"POST",headers:{"x-admin-token":token(),"Content-Type":"application/json"},body:JSON.stringify(cfg)});
