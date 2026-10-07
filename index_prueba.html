@@ -1945,7 +1945,8 @@ function productTone(p){
   return 'Prenda seleccionada de Caneva para armar un look femenino, actual y fácil de comprar por WhatsApp.';
 }
 function waLinkFor(p){
-  return 'https://wa.me/'+WA_PHONE+'?text='+encodeURIComponent('Hola Caneva ✨ Vi en la página este producto: '+p.nombre+' - '+p.precio+(p.tallas?' | Tallas: '+p.tallas:'')+'. ¿Me confirmas disponibilidad?');
+  var u=createOrder([orderItem(p,1,'')],true);
+  return 'https://wa.me/'+WA_PHONE+'?text='+encodeURIComponent('Hola Caneva ✨ Vi en la página este producto:\n🖼 Foto: '+u+'\n\n'+p.nombre+' - '+p.precio+(p.tallas?' | Tallas: '+p.tallas:'')+'\n¿Me confirmas disponibilidad?');
 }
 function productTags(p){
   var tags=['Caneva Boutique'];
@@ -2398,8 +2399,16 @@ function renderCart(){
 }
 function openCart(){document.body.classList.add('cart-open');var d=document.getElementById('cartDrawer');if(d)d.setAttribute('aria-hidden','false');}
 function closeCart(){document.body.classList.remove('cart-open');var d=document.getElementById('cartDrawer');if(d)d.setAttribute('aria-hidden','true');}
-function cartWhatsText(){if(!CART.length)return 'Hola Caneva ✨ Quiero hacer un pedido.';var lines=CART.map(function(it,i){return (i+1)+'. '+it.nombre+' x'+it.qty+' - '+it.precio+(it.size?' | Talla: '+it.size:(it.tallas?' | Tallas disponibles: '+it.tallas:''));});return 'Hola Caneva ✨ Quiero hacer este pedido:%0A%0A'+lines.join('%0A')+'%0A%0ASubtotal: '+moneyCOP(cartTotal())+'%0A¿Me confirmas disponibilidad y domicilio?';}
-function sendCartWhatsApp(){if(!CART.length){toastCart('Tu carrito está vacío');return;}window.open('https://wa.me/'+WA_PHONE+'?text='+cartWhatsText(),'_blank','noopener');}
+// Orders with photos: each WhatsApp message carries a link to a page with the items' photos (Worker /o/:id)
+var ORDER_PENDING={};
+function orderId(){var a='abcdefghjkmnpqrstuvwxyz23456789',s='';var r=(window.crypto&&crypto.getRandomValues)?crypto.getRandomValues(new Uint8Array(10)):null;for(var i=0;i<10;i++)s+=a[(r?r[i]:Math.floor(Math.random()*256))%a.length];return s;}
+function orderItem(p,qty,size){if(!p.imagen){var f=P.find(function(x){return x.nombre===p.nombre&&x.categoria===p.categoria;});if(f)p=Object.assign({},p,{imagen:f.imagen});}return {nombre:p.nombre,categoria:p.categoria||'',precio:p.precio||'',qty:qty||1,size:size||'',imagen:(p.imagen&&p.imagen.indexOf('http')===0)?p.imagen:''};}
+function postOrder(id,items){try{fetch(API_BASE+'/order',{method:'POST',headers:{'Content-Type':'text/plain;charset=UTF-8'},body:JSON.stringify({id:id,items:items}),keepalive:true}).catch(function(){});}catch(e){}}
+// defer=true: saved only when the WhatsApp link is actually tapped
+function createOrder(items,defer){var id=orderId();if(defer)ORDER_PENDING[id]=items;else postOrder(id,items);return API_BASE+'/o/'+id;}
+document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a[href*="wa.me"]');if(!a)return;var m=decodeURIComponent(a.getAttribute('href')||'').match(/\/o\/([a-z0-9]{8,16})/);if(m&&ORDER_PENDING[m[1]])postOrder(m[1],ORDER_PENDING[m[1]]);},true);
+function cartWhatsText(orderUrl){if(!CART.length)return 'Hola Caneva ✨ Quiero hacer un pedido.';var lines=CART.map(function(it,i){return (i+1)+'. '+it.nombre+' x'+it.qty+' - '+it.precio+(it.size?' | Talla: '+it.size:(it.tallas?' | Tallas disponibles: '+it.tallas:''));});return 'Hola Caneva ✨ Quiero hacer este pedido:\n'+(orderUrl?'🖼 Ver pedido con fotos: '+orderUrl+'\n':'')+'\n'+lines.join('\n')+'\n\nSubtotal: '+moneyCOP(cartTotal())+'\n¿Me confirmas disponibilidad y domicilio?';}
+function sendCartWhatsApp(){if(!CART.length){toastCart('Tu carrito está vacío');return;}var url=createOrder(CART.map(function(it){return orderItem(it,it.qty,it.size);}),false);window.open('https://wa.me/'+WA_PHONE+'?text='+encodeURIComponent(cartWhatsText(url)),'_blank','noopener');}
 function checkoutBold(){if(!CART.length){toastCart('Tu carrito está vacío');return;}alert('El pago con Bold está temporalmente fuera de servicio. Por ahora finaliza tu pedido por WhatsApp y Caneva te confirma disponibilidad, domicilio y forma de pago.');}
 function bindCartEvents(){
   var fab=document.getElementById('cartFab'),navCart=document.getElementById('navCart'),mobileCart=document.getElementById('mobileCart'),mobileDockCart=document.getElementById('mobileDockCart'),mobileDockAi=document.getElementById('mobileDockAi'),close=document.getElementById('cartClose'),back=document.getElementById('cartBackdrop'),keep=document.getElementById('cartKeep'),wa=document.getElementById('cartWhats'),bold=document.getElementById('cartBold'),items=document.getElementById('cartItems');
@@ -2480,7 +2489,7 @@ function bindAiExtras(d,ps){
 }
 function lookbookForAI(){return Array.prototype.map.call(document.querySelectorAll('.lb-item'),function(el){var p=P[parseInt(el.dataset.pid,10)];return p?p.nombre+' ('+p.categoria+', '+p.precio+')':'';}).filter(Boolean);}
 function aiPicked(list){return (list||[]).map(function(x){var i=P.findIndex(function(p){return p.nombre===x.nombre&&p.categoria===x.categoria&&p.precio===x.precio;});if(i<0)i=P.findIndex(function(p){return p.nombre===x.nombre&&p.categoria===x.categoria;});if(i<0)i=P.findIndex(function(p){return p.nombre===x.nombre;});return P[i];}).filter(Boolean);}
-function lookWhatsLink(ps){var total=0;var lines=ps.map(function(p){total+=priceNum(p.precio)<999999999?priceNum(p.precio):0;return '• '+p.nombre+' - '+p.precio;});return 'https://wa.me/'+WA_PHONE+'?text='+encodeURIComponent('Hola Caneva ✨ Caneva AI me recomendó:\n'+lines.join('\n')+(ps.length>1?'\nTotal: $'+total.toLocaleString('es-CO'):'')+'\n¿Me confirmas disponibilidad y tallas?');}
+function lookWhatsLink(ps){var total=0;var lines=ps.map(function(p){total+=priceNum(p.precio)<999999999?priceNum(p.precio):0;return '• '+p.nombre+' - '+p.precio;});var u=createOrder(ps.map(function(p){return orderItem(p,1,chatSizeFor(p));}),true);return 'https://wa.me/'+WA_PHONE+'?text='+encodeURIComponent('Hola Caneva ✨ Caneva AI me recomendó:\n🖼 Ver fotos: '+u+'\n\n'+lines.join('\n')+(ps.length>1?'\nTotal: $'+total.toLocaleString('es-CO'):'')+'\n¿Me confirmas disponibilidad y tallas?');}
 function addMsg(t,r,explicit,sugs){
   var d=document.createElement('div');d.className='cm '+r;
   var ps=r==='a'?(explicit||exP(t)):[];
