@@ -38,6 +38,32 @@ main{padding:14px 16px 120px}
 .vis{position:absolute;top:8px;right:8px;z-index:2;border:0;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:600;background:rgba(5,5,5,.75);color:var(--w);backdrop-filter:blur(6px)}
 .card.off .vis{background:var(--bad);color:var(--k)}
 @media(max-width:430px){header .logo{font-size:18px;letter-spacing:.28em}header .iconbtn{padding:7px 9px;font-size:11px;letter-spacing:0}}
+.tabs{display:flex;gap:6px;margin-top:10px}
+.tabs button{flex:1;background:none;border:1px solid var(--b);border-radius:10px;padding:9px 6px;font-size:13px}
+.tabs button.on{background:var(--w);color:var(--k);border-color:var(--w)}
+.tabs b{display:inline-block;min-width:18px;border-radius:9px;background:var(--bad);color:var(--k);font-size:11px;padding:0 5px;margin-left:4px}
+.tabs b:empty{display:none}
+.seg{display:flex;gap:6px;margin:0 0 12px}.seg button{flex:1;background:none;border:1px solid var(--b);border-radius:999px;padding:7px;font-size:12px}.seg button.on{background:var(--w);color:var(--k)}
+.ocard{border:1px solid var(--b);border-radius:14px;background:var(--k2);padding:12px;margin-bottom:12px}
+.ohead{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--dim)}
+.ohead b{color:var(--w);font-size:14px}
+.ocli{margin:8px 0;font-size:13px;line-height:1.5}
+.ocli a{color:var(--w)}
+.oitem{display:flex;gap:10px;align-items:center;padding:6px 0;border-top:1px solid var(--b);font-size:13px}
+.oitem img{width:40px;height:52px;object-fit:cover;border-radius:6px;background:var(--k3)}
+.oitem span{flex:1}
+.otot{display:flex;justify-content:space-between;border-top:1px solid var(--b);padding-top:8px;margin-top:4px;font-weight:600}
+.oact{display:flex;gap:8px;margin-top:10px}.oact button,.oact a{flex:1;text-align:center;border-radius:10px;padding:11px;font-size:13px;font-weight:600;text-decoration:none}
+.oact .pay{background:var(--w);color:var(--k);border:0}.oact .cancel,.oact a{background:none;color:var(--w);border:1px solid var(--b)}
+.tag{display:inline-block;font-size:11px;border:1px solid var(--b);border-radius:6px;padding:1px 6px;margin-left:4px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.stat{border:1px solid var(--b);border-radius:12px;padding:12px;background:var(--k2)}.stat b{display:block;font-family:"Cormorant Garamond",serif;font-size:30px;font-weight:300}.stat span{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.12em}
+.mrow{display:flex;justify-content:space-between;gap:10px;align-items:center;border-top:1px solid var(--b);padding:10px 0;font-size:13px;line-height:1.45}
+.mrow small{color:var(--dim)}.mrow a{color:var(--w)}
+.mrow button{flex:none;background:none;border:1px solid var(--b);border-radius:999px;padding:6px 10px;font-size:12px}
+.rwrow{display:grid;grid-template-columns:1.4fr .7fr;gap:8px;margin-top:8px}.rwrow input{width:100%;background:var(--k2);border:1px solid var(--b);border-radius:10px;padding:10px;font-size:15px}
+.rwrow .full{grid-column:1/-1}
+.empty{color:var(--dim);font-size:13px;text-align:center;padding:30px 10px;line-height:1.6}
 .hint{font-size:12px;color:var(--dim);margin:6px 0 0;line-height:1.5}
 .sect{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin:22px 0 4px;border-top:1px solid var(--b);padding-top:16px}
 .badge{display:inline-block;font-size:10px;letter-spacing:.06em;border:1px solid var(--bad);color:var(--bad);border-radius:6px;padding:1px 5px;margin-left:4px}
@@ -120,16 +146,30 @@ main{padding:14px 16px 120px}
         <button class="iconbtn" id="logoutBtn">Salir</button>
       </div>
     </div>
-    <input id="search" class="search" type="search" placeholder="Buscar producto…">
-    <div id="chips" class="chips"></div>
+    <div class="tabs" id="tabs">
+      <button type="button" data-tab="productos" class="on">Productos</button>
+      <button type="button" data-tab="pedidos">Pedidos<b id="pendCount"></b></button>
+      <button type="button" data-tab="club">Club</button>
+    </div>
+    <div id="prodTools">
+      <input id="search" class="search" type="search" placeholder="Buscar producto…">
+      <div id="chips" class="chips"></div>
+    </div>
   </header>
   <main>
+    <div id="ordersView" class="hidden">
+      <div class="seg" id="ordSeg"><button type="button" data-st="pendiente" class="on">Pendientes</button><button type="button" data-st="pagado">Pagados</button><button type="button" data-st="cancelado">Cancelados</button></div>
+      <div id="ordersList"></div>
+    </div>
+    <div id="clubView" class="hidden"></div>
+    <div id="prodView">
     <button id="portadaInfo" class="promo" type="button"></button>
     <div class="hrow" style="margin:0 0 10px">
       <p id="countLine" class="muted" style="font-size:12px;margin:0"></p>
       <button class="iconbtn hidden" id="renameCatBtn">✎ Renombrar categoría</button>
     </div>
     <div id="grid" class="grid"></div>
+    </div>
   </main>
   <button class="fab" id="newBtn">+ Nuevo</button>
 </section>
@@ -182,6 +222,17 @@ main{padding:14px 16px 120px}
   <div class="sect">Caneva AI</div>
   <div class="field"><label>Lo que Caneva AI debe saber hoy</label><textarea id="sAiNotes" maxlength="1500" placeholder="Ej: Esta semana 10% de descuento en Denim pagando contraentrega. Los pedidos de Atelier tardan 5 días hábiles. Llegaron vestidos nuevos de lino."></textarea></div>
   <p class="hint">Promos, novedades, tiempos de entrega o cualquier dato del día. La asesora lo usa para recomendar y vender.</p>
+  <div class="sect">Club Caneva (registro, puntos y recibos)</div>
+  <label class="checkrow"><input type="checkbox" id="sClubOn"><span><b>Activar Club Caneva</b> (botón "Club Caneva" en la tienda)</span></label>
+  <div class="field"><label>Google Client ID</label><input id="sGid" type="text" placeholder="123456789-abc….apps.googleusercontent.com"></div>
+  <div class="row2">
+    <div class="field"><label>Puntos por cada $1.000</label><input id="sPer" type="text" inputmode="numeric" placeholder="1"></div>
+    <div class="field"><label>Puntos de bienvenida</label><input id="sWelcome" type="text" inputmode="numeric" placeholder="100"></div>
+  </div>
+  <div class="field"><label>Recompensas (nombre · puntos · descripción)</label><div id="sRewards"></div></div>
+  <div class="field"><label>Correo que envía los recibos</label><input id="sFrom" type="text" placeholder="CANEVA <recibos@canevacol.com>"></div>
+  <div class="field"><label>Si la clienta responde, llega a</label><input id="sReply" type="text" inputmode="email" placeholder="canevamayra@gmail.com"></div>
+  <p class="hint">Sin Google Client ID el botón del Club no aparece en la tienda. Los recibos se envían al marcar un pedido como pagado.</p>
   <div class="sect">Pauta y medición</div>
   <div class="field"><label>Meta Pixel ID (Facebook / Instagram Ads)</label><input id="sMeta" type="text" inputmode="numeric" placeholder="Ej: 123456789012345"></div>
   <div class="field"><label>TikTok Pixel ID</label><input id="sTtPx" type="text" placeholder="Ej: C1ABCDEF2345GHIJ"></div>
@@ -678,6 +729,13 @@ async function openSettings(){
   $("sIg").value=so.instagram||""; $("sTt").value=so.tiktok||""; $("sFb").value=so.facebook||"";
   $("sAnnOn").checked=!!an.enabled; $("sAnnText").value=an.text||""; $("sAnnLink").value=an.link||"";
   $("sAiNotes").value=(siteConfig.ai&&siteConfig.ai.notes)||"";
+  const lo=siteConfig.loyalty||{}, ml=siteConfig.mail||{};
+  $("sClubOn").checked=lo.enabled!==false && !!(siteConfig.auth&&siteConfig.auth.googleClientId);
+  $("sGid").value=(siteConfig.auth&&siteConfig.auth.googleClientId)||"";
+  $("sPer").value=lo.pointsPer1000!=null?lo.pointsPer1000:1; $("sWelcome").value=lo.welcomePoints!=null?lo.welcomePoints:100;
+  const rws=(lo.rewards&&lo.rewards.length?lo.rewards:DEFAULT_REWARDS).concat([{},{},{},{},{},{}]).slice(0,6);
+  $("sRewards").innerHTML=rws.map((r,i)=>`<div class="rwrow"><input data-rn="${i}" placeholder="Ej: $10.000 de descuento" value="${esc(r.name||"")}"><input data-rp="${i}" inputmode="numeric" placeholder="Puntos" value="${r.points||""}"><input class="full" data-rd="${i}" placeholder="Descripción (opcional)" value="${esc(r.desc||"")}"></div>`).join("");
+  $("sFrom").value=ml.from||""; $("sReply").value=ml.replyTo||"";
   $("sMeta").value=ad.metaPixel||""; $("sTtPx").value=ad.tiktokPixel||""; $("sGa").value=ad.ga4||"";
   $("sSheetBg").classList.remove("hidden"); $("sSheet").classList.remove("hidden");
   $("sSheet").scrollTop=0; document.body.style.overflow="hidden";
@@ -694,7 +752,14 @@ async function saveSettings(){
   if(ads.ga4 && !/^G-[A-Z0-9]{4,15}$/.test(ads.ga4)) return toast("El ID de Google Analytics empieza por G-",{err:true});
   if(announcement.enabled && !announcement.text) return toast("Escribe el texto del anuncio o apágalo.",{err:true});
   const ai={notes:$("sAiNotes").value.trim()};
-  const cfg={...(siteConfig||{}), social, announcement, ads, ai};
+  const gid=$("sGid").value.trim();
+  if(gid && !/^[0-9]+-[a-z0-9]+\.apps\.googleusercontent\.com$/.test(gid)) return toast("El Google Client ID termina en .apps.googleusercontent.com",{err:true});
+  if($("sClubOn").checked && !gid) return toast("Para activar el Club pega el Google Client ID.",{err:true});
+  const rewards=[0,1,2,3,4,5].map(i=>({name:(document.querySelector(`[data-rn="${i}"]`).value||"").trim(),points:parseInt(document.querySelector(`[data-rp="${i}"]`).value,10)||0,desc:(document.querySelector(`[data-rd="${i}"]`).value||"").trim()})).filter(r=>r.name&&r.points>0);
+  const loyalty={enabled:$("sClubOn").checked, pointsPer1000:parseInt($("sPer").value,10)||0, welcomePoints:parseInt($("sWelcome").value,10)||0, rewards};
+  const fromV=$("sFrom").value.trim(), replyV=$("sReply").value.trim();
+  if(fromV && !/^[^<>@]{0,60}<[^<>@\s]+@[^<>\s]+>$|^[^<>@\s]+@[^<>\s]+$/.test(fromV)) return toast("Correo remitente inválido. Ej: CANEVA <recibos@canevacol.com>",{err:true});
+  const cfg={...(siteConfig||{}), social, announcement, ads, ai, auth:{googleClientId:gid}, loyalty, mail:{from:fromV, replyTo:replyV}};
   busy(true,"Guardando ajustes…");
   try{
     const res=await api(API_BASE+"/admin/config",{method:"POST",headers:{"x-admin-token":token(),"Content-Type":"application/json"},body:JSON.stringify(cfg)});
@@ -706,6 +771,104 @@ async function saveSettings(){
     if(social.tiktok && !data.config.social) throw new Error("Tu Worker aún no guarda redes/pauta: actualízalo a la versión 3.");
     closeSettings(); busy(false); toast("Ajustes publicados ✓");
   }catch(e){ busy(false); toast("Error: "+e.message,{err:true,ms:9000}); }
+}
+
+// ---------- Tabs: Productos | Pedidos | Club ----------
+const DEFAULT_REWARDS=[{name:"$10.000 de descuento",points:300,desc:"En tu próxima compra"},{name:"$25.000 de descuento",points:600,desc:"En tu próxima compra"},{name:"Prenda sorpresa",points:1000,desc:"Elegida por nuestra stylist"}];
+let currentTab="productos", ordStatus="pendiente";
+function adminFetch(path,opts={}){
+  return api(API_BASE+path,{method:opts.method||"GET",headers:{"x-admin-token":token(),"Content-Type":"application/json"},body:opts.body?JSON.stringify(opts.body):undefined})
+    .then(async res=>{let d={};try{d=await res.json();}catch(e){}
+      if(res.status===401||res.status===403) throw new Error("Token inválido. Toca Salir y vuelve a entrar.");
+      if(res.status===404&&!d.error) throw new Error("Falta actualizar el Worker de Cloudflare.");
+      if(!res.ok||!d.ok) throw new Error(d.error||("Error "+res.status));
+      return d;});
+}
+function showTab(t){
+  currentTab=t;
+  document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("on",b.dataset.tab===t));
+  $("prodTools").classList.toggle("hidden",t!=="productos"); $("prodView").classList.toggle("hidden",t!=="productos");
+  $("newBtn").classList.toggle("hidden",t!=="productos");
+  $("ordersView").classList.toggle("hidden",t!=="pedidos"); $("clubView").classList.toggle("hidden",t!=="club");
+  if(t==="pedidos") loadOrders(); if(t==="club") loadClub();
+  window.scrollTo(0,0);
+}
+const money=n=>"$"+Number(n||0).toLocaleString("es-CO");
+const when=iso=>iso?new Date(iso).toLocaleString("es-CO",{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"}):"";
+function clubOff(msg){ return `<div class="empty">${esc(msg)}<br><br>Para activarlo: crea la base de datos <b>D1</b> en Cloudflare y conéctala al Worker como <b>CANEVA_DB</b> (ver guía).</div>`; }
+async function refreshPendingCount(){
+  try{ const d=await adminFetch("/admin/orders?status=pendiente"); $("pendCount").textContent=d.orders.length||""; }catch(e){ $("pendCount").textContent=""; }
+}
+async function loadOrders(){
+  $("ordersList").innerHTML=`<div class="empty">Cargando…</div>`;
+  try{
+    const d=await adminFetch("/admin/orders?status="+ordStatus);
+    if(ordStatus==="pendiente") $("pendCount").textContent=d.orders.length||"";
+    $("ordersList").innerHTML=d.orders.length?d.orders.map(orderCard).join(""):`<div class="empty">No hay pedidos ${ordStatus==="pendiente"?"pendientes":ordStatus==="pagado"?"pagados":"cancelados"}.</div>`;
+  }catch(e){ $("ordersList").innerHTML=/D1|activado/.test(e.message)?clubOff(e.message):`<div class="empty">${esc(e.message)}</div>`; }
+}
+function orderCard(o){
+  const u=o.user;
+  const phone=u&&u.phone?String(u.phone).replace(/[^\d]/g,""):"";
+  const cli=u?`👤 <b>${esc(u.name)}</b> · ${esc(u.email)}${u.phone?` · <a href="https://wa.me/${phone.length===10?"57"+phone:phone}" target="_blank" rel="noopener">${esc(u.phone)}</a>`:""}<span class="tag">${u.points} pts</span>`:`<span style="color:var(--dim)">Sin cuenta del Club</span>`;
+  const items=o.items.map(it=>`<div class="oitem">${it.imagen?`<img src="${esc(it.imagen)}" alt="" loading="lazy">`:"<img alt=''>"}<span>${esc(it.nombre)}${it.size?` · Talla ${esc(it.size)}`:""}</span><b>×${it.qty}</b></div>`).join("");
+  const ref=o.id.toUpperCase();
+  const acts=o.status==="pendiente"
+    ?`<div class="oact"><button class="pay" data-pay="${o.id}" data-has-user="${u?1:0}">Marcar pagado ✓</button><button class="cancel" data-cancel="${o.id}">Cancelar</button></div>`
+    :`<div class="oact"><a href="${API_BASE}/o/${o.id}" target="_blank" rel="noopener">Ver pedido</a></div>`;
+  const paid=o.status==="pagado"?`<div class="ocli">🧾 Recibo <b>${esc(o.ticket)}</b>${o.points?` · +${o.points} pts`:""} · ${o.emailSentAt?"correo enviado ✓":(o.receiptEmail?"correo no enviado":"sin correo")}</div>`:"";
+  return `<div class="ocard"><div class="ohead"><span>Ref. <b>${esc(ref)}</b></span><span>${esc(when(o.createdAt))}</span></div><div class="ocli">${cli}</div>${paid}${items}<div class="otot"><span>Total</span><span>${money(o.total)}</span></div>${acts}</div>`;
+}
+async function payOrder(id,hasUser){
+  let email="";
+  if(!hasUser){
+    const v=prompt("Esta clienta no tiene cuenta. ¿A qué correo enviamos el recibo? (déjalo vacío para no enviar)","");
+    if(v===null) return; email=v.trim();
+    if(email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return toast("Ese correo no es válido.",{err:true});
+  }else if(!confirm("¿Confirmas que este pedido está pagado? Se genera el recibo, se suman los puntos y se envía el correo.")) return;
+  busy(true,"Generando recibo…");
+  try{
+    const d=await adminFetch(`/admin/orders/${id}/pay`,{method:"POST",body:{email}});
+    busy(false);
+    const mail=d.email&&d.email.sent?"correo enviado ✓":(d.email&&d.email.error?"correo NO enviado: "+d.email.error:(email||hasUser?"correo no configurado":"sin correo"));
+    toast(`Recibo ${d.ticket}${d.points?` · +${d.points} pts`:""} · ${mail}`,{ms:9000});
+    loadOrders();
+  }catch(e){ busy(false); toast("Error: "+e.message,{err:true,ms:8000}); }
+}
+async function cancelOrder(id){
+  if(!confirm("¿Cancelar este pedido?")) return;
+  try{ await adminFetch(`/admin/orders/${id}/cancel`,{method:"POST",body:{}}); toast("Pedido cancelado"); loadOrders(); }
+  catch(e){ toast("Error: "+e.message,{err:true}); }
+}
+async function loadClub(){
+  $("clubView").innerHTML=`<div class="empty">Cargando…</div>`;
+  try{
+    const d=await adminFetch("/admin/club");
+    const active=d.coupons.filter(c=>c.status==="activo").length;
+    $("clubView").innerHTML=`<div class="stats"><div class="stat"><b>${d.members.length}</b><span>Miembros</span></div><div class="stat"><b>${esc(d.lastTicket||"—")}</b><span>Último recibo</span></div><div class="stat"><b>${d.members.reduce((s,m)=>s+(m.points||0),0)}</b><span>Puntos en circulación</span></div><div class="stat"><b>${active}</b><span>Códigos activos</span></div></div>
+      <div class="sect" style="margin-top:0;border:0;padding:0">Validar código de recompensa</div>
+      <div style="display:flex;gap:8px;margin:8px 0 6px"><input id="cpCode" class="search" style="margin:0" placeholder="CANEVA-XXXXXX" autocapitalize="characters"><button class="iconbtn" id="cpCheck" type="button">Revisar</button></div>
+      <div id="cpResult"></div>
+      <div class="sect">Miembros</div>
+      ${d.members.length?d.members.map(m=>{const ph=String(m.phone||"").replace(/[^\d]/g,"");return `<div class="mrow"><div><b>${esc(m.name)}</b> <span class="tag">${m.points} pts</span><br><small>${esc(m.email)}${m.phone?` · <a href="https://wa.me/${ph.length===10?"57"+ph:ph}" target="_blank" rel="noopener">${esc(m.phone)}</a>`:""}${m.size?` · Talla ${esc(m.size)}`:""}${m.birthday?` · 🎂 ${esc(m.birthday.split("-").reverse().join("/"))}`:""}</small></div><button type="button" data-adj="${esc(m.id)}" data-name="${esc(m.name)}">± Puntos</button></div>`;}).join(""):`<div class="empty">Aún no hay miembros. Cuando alguien se registre aparecerá aquí.</div>`}`;
+    $("cpCheck").onclick=()=>checkCoupon(false);
+  }catch(e){ $("clubView").innerHTML=/D1|activado/.test(e.message)?clubOff(e.message):`<div class="empty">${esc(e.message)}</div>`; }
+}
+async function checkCoupon(use){
+  const code=$("cpCode").value.trim().toUpperCase(); if(!code) return;
+  try{
+    const d=await adminFetch("/admin/coupon",{method:"POST",body:{code,use}});
+    $("cpResult").innerHTML=`<div class="ocard"><b>${esc(d.reward)}</b> · ${esc(d.name||"")}<br><small>${d.status==="activo"?"✅ Activo":"⛔ Ya usado"} · creado ${esc(when(d.createdAt))}</small>${d.status==="activo"?`<div class="oact"><button class="pay" id="cpUse" type="button">Marcar como usado</button></div>`:""}</div>`;
+    const u=$("cpUse"); if(u) u.onclick=()=>{ if(confirm("¿Marcar este código como usado?")) checkCoupon(true); };
+    if(use) toast("Código marcado como usado ✓");
+  }catch(e){ $("cpResult").innerHTML=`<div class="empty">${esc(e.message)}</div>`; }
+}
+async function adjustPoints(id,name){
+  const v=prompt(`Puntos para ${name}. Usa negativo para restar (ej: 200 o -50):`,""); if(v===null) return;
+  const delta=parseInt(v,10); if(!delta) return toast("Escribe un número distinto de 0.",{err:true});
+  const reason=prompt("Motivo (lo verá en su historial interno):","Ajuste manual")||"Ajuste manual";
+  try{ const d=await adminFetch("/admin/points",{method:"POST",body:{userId:id,delta,reason}}); toast(`${name}: ahora tiene ${d.points} pts`); loadClub(); }
+  catch(e){ toast("Error: "+e.message,{err:true}); }
 }
 
 // Renames a whole category (or merges it into an existing one) in a single publish.
@@ -747,15 +910,20 @@ async function loadList(){
   catch(e){ toast("Error: "+e.message,{err:true}); }
   busy(false);
   fetchConfig().then(c=>{ siteConfig=c; renderPortadaInfo(); }).catch(()=>{ siteConfig=null; renderPortadaInfo(); });
+  refreshPendingCount();
 }
 function showLogin(){ $("loginView").classList.remove("hidden"); $("listView").classList.add("hidden"); }
 function showList(){ $("loginView").classList.add("hidden"); $("listView").classList.remove("hidden"); loadList(); }
 
 $("loginBtn").onclick=()=>{ const t=$("tokenInput").value.trim(); if(!t){ toast("Pega el token.",{err:true}); return; } setLS(TOKEN_KEY,t); showList(); };
 $("logoutBtn").onclick=()=>{ if(confirm("¿Cerrar sesión y borrar el token de este celular?")){ delLS(TOKEN_KEY); showLogin(); } };
-$("reloadBtn").onclick=loadList;
+$("reloadBtn").onclick=()=>{ if(currentTab==="pedidos") loadOrders(); else if(currentTab==="club") loadClub(); else loadList(); };
 $("renameCatBtn").onclick=renameCategory;
 $("portadaInfo").onclick=openPortada;
+$("tabs").onclick=e=>{ const b=e.target.closest("button[data-tab]"); if(b) showTab(b.dataset.tab); };
+$("ordSeg").onclick=e=>{ const b=e.target.closest("button[data-st]"); if(!b) return; ordStatus=b.dataset.st; document.querySelectorAll("#ordSeg button").forEach(x=>x.classList.toggle("on",x===b)); loadOrders(); };
+$("ordersList").onclick=e=>{ const p=e.target.closest("[data-pay]"); if(p) return payOrder(p.dataset.pay, p.dataset.hasUser==="1"); const c=e.target.closest("[data-cancel]"); if(c) cancelOrder(c.dataset.cancel); };
+$("clubView").onclick=e=>{ const a=e.target.closest("[data-adj]"); if(a) adjustPoints(a.dataset.adj,a.dataset.name); };
 $("pSheetBg").onclick=closePortada; $("pCancel").onclick=closePortada; $("pSave").onclick=savePortada;
 $("pSlots").addEventListener("input",onSlotsInput); $("pSlots").addEventListener("change",onSlotsInput);
 $("pSlots").onclick=onSlotsClick; $("pFile").onchange=onSlotFile;
