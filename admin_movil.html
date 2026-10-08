@@ -58,6 +58,7 @@ main{padding:14px 16px 120px}
 .apbar{height:6px;background:var(--k3);border-radius:9px;overflow:hidden;margin:6px 0}.apbar i{display:block;height:100%;background:var(--w)}
 .apinfo{font-size:13px;line-height:1.6}.apinfo small{color:var(--dim)}
 .oact .ext{background:none;color:var(--w);border:1px solid var(--b)}
+.dlrow{display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid var(--b)}.dlrow span{flex:1;font-size:14px}.dlrow input{width:80px;text-align:center}
 .tag{display:inline-block;font-size:11px;border:1px solid var(--b);border-radius:6px;padding:1px 6px;margin-left:4px}
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
 .stat{border:1px solid var(--b);border-radius:12px;padding:12px;background:var(--k2)}.stat b{display:block;font-family:"Cormorant Garamond",serif;font-size:30px;font-weight:300}.stat span{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.12em}
@@ -248,6 +249,9 @@ main{padding:14px 16px 120px}
     <div class="field"><label>Días para pagar el resto</label><input id="sApDays" type="text" inputmode="numeric" placeholder="30"></div>
   </div>
   <p class="hint">La clienta paga la cuota por WhatsApp y tú la registras en la pestaña Apartados. Si no completa a tiempo, lo abonado se convierte solo en un código de saldo a favor.</p>
+  <div class="sect">Días de entrega por categoría</div>
+  <div id="sDelivery"></div>
+  <p class="hint">Días hábiles que se muestran en cada prenda y que Caneva AI le dice a la clienta. Vacío = 1 día (Atelier: 10).</p>
   <div class="sect">Pauta y medición</div>
   <div class="field"><label>Meta Pixel ID (Facebook / Instagram Ads)</label><input id="sMeta" type="text" inputmode="numeric" placeholder="Ej: 123456789012345"></div>
   <div class="field"><label>TikTok Pixel ID</label><input id="sTtPx" type="text" placeholder="Ej: C1ABCDEF2345GHIJ"></div>
@@ -751,6 +755,8 @@ async function openSettings(){
   const rws=(lo.rewards&&lo.rewards.length?lo.rewards:DEFAULT_REWARDS).concat([{},{},{},{},{},{}]).slice(0,6);
   $("sRewards").innerHTML=rws.map((r,i)=>`<div class="rwrow"><input data-rn="${i}" placeholder="Ej: $10.000 de descuento" value="${esc(r.name||"")}"><input data-rp="${i}" inputmode="numeric" placeholder="Puntos" value="${r.points||""}"><input class="full" data-rd="${i}" placeholder="Descripción (opcional)" value="${esc(r.desc||"")}"></div>`).join("");
   $("sFrom").value=ml.from||""; $("sReply").value=ml.replyTo||"";
+  const dl=siteConfig.delivery||{}, dlFind=c=>{const k=Object.keys(dl).find(x=>x.trim().toLowerCase()===c.trim().toLowerCase());return k?dl[k]:"";};
+  $("sDelivery").innerHTML=categories().map(({c},i)=>`<div class="dlrow"><span>${esc(c)}</span><input data-dlc="${esc(c)}" type="text" inputmode="numeric" placeholder="${/atelier|bajo pedido|encargo/i.test(c)?10:1}" value="${dlFind(c)}"> <small style="color:var(--dim)">días</small></div>`).join("")||`<p class="hint">Aún no hay categorías.</p>`;
   const ly=siteConfig.layaway||{}; $("sApOn").checked=!!ly.enabled; $("sApPct").value=ly.depositPercent||30; $("sApDays").value=ly.days||30;
   $("sMeta").value=ad.metaPixel||""; $("sTtPx").value=ad.tiktokPixel||""; $("sGa").value=ad.ga4||"";
   $("sSheetBg").classList.remove("hidden"); $("sSheet").classList.remove("hidden");
@@ -775,11 +781,14 @@ async function saveSettings(){
   const loyalty={enabled:$("sClubOn").checked, pointsPer1000:parseInt($("sPer").value,10)||0, welcomePoints:parseInt($("sWelcome").value,10)||0, rewards};
   const fromV=$("sFrom").value.trim(), replyV=$("sReply").value.trim();
   if(fromV && !/^[^<>@]{0,60}<[^<>@\s]+@[^<>\s]+>$|^[^<>@\s]+@[^<>\s]+$/.test(fromV)) return toast("Correo remitente inválido. Ej: CANEVA <recibos@canevacol.com>",{err:true});
+  const delivery={}; let dlBad=false;
+  document.querySelectorAll("[data-dlc]").forEach(i=>{ const v=i.value.trim(); if(!v) return; const n=parseInt(v,10); if(!(n>=1&&n<=60)) dlBad=true; else delivery[i.dataset.dlc]=n; });
+  if(dlBad) return toast("Los días de entrega deben estar entre 1 y 60.",{err:true});
   const layaway={enabled:$("sApOn").checked, depositPercent:parseInt($("sApPct").value,10)||30, days:parseInt($("sApDays").value,10)||30};
   if(layaway.enabled && !$("sClubOn").checked) return toast("Los Apartados necesitan el Club Caneva activo.",{err:true});
   if(layaway.depositPercent<5||layaway.depositPercent>90) return toast("La cuota inicial debe estar entre 5% y 90%.",{err:true});
   if(layaway.days<1||layaway.days>120) return toast("Los días deben estar entre 1 y 120.",{err:true});
-  const cfg={...(siteConfig||{}), social, announcement, ads, ai, auth:{googleClientId:gid}, loyalty, mail:{from:fromV, replyTo:replyV}, layaway};
+  const cfg={...(siteConfig||{}), social, announcement, ads, ai, auth:{googleClientId:gid}, loyalty, mail:{from:fromV, replyTo:replyV}, layaway, delivery};
   busy(true,"Guardando ajustes…");
   try{
     const res=await api(API_BASE+"/admin/config",{method:"POST",headers:{"x-admin-token":token(),"Content-Type":"application/json"},body:JSON.stringify(cfg)});

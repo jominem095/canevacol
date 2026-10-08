@@ -2159,6 +2159,8 @@ function bindPmSlides(n){
   media.querySelector('.pm-next').addEventListener('click',function(e){e.stopPropagation();go(pmSlideIndex()+1);});
   dots.forEach(function(d,j){d.addEventListener('click',function(e){e.stopPropagation();go(j);});});
 }
+// Business days to deliver: configured per category in the admin; otherwise 1 day (Atelier keeps 10 until configured)
+function deliveryDaysFor(p,made){var m=(SITE_CONFIG&&SITE_CONFIG.delivery)||{},k=String(p.categoria||'').trim().toLowerCase();for(var c in m){if(String(c).trim().toLowerCase()===k&&m[c]>0)return m[c];}return made?10:1;}
 function openProductModal(idx){
   var p=P[idx]; if(!p)return;
   currentProductIndex=idx;
@@ -2185,7 +2187,7 @@ function openProductModal(idx){
   document.getElementById('pmCat').textContent=p.categoria;
   document.getElementById('pmName').textContent=p.nombre;
   document.getElementById('pmPrice').textContent=p.precio;
-  var ownDesc=String(p.descripcion||'').trim();document.getElementById('pmDesc').textContent=(ownDesc&&ownDesc!==p.tallas&&/[a-záéíóúñ]{4,}/i.test(ownDesc))?ownDesc:productTone(p);var made=/atelier|bajo pedido|encargo/i.test(p.categoria+' '+(p.descripcion||''));var td=document.getElementById('pmTrustDays'),tt=document.getElementById('pmTrustDaysTxt');if(td){td.textContent=made?'10 días hábiles':'1 día';tt.textContent=made?'Hecho para ti':'Entrega hábil Barranquilla';}var fab=document.getElementById('pmFabric');if(fab){fab.hidden=!p.tela;document.getElementById('pmFabricText').textContent=p.tela||'';}
+  var ownDesc=String(p.descripcion||'').trim();document.getElementById('pmDesc').textContent=(ownDesc&&ownDesc!==p.tallas&&/[a-záéíóúñ]{4,}/i.test(ownDesc))?ownDesc:productTone(p);var made=/atelier|bajo pedido|encargo/i.test(p.categoria+' '+(p.descripcion||''));var td=document.getElementById('pmTrustDays'),tt=document.getElementById('pmTrustDaysTxt');if(td){var dd=deliveryDaysFor(p,made);td.textContent=dd<=1?'1 día':dd+' días hábiles';tt.textContent=made?'Hecho para ti':'Entrega hábil Barranquilla';}var fab=document.getElementById('pmFabric');if(fab){fab.hidden=!p.tela;document.getElementById('pmFabricText').textContent=p.tela||'';}
   document.getElementById('pmTags').innerHTML=productTags(p).map(function(t,i){return '<span class="pm-tag '+(i===0?'gold':'')+'">'+escHtml(t)+'</span>';}).join('');
   renderSizeSelector(p);
   document.getElementById('pmWhats').href=waLinkFor(p);
