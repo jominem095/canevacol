@@ -1489,6 +1489,11 @@ body.has-ann nav{top:34px}
 .club-cart{margin:.8rem 0;padding:.8rem .9rem;border:1px solid rgba(247,247,244,.2);background:rgba(247,247,244,.05);font-family:'Inter',sans-serif;font-size:.72rem;line-height:1.5;color:#f7f7f4}
 .pm-apartar[hidden],.pm-apartar-note[hidden]{display:none!important}
 .pm-actions .pm-apartar{border-color:#c9b38a;color:#f7f7f4;background:rgba(201,179,138,.12)}
+.ai-look-ap{display:block;width:100%;margin-top:.55rem;padding:.7rem .8rem;background:rgba(201,179,138,.14);border:1px solid #c9b38a;color:#f7f7f4;font-family:'Inter',sans-serif;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
+.ai-look-ap.sm{font-size:.56rem;letter-spacing:.08em;text-transform:none;text-align:left;margin-top:.4rem}
+.ai-look-apl{margin-top:.6rem}.ai-look-apl small{display:block;font-size:.66rem;color:rgba(247,247,244,.65);font-family:'Inter',sans-serif}
+.pm-apartar.pulse{animation:apPulse .6s ease 3}
+@keyframes apPulse{50%{box-shadow:0 0 0 6px rgba(201,179,138,.35)}}
 .pm-apartar-note{margin-top:.6rem;font-family:'Inter',sans-serif;font-size:.68rem;letter-spacing:.03em;line-height:1.5;color:rgba(247,247,244,.65)}
 .pm-apartar-note b{color:#c9b38a;font-weight:500}
 .club-ap{display:grid;grid-template-columns:60px 1fr;gap:.8rem;padding:.85rem 0;border-top:1px solid rgba(247,247,244,.12)}
@@ -2548,7 +2553,9 @@ function aiExtras(ps,sugs){
     var total=0;ps.forEach(function(p){var n=priceNum(p.precio);if(n<999999999)total+=n;});
     h+='<div class="ai-look">'+(ps.length>1?'<div class="ai-look-head"><small>Tu look Caneva · '+ps.length+' prendas</small><strong>$'+total.toLocaleString('es-CO')+'</strong></div>':'')+
        '<div class="ai-look-act">'+(ps.length>1?'<button type="button" class="ai-look-add">Agregar look a la bolsa</button>':'<button type="button" class="ai-look-view">Elegir talla y agregar</button>')+
-       '<a class="ai-wa" href="'+lookWhatsLink(ps)+'" target="_blank" rel="noopener">WhatsApp →</a></div></div>';
+       '<a class="ai-wa" href="'+lookWhatsLink(ps)+'" target="_blank" rel="noopener">WhatsApp →</a></div>'+
+       (function(){var L=window.clubLayaway&&clubLayaway();if(!L)return '';if(ps.length===1)return '<button type="button" class="ai-look-ap" data-api="0">Apártala con $'+L.deposit(ps[0].precio).toLocaleString('es-CO')+' · resto en '+L.days+' días</button>';return '<div class="ai-look-apl"><small>¿No te alcanza hoy? Aparta cada prenda con el '+L.pct+'%:</small>'+ps.map(function(p,i){return '<button type="button" class="ai-look-ap sm" data-api="'+i+'">'+escHtml(p.nombre)+' · $'+L.deposit(p.precio).toLocaleString('es-CO')+'</button>';}).join('')+'</div>';})()+
+       '</div>';
   }
   if(sugs&&sugs.length)h+='<div class="ai-sugs">'+sugs.map(function(x){return '<button type="button" data-sug="'+escAttr(x)+'">'+escHtml(x)+'</button>';}).join('')+'</div>';
   return h;
@@ -2561,6 +2568,7 @@ function bindAiExtras(d,ps){
     toastCart(sizes.indexOf('Por confirmar')>=0?'Look agregado · confirma tallas en la bolsa':'Look agregado a tu bolsa');
     setTimeout(openCart,450);
   });
+  d.querySelectorAll('.ai-look-ap').forEach(function(b){b.addEventListener('click',function(){var p=ps[parseInt(b.dataset.api,10)||0],i=P.indexOf(p);if(i<0)return;openProductModal(i);setTimeout(function(){var a=document.getElementById('pmApartar');if(a&&!a.hidden){a.scrollIntoView({behavior:'smooth',block:'center'});a.classList.add('pulse');setTimeout(function(){a.classList.remove('pulse');},1800);}},350);});});
   var view=d.querySelector('.ai-look-view');
   if(view)view.addEventListener('click',function(){var i=P.indexOf(ps[0]);if(i>=0)openProductModal(i);});
   d.querySelectorAll('[data-sug]').forEach(function(b){b.addEventListener('click',function(){var inp=document.getElementById('cinput');inp.value=b.dataset.sug;sendChat();});});
@@ -2945,6 +2953,7 @@ document.getElementById('csend').addEventListener('click',sendChat);
     if(n)n.innerHTML='<b>Apartado Caneva:</b> pagas el '+lay().pct+'% hoy y el resto en '+lay().days+' días, en los abonos que quieras. Si no completas, tu abono queda como saldo a favor.';
   }
   window.renderApartarBtn=renderApartarBtn;
+  window.clubLayaway=function(){return layOn()?{pct:lay().pct,days:lay().days,deposit:function(v){return depositFor(priceOf(v));}}:null;};
   async function apartar(){
     var p=curProduct();if(!p)return;
     if(typeof requireSizeIfNeeded==='function'&&!requireSizeIfNeeded(p))return;

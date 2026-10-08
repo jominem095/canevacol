@@ -1487,6 +1487,24 @@ body.has-ann nav{top:34px}
 .mclub{border:1px solid rgba(247,247,244,.4);background:none;color:#f7f7f4;padding:.9rem 1.6rem;font-family:'Inter',sans-serif;font-size:.7rem;letter-spacing:.24em;text-transform:uppercase}
 .nclub[hidden],.mclub[hidden],.club-cart[hidden]{display:none!important}
 .club-cart{margin:.8rem 0;padding:.8rem .9rem;border:1px solid rgba(247,247,244,.2);background:rgba(247,247,244,.05);font-family:'Inter',sans-serif;font-size:.72rem;line-height:1.5;color:#f7f7f4}
+.pm-apartar[hidden],.pm-apartar-note[hidden]{display:none!important}
+.pm-actions .pm-apartar{border-color:#c9b38a;color:#f7f7f4;background:rgba(201,179,138,.12)}
+.ai-look-ap{display:block;width:100%;margin-top:.55rem;padding:.7rem .8rem;background:rgba(201,179,138,.14);border:1px solid #c9b38a;color:#f7f7f4;font-family:'Inter',sans-serif;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
+.ai-look-ap.sm{font-size:.56rem;letter-spacing:.08em;text-transform:none;text-align:left;margin-top:.4rem}
+.ai-look-apl{margin-top:.6rem}.ai-look-apl small{display:block;font-size:.66rem;color:rgba(247,247,244,.65);font-family:'Inter',sans-serif}
+.pm-apartar.pulse{animation:apPulse .6s ease 3}
+@keyframes apPulse{50%{box-shadow:0 0 0 6px rgba(201,179,138,.35)}}
+.pm-apartar-note{margin-top:.6rem;font-family:'Inter',sans-serif;font-size:.68rem;letter-spacing:.03em;line-height:1.5;color:rgba(247,247,244,.65)}
+.pm-apartar-note b{color:#c9b38a;font-weight:500}
+.club-ap{display:grid;grid-template-columns:60px 1fr;gap:.8rem;padding:.85rem 0;border-top:1px solid rgba(247,247,244,.12)}
+.club-ap-img{width:60px;height:76px;background:#151515}
+.club-ap-img img{width:60px;height:76px;object-fit:cover;display:block}
+.club-ap-tx b{display:block;font-size:.84rem;font-weight:500}
+.club-ap-tx small{display:block;font-size:.66rem;color:rgba(247,247,244,.6);margin:.15rem 0}
+.club-ap .club-bar{background:rgba(247,247,244,.15);margin-top:.45rem}.club-ap .club-bar i{background:#c9b38a}
+.club-ap-tx p{font-size:.72rem;margin:.35rem 0 0;line-height:1.5}
+.club-ap-btn{display:inline-block;margin-top:.5rem;padding:.5rem .75rem;background:#f7f7f4;color:#050505!important;font-size:.56rem;letter-spacing:.16em;text-transform:uppercase;font-weight:600;text-decoration:none}
+.club-ap-empty{font-size:.72rem;color:rgba(247,247,244,.7);line-height:1.55;padding:.2rem 0 .4rem}
 .club-cart .guest{margin-top:.75rem;padding-top:.7rem;border-top:1px solid rgba(247,247,244,.14)}
 .club-cart .guest input{width:100%;margin-top:.45rem;background:#0b0b0a;border:1px solid rgba(247,247,244,.25);color:#f7f7f4;padding:.6rem .7rem;font:inherit;font-size:.78rem;outline:none}
 .club-cart .guest input:focus{border-color:#c9b38a}
@@ -1678,9 +1696,11 @@ body.has-ann nav{top:34px}
       </div>
       <div class="pm-actions">
         <button class="btn-p cart-add" id="pmAddCart" type="button"><span>Agregar al carrito</span></button>
+        <button class="btn-o pm-apartar" id="pmApartar" type="button" hidden><span>Apartar</span></button>
         <a class="btn-o" id="pmWhats" href="#" target="_blank" rel="noopener"><span>Comprar por WhatsApp</span></a>
         <button class="btn-o" id="pmAsk" type="button">Preguntar a Caneva AI</button>
       </div>
+      <div class="pm-apartar-note" id="pmApartarNote" hidden></div>
       <div class="pm-cart-state" id="pmCartState" aria-live="polite">
         <div class="pm-cart-copy"><strong id="pmCartTitle">Agregado a tu carrito</strong><span id="pmCartMeta">1 prenda lista para comprar</span></div>
         <button class="pm-view-cart" id="pmViewCart" type="button">Ver carrito</button>
@@ -2144,6 +2164,8 @@ function bindPmSlides(n){
   media.querySelector('.pm-next').addEventListener('click',function(e){e.stopPropagation();go(pmSlideIndex()+1);});
   dots.forEach(function(d,j){d.addEventListener('click',function(e){e.stopPropagation();go(j);});});
 }
+// Business days to deliver: configured per category in the admin; otherwise 1 day (Atelier keeps 10 until configured)
+function deliveryDaysFor(p,made){var m=(SITE_CONFIG&&SITE_CONFIG.delivery)||{},k=String(p.categoria||'').trim().toLowerCase();for(var c in m){if(String(c).trim().toLowerCase()===k&&m[c]>0)return m[c];}return made?10:1;}
 function openProductModal(idx){
   var p=P[idx]; if(!p)return;
   currentProductIndex=idx;
@@ -2170,7 +2192,7 @@ function openProductModal(idx){
   document.getElementById('pmCat').textContent=p.categoria;
   document.getElementById('pmName').textContent=p.nombre;
   document.getElementById('pmPrice').textContent=p.precio;
-  var ownDesc=String(p.descripcion||'').trim();document.getElementById('pmDesc').textContent=(ownDesc&&ownDesc!==p.tallas&&/[a-záéíóúñ]{4,}/i.test(ownDesc))?ownDesc:productTone(p);var made=/atelier|bajo pedido|encargo/i.test(p.categoria+' '+(p.descripcion||''));var td=document.getElementById('pmTrustDays'),tt=document.getElementById('pmTrustDaysTxt');if(td){td.textContent=made?'10 días hábiles':'1 día';tt.textContent=made?'Hecho para ti':'Entrega hábil Barranquilla';}var fab=document.getElementById('pmFabric');if(fab){fab.hidden=!p.tela;document.getElementById('pmFabricText').textContent=p.tela||'';}
+  var ownDesc=String(p.descripcion||'').trim();document.getElementById('pmDesc').textContent=(ownDesc&&ownDesc!==p.tallas&&/[a-záéíóúñ]{4,}/i.test(ownDesc))?ownDesc:productTone(p);var made=/atelier|bajo pedido|encargo/i.test(p.categoria+' '+(p.descripcion||''));var td=document.getElementById('pmTrustDays'),tt=document.getElementById('pmTrustDaysTxt');if(td){var dd=deliveryDaysFor(p,made);td.textContent=dd<=1?'1 día':dd+' días hábiles';tt.textContent=made?'Hecho para ti':'Entrega hábil Barranquilla';}var fab=document.getElementById('pmFabric');if(fab){fab.hidden=!p.tela;document.getElementById('pmFabricText').textContent=p.tela||'';}
   document.getElementById('pmTags').innerHTML=productTags(p).map(function(t,i){return '<span class="pm-tag '+(i===0?'gold':'')+'">'+escHtml(t)+'</span>';}).join('');
   renderSizeSelector(p);
   document.getElementById('pmWhats').href=waLinkFor(p);
@@ -2531,7 +2553,9 @@ function aiExtras(ps,sugs){
     var total=0;ps.forEach(function(p){var n=priceNum(p.precio);if(n<999999999)total+=n;});
     h+='<div class="ai-look">'+(ps.length>1?'<div class="ai-look-head"><small>Tu look Caneva · '+ps.length+' prendas</small><strong>$'+total.toLocaleString('es-CO')+'</strong></div>':'')+
        '<div class="ai-look-act">'+(ps.length>1?'<button type="button" class="ai-look-add">Agregar look a la bolsa</button>':'<button type="button" class="ai-look-view">Elegir talla y agregar</button>')+
-       '<a class="ai-wa" href="'+lookWhatsLink(ps)+'" target="_blank" rel="noopener">WhatsApp →</a></div></div>';
+       '<a class="ai-wa" href="'+lookWhatsLink(ps)+'" target="_blank" rel="noopener">WhatsApp →</a></div>'+
+       (function(){var L=window.clubLayaway&&clubLayaway();if(!L)return '';if(ps.length===1)return '<button type="button" class="ai-look-ap" data-api="0">Apártala con $'+L.deposit(ps[0].precio).toLocaleString('es-CO')+' · resto en '+L.days+' días</button>';return '<div class="ai-look-apl"><small>¿No te alcanza hoy? Aparta cada prenda con el '+L.pct+'%:</small>'+ps.map(function(p,i){return '<button type="button" class="ai-look-ap sm" data-api="'+i+'">'+escHtml(p.nombre)+' · $'+L.deposit(p.precio).toLocaleString('es-CO')+'</button>';}).join('')+'</div>';})()+
+       '</div>';
   }
   if(sugs&&sugs.length)h+='<div class="ai-sugs">'+sugs.map(function(x){return '<button type="button" data-sug="'+escAttr(x)+'">'+escHtml(x)+'</button>';}).join('')+'</div>';
   return h;
@@ -2544,6 +2568,7 @@ function bindAiExtras(d,ps){
     toastCart(sizes.indexOf('Por confirmar')>=0?'Look agregado · confirma tallas en la bolsa':'Look agregado a tu bolsa');
     setTimeout(openCart,450);
   });
+  d.querySelectorAll('.ai-look-ap').forEach(function(b){b.addEventListener('click',function(){var p=ps[parseInt(b.dataset.api,10)||0],i=P.indexOf(p);if(i<0)return;openProductModal(i);setTimeout(function(){var a=document.getElementById('pmApartar');if(a&&!a.hidden){a.scrollIntoView({behavior:'smooth',block:'center'});a.classList.add('pulse');setTimeout(function(){a.classList.remove('pulse');},1800);}},350);});});
   var view=d.querySelector('.ai-look-view');
   if(view)view.addEventListener('click',function(){var i=P.indexOf(ps[0]);if(i>=0)openProductModal(i);});
   d.querySelectorAll('[data-sug]').forEach(function(b){b.addEventListener('click',function(){var inp=document.getElementById('cinput');inp.value=b.dataset.sug;sendChat();});});
@@ -2913,10 +2938,64 @@ document.getElementById('csend').addEventListener('click',sendChat);
   // Birthday is stored MM-DD; show it as DD-MM in the form
   var _ra=renderAccount;renderAccount=function(a,b){_ra(a,b);var i=document.getElementById('clubBday');if(i&&/^\d{2}-\d{2}$/.test(i.value)){var p=i.value.split('-');i.value=p[1]+'-'+p[0];}};
 
+  // ---------- Apartados: deposit now, pay the rest in N days (members only) ----------
+  function lay(){var l=(C.cfg&&C.cfg.layaway)||{};return {enabled:!!l.enabled,pct:Number.isFinite(l.depositPercent)?l.depositPercent:30,days:Number.isFinite(l.days)?l.days:30};}
+  function layOn(){return active()&&lay().enabled;}
+  function priceOf(v){var n=String(v||'').replace(/[^\d]/g,'');return n?parseInt(n,10):0;}
+  function depositFor(price){return Math.min(price,Math.max(1000,Math.ceil(price*lay().pct/100/1000)*1000));}
+  function curProduct(){return (typeof currentProductIndex==='number'&&currentProductIndex>=0&&window.P)?P[currentProductIndex]:null;}
+  function renderApartarBtn(){
+    var b=document.getElementById('pmApartar'),n=document.getElementById('pmApartarNote');if(!b)return;
+    var p=curProduct(),price=p?priceOf(p.precio):0;
+    var on=!!(layOn()&&p&&price>0&&!/domicilio|domicl|mayorista|others/i.test(p.categoria||''));
+    b.hidden=!on;if(n)n.hidden=!on;if(!on)return;
+    b.innerHTML='<span>Apártala con '+money(depositFor(price))+'</span>';
+    if(n)n.innerHTML='<b>Apartado Caneva:</b> pagas el '+lay().pct+'% hoy y el resto en '+lay().days+' días, en los abonos que quieras. Si no completas, tu abono queda como saldo a favor.';
+  }
+  window.renderApartarBtn=renderApartarBtn;
+  window.clubLayaway=function(){return layOn()?{pct:lay().pct,days:lay().days,deposit:function(v){return depositFor(priceOf(v));}}:null;};
+  async function apartar(){
+    var p=curProduct();if(!p)return;
+    if(typeof requireSizeIfNeeded==='function'&&!requireSizeIfNeeded(p))return;
+    if(!C.user){openClub();var m=document.getElementById('clubMsg');if(m){m.className='club-msg';m.textContent='Para apartar, entra al Club Caneva: toma 10 segundos 🖤';}return;}
+    var size=(typeof getSelectedSize==='function'&&getSelectedSize())||'';
+    var price=priceOf(p.precio),dep=depositFor(price);
+    if(!confirm('Apartar '+p.nombre+(size?' (talla '+size+')':'')+'\n\nCuota inicial: '+money(dep)+'\nEl resto ('+money(price-dep)+') lo pagas en '+lay().days+' días, en los abonos que quieras.\nSi no completas, lo abonado queda como saldo a favor.\n\n¿Continuar?'))return;
+    var win=null;try{win=window.open('','_blank');}catch(e){}
+    try{
+      var d=await api('/me/layaway',{method:'POST',body:{nombre:p.nombre,categoria:p.categoria,precio:p.precio,size:size}});
+      var l=d.layaway;
+      var txt='Hola Caneva ✨ Quiero APARTAR esta prenda:\n👗 '+l.item.nombre+(l.item.size?' · Talla '+l.item.size:'')+' · '+money(l.price)+'\n💳 Cuota inicial: '+money(l.deposit)+'\n🔖 Apartado: '+l.id.toUpperCase()+'\n'+window.clubMemberLine()+'\n¿Me envías los datos para pagar la cuota?';
+      var url='https://wa.me/'+WA_PHONE+'?text='+encodeURIComponent(txt);
+      if(win){win.location.href=url;}else{location.href=url;}
+      if(typeof toastCart==='function')toastCart('Apartado solicitado ✓');
+      loadAccount();
+    }catch(e){if(win)try{win.close();}catch(x){}alert(e.message);}
+  }
+  var apBtn=document.getElementById('pmApartar');if(apBtn)apBtn.addEventListener('click',apartar);
+  if(typeof openProductModal==='function'){var _opm=openProductModal;window.openProductModal=openProductModal=function(){var r=_opm.apply(this,arguments);try{renderApartarBtn();}catch(e){}return r;};}
+  var _ph=perksHtml;perksHtml=function(){var h=_ph();return layOn()?h.replace('</ul>','<li><b>Aparta tus prendas</b><span>con el '+lay().pct+'%</span></li></ul>'):h;};
+  function fdate(iso){try{return new Date(iso).toLocaleDateString('es-CO',{day:'numeric',month:'short'});}catch(e){return '';}}
+  function waLink(t){return 'https://wa.me/'+WA_PHONE+'?text='+encodeURIComponent(t);}
+  function layCard(l){
+    var it=l.item||{},pct=l.price?Math.min(100,Math.round(l.paid/l.price*100)):0,st='',act='';
+    if(l.status==='solicitado'){st='Esperando tu cuota inicial de <b>'+money(l.deposit)+'</b>';act='<a class="club-ap-btn" target="_blank" rel="noopener" href="'+esc(waLink('Hola Caneva ✨ Quiero pagar la cuota inicial de mi apartado '+l.id.toUpperCase()+' ('+it.nombre+'): '+money(l.deposit)))+'">Pagar cuota por WhatsApp</a>';}
+    else if(l.status==='activo'){st='Saldo <b>'+money(l.balance)+'</b> · '+(l.daysLeft<=1?'<b>vence hoy</b>':'te quedan <b>'+l.daysLeft+' días</b>')+' (hasta el '+fdate(l.dueAt)+')';act='<a class="club-ap-btn" target="_blank" rel="noopener" href="'+esc(waLink('Hola Caneva ✨ Quiero abonar a mi apartado '+l.id.toUpperCase()+' ('+it.nombre+'). Saldo: '+money(l.balance)))+'">Abonar por WhatsApp</a>';}
+    else if(l.status==='completado'){st='¡Es tuya! 🖤 Recibo <b>'+esc(l.ticket)+'</b>';}
+    else if(l.status==='vencido'){st=l.creditCode?'Tu abono quedó como <b>saldo a favor de '+money(l.paid)+'</b>: <span class="club-code">'+esc(l.creditCode)+'</span>':'Venció sin abonos.';}
+    return '<div class="club-ap"><div class="club-ap-img">'+(it.imagen?'<img src="'+esc(it.imagen)+'" alt="" loading="lazy">':'')+'</div><div class="club-ap-tx"><b>'+esc(it.nombre)+'</b><small>'+(it.size?'Talla '+esc(it.size)+' · ':'')+money(l.price)+' · abonado '+money(l.paid)+'</small><div class="club-bar"><i style="width:'+Math.max(3,pct)+'%"></i></div><p>'+st+'</p>'+act+'</div></div>';
+  }
+  var _ra2=renderAccount;renderAccount=function(a,b){_ra2(a,b);try{
+    var ls=((C.acc&&C.acc.layaways)||[]).filter(function(l){return l.status!=='cancelado';});
+    var pts=body.querySelector('.club-points');if(!pts)return;
+    var html=ls.length?'<div class="club-sec">Tus apartados</div>'+ls.map(layCard).join(''):(layOn()?'<div class="club-sec">Apartados</div><div class="club-ap-empty">Aparta cualquier prenda con el '+lay().pct+'% y paga el resto en '+lay().days+' días. Busca el botón <b>Apartar</b> en la prenda que te enamore.</div>':'');
+    if(html)pts.insertAdjacentHTML('afterend',html);
+  }catch(e){}};
+
   // ---------- Wiring ----------
   ['navClub','mobileClub'].forEach(function(id){var b=document.getElementById(id);if(b)b.addEventListener('click',openClub);});
   if(typeof renderCart==='function'){var _rc=renderCart;window.renderCart=renderCart=function(){var r=_rc.apply(this,arguments);try{renderCartNote();}catch(e){}return r;};}
-  function init(cfg){C.cfg=cfg||{};renderButtons();renderCartNote();if(active()&&C.token)loadAccount();
+  function init(cfg){C.cfg=cfg||{};renderButtons();renderCartNote();try{renderApartarBtn();}catch(e){}if(active()&&C.token)loadAccount();
     // Link from the guest receipt e-mail (?club=1) opens the Club directly
     try{if(active()&&/[?&]club=1\b/.test(location.search)&&!init.done){init.done=1;setTimeout(openClub,400);}}catch(e){}}
   var prev=window.applySiteConfig;
