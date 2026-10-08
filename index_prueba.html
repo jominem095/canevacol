@@ -3113,14 +3113,18 @@ document.getElementById('csend').addEventListener('click',sendChat);
     tshow();
   }
   window.tryStart=tryStart;
-  function resizePhoto(file){return new Promise(function(res,rej){var img=new Image();img.onload=function(){var max=1280,k=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(img.src);res({mime:'image/jpeg',data:c.toDataURL('image/jpeg',.86).split(',')[1]});};img.onerror=function(){rej(new Error('No pude leer esa foto. Prueba con una JPG o PNG.'));};img.src=URL.createObjectURL(file);});}
+  // The free AI model needs every input image smaller than 512x512
+  function toInput(img){var max=500,k=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext('2d').drawImage(img,0,0,c.width,c.height);return {mime:'image/jpeg',data:c.toDataURL('image/jpeg',.9).split(',')[1]};}
+  function garmentInput(p){return new Promise(function(res,rej){var img=new Image();img.crossOrigin='anonymous';img.onload=function(){try{res(toInput(img));}catch(e){rej(new Error('No pude preparar la foto de la prenda.'));}};img.onerror=function(){rej(new Error('No pude cargar la foto de la prenda.'));};img.src=p.imagen+(p.imagen.indexOf('?')<0?'?':'&')+'cors=1';});}
+  function resizePhoto(file){return new Promise(function(res,rej){var img=new Image();img.onload=function(){var max=500,k=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(img.src);res({mime:'image/jpeg',data:c.toDataURL('image/jpeg',.9).split(',')[1]});};img.onerror=function(){rej(new Error('No pude leer esa foto. Prueba con una JPG o PNG.'));};img.src=URL.createObjectURL(file);});}
   function tryError(msg){tbody.insertAdjacentHTML('beforeend','<div class="try-err">'+esc(msg)+'</div>');}
   var TRY_MSGS=['Eligiendo la luz perfecta…','Ajustando la prenda a la silueta…','Cuidando cada detalle de la tela…','Casi lista ✨'];
   async function tryRun(mode,photo){
     var i=0;tbody.innerHTML='<div class="club-kicker">Probador virtual · IA</div>'+thumbs()+'<div class="try-load"><div class="try-spin"></div><div id="tryMsg">Creando tu imagen… puede tardar hasta 30 segundos</div></div>';
     var tick=setInterval(function(){var m=document.getElementById('tryMsg');if(m)m.textContent=TRY_MSGS[i++%TRY_MSGS.length];},4500);
     try{
-      var d=await api('/me/tryon',{method:'POST',body:{mode:mode,items:TRY.items.map(function(p){return {nombre:p.nombre,categoria:p.categoria,precio:p.precio};}),photo:photo||undefined}});
+      var garments=await Promise.all(TRY.items.map(garmentInput));
+      var d=await api('/me/tryon',{method:'POST',body:{mode:mode,items:TRY.items.map(function(p){return {nombre:p.nombre,categoria:p.categoria,precio:p.precio};}),garments:garments,photo:photo||undefined}});
       clearInterval(tick);tryResult(d,mode);
       if(window.canevaTrack)try{canevaTrack('TryOn',{mode:mode});}catch(e){}
     }catch(e){clearInterval(tick);tryStart(TRY.items);tryError(e.message);}
