@@ -62,14 +62,90 @@ details.tech summary{cursor:pointer;font-size:13px;color:var(--dim)}
 pre{white-space:pre-wrap;background:var(--k);border:1px solid var(--b);border-radius:10px;padding:12px;color:#ddd;max-height:260px;overflow:auto;font-size:12px;margin:12px 0 0}
 @media(max-width:900px){.grid{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.kpis .kpi:first-child{grid-column:1/-1}.actions{grid-template-columns:1fr}}
 @media(max-width:430px){.logo{font-size:18px;letter-spacing:.28em}.nav a,.nav span{padding:7px 10px;font-size:11px}}
+
+/* Cloud catalog editor */
+.hidden{display:none!important}
+.nav button{border:1px solid var(--b);border-radius:999px;padding:8px 14px;font-size:12px;letter-spacing:.06em;background:none;color:var(--w);font-weight:500}
+.nav button.on{background:var(--w);color:var(--k);border-color:var(--w);font-weight:600}
+.cltop{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.clacts{display:flex;gap:10px}
+.cltools{position:sticky;top:61px;z-index:4;background:rgba(5,5,5,.96);padding:14px 0 10px;margin-top:18px;border-bottom:1px solid var(--b)}
+.clrow1{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.clsearch{flex:1;min-width:220px;background:var(--k2);border:1px solid var(--b);border-radius:12px;padding:12px 14px;font-size:15px;outline:none}
+.clsearch:focus{border-color:var(--w)}
+.clseg{display:flex;gap:6px}.clseg button{background:none;color:var(--w);border:1px solid var(--b);border-radius:999px;padding:8px 12px;font-size:12px;font-weight:500}
+.clseg button.on{background:var(--w);color:var(--k)}
+.clchips{display:flex;gap:8px;overflow-x:auto;padding-top:10px;scrollbar-width:none}.clchips::-webkit-scrollbar{display:none}
+.chip{flex:none;background:none;color:var(--w);border:1px solid var(--b);border-radius:999px;padding:7px 12px;font-size:12px;font-weight:500;white-space:nowrap}
+.chip i{font-style:normal;color:var(--dim);margin-left:3px}.chip.on{background:var(--w);color:var(--k);border-color:var(--w)}.chip.on i{color:#555}
+.cltable{width:100%;border-collapse:collapse;margin-top:6px;min-width:980px}
+.clwrap{overflow-x:auto}
+.cltable th{position:static;background:none;text-align:left;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);font-weight:500;padding:12px 8px;border-bottom:1px solid var(--b)}
+.cltable td{padding:8px;border-bottom:1px solid var(--b);vertical-align:middle;background:none}
+.cltable tr:hover td{background:#0d0d0d}
+.cltable tr.dirty td{background:rgba(201,179,138,.07)}.cltable tr.dirty td:first-child{box-shadow:inset 3px 0 0 #d9c49b}
+.cltable tr.del td{opacity:.35;text-decoration:line-through}
+.cltable tr.drop td{background:rgba(157,224,143,.08)}
+.clph{position:relative;width:54px;height:70px;border-radius:9px;overflow:hidden;background:var(--k3);display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px dashed transparent}
+.clph:hover{border-color:var(--w)}.clph img{width:100%;height:100%;object-fit:cover}.clph span{font-size:10px;color:var(--dim)}
+.clph b{position:absolute;right:3px;bottom:3px;background:rgba(5,5,5,.8);font-size:10px;border-radius:5px;padding:0 4px}
+.clin{width:100%;background:transparent;border:1px solid transparent;border-radius:8px;padding:9px 8px;font-size:14px;color:var(--w);outline:none}
+.clin:hover{border-color:var(--b)}.clin:focus{border-color:var(--w);background:var(--k)}
+.clin.name{font-weight:500}.clin.num{max-width:120px}
+.cltog{background:none;color:var(--ok);border:1px solid rgba(157,224,143,.35);border-radius:999px;padding:6px 12px;font-size:12px;font-weight:500}
+.cltog.off{color:var(--bad);border-color:rgba(255,180,168,.4)}
+.clmini{background:none;color:var(--w);border:1px solid var(--b);border-radius:999px;padding:7px 12px;font-size:12px;font-weight:500;white-space:nowrap}
+.clx{background:none;color:var(--dim);border:0;padding:6px 8px;font-size:15px}.clx:hover{color:var(--bad)}
+.cltag{display:inline-block;font-size:11px;border-radius:6px;padding:3px 7px;background:#17221a;color:var(--ok);white-space:nowrap}.cltag.r{background:#2a1f1f;color:#ff8f80}
+.clempty{text-align:center;color:var(--dim);padding:40px 10px!important}
+.clcount{font-size:12px;color:var(--dim);margin-top:10px}
+.clbar{position:fixed;left:50%;transform:translateX(-50%);bottom:20px;z-index:20;display:flex;align-items:center;gap:14px;background:var(--w);color:var(--k);border-radius:16px;padding:10px 10px 10px 18px;box-shadow:0 20px 60px rgba(0,0,0,.6);font-size:14px}
+.clbar button{padding:11px 16px;font-size:13px}.clbar .secondary{color:var(--k);border-color:rgba(0,0,0,.2)}.clbar #clPub{background:var(--k);color:var(--w)}
+.clmodal{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:20px}
+.clmbox{width:min(880px,100%);max-height:92vh;overflow:auto;background:var(--k);border:1px solid var(--b);border-radius:20px;padding:22px}
+.clmhead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.clmhead h2{font-family:"Cormorant Garamond",serif;font-weight:300;font-size:32px;margin:4px 0 12px}
+.clgal{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px}
+.clgi{position:relative;aspect-ratio:3/4;border-radius:12px;overflow:hidden;background:var(--k3);border:1px solid var(--b)}
+.clgi.main{border-color:var(--w)}.clgi img{width:100%;height:100%;object-fit:cover}
+.clstar,.clnew{position:absolute;top:6px;left:6px;background:var(--w);color:var(--k);font-size:10px;font-weight:600;border-radius:5px;padding:2px 6px}.clnew{left:auto;right:6px;background:#d9c49b}
+.clgact{position:absolute;left:0;right:0;bottom:0;display:flex;gap:4px;justify-content:center;padding:6px;background:linear-gradient(transparent,rgba(0,0,0,.85));opacity:0;transition:.15s}
+.clgi:hover .clgact{opacity:1}.clgact button{background:rgba(247,247,244,.92);color:var(--k);border-radius:8px;padding:5px 9px;font-size:12px}
+.cldrop{aspect-ratio:3/4;border:1px dashed rgba(247,247,244,.35);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;text-align:center;font-size:13px;color:var(--dim)}
+.cldrop:hover,.cldrop.on{border-color:var(--w);color:var(--w)}.cldrop b{font-size:30px;font-weight:300;color:var(--w)}.cldrop input{display:none}
+.clm2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+.cll{display:block;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-bottom:6px}
+.clta{font-family:inherit;width:100%;min-height:110px;background:var(--k2);border:1px solid var(--b);border-radius:12px;padding:12px;font-size:14px;color:var(--w);resize:vertical;outline:none}.clta:focus{border-color:var(--w)}
+.clmfoot{display:flex;justify-content:flex-end;margin-top:16px}
+.cltoast{position:fixed;right:20px;top:76px;z-index:40;background:var(--w);color:var(--k);border-radius:12px;padding:13px 16px;font-size:14px;max-width:420px;box-shadow:0 10px 30px rgba(0,0,0,.5)}.cltoast.err{background:var(--bad)}
+.clbusy{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;font-size:14px}
+.clspin{width:34px;height:34px;border:3px solid var(--b);border-top-color:var(--w);border-radius:50%;animation:clsp 1s linear infinite}@keyframes clsp{to{transform:rotate(360deg)}}
+@media(max-width:700px){.clm2{grid-template-columns:1fr}.clbar{left:12px;right:12px;transform:none;justify-content:space-between}}
 </style>
 </head>
 <body>
 <header><div class="hrow">
   <div class="logo">CΛNEVΛ</div>
-  <nav class="nav"><span>Excel</span><a href="admin_movil.html">Admin móvil ›</a></nav>
+  <nav class="nav"><button type="button" data-tab="nube" class="on">Catálogo</button><button type="button" data-tab="excel">Excel</button><a href="admin_movil.html">Admin móvil ›</a></nav>
 </div></header>
-<div class="wrap">
+<div class="wrap" id="cloudView">
+  <div class="cltop"><div><div class="eyeb">Panel privado · en vivo</div><h1>Catálogo en la nube</h1>
+    <p class="lead">Lo que ves aquí es lo que está publicado en la tienda. Edita directo en la tabla, arrastra fotos sobre cada fila y toca <b style="color:var(--w)">Publicar cambios</b>.</p></div>
+    <div class="clacts"><button type="button" class="secondary" id="clReload">↻ Recargar</button><button type="button" id="clNewBtn">+ Nuevo producto</button></div></div>
+  <div class="cltools">
+    <div class="clrow1"><input id="clSearch" class="clsearch" type="search" placeholder="Buscar por nombre, categoría o talla…"><div class="clseg" id="clFlt"></div></div>
+    <div class="clchips" id="clCats"></div>
+    <div class="clcount" id="clCount"></div>
+  </div>
+  <div class="clwrap"><table class="cltable"><thead><tr><th>Foto</th><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Tallas</th><th>Stock</th><th>Tienda</th><th></th><th></th></tr></thead>
+    <tbody id="clBody"></tbody></table></div>
+  <datalist id="clCatList"></datalist>
+</div>
+<div class="clbar hidden" id="clBar"><span id="clBarTxt"></span><button type="button" class="secondary" id="clDisc">Descartar</button><button type="button" id="clPub">Publicar cambios</button></div>
+<div class="clmodal hidden" id="clModal"><div class="clmbox" id="clMBody"></div></div>
+<div class="cltoast hidden" id="clToast"></div>
+<div class="clbusy hidden" id="clBusy"><div class="clspin"></div><div id="clBusyMsg">Publicando…</div></div>
+
+<div class="wrap hidden" id="excelView">
   <div class="eyeb">Panel privado</div>
   <h1>Catálogo desde Excel</h1>
   <p class="lead">Sube el Excel de Caneva y, si quieres, las fotos desde el computador. Los productos quedan en la tienda y en Caneva AI sin tocar código. El inventario por talla se maneja en el Admin móvil → Inventario.</p>
@@ -390,6 +466,236 @@ document.getElementById("previewBtn").addEventListener("click", readExcel);
 document.getElementById("publishBtn").addEventListener("click", publishCatalog);
 document.getElementById("migrateBtn").addEventListener("click", migrateImagesLoop);
 document.getElementById("downloadBtn").addEventListener("click", downloadUpdatedExcel);
+
+// ===================== Catálogo en la nube (desktop editor) =====================
+// Loads the live catalog from the Worker, edits it in place (fields, photos, visibility),
+// and republishes through /admin/catalog — same contract as admin_movil.html.
+const CL={list:[],edits:new Map(),news:[],deleted:new Set(),cat:"Todos",flt:"todos",q:"",modal:null,seq:0};
+const $c=id=>document.getElementById(id);
+function clToken(){ let t=""; try{ t=localStorage.getItem(TOKEN_KEY)||""; }catch(e){} return t||token(); }
+function clToast(msg,err){ const t=$c("clToast"); t.textContent=msg; t.className="cltoast"+(err?" err":""); clearTimeout(t._h); t._h=setTimeout(()=>t.className="cltoast hidden",err?8000:4500); }
+function clBusy(on,msg){ $c("clBusy").classList.toggle("hidden",!on); if(msg) $c("clBusyMsg").textContent=msg; }
+function clShape(p){
+  const out={id:String(p.id||""),categoria:String(p.categoria||"").trim(),nombre:String(p.nombre||"").trim(),precio:String(p.precio||"").trim(),
+    descripcion:String(p.descripcion||"").trim(),tallas:String(p.tallas||"").trim(),stock:String(p.stock||"").trim(),imagen:String(p.imagen||"").trim(),
+    imagenesExtra:String(p.imagenesExtra||"").trim(),url:String(p.url||"").trim(),tela:String(p.tela||"").trim()};
+  if(p.inv&&typeof p.inv==="object") out.inv=p.inv;
+  return out;
+}
+const CL_FIELDS=["categoria","nombre","precio","descripcion","tallas","stock","imagen","imagenesExtra","url","tela"];
+function clSame(a,b){ return a&&b&&CL_FIELDS.every(k=>a[k]===b[k]); }
+function clHidden(p){ const s=String(p.stock||"").trim().toLowerCase(); return /^0+$/.test(s)||s.startsWith("agotad")||s.startsWith("ocult"); }
+function clInvTotal(p){ return Object.values(p.inv||{}).reduce((s,q)=>s+Math.max(0,q|0),0); }
+function clSplit(v){ return String(v||"").split(/\s*\|\s*|\s*,\s*(?=https?:)|\s*\n\s*/).map(x=>x.trim()).filter(isHttpUrl); }
+// Working copy of a row: original + pending edits
+function clRow(key){
+  const n=CL.news.find(x=>x.key===key); if(n) return n;
+  const i=Number(key.slice(1)); const base=CL.list[i];
+  const e=CL.edits.get(key); return e?{...base,...e.fields,photos:e.photos}:base;
+}
+function clPhotos(key){
+  const n=CL.news.find(x=>x.key===key); if(n) return n.photos;
+  const e=CL.edits.get(key); if(e&&e.photos) return e.photos;
+  const p=CL.list[Number(key.slice(1))];
+  return [...(isHttpUrl(p.imagen)?[p.imagen]:[]),...clSplit(p.imagenesExtra)].map(u=>({url:u}));
+}
+function clEdit(key,fields,photos){
+  if(key.startsWith("n")){ const n=CL.news.find(x=>x.key===key); Object.assign(n,fields||{}); if(photos) n.photos=photos; }
+  else{
+    const e=CL.edits.get(key)||{fields:{},photos:null}; Object.assign(e.fields,fields||{}); if(photos) e.photos=photos;
+    const base=CL.list[Number(key.slice(1))];
+    // Drop edits that went back to the original value
+    Object.keys(e.fields).forEach(k=>{ if(e.fields[k]===base[k]) delete e.fields[k]; });
+    if(!Object.keys(e.fields).length&&!e.photos) CL.edits.delete(key); else CL.edits.set(key,e);
+  }
+  clBar();
+}
+function clDirtyCount(){ return CL.edits.size+CL.news.length+CL.deleted.size; }
+function clBar(){
+  const n=clDirtyCount();
+  $c("clBar").classList.toggle("hidden",!n);
+  $c("clBarTxt").innerHTML=`<b>${n}</b> cambio${n===1?"":"s"} sin publicar`;
+  document.querySelectorAll("#clBody tr[data-k]").forEach(tr=>{ const k=tr.dataset.k; tr.classList.toggle("dirty",k.startsWith("n")||CL.edits.has(k)); tr.classList.toggle("del",CL.deleted.has(k)); });
+}
+async function clLoad(){
+  if(clDirtyCount()&&!confirm("Tienes cambios sin publicar. ¿Recargar y perderlos?")) return;
+  $c("clBody").innerHTML=`<tr><td colspan="9" class="clempty">Cargando el catálogo de la nube…</td></tr>`;
+  try{
+    const res=await fetch(API_BASE+"/catalog?ts="+Date.now(),{cache:"no-store"});
+    const d=await res.json(); if(!res.ok||!d.ok) throw new Error(d.error||"No se pudo leer el catálogo");
+    CL.list=(d.products||[]).map(clShape); CL.edits.clear(); CL.news=[]; CL.deleted.clear();
+    clRender(); clBar();
+  }catch(e){ $c("clBody").innerHTML=`<tr><td colspan="9" class="clempty bad">${escapeHtml(e.message)}</td></tr>`; }
+}
+function clCats(){ const c={}; CL.list.forEach(p=>{ if(p.categoria) c[p.categoria]=(c[p.categoria]||0)+1; }); return Object.keys(c).sort((a,b)=>c[b]-c[a]||a.localeCompare(b)).map(k=>({c:k,n:c[k]})); }
+function clRender(){
+  const cats=clCats();
+  $c("clCats").innerHTML=[{c:"Todos",n:CL.list.length},...cats].map(x=>`<button type="button" class="chip ${x.c===CL.cat?"on":""}" data-cat="${escapeAttr(x.c)}">${escapeHtml(x.c)} <i>${x.n}</i></button>`).join("");
+  $c("clCatList").innerHTML=cats.map(x=>`<option value="${escapeAttr(x.c)}">`).join("");
+  const nHidden=CL.list.filter(clHidden).length, nNoPhoto=CL.list.filter(p=>!isHttpUrl(p.imagen)).length;
+  $c("clFlt").innerHTML=[["todos","Todos"],["visibles","Visibles"],["ocultos",`Ocultos (${nHidden})`],["sinfoto",`Sin foto (${nNoPhoto})`]].map(([k,t])=>`<button type="button" data-flt="${k}" class="${k===CL.flt?"on":""}">${t}</button>`).join("");
+  const q=norm(CL.q);
+  const keys=[...CL.news.map(n=>n.key), ...CL.list.map((p,i)=>"p"+i)].filter(k=>{
+    if(k.startsWith("n")) return true;
+    const p=clRow(k);
+    if(CL.cat!=="Todos"&&p.categoria!==CL.cat) return false;
+    if(CL.flt==="visibles"&&clHidden(p)) return false;
+    if(CL.flt==="ocultos"&&!clHidden(p)) return false;
+    if(CL.flt==="sinfoto"&&!clPhotos(k).length) return false;
+    return !q||norm(p.nombre+" "+p.categoria+" "+p.tallas).includes(q);
+  });
+  $c("clCount").textContent=`${keys.filter(k=>k.startsWith("p")).length} de ${CL.list.length} productos${CL.news.length?` · ${CL.news.length} nuevo${CL.news.length===1?"":"s"}`:""}`;
+  $c("clBody").innerHTML=keys.length?keys.map(clRowHtml).join(""):`<tr><td colspan="9" class="clempty">No hay productos con ese filtro.</td></tr>`;
+  clBar();
+}
+function clThumb(ph){ return ph.file?ph.src:ph.url; }
+function clRowHtml(k){
+  const p=clRow(k), ph=clPhotos(k), hidden=clHidden(p), managed=!!p.inv;
+  const stockCell=managed?`<span class="cltag ${clInvTotal(p)<=0?"r":""}" title="${escapeAttr(Object.entries(p.inv).map(([z,q])=>z+": "+q).join(" · "))}">${clInvTotal(p)} und · inventario</span>`
+    :`<input class="clin num" data-f="stock" value="${escapeAttr(p.stock)}" placeholder="—">`;
+  return `<tr data-k="${k}">
+    <td><div class="clph" data-ph="${k}" title="Clic o arrastra fotos aquí">${ph.length?`<img src="${escapeAttr(clThumb(ph[0]))}" alt="" loading="lazy">`:"<span>+ Foto</span>"}${ph.length>1?`<b>${ph.length}</b>`:""}</div></td>
+    <td><input class="clin name" data-f="nombre" value="${escapeAttr(p.nombre)}" placeholder="Nombre del producto"></td>
+    <td><input class="clin" data-f="categoria" value="${escapeAttr(p.categoria)}" list="clCatList" placeholder="Categoría"></td>
+    <td><input class="clin num" data-f="precio" value="${escapeAttr(p.precio)}" placeholder="$0"></td>
+    <td><input class="clin" data-f="tallas" value="${escapeAttr(p.tallas)}" placeholder="Ej: S M L"></td>
+    <td>${stockCell}</td>
+    <td><button type="button" class="cltog ${hidden?"off":""}" data-vis="${k}">${hidden?"Oculto":"Visible"}</button></td>
+    <td><button type="button" class="clmini" data-det="${k}">Fotos y detalle</button></td>
+    <td><button type="button" class="clx" data-del="${k}" title="${CL.deleted.has(k)?"Restaurar":"Eliminar"}">${CL.deleted.has(k)?"↺":"✕"}</button></td></tr>`;
+}
+function clNew(){
+  const key="n"+(++CL.seq);
+  CL.news.unshift({key,id:"",categoria:CL.cat!=="Todos"?CL.cat:"",nombre:"",precio:"",descripcion:"",tallas:"",stock:"",imagen:"",imagenesExtra:"",url:"",tela:"",photos:[]});
+  CL.flt="todos"; clRender(); const i=document.querySelector(`#clBody tr[data-k="${key}"] input[data-f="nombre"]`); if(i) i.focus();
+}
+// ---------- Photos ----------
+async function clCompress(file, base){
+  const MAX=1600,Q=0.85;
+  try{
+    const url=URL.createObjectURL(file);
+    const img=await new Promise((ok,ko)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=ko;i.src=url;});
+    const sc=Math.min(1,MAX/Math.max(img.naturalWidth,img.naturalHeight));
+    const c=document.createElement("canvas"); c.width=Math.round(img.naturalWidth*sc); c.height=Math.round(img.naturalHeight*sc);
+    c.getContext("2d").drawImage(img,0,0,c.width,c.height); URL.revokeObjectURL(url);
+    const blob=await new Promise(r=>c.toBlob(r,"image/jpeg",Q)); if(!blob) throw 0;
+    return new File([blob],base+".jpg",{type:"image/jpeg"});
+  }catch(e){ const ext=(file.name.match(/\.[a-z0-9]+$/i)||[".jpg"])[0].toLowerCase(); return new File([file],base+ext,{type:file.type||"image/jpeg"}); }
+}
+function clStamp(){ const d=new Date(),p=n=>String(n).padStart(2,"0"); return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`; }
+async function clAddFiles(key, files){
+  files=[...files].filter(f=>/^image\//.test(f.type)||/\.(jpe?g|png|webp|heic|gif)$/i.test(f.name)); if(!files.length) return;
+  clBusy(true, files.length>1?`Preparando ${files.length} fotos…`:"Preparando foto…");
+  const name=norm(clRow(key).nombre)||"producto";
+  const ph=[...clPhotos(key)];
+  for(const f of files){ const file=await clCompress(f,`${name}-${clStamp()}-${++CL.seq}`); ph.push({file,src:URL.createObjectURL(file)}); }
+  clBusy(false); clEdit(key,null,ph);
+  if(CL.modal===key) clModalRender(); clRefreshRow(key);
+  clToast(files.length>1?`${files.length} fotos agregadas · publica para guardarlas`:"Foto agregada · publica para guardarla");
+}
+function clRefreshRow(key){ const tr=document.querySelector(`#clBody tr[data-k="${key}"]`); if(tr) tr.outerHTML=clRowHtml(key); clBar(); }
+// ---------- Detail modal (photos, description, fabric) ----------
+function clOpen(key){ CL.modal=key; $c("clModal").classList.remove("hidden"); document.body.style.overflow="hidden"; clModalRender(); }
+function clClose(){ CL.modal=null; $c("clModal").classList.add("hidden"); document.body.style.overflow=""; }
+function clModalRender(){
+  const k=CL.modal, p=clRow(k), ph=clPhotos(k);
+  $c("clMBody").innerHTML=`
+  <div class="clmhead"><div><div class="eyeb">${escapeHtml(p.categoria||"Producto nuevo")}</div><h2>${escapeHtml(p.nombre||"Sin nombre")}</h2></div><button type="button" class="clx" data-mclose>✕</button></div>
+  <div class="clgal">${ph.map((x,i)=>`<div class="clgi ${i===0?"main":""}"><img src="${escapeAttr(clThumb(x))}" alt="">${i===0?'<span class="clstar">★ Principal</span>':""}${x.file?'<span class="clnew">Nueva</span>':""}
+    <div class="clgact">${i>0?`<button type="button" data-main="${i}" title="Hacer principal">★</button><button type="button" data-left="${i}" title="Mover">‹</button>`:""}${i<ph.length-1?`<button type="button" data-right="${i}" title="Mover">›</button>`:""}<button type="button" data-rm="${i}" title="Quitar">✕</button></div></div>`).join("")}
+    <label class="cldrop" id="clDrop"><input type="file" accept="image/*" multiple id="clMFile"><b>+</b><span>Agregar fotos<br><small>clic o arrastra aquí</small></span></label></div>
+  <p class="mini">La foto ★ es la principal (portada de la prenda). Las demás salen en el carrusel. Puedes arrastrar fotos desde tu computador.</p>
+  <div class="clm2"><div><label class="cll">Tela</label><textarea class="clta" data-mf="tela" maxlength="300" placeholder="Ej: Lino 100%, fresco y liviano.">${escapeHtml(p.tela)}</textarea></div>
+  <div><label class="cll">Descripción</label><textarea class="clta" data-mf="descripcion" maxlength="500" placeholder="Cómo es, cómo combinarla…">${escapeHtml(p.descripcion)}</textarea></div></div>
+  <div class="clmfoot"><button type="button" class="secondary" data-mclose>Listo</button></div>`;
+}
+function clMovePhoto(i,to){ const k=CL.modal, ph=[...clPhotos(k)]; const [x]=ph.splice(i,1); ph.splice(to,0,x); clEdit(k,null,ph); clModalRender(); clRefreshRow(k); }
+// ---------- Publish ----------
+function clPhotoRef(x){ return x.url||x.file.name; }
+function clFinal(k){
+  const p={...clRow(k)}; delete p.photos; delete p.key;
+  const ph=clPhotos(k);
+  const e=k.startsWith("n")?{photos:true}:CL.edits.get(k);
+  if(e&&e.photos){ p.imagen=ph[0]?clPhotoRef(ph[0]):""; p.imagenesExtra=ph.slice(1).map(clPhotoRef).join(" | "); }
+  p.precio=cleanMoney(p.precio);
+  return p;
+}
+async function clPublish(){
+  for(const n of CL.news){ if(!n.nombre.trim()||!n.categoria.trim()) return clToast("Los productos nuevos necesitan nombre y categoría.",true); }
+  for(const [k] of CL.edits){ const p=clRow(k); if(!p.nombre.trim()) return clToast("Hay un producto sin nombre.",true); }
+  let tk=clToken();
+  if(!tk){ tk=(prompt("Pega el ADMIN_TOKEN para publicar (se recuerda en este computador):")||"").trim(); if(!tk) return; try{ localStorage.setItem(TOKEN_KEY,tk); }catch(e){} }
+  const n=clDirtyCount(); if(CL.deleted.size&&!confirm(`Vas a eliminar ${CL.deleted.size} producto(s) de la tienda. ¿Continuar?`)) return;
+  clBusy(true,"Publicando…");
+  try{
+    // Apply on top of the freshest catalog so edits made from the phone are not lost
+    const res=await fetch(API_BASE+"/catalog?ts="+Date.now(),{cache:"no-store"}); const d=await res.json();
+    if(!res.ok||!d.ok) throw new Error(d.error||"No se pudo leer el catálogo");
+    const fresh=(d.products||[]).map(clShape);
+    const find=orig=>{ if(orig.id){ const i=fresh.findIndex(x=>x.id===orig.id); if(i>=0) return i; } return fresh.findIndex(x=>clSame(x,orig)); };
+    const files=[];
+    for(const [k] of CL.edits){ if(CL.deleted.has(k)) continue; const orig=CL.list[Number(k.slice(1))]; const i=find(orig); if(i<0) throw new Error(`"${orig.nombre}" cambió desde otro lado. Toca Recargar.`); fresh[i]=clFinal(k); clPhotos(k).forEach(x=>x.file&&files.push(x.file)); }
+    const del=[...CL.deleted].map(k=>find(CL.list[Number(k.slice(1))])).filter(i=>i>=0).sort((a,b)=>b-a); del.forEach(i=>fresh.splice(i,1));
+    const adds=CL.news.map(n=>{ n.photos.forEach(x=>x.file&&files.push(x.file)); return clFinal(n.key); });
+    const list=[...adds,...fresh];
+    const fd=new FormData(); fd.append("products",JSON.stringify(list)); fd.append("options",JSON.stringify({replaceUrlWithLocal:false}));
+    files.forEach(f=>fd.append("images",f,f.name));
+    clBusy(true, files.length?`Subiendo ${files.length} foto${files.length===1?"":"s"} y publicando…`:"Publicando…");
+    const r=await fetch(API_BASE+"/admin/catalog",{method:"POST",headers:{"x-admin-token":tk},body:fd});
+    let out={}; try{ out=await r.json(); }catch(e){}
+    if(r.status===401||r.status===403) throw new Error("Token inválido. Revísalo en la pestaña Excel.");
+    if(!r.ok||!out.ok) throw new Error(out.error||("Error "+r.status));
+    CL.edits.clear(); CL.news=[]; CL.deleted.clear(); clBusy(false);
+    clToast(`Publicado ✓ · ${n} cambio${n===1?"":"s"}${out.uploadedImages?` · ${out.uploadedImages} foto${out.uploadedImages===1?"":"s"} subida${out.uploadedImages===1?"":"s"}`:""}`);
+    await clLoad();
+  }catch(e){ clBusy(false); clToast("Error: "+e.message,true); }
+}
+function clDiscard(){ if(!confirm("¿Descartar todos los cambios sin publicar?")) return; CL.edits.clear(); CL.news=[]; CL.deleted.clear(); clRender(); }
+// ---------- Tabs + events ----------
+function clTab(t){
+  document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("on",b.dataset.tab===t));
+  $c("cloudView").classList.toggle("hidden",t!=="nube"); $c("excelView").classList.toggle("hidden",t!=="excel");
+  if(t==="nube"&&!CL.list.length) clLoad();
+}
+document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>clTab(b.dataset.tab)));
+$c("clReload").onclick=clLoad; $c("clNewBtn").onclick=clNew; $c("clPub").onclick=clPublish; $c("clDisc").onclick=clDiscard;
+$c("clSearch").oninput=e=>{ CL.q=e.target.value; clRender(); };
+$c("clCats").onclick=e=>{ const b=e.target.closest("[data-cat]"); if(b){ CL.cat=b.dataset.cat; clRender(); } };
+$c("clFlt").onclick=e=>{ const b=e.target.closest("[data-flt]"); if(b){ CL.flt=b.dataset.flt; clRender(); } };
+$c("clBody").addEventListener("input",e=>{ const i=e.target.closest("input[data-f]"); if(!i) return; clEdit(i.closest("tr").dataset.k,{[i.dataset.f]:i.value}); });
+$c("clBody").addEventListener("change",e=>{ const i=e.target.closest('input[data-f="precio"]'); if(i&&i.value.trim()){ i.value=cleanMoney(i.value); clEdit(i.closest("tr").dataset.k,{precio:i.value}); } });
+$c("clBody").addEventListener("click",e=>{
+  const v=e.target.closest("[data-vis]");
+  if(v){ const k=v.dataset.vis, p=clRow(k), hide=!clHidden(p);
+    if(p.inv&&!hide&&clInvTotal(p)<=0&&!/^ocult/i.test(p.stock)) return clToast("Está agotada: registra unidades en Admin móvil → Inventario.",true);
+    clEdit(k,{stock:hide?(p.inv?"oculto":"0"):""}); clRefreshRow(k); return; }
+  const d=e.target.closest("[data-del]");
+  if(d){ const k=d.dataset.del; if(k.startsWith("n")){ CL.news=CL.news.filter(x=>x.key!==k); clRender(); return; }
+    CL.deleted.has(k)?CL.deleted.delete(k):CL.deleted.add(k); clRefreshRow(k); return; }
+  const t=e.target.closest("[data-det]"); if(t) return clOpen(t.dataset.det);
+  const ph=e.target.closest("[data-ph]"); if(ph) return clOpen(ph.dataset.ph);
+});
+// Drag & drop photos straight onto a row
+$c("clBody").addEventListener("dragover",e=>{ const r=e.target.closest("tr[data-k]"); if(!r) return; e.preventDefault(); r.classList.add("drop"); });
+$c("clBody").addEventListener("dragleave",e=>{ const r=e.target.closest("tr[data-k]"); if(r) r.classList.remove("drop"); });
+$c("clBody").addEventListener("drop",e=>{ const r=e.target.closest("tr[data-k]"); if(!r) return; e.preventDefault(); r.classList.remove("drop"); clAddFiles(r.dataset.k,e.dataTransfer.files); });
+$c("clMBody").addEventListener("click",e=>{
+  if(e.target.closest("[data-mclose]")) return clClose();
+  const k=CL.modal; let b;
+  if((b=e.target.closest("[data-main]"))) return clMovePhoto(Number(b.dataset.main),0);
+  if((b=e.target.closest("[data-left]"))) return clMovePhoto(Number(b.dataset.left),Number(b.dataset.left)-1);
+  if((b=e.target.closest("[data-right]"))) return clMovePhoto(Number(b.dataset.right),Number(b.dataset.right)+1);
+  if((b=e.target.closest("[data-rm]"))){ if(!confirm("¿Quitar esta foto?")) return; const ph=[...clPhotos(k)]; ph.splice(Number(b.dataset.rm),1); clEdit(k,null,ph); clModalRender(); clRefreshRow(k); }
+});
+$c("clMBody").addEventListener("change",e=>{ if(e.target.id==="clMFile"){ clAddFiles(CL.modal,e.target.files); e.target.value=""; } });
+$c("clMBody").addEventListener("input",e=>{ const t=e.target.closest("[data-mf]"); if(t){ clEdit(CL.modal,{[t.dataset.mf]:t.value}); clRefreshRow(CL.modal); } });
+$c("clMBody").addEventListener("dragover",e=>{ if(e.target.closest("#clDrop")){ e.preventDefault(); e.target.closest("#clDrop").classList.add("on"); } });
+$c("clMBody").addEventListener("drop",e=>{ if(e.target.closest("#clDrop")){ e.preventDefault(); clAddFiles(CL.modal,e.dataTransfer.files); } });
+$c("clModal").addEventListener("click",e=>{ if(e.target.id==="clModal") clClose(); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&CL.modal) clClose(); });
+window.addEventListener("beforeunload",e=>{ if(clDirtyCount()){ e.preventDefault(); e.returnValue=""; } });
+clTab("nube");
+
 </script>
 </body>
 </html>
