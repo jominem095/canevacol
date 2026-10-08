@@ -1594,7 +1594,18 @@ body.has-ann nav{top:34px}
 .club-consent input{margin-top:.2rem;width:18px;height:18px;accent-color:#f7f7f4;flex:none}
 .club-consent a{color:#f7f7f4}
 .club-consent.warn{color:#ffb4a8}
-.club-gbtn{display:flex;justify-content:center;min-height:44px}
+.club-gbtn{display:flex;justify-content:center;min-height:44px}
+.club-or{display:flex;align-items:center;gap:.8rem;margin:1rem 0 .8rem;font-size:.6rem;letter-spacing:.24em;text-transform:uppercase;color:rgba(247,247,244,.5)}
+.club-or::before,.club-or::after{content:'';flex:1;height:1px;background:rgba(247,247,244,.14)}
+.club-mail{display:flex;gap:.5rem}
+.club-mail input{flex:1;min-width:0;background:#0b0b0a;border:1px solid rgba(247,247,244,.25);color:#f7f7f4;padding:.75rem .8rem;font:inherit;font-size:.86rem;outline:none}
+.club-mail input:focus{border-color:#c9b38a}
+.club-mail input.code{letter-spacing:.5em;text-align:center;font-size:1.1rem}
+.club-mail button{background:#f7f7f4;color:#050505;border:0;padding:0 .9rem;font-size:.56rem;letter-spacing:.14em;text-transform:uppercase;font-weight:600;cursor:pointer;white-space:nowrap}
+.club-mail button:disabled{opacity:.5}
+.club-mail-note{font-size:.68rem;color:rgba(247,247,244,.65);margin:.1rem 0 .55rem;line-height:1.5}
+.club-mail-alt{display:flex;justify-content:space-between;margin-top:.5rem}
+.club-mail-alt button{background:none;border:0;color:#c9b38a;font-size:.66rem;cursor:pointer;padding:0;text-decoration:underline}
 .club-msg{font-size:.72rem;margin-top:.8rem;text-align:center;color:rgba(247,247,244,.6)}
 .club-msg.err{color:#ffb4a8}
 .club-hello{display:flex;align-items:center;gap:.8rem;margin-bottom:1.2rem}
@@ -3023,9 +3034,12 @@ document.getElementById('csend').addEventListener('click',sendChat);
   function renderJoin(msg,isErr,warnConsent){
     body.innerHTML='<div class="club-logo">CΛNEVΛ</div><div class="club-kicker">Club Caneva · Ropa para mujeres</div>'+
       '<h3 class="club-h">Tu estilo merece <em>recompensas</em></h3>'+
-      '<p class="club-p">Entra con tu cuenta de Google en un toque. Cada compra suma puntos que cambias por descuentos y regalos, y nuestra stylist Caneva AI te reconoce.</p>'+perksHtml()+
+      '<p class="club-p">Entra con Google o con tu correo en un toque, sin contraseñas. Cada compra suma puntos que cambias por descuentos y regalos, y nuestra stylist Caneva AI te reconoce.</p>'+perksHtml()+
       '<label class="club-consent'+(warnConsent?' warn':'')+'"><input type="checkbox" id="clubConsent"'+(C.pendingCred?' autofocus':'')+'><span>Autorizo a CANEVA a tratar mis datos (nombre, correo, WhatsApp, talla y compras) para el Club Caneva, según la <a href="privacidad.html" target="_blank" rel="noopener">política de privacidad</a> (Ley 1581 de 2012).</span></label>'+
-      '<div class="club-gbtn" id="clubGbtn"></div><div class="club-msg'+(isErr?' err':'')+'" id="clubMsg">'+(msg||'')+'</div>';
+      '<div class="club-gbtn" id="clubGbtn"></div>'+
+      '<div class="club-or">o entra con tu correo</div><div id="clubMailBox"></div>'+
+      '<div class="club-msg'+(isErr?' err':'')+'" id="clubMsg">'+(msg||'')+'</div>';
+    mailStep(C.mailEmail?'code':'email');
     var cb=document.getElementById('clubConsent');
     cb.onchange=function(){if(cb.checked&&C.pendingCred){var cred=C.pendingCred;C.pendingCred=null;signIn(cred);}};
     renderGoogleButton();
@@ -3055,6 +3069,38 @@ document.getElementById('csend').addEventListener('click',sendChat);
     }catch(e){renderJoin(esc(e.message),true);}
   }
 
+  // ---------- E-mail code sign-in (no passwords): any e-mail, a 6-digit code arrives by e-mail ----------
+  function cmsg(t,err){var m=document.getElementById('clubMsg');if(m){m.className='club-msg'+(err?' err':'');m.textContent=t||'';}}
+  function mailStep(step){
+    var box=document.getElementById('clubMailBox');if(!box)return;
+    if(step==='email'){
+      box.innerHTML='<div class="club-mail"><input type="email" id="clubMailIn" placeholder="tucorreo@hotmail.com" autocomplete="email" inputmode="email" value="'+esc(C.mailEmail||lsGet(GUEST_KEY)||'')+'"><button type="button" id="clubMailBtn">Enviarme código</button></div>';
+      var inp=document.getElementById('clubMailIn'),btn=document.getElementById('clubMailBtn');
+      var go=async function(){var v=inp.value.trim().toLowerCase();if(!validEmail(v)){cmsg('Escribe un correo válido.',true);return;}btn.disabled=true;cmsg('Enviando tu código…');
+        try{await api('/auth/email/start',{method:'POST',body:{email:v}});C.mailEmail=v;mailStep('code');cmsg('');}catch(e){cmsg(e.message,true);}finally{btn.disabled=false;}};
+      btn.onclick=go;inp.onkeydown=function(e){if(e.key==='Enter')go();};
+    }else{
+      box.innerHTML='<p class="club-mail-note">Te enviamos un código de 6 números a <b>'+esc(C.mailEmail)+'</b>. Revisa también spam.</p>'+
+        '<div class="club-mail"><input class="code" type="text" id="clubCodeIn" placeholder="······" maxlength="6" inputmode="numeric" autocomplete="one-time-code"><button type="button" id="clubCodeBtn">Entrar</button></div>'+
+        '<div class="club-mail-alt"><button type="button" id="clubCodeAgain">Reenviar código</button><button type="button" id="clubCodeChange">Cambiar correo</button></div>';
+      var ci=document.getElementById('clubCodeIn'),cb=document.getElementById('clubCodeBtn');ci.focus();
+      var verify=async function(){if(cb.disabled)return;var code=ci.value.replace(/\D/g,'');if(code.length!==6){cmsg('Escribe los 6 números del código.',true);return;}
+        var consent=!!(document.getElementById('clubConsent')||{}).checked;cb.disabled=true;cmsg('Entrando…');
+        try{var d=await api('/auth/email/verify',{method:'POST',body:{email:C.mailEmail,code:code,consent:consent}});
+          if(d.needConsent){var lab=document.querySelector('.club-consent');if(lab)lab.classList.add('warn');cmsg('¡Bienvenida! Para crear tu cuenta, marca la autorización de datos y toca Entrar.',true);return;}
+          C.mailEmail='';afterAuth(d);
+        }catch(e){cmsg(e.message,true);}finally{cb.disabled=false;}};
+      cb.onclick=verify;ci.oninput=function(){ci.value=ci.value.replace(/\D/g,'').slice(0,6);if(ci.value.length===6)verify();};
+      document.getElementById('clubCodeAgain').onclick=async function(){cmsg('Enviando un código nuevo…');try{await api('/auth/email/start',{method:'POST',body:{email:C.mailEmail}});cmsg('Te enviamos un código nuevo ✓');}catch(e){cmsg(e.message,true);}};
+      document.getElementById('clubCodeChange').onclick=function(){C.mailEmail='';mailStep('email');cmsg('');};
+    }
+  }
+  async function afterAuth(d){
+    setSession(d.token,d.user);
+    if(window.canevaTrack)try{if(d.isNew&&window.fbq)fbq('track','CompleteRegistration');if(d.isNew&&window.ttq)ttq.track('CompleteRegistration');}catch(e){}
+    await loadAccount();renderAccount(d.isNew,d.claimed&&d.claimed.points?'<div class="club-flash">🎉 Sumamos <b>'+d.claimed.points+' puntos</b> de '+(d.claimed.orders>1?d.claimed.orders+' compras anteriores':'tu compra anterior')+'. ¡Ya son tuyos!</div>':'');
+  }
+
   // ---------- Account ----------
   async function loadAccount(){try{var d=await api('/me');C.acc=d;C.user=d.user;renderButtons();renderCartNote();}catch(e){}}
   function nextReward(points){var rs=loyalty().rewards.slice().sort(function(a,b){return a.points-b.points;});var n=rs.find(function(r){return r.points>points;});var prev=rs.filter(function(r){return r.points<=points;}).pop();return {next:n,from:prev?prev.points:0};}
