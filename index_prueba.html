@@ -1663,6 +1663,8 @@ textarea.gf{min-height:74px;resize:vertical}
 .club-btn{width:100%;margin-top:1rem;border:0;background:#f7f7f4;color:#050505;padding:.9rem;font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;font-weight:600;cursor:pointer}
 .club-btn.ghost{background:none;color:#f7f7f4;border:1px solid rgba(247,247,244,.3)}
 @media(max-width:1000px){.nclub{display:none!important}}
+/* Sold-out sizes (inventory) */
+.pm-size-btn.out,.pm-size-btn.out:hover{opacity:.3!important;text-decoration:line-through!important;cursor:not-allowed!important;transform:none!important;border-style:dashed!important;color:rgba(250,249,246,.6)!important;background:transparent!important;box-shadow:none!important}
 </style>
 </head>
 <body>
@@ -2023,7 +2025,13 @@ var P_FALLBACK = JSON.parse(document.getElementById('pdata').textContent);
 var P = P_FALLBACK.filter(function(p){return !isHiddenProduct(p);});
 // Hidden when stock is 0 or says "agotado"/"oculto" (toggled from admin_movil)
 function isHiddenProduct(p){var s=String((p&&p.stock)||'').trim().toLowerCase();return /^0+$/.test(s)||s.indexOf('agotad')===0||s.indexOf('ocult')===0;}
-function lowStock(p){var s=String((p&&p.stock)||'').trim();return /^\d+$/.test(s)&&+s>0&&+s<=3;}
+// Inventory (per size) comes from the Worker: p.inv = {size: units}. Products without it behave as before.
+function invOf(p){return p&&p.inv&&typeof p.inv==='object'?p.inv:null;}
+function invCfg(){var c=SITE_CONFIG&&SITE_CONFIG.inventory;return {low:c&&c.low!=null?+c.low:2,show:!c||c.showLeft!==false};}
+function invQty(p,size){var inv=invOf(p);if(!inv)return Infinity;var sizes=productSizes(p);if(size&&sizes.length&&sizes.indexOf(size)<0)return Infinity;var k=size||'Única';if(Object.prototype.hasOwnProperty.call(inv,k))return Math.max(0,inv[k]|0);var ks=Object.keys(inv);if(!size&&ks.length===1)return Math.max(0,inv[ks[0]]|0);return 0;}
+function invTotalSite(p){var inv=invOf(p);if(!inv)return Infinity;var t=0;for(var k in inv)t+=Math.max(0,inv[k]|0);return t;}
+function tallasLabel(p){if(!invOf(p))return p.tallas;var av=productSizes(p).filter(function(z){return invQty(p,z)>0;});return av.length?av.join(' · '):'';}
+function lowStock(p){if(invOf(p)){var c=invCfg(),t=invTotalSite(p);return c.show&&t>0&&t<=c.low;}var s=String((p&&p.stock)||'').trim();return /^\d+$/.test(s)&&+s>0&&+s<=3;}
 var GK = ""; // No usar API key en el HTML. Gemini vive seguro en Cloudflare Worker.
 
 function normCat(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
@@ -2043,7 +2051,9 @@ function normalizeProductForSite(p){
     imagen:String(p.imagen||p.imagenPrincipal||'').trim(),
     imagenesExtra:String(p.imagenesExtra||'').trim(),
     url:String(p.url||p.urlProducto||'').trim(),
-    tela:String(p.tela||'').trim()
+    tela:String(p.tela||'').trim(),
+    id:String(p.id||'').trim(),
+    inv:(p.inv&&typeof p.inv==='object')?p.inv:null
   };
 }
 function renderFilters(){
@@ -2207,10 +2217,14 @@ function renderSizeSelector(p){
   wrap.classList.add('show');
   if(help)help.textContent='Obligatorio';
   if(note)note.textContent='Elige la talla antes de agregar al carrito. Si no estás segura, Caneva confirma disponibilidad por WhatsApp.';
-  opts.innerHTML=sizes.map(function(sz){return '<button class="pm-size-btn" type="button" data-size="'+escAttr(sz)+'">'+escHtml(sz)+'</button>';}).join('');
+  var managed=!!invOf(p);
+  if(managed&&note)note.textContent='Las tallas tachadas están agotadas. Elige una disponible.';
+  opts.innerHTML=sizes.map(function(sz){var out=managed&&invQty(p,sz)<=0;return '<button class="pm-size-btn'+(out?' out':'')+'" type="button" data-size="'+escAttr(sz)+'"'+(out?' disabled aria-disabled="true" title="Agotada"':'')+'>'+escHtml(sz)+'</button>';}).join('');
   opts.querySelectorAll('.pm-size-btn').forEach(function(btn){
     btn.addEventListener('click',function(){
+      if(btn.disabled)return;
       currentSelectedSize=btn.dataset.size||'';
+      if(managed&&note){var q=invQty(p,currentSelectedSize),c=invCfg();note.textContent=c.show&&q<=c.low?'¡Solo quedan '+q+' en talla '+currentSelectedSize+'! 🔥':'Talla '+currentSelectedSize+' disponible ✓';}
       wrap.classList.remove('need');
       opts.querySelectorAll('.pm-size-btn').forEach(function(b){b.classList.remove('on');});
       btn.classList.add('on');
@@ -2544,7 +2558,7 @@ function render(){
   if(!f.length){g.innerHTML='<div class="nor">No se encontraron productos</div>';return;}
   g.innerHTML=f.map(function(p){
     var ih=p.imagen&&p.imagen.indexOf('http')===0?'<img src="'+p.imagen+'" alt="'+p.nombre.replace(/"/g,'&quot;')+'" loading="lazy">':'<div class="pph">C</div>';
-    var th=p.tallas?'<div class="ptallas">Tallas: '+p.tallas+'</div>':'';
+    var tl=tallasLabel(p);var th=tl?'<div class="ptallas">Tallas: '+tl+'</div>':'';
     var pid=P.indexOf(p);
     return '<div class="pc" data-pid="'+pid+'"><div class="pimg">'+ih+'<div class="pbadge">'+p.categoria+'</div>'+(lowStock(p)?'<div class="plow">Últimas unidades</div>':'')+'<div class="pov"></div><div class="pact">Ver / agregar ✨</div></div><div class="pinfo"><div class="pname">'+p.nombre+'</div><div class="pprice">'+p.precio+'</div>'+th+'</div></div>';
   }).join('');
@@ -2648,8 +2662,8 @@ function saveCart(){localStorage.setItem(CART_KEY,JSON.stringify(CART));renderCa
 function cartTotal(){return CART.reduce(function(s,it){return s+(Number(it.price)||0)*(Number(it.qty)||1);},0);}
 function cartQty(){return CART.reduce(function(s,it){return s+(Number(it.qty)||1);},0);}
 function toastCart(msg){var t=document.getElementById('cartToast');if(!t)return;t.textContent=msg||'Producto agregado';t.classList.add('show');setTimeout(function(){t.classList.remove('show');},1700);}
-function addToCartByIndex(idx,open,size){var p=P[idx];if(!p)return;size=size||'';var key=productKey(p,size);var it=CART.find(function(x){return x.key===key;});if(it){it.qty+=1;}else{CART.push({key:key,nombre:p.nombre,categoria:p.categoria,precio:p.precio,price:priceNum(p.precio),tallas:p.tallas||'',size:size,imagen:p.imagen||'',url:p.url||'',qty:1});}saveCart();flyToBag(p);toastCart(size?'Agregado · talla '+size:'Agregado al carrito');if(open)openCart();}
-function changeCartQty(key,delta){var it=CART.find(function(x){return x.key===key;});if(!it)return;it.qty=(Number(it.qty)||1)+delta;if(it.qty<=0){CART=CART.filter(function(x){return x.key!==key;});}saveCart();}
+function addToCartByIndex(idx,open,size){var p=P[idx];if(!p)return;size=size||'';var key=productKey(p,size);var it=CART.find(function(x){return x.key===key;});var max=invQty(p,size);if((it?it.qty:0)+1>max){toastCart(max<=0?'Esta talla se agotó':'Solo quedan '+max+(size?' en talla '+size:''));return;}if(it){it.qty+=1;}else{CART.push({key:key,pid:p.id||'',nombre:p.nombre,categoria:p.categoria,precio:p.precio,price:priceNum(p.precio),tallas:p.tallas||'',size:size,imagen:p.imagen||'',url:p.url||'',qty:1});}saveCart();flyToBag(p);toastCart(size?'Agregado · talla '+size:'Agregado al carrito');if(open)openCart();}
+function changeCartQty(key,delta){var it=CART.find(function(x){return x.key===key;});if(!it)return;if(delta>0){var cp=P.find(function(x){return (it.pid&&x.id===it.pid)||(x.nombre===it.nombre&&x.categoria===it.categoria);});var max=cp?invQty(cp,it.size):Infinity;if((Number(it.qty)||1)+delta>max){toastCart('Solo quedan '+max+(it.size?' en talla '+it.size:''));return;}}it.qty=(Number(it.qty)||1)+delta;if(it.qty<=0){CART=CART.filter(function(x){return x.key!==key;});}saveCart();}
 function removeCartItem(key){CART=CART.filter(function(x){return x.key!==key;});saveCart();}
 
 function updateCartBadges(){var q=cartQty();['cartCount','navCartCount','mobileCartCount','mobileDockCartCount'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=q;});}
@@ -2675,7 +2689,7 @@ function closeCart(){document.body.classList.remove('cart-open');var d=document.
 // Orders with photos: each WhatsApp message carries a link to a page with the items' photos (Worker /o/:id)
 var ORDER_PENDING={};
 function orderId(){var a='abcdefghjkmnpqrstuvwxyz23456789',s='';var r=(window.crypto&&crypto.getRandomValues)?crypto.getRandomValues(new Uint8Array(10)):null;for(var i=0;i<10;i++)s+=a[(r?r[i]:Math.floor(Math.random()*256))%a.length];return s;}
-function orderItem(p,qty,size){if(!p.imagen){var f=P.find(function(x){return x.nombre===p.nombre&&x.categoria===p.categoria;});if(f)p=Object.assign({},p,{imagen:f.imagen});}return {nombre:p.nombre,categoria:p.categoria||'',precio:p.precio||'',qty:qty||1,size:size||'',imagen:(p.imagen&&p.imagen.indexOf('http')===0)?p.imagen:''};}
+function orderItem(p,qty,size){if(!p.imagen){var f=P.find(function(x){return x.nombre===p.nombre&&x.categoria===p.categoria;});if(f)p=Object.assign({},p,{imagen:f.imagen});}return {pid:p.id||p.pid||'',nombre:p.nombre,categoria:p.categoria||'',precio:p.precio||'',qty:qty||1,size:size||'',imagen:(p.imagen&&p.imagen.indexOf('http')===0)?p.imagen:''};}
 function postOrder(id,items){try{fetch(API_BASE+'/order',{method:'POST',headers:{'Content-Type':'text/plain;charset=UTF-8'},body:JSON.stringify({id:id,items:items,token:(window.clubToken&&clubToken())||undefined,email:(window.clubGuestEmail&&clubGuestEmail())||undefined}),keepalive:true}).catch(function(){});}catch(e){}}
 // defer=true: saved only when the WhatsApp link is actually tapped
 function createOrder(items,defer){var id=orderId();if(defer)ORDER_PENDING[id]=items;else postOrder(id,items);return API_BASE+'/o/'+id;}
