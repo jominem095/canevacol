@@ -810,19 +810,19 @@ async function loadOrders(){
 function orderCard(o){
   const u=o.user;
   const phone=u&&u.phone?String(u.phone).replace(/[^\d]/g,""):"";
-  const cli=u?`👤 <b>${esc(u.name)}</b> · ${esc(u.email)}${u.phone?` · <a href="https://wa.me/${phone.length===10?"57"+phone:phone}" target="_blank" rel="noopener">${esc(u.phone)}</a>`:""}<span class="tag">${u.points} pts</span>`:`<span style="color:var(--dim)">Sin cuenta del Club</span>`;
+  const cli=u?`👤 <b>${esc(u.name)}</b> · ${esc(u.email)}${u.phone?` · <a href="https://wa.me/${phone.length===10?"57"+phone:phone}" target="_blank" rel="noopener">${esc(u.phone)}</a>`:""}<span class="tag">${u.points} pts</span>`:(o.receiptEmail?`✉ <b>${esc(o.receiptEmail)}</b> <span style="color:var(--dim)">· sin cuenta (sus puntos quedan guardados)</span>`:`<span style="color:var(--dim)">Sin cuenta del Club</span>`);
   const items=o.items.map(it=>`<div class="oitem">${it.imagen?`<img src="${esc(it.imagen)}" alt="" loading="lazy">`:"<img alt=''>"}<span>${esc(it.nombre)}${it.size?` · Talla ${esc(it.size)}`:""}</span><b>×${it.qty}</b></div>`).join("");
   const ref=o.id.toUpperCase();
   const acts=o.status==="pendiente"
-    ?`<div class="oact"><button class="pay" data-pay="${o.id}" data-has-user="${u?1:0}">Marcar pagado ✓</button><button class="cancel" data-cancel="${o.id}">Cancelar</button></div>`
+    ?`<div class="oact"><button class="pay" data-pay="${o.id}" data-has-user="${u?1:0}" data-mail="${esc(o.receiptEmail||"")}">Marcar pagado ✓</button><button class="cancel" data-cancel="${o.id}">Cancelar</button></div>`
     :`<div class="oact"><a href="${API_BASE}/o/${o.id}" target="_blank" rel="noopener">Ver pedido</a>${o.status==="pagado"?`<button class="pay" data-resend="${o.id}" data-mail="${esc(o.receiptEmail||(u&&u.email)||"")}">${o.emailSentAt?"Reenviar recibo":"Enviar recibo ✉"}</button>`:""}</div>`;
-  const paid=o.status==="pagado"?`<div class="ocli">🧾 Recibo <b>${esc(o.ticket)}</b>${o.points?` · +${o.points} pts`:""} · ${o.emailSentAt?"correo enviado ✓":(o.receiptEmail?"correo no enviado":"sin correo")}</div>`:"";
+  const paid=o.status==="pagado"?`<div class="ocli">🧾 Recibo <b>${esc(o.ticket)}</b>${o.points?(u?` · +${o.points} pts`:` · ${o.points} pts guardados`):""} · ${o.emailSentAt?"correo enviado ✓":(o.receiptEmail?"correo no enviado":"sin correo")}</div>`:"";
   return `<div class="ocard"><div class="ohead"><span>Ref. <b>${esc(ref)}</b></span><span>${esc(when(o.createdAt))}</span></div><div class="ocli">${cli}</div>${paid}${items}<div class="otot"><span>Total</span><span>${money(o.total)}</span></div>${acts}</div>`;
 }
-async function payOrder(id,hasUser){
+async function payOrder(id,hasUser,mail){
   let email="";
   if(!hasUser){
-    const v=prompt("Esta clienta no tiene cuenta. ¿A qué correo enviamos el recibo? (déjalo vacío para no enviar)","");
+    const v=prompt("Esta clienta no tiene cuenta. ¿A qué correo enviamos el recibo? Sus puntos quedan guardados para ese correo. (déjalo vacío para no enviar)",mail||"");
     if(v===null) return; email=v.trim();
     if(email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return toast("Ese correo no es válido.",{err:true});
   }else if(!confirm("¿Confirmas que este pedido está pagado? Se genera el recibo, se suman los puntos y se envía el correo.")) return;
@@ -831,7 +831,7 @@ async function payOrder(id,hasUser){
     const d=await adminFetch(`/admin/orders/${id}/pay`,{method:"POST",body:{email}});
     busy(false);
     const mail=d.email&&d.email.sent?"correo enviado ✓":(d.email&&d.email.error?"correo NO enviado: "+d.email.error:(email||hasUser?"correo no configurado":"sin correo"));
-    toast(`Recibo ${d.ticket}${d.points?` · +${d.points} pts`:""} · ${mail}`,{ms:9000});
+    toast(`Recibo ${d.ticket}${d.points?` · +${d.points} pts`:""}${d.reserved?` · ${d.reserved} pts guardados`:""} · ${mail}`,{ms:9000});
     loadOrders();
   }catch(e){ busy(false); toast("Error: "+e.message,{err:true,ms:8000}); }
 }
@@ -930,7 +930,7 @@ $("renameCatBtn").onclick=renameCategory;
 $("portadaInfo").onclick=openPortada;
 $("tabs").onclick=e=>{ const b=e.target.closest("button[data-tab]"); if(b) showTab(b.dataset.tab); };
 $("ordSeg").onclick=e=>{ const b=e.target.closest("button[data-st]"); if(!b) return; ordStatus=b.dataset.st; document.querySelectorAll("#ordSeg button").forEach(x=>x.classList.toggle("on",x===b)); loadOrders(); };
-$("ordersList").onclick=e=>{ const r=e.target.closest("[data-resend]"); if(r) return resendReceipt(r.dataset.resend, r.dataset.mail); const p=e.target.closest("[data-pay]"); if(p) return payOrder(p.dataset.pay, p.dataset.hasUser==="1"); const c=e.target.closest("[data-cancel]"); if(c) cancelOrder(c.dataset.cancel); };
+$("ordersList").onclick=e=>{ const r=e.target.closest("[data-resend]"); if(r) return resendReceipt(r.dataset.resend, r.dataset.mail); const p=e.target.closest("[data-pay]"); if(p) return payOrder(p.dataset.pay, p.dataset.hasUser==="1", p.dataset.mail); const c=e.target.closest("[data-cancel]"); if(c) cancelOrder(c.dataset.cancel); };
 $("clubView").onclick=e=>{ const a=e.target.closest("[data-adj]"); if(a) adjustPoints(a.dataset.adj,a.dataset.name); };
 $("pSheetBg").onclick=closePortada; $("pCancel").onclick=closePortada; $("pSave").onclick=savePortada;
 $("pSlots").addEventListener("input",onSlotsInput); $("pSlots").addEventListener("change",onSlotsInput);

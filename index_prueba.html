@@ -1487,6 +1487,11 @@ body.has-ann nav{top:34px}
 .mclub{border:1px solid rgba(247,247,244,.4);background:none;color:#f7f7f4;padding:.9rem 1.6rem;font-family:'Inter',sans-serif;font-size:.7rem;letter-spacing:.24em;text-transform:uppercase}
 .nclub[hidden],.mclub[hidden],.club-cart[hidden]{display:none!important}
 .club-cart{margin:.8rem 0;padding:.8rem .9rem;border:1px solid rgba(247,247,244,.2);background:rgba(247,247,244,.05);font-family:'Inter',sans-serif;font-size:.72rem;line-height:1.5;color:#f7f7f4}
+.club-cart .guest{margin-top:.75rem;padding-top:.7rem;border-top:1px solid rgba(247,247,244,.14)}
+.club-cart .guest input{width:100%;margin-top:.45rem;background:#0b0b0a;border:1px solid rgba(247,247,244,.25);color:#f7f7f4;padding:.6rem .7rem;font:inherit;font-size:.78rem;outline:none}
+.club-cart .guest input:focus{border-color:#c9b38a}
+.club-cart .guest small{display:block;margin-top:.35rem;color:rgba(247,247,244,.6);font-size:.66rem}
+.club-flash{margin:.6rem 0 0;padding:.75rem .9rem;border:1px solid #c9b38a;background:rgba(201,179,138,.12);font-size:.8rem;line-height:1.5}
 .club-cart button{margin-top:.5rem;border:0;background:#f7f7f4;color:#050505;padding:.55rem .8rem;font-size:.56rem;letter-spacing:.18em;text-transform:uppercase;font-weight:600;cursor:pointer}
 .club-ov{position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .35s}
 .club-ov.open{opacity:1;pointer-events:all}
@@ -1729,12 +1734,12 @@ body.has-ann nav{top:34px}
   </div>
   <div class="cart-foot">
     <div class="cart-row"><span>Subtotal</span><strong class="cart-total" id="cartTotal">$0</strong></div>
+    <div class="club-cart" id="clubCartNote" hidden></div>
     <div class="cart-actions">
       <button class="cart-pay cart-bold-off" id="cartBold" type="button">Pagar con Bold</button>
       <button class="cart-wa" id="cartWhats" type="button">Enviar pedido por WhatsApp</button>
       <button class="cart-keep" id="cartKeep" type="button">Seguir mirando</button>
     </div>
-    <div class="club-cart" id="clubCartNote" hidden></div>
     <div class="cart-mini-note">El pago con Bold se activa desde Cloudflare Worker para proteger las llaves del comercio. Mientras tanto, el pedido por WhatsApp queda listo.</div>
   </div>
 </aside>
@@ -2459,7 +2464,7 @@ function closeCart(){document.body.classList.remove('cart-open');var d=document.
 var ORDER_PENDING={};
 function orderId(){var a='abcdefghjkmnpqrstuvwxyz23456789',s='';var r=(window.crypto&&crypto.getRandomValues)?crypto.getRandomValues(new Uint8Array(10)):null;for(var i=0;i<10;i++)s+=a[(r?r[i]:Math.floor(Math.random()*256))%a.length];return s;}
 function orderItem(p,qty,size){if(!p.imagen){var f=P.find(function(x){return x.nombre===p.nombre&&x.categoria===p.categoria;});if(f)p=Object.assign({},p,{imagen:f.imagen});}return {nombre:p.nombre,categoria:p.categoria||'',precio:p.precio||'',qty:qty||1,size:size||'',imagen:(p.imagen&&p.imagen.indexOf('http')===0)?p.imagen:''};}
-function postOrder(id,items){try{fetch(API_BASE+'/order',{method:'POST',headers:{'Content-Type':'text/plain;charset=UTF-8'},body:JSON.stringify({id:id,items:items,token:(window.clubToken&&clubToken())||undefined}),keepalive:true}).catch(function(){});}catch(e){}}
+function postOrder(id,items){try{fetch(API_BASE+'/order',{method:'POST',headers:{'Content-Type':'text/plain;charset=UTF-8'},body:JSON.stringify({id:id,items:items,token:(window.clubToken&&clubToken())||undefined,email:(window.clubGuestEmail&&clubGuestEmail())||undefined}),keepalive:true}).catch(function(){});}catch(e){}}
 // defer=true: saved only when the WhatsApp link is actually tapped
 function createOrder(items,defer){var id=orderId();if(defer)ORDER_PENDING[id]=items;else postOrder(id,items);return API_BASE+'/o/'+id;}
 document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a[href*="wa.me"]');if(!a)return;var m=decodeURIComponent(a.getAttribute('href')||'').match(/\/o\/([a-z0-9]{8,16})/);if(m&&ORDER_PENDING[m[1]])postOrder(m[1],ORDER_PENDING[m[1]]);},true);
@@ -2779,7 +2784,11 @@ document.getElementById('csend').addEventListener('click',sendChat);
   window.clubToken=function(){return C.token||'';};
   window.clubUser=function(){return C.user;};
   window.clubAuthHeaders=function(){return C.token?{Authorization:'Bearer '+C.token}:{};};
-  window.clubMemberLine=function(){return C.user?'👤 Club Caneva: '+C.user.name+(C.user.email?' ('+C.user.email+')':'')+'\n':'';};
+  window.clubMemberLine=function(){if(C.user)return '👤 Club Caneva: '+C.user.name+(C.user.email?' ('+C.user.email+')':'')+'\n';var g=window.clubGuestEmail();return g?'✉ Recibo a: '+g+'\n':'';};
+  // Guests (no Club account) can leave an e-mail: they get the receipt and their points are kept for them
+  var GUEST_KEY='caneva_guest_email';
+  function validEmail(v){return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(v||'').trim());}
+  window.clubGuestEmail=function(){if(C.user)return '';var v=lsGet(GUEST_KEY).trim();return validEmail(v)?v:'';};
 
   function loyalty(){var l=(C.cfg&&C.cfg.loyalty)||{};return {enabled:l.enabled!==false,per:Number.isFinite(l.pointsPer1000)?l.pointsPer1000:1,welcome:Number.isFinite(l.welcomePoints)?l.welcomePoints:100,rewards:(l.rewards&&l.rewards.length)?l.rewards:[{name:'$10.000 de descuento',points:300,desc:'En tu próxima compra'},{name:'$25.000 de descuento',points:600,desc:'En tu próxima compra'},{name:'Prenda sorpresa',points:1000,desc:'Elegida por nuestra stylist'}]};}
   function clientId(){return C.cfg&&C.cfg.auth&&C.cfg.auth.googleClientId;}
@@ -2807,8 +2816,13 @@ document.getElementById('csend').addEventListener('click',sendChat);
     if(!active()||typeof cartTotal!=='function'||!window.CART||!CART.length){el.hidden=true;return;}
     var pts=Math.floor(cartTotal()/1000*loyalty().per);
     el.hidden=false;
-    el.innerHTML=C.user?('✨ <b>'+esc(C.user.firstName)+'</b>, con esta compra sumas <b>'+pts+' puntos</b> Caneva.'):('🖤 Únete al <b>Club Caneva</b> y gana <b>'+(pts+loyalty().welcome)+' puntos</b> con esta compra (incluye '+loyalty().welcome+' de bienvenida).<br><button type="button" id="clubCartJoin">Unirme gratis</button>');
+    el.innerHTML=C.user?('✨ <b>'+esc(C.user.firstName)+'</b>, con esta compra sumas <b>'+pts+' puntos</b> Caneva.'):('🖤 Únete al <b>Club Caneva</b> y gana <b>'+(pts+loyalty().welcome)+' puntos</b> con esta compra (incluye '+loyalty().welcome+' de bienvenida).<br><button type="button" id="clubCartJoin">Unirme gratis</button>'+
+      '<div class="guest"><b>¿Compras sin cuenta?</b> Déjanos tu correo: te enviamos tu recibo y te <b>guardamos tus '+pts+' puntos</b> por 90 días. Únete después con ese correo y son tuyos.'+
+      '<input type="email" id="clubGuestMail" inputmode="email" autocomplete="email" placeholder="tucorreo@gmail.com" value="'+esc(lsGet(GUEST_KEY))+'"><small id="clubGuestOk"></small></div>');
     var j=document.getElementById('clubCartJoin');if(j)j.onclick=function(){openClub();};
+    var gm=document.getElementById('clubGuestMail'),ok=document.getElementById('clubGuestOk');
+    function mark(){if(!ok)return;var v=gm.value.trim();ok.textContent=!v?'':(validEmail(v)?'✓ Te llegará el recibo a este correo':'Revisa el correo');}
+    if(gm){mark();gm.addEventListener('input',function(){lsSet(GUEST_KEY,gm.value.trim());mark();});}
   }
 
   // ---------- Modal ----------
@@ -2856,7 +2870,7 @@ document.getElementById('csend').addEventListener('click',sendChat);
       if(d.needConsent){C.pendingCred=credential;renderJoin('Hola '+esc((d.preview&&d.preview.name||'').split(' ')[0])+' 🖤 Para crear tu cuenta, marca la autorización de datos.',true,true);return;}
       setSession(d.token,d.user);
       if(window.canevaTrack)try{if(d.isNew&&window.fbq)fbq('track','CompleteRegistration');if(d.isNew&&window.ttq)ttq.track('CompleteRegistration');}catch(e){}
-      await loadAccount();renderAccount(d.isNew);
+      await loadAccount();renderAccount(d.isNew,d.claimed&&d.claimed.points?'<div class="club-flash">🎉 Sumamos <b>'+d.claimed.points+' puntos</b> de '+(d.claimed.orders>1?d.claimed.orders+' compras anteriores':'tu compra anterior')+'. ¡Ya son tuyos!</div>':'');
     }catch(e){renderJoin(esc(e.message),true);}
   }
 
@@ -2902,7 +2916,9 @@ document.getElementById('csend').addEventListener('click',sendChat);
   // ---------- Wiring ----------
   ['navClub','mobileClub'].forEach(function(id){var b=document.getElementById(id);if(b)b.addEventListener('click',openClub);});
   if(typeof renderCart==='function'){var _rc=renderCart;window.renderCart=renderCart=function(){var r=_rc.apply(this,arguments);try{renderCartNote();}catch(e){}return r;};}
-  function init(cfg){C.cfg=cfg||{};renderButtons();renderCartNote();if(active()&&C.token)loadAccount();}
+  function init(cfg){C.cfg=cfg||{};renderButtons();renderCartNote();if(active()&&C.token)loadAccount();
+    // Link from the guest receipt e-mail (?club=1) opens the Club directly
+    try{if(active()&&/[?&]club=1\b/.test(location.search)&&!init.done){init.done=1;setTimeout(openClub,400);}}catch(e){}}
   var prev=window.applySiteConfig;
   window.applySiteConfig=function(cfg){if(prev)prev(cfg);init(cfg);};
   if(window.SITE_CONFIG)init(window.SITE_CONFIG);
