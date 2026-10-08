@@ -1515,6 +1515,8 @@ body.has-ann nav{top:34px}
 .club-ap-tx p{font-size:.72rem;margin:.35rem 0 0;line-height:1.5}
 .club-ap-btn{display:inline-block;margin-top:.5rem;padding:.5rem .75rem;background:#f7f7f4;color:#050505!important;font-size:.56rem;letter-spacing:.16em;text-transform:uppercase;font-weight:600;text-decoration:none}
 .club-ap-empty{font-size:.72rem;color:rgba(247,247,244,.7);line-height:1.55;padding:.2rem 0 .4rem}
+.cart-ap{margin:-.1rem 0 .75rem;padding-bottom:.75rem;border-bottom:1px solid rgba(247,247,244,.14)}
+.club-cart .cart-ap button{display:block;width:100%;margin-top:.55rem;background:rgba(201,179,138,.16);color:#f7f7f4;border:1px solid #c9b38a}
 .club-cart .guest{margin-top:.75rem;padding-top:.7rem;border-top:1px solid rgba(247,247,244,.14)}
 .club-cart .guest input{width:100%;margin-top:.45rem;background:#0b0b0a;border:1px solid rgba(247,247,244,.25);color:#f7f7f4;padding:.6rem .7rem;font:inherit;font-size:.78rem;outline:none}
 .club-cart .guest input:focus{border-color:#c9b38a}
@@ -2890,6 +2892,7 @@ document.getElementById('csend').addEventListener('click',sendChat);
     el.innerHTML=C.user?('✨ <b>'+esc(C.user.firstName)+'</b>, con esta compra sumas <b>'+pts+' puntos</b> Caneva.'):('🖤 Únete al <b>Club Caneva</b> y gana <b>'+(pts+loyalty().welcome)+' puntos</b> con esta compra (incluye '+loyalty().welcome+' de bienvenida).<br><button type="button" id="clubCartJoin">Unirme gratis</button>'+
       '<div class="guest"><b>¿Compras sin cuenta?</b> Déjanos tu correo: te enviamos tu recibo y te <b>guardamos tus '+pts+' puntos</b> por 90 días. Únete después con ese correo y son tuyos.'+
       '<input type="email" id="clubGuestMail" inputmode="email" autocomplete="email" placeholder="tucorreo@gmail.com" value="'+esc(lsGet(GUEST_KEY))+'"><small id="clubGuestOk"></small></div>');
+    if(layOn()){var tot=cartTotal();if(tot>0){el.insertAdjacentHTML('afterbegin','<div class="cart-ap"><b>🔖 ¿No te alcanza hoy?</b> Aparta toda tu bolsa con <b>'+money(depositFor(tot))+'</b> ('+lay().pct+'%) y paga el resto en '+lay().days+' días.<button type="button" id="cartApartar">Apartar mi bolsa · '+money(depositFor(tot))+'</button></div>');var ab=document.getElementById('cartApartar');if(ab)ab.onclick=apartarBolsa;}}
     var j=document.getElementById('clubCartJoin');if(j)j.onclick=function(){openClub();};
     var gm=document.getElementById('clubGuestMail'),ok=document.getElementById('clubGuestOk');
     function mark(){if(!ok)return;var v=gm.value.trim();ok.textContent=!v?'':(validEmail(v)?'✓ Te llegará el recibo a este correo':'Revisa el correo');}
@@ -3010,26 +3013,47 @@ document.getElementById('csend').addEventListener('click',sendChat);
     var win=null;try{win=window.open('','_blank');}catch(e){}
     try{
       var d=await api('/me/layaway',{method:'POST',body:{nombre:p.nombre,categoria:p.categoria,precio:p.precio,size:size}});
-      var l=d.layaway;
-      var txt='Hola Caneva ✨ Quiero APARTAR esta prenda:\n👗 '+l.item.nombre+(l.item.size?' · Talla '+l.item.size:'')+' · '+money(l.price)+'\n💳 Cuota inicial: '+money(l.deposit)+'\n🔖 Apartado: '+l.id.toUpperCase()+'\n'+window.clubMemberLine()+'\n¿Me envías los datos para pagar la cuota?';
-      var url='https://wa.me/'+WA_PHONE+'?text='+encodeURIComponent(txt);
+      var url=layWhats(d.layaway);
       if(win){win.location.href=url;}else{location.href=url;}
       if(typeof toastCart==='function')toastCart('Apartado solicitado ✓');
       loadAccount();
     }catch(e){if(win)try{win.close();}catch(x){}alert(e.message);}
   }
+  function layWhats(l){
+    var lines=(l.items&&l.items.length?l.items:[l.item]).map(function(x){return '👗 '+x.nombre+(x.size?' · Talla '+x.size:'')+((x.qty||1)>1?' x'+x.qty:'')+' · '+x.precio;}).join('\n');
+    var txt='Hola Caneva ✨ Quiero APARTAR '+((l.items||[]).length>1?'mi bolsa':'esta prenda')+':\n'+lines+'\n\n💰 Total: '+money(l.price)+'\n💳 Cuota inicial: '+money(l.deposit)+'\n🔖 Apartado: '+l.id.toUpperCase()+'\n'+window.clubMemberLine()+'\n¿Me envías los datos para pagar la cuota?';
+    return 'https://wa.me/'+WA_PHONE+'?text='+encodeURIComponent(txt);
+  }
+  // Whole bag from the cart
+  async function apartarBolsa(){
+    if(!window.CART||!CART.length)return;
+    if(!C.user){if(typeof closeCart==='function')closeCart();openClub();var m=document.getElementById('clubMsg');if(m){m.className='club-msg';m.textContent='Para apartar tu bolsa, entra al Club Caneva: toma 10 segundos 🖤';}return;}
+    var total=cartTotal(),dep=depositFor(total);
+    if(!confirm('Apartar tu bolsa ('+CART.reduce(function(s,x){return s+(Number(x.qty)||1);},0)+' prendas · '+money(total)+')\n\nCuota inicial: '+money(dep)+'\nEl resto ('+money(total-dep)+') lo pagas en '+lay().days+' días, en los abonos que quieras.\nSi no completas, lo abonado queda como saldo a favor.\n\n¿Continuar?'))return;
+    var win=null;try{win=window.open('','_blank');}catch(e){}
+    try{
+      var items=CART.map(function(x){return {nombre:x.nombre,categoria:x.categoria,precio:x.precio,size:x.size||'',qty:Number(x.qty)||1};});
+      var d=await api('/me/layaway',{method:'POST',body:{items:items}});
+      var url=layWhats(d.layaway);
+      if(win){win.location.href=url;}else{location.href=url;}
+      CART=[];saveCart();if(typeof closeCart==='function')closeCart();
+      if(typeof toastCart==='function')toastCart('Bolsa apartada ✓ Envía tu cuota por WhatsApp');
+      loadAccount();
+    }catch(e){if(win)try{win.close();}catch(x){}alert(e.message);}
+  }
+  window.apartarBolsa=apartarBolsa;
   var apBtn=document.getElementById('pmApartar');if(apBtn)apBtn.addEventListener('click',apartar);
   if(typeof openProductModal==='function'){var _opm=openProductModal;window.openProductModal=openProductModal=function(){var r=_opm.apply(this,arguments);try{renderApartarBtn();}catch(e){}return r;};}
   var _ph=perksHtml;perksHtml=function(){var h=_ph();return layOn()?h.replace('</ul>','<li><b>Aparta tus prendas</b><span>con el '+lay().pct+'%</span></li></ul>'):h;};
   function fdate(iso){try{return new Date(iso).toLocaleDateString('es-CO',{day:'numeric',month:'short'});}catch(e){return '';}}
   function waLink(t){return 'https://wa.me/'+WA_PHONE+'?text='+encodeURIComponent(t);}
   function layCard(l){
-    var it=l.item||{},pct=l.price?Math.min(100,Math.round(l.paid/l.price*100)):0,st='',act='';
-    if(l.status==='solicitado'){st='Esperando tu cuota inicial de <b>'+money(l.deposit)+'</b>';act='<a class="club-ap-btn" target="_blank" rel="noopener" href="'+esc(waLink('Hola Caneva ✨ Quiero pagar la cuota inicial de mi apartado '+l.id.toUpperCase()+' ('+it.nombre+'): '+money(l.deposit)))+'">Pagar cuota por WhatsApp</a>';}
-    else if(l.status==='activo'){st='Saldo <b>'+money(l.balance)+'</b> · '+(l.daysLeft<=1?'<b>vence hoy</b>':'te quedan <b>'+l.daysLeft+' días</b>')+' (hasta el '+fdate(l.dueAt)+')';act='<a class="club-ap-btn" target="_blank" rel="noopener" href="'+esc(waLink('Hola Caneva ✨ Quiero abonar a mi apartado '+l.id.toUpperCase()+' ('+it.nombre+'). Saldo: '+money(l.balance)))+'">Abonar por WhatsApp</a>';}
+    var it=l.item||{},nm=l.label||it.nombre||'',pct=l.price?Math.min(100,Math.round(l.paid/l.price*100)):0,st='',act='';
+    if(l.status==='solicitado'){st='Esperando tu cuota inicial de <b>'+money(l.deposit)+'</b>';act='<a class="club-ap-btn" target="_blank" rel="noopener" href="'+esc(waLink('Hola Caneva ✨ Quiero pagar la cuota inicial de mi apartado '+l.id.toUpperCase()+' ('+nm+'): '+money(l.deposit)))+'">Pagar cuota por WhatsApp</a>';}
+    else if(l.status==='activo'){st='Saldo <b>'+money(l.balance)+'</b> · '+(l.daysLeft<=1?'<b>vence hoy</b>':'te quedan <b>'+l.daysLeft+' días</b>')+' (hasta el '+fdate(l.dueAt)+')';act='<a class="club-ap-btn" target="_blank" rel="noopener" href="'+esc(waLink('Hola Caneva ✨ Quiero abonar a mi apartado '+l.id.toUpperCase()+' ('+nm+'). Saldo: '+money(l.balance)))+'">Abonar por WhatsApp</a>';}
     else if(l.status==='completado'){st='¡Es tuya! 🖤 Recibo <b>'+esc(l.ticket)+'</b>';}
     else if(l.status==='vencido'){st=l.creditCode?'Tu abono quedó como <b>saldo a favor de '+money(l.paid)+'</b>: <span class="club-code">'+esc(l.creditCode)+'</span>':'Venció sin abonos.';}
-    return '<div class="club-ap"><div class="club-ap-img">'+(it.imagen?'<img src="'+esc(it.imagen)+'" alt="" loading="lazy">':'')+'</div><div class="club-ap-tx"><b>'+esc(it.nombre)+'</b><small>'+(it.size?'Talla '+esc(it.size)+' · ':'')+money(l.price)+' · abonado '+money(l.paid)+'</small><div class="club-bar"><i style="width:'+Math.max(3,pct)+'%"></i></div><p>'+st+'</p>'+act+'</div></div>';
+    return '<div class="club-ap"><div class="club-ap-img">'+(it.imagen?'<img src="'+esc(it.imagen)+'" alt="" loading="lazy">':'')+'</div><div class="club-ap-tx"><b>'+esc(nm)+'</b><small>'+((l.items||[]).length>1?(l.units||l.items.length)+' prendas · ':(it.size?'Talla '+esc(it.size)+' · ':''))+money(l.price)+' · abonado '+money(l.paid)+'</small><div class="club-bar"><i style="width:'+Math.max(3,pct)+'%"></i></div><p>'+st+'</p>'+act+'</div></div>';
   }
   var _ra2=renderAccount;renderAccount=function(a,b){_ra2(a,b);try{
     var ls=((C.acc&&C.acc.layaways)||[]).filter(function(l){return l.status!=='cancelado';});

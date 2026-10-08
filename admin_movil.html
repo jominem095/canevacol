@@ -900,7 +900,8 @@ function apCard(l){
     ?`<div class="oact"><button class="pay" data-appay="${l.id}">Recibí la cuota ✓</button><button class="cancel" data-apcancel="${l.id}">Cancelar</button></div>`
     :l.status==="activo"?`<div class="oact"><button class="pay" data-appay="${l.id}">Registrar abono</button><button class="ext" data-apext="${l.id}">+ Días</button></div>`:"";
   return `<div class="ocard"><div class="ohead"><span>Apartado <b>${esc(l.id.toUpperCase())}</b></span><span>${esc(when(l.createdAt))}</span></div><div class="ocli">${cli}</div>
-  <div class="oitem">${it.imagen?`<img src="${esc(it.imagen)}" alt="" loading="lazy">`:"<img alt=''>"}<span>${esc(it.nombre||"")}${it.size?` · Talla ${esc(it.size)}`:""}</span><b>${money(l.price)}</b></div>
+  ${(l.items&&l.items.length?l.items:[it]).map(x=>`<div class="oitem">${x.imagen?`<img src="${esc(x.imagen)}" alt="" loading="lazy">`:"<img alt=''>"}<span>${esc(x.nombre||"")}${x.size?` · Talla ${esc(x.size)}`:""}</span><b>${(x.qty||1)>1?`×${x.qty} · `:""}${esc(x.precio||"")}</b></div>`).join("")}
+  <div class="otot"><span>Total</span><span>${money(l.price)}</span></div>
   <div class="apinfo">Abonado <b>${money(l.paid)}</b> de ${money(l.price)}<div class="apbar"><i style="width:${Math.max(2,pct)}%"></i></div>${info}${pays?`<br><small>Abonos: ${pays}</small>`:""}</div>${acts}</div>`;
 }
 async function apPay(id){
