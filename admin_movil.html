@@ -55,6 +55,9 @@ main{padding:14px 16px 120px}
 .otot{display:flex;justify-content:space-between;border-top:1px solid var(--b);padding-top:8px;margin-top:4px;font-weight:600}
 .oact{display:flex;gap:8px;margin-top:10px}.oact button,.oact a{flex:1;text-align:center;border-radius:10px;padding:11px;font-size:13px;font-weight:600;text-decoration:none}
 .oact .pay{background:var(--w);color:var(--k);border:0}.oact .cancel,.oact a{background:none;color:var(--w);border:1px solid var(--b)}
+.apbar{height:6px;background:var(--k3);border-radius:9px;overflow:hidden;margin:6px 0}.apbar i{display:block;height:100%;background:var(--w)}
+.apinfo{font-size:13px;line-height:1.6}.apinfo small{color:var(--dim)}
+.oact .ext{background:none;color:var(--w);border:1px solid var(--b)}
 .tag{display:inline-block;font-size:11px;border:1px solid var(--b);border-radius:6px;padding:1px 6px;margin-left:4px}
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
 .stat{border:1px solid var(--b);border-radius:12px;padding:12px;background:var(--k2)}.stat b{display:block;font-family:"Cormorant Garamond",serif;font-size:30px;font-weight:300}.stat span{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.12em}
@@ -149,6 +152,7 @@ main{padding:14px 16px 120px}
     <div class="tabs" id="tabs">
       <button type="button" data-tab="productos" class="on">Productos</button>
       <button type="button" data-tab="pedidos">Pedidos<b id="pendCount"></b></button>
+      <button type="button" data-tab="apartados">Apartados<b id="apCount"></b></button>
       <button type="button" data-tab="club">Club</button>
     </div>
     <div id="prodTools">
@@ -160,6 +164,10 @@ main{padding:14px 16px 120px}
     <div id="ordersView" class="hidden">
       <div class="seg" id="ordSeg"><button type="button" data-st="pendiente" class="on">Pendientes</button><button type="button" data-st="pagado">Pagados</button><button type="button" data-st="cancelado">Cancelados</button></div>
       <div id="ordersList"></div>
+    </div>
+    <div id="apView" class="hidden">
+      <div class="seg" id="apSeg"><button type="button" data-ap="solicitado">Por cuota</button><button type="button" data-ap="activo" class="on">Activos</button><button type="button" data-ap="completado">Pagados</button><button type="button" data-ap="vencido">Vencidos</button></div>
+      <div id="apList"></div>
     </div>
     <div id="clubView" class="hidden"></div>
     <div id="prodView">
@@ -233,6 +241,13 @@ main{padding:14px 16px 120px}
   <div class="field"><label>Correo que envía los recibos</label><input id="sFrom" type="text" placeholder="CANEVA <recibos@canevacol.com>"></div>
   <div class="field"><label>Si la clienta responde, llega a</label><input id="sReply" type="text" inputmode="email" placeholder="canevamayra@gmail.com"></div>
   <p class="hint">Sin Google Client ID el botón del Club no aparece en la tienda. Los recibos se envían al marcar un pedido como pagado.</p>
+  <div class="sect">Apartados</div>
+  <label class="checkrow"><input type="checkbox" id="sApOn"><span><b>Activar Apartados</b> (botón "Apartar" en cada prenda, solo miembros del Club)</span></label>
+  <div class="row2">
+    <div class="field"><label>Cuota inicial (%)</label><input id="sApPct" type="text" inputmode="numeric" placeholder="30"></div>
+    <div class="field"><label>Días para pagar el resto</label><input id="sApDays" type="text" inputmode="numeric" placeholder="30"></div>
+  </div>
+  <p class="hint">La clienta paga la cuota por WhatsApp y tú la registras en la pestaña Apartados. Si no completa a tiempo, lo abonado se convierte solo en un código de saldo a favor.</p>
   <div class="sect">Pauta y medición</div>
   <div class="field"><label>Meta Pixel ID (Facebook / Instagram Ads)</label><input id="sMeta" type="text" inputmode="numeric" placeholder="Ej: 123456789012345"></div>
   <div class="field"><label>TikTok Pixel ID</label><input id="sTtPx" type="text" placeholder="Ej: C1ABCDEF2345GHIJ"></div>
@@ -736,6 +751,7 @@ async function openSettings(){
   const rws=(lo.rewards&&lo.rewards.length?lo.rewards:DEFAULT_REWARDS).concat([{},{},{},{},{},{}]).slice(0,6);
   $("sRewards").innerHTML=rws.map((r,i)=>`<div class="rwrow"><input data-rn="${i}" placeholder="Ej: $10.000 de descuento" value="${esc(r.name||"")}"><input data-rp="${i}" inputmode="numeric" placeholder="Puntos" value="${r.points||""}"><input class="full" data-rd="${i}" placeholder="Descripción (opcional)" value="${esc(r.desc||"")}"></div>`).join("");
   $("sFrom").value=ml.from||""; $("sReply").value=ml.replyTo||"";
+  const ly=siteConfig.layaway||{}; $("sApOn").checked=!!ly.enabled; $("sApPct").value=ly.depositPercent||30; $("sApDays").value=ly.days||30;
   $("sMeta").value=ad.metaPixel||""; $("sTtPx").value=ad.tiktokPixel||""; $("sGa").value=ad.ga4||"";
   $("sSheetBg").classList.remove("hidden"); $("sSheet").classList.remove("hidden");
   $("sSheet").scrollTop=0; document.body.style.overflow="hidden";
@@ -759,7 +775,11 @@ async function saveSettings(){
   const loyalty={enabled:$("sClubOn").checked, pointsPer1000:parseInt($("sPer").value,10)||0, welcomePoints:parseInt($("sWelcome").value,10)||0, rewards};
   const fromV=$("sFrom").value.trim(), replyV=$("sReply").value.trim();
   if(fromV && !/^[^<>@]{0,60}<[^<>@\s]+@[^<>\s]+>$|^[^<>@\s]+@[^<>\s]+$/.test(fromV)) return toast("Correo remitente inválido. Ej: CANEVA <recibos@canevacol.com>",{err:true});
-  const cfg={...(siteConfig||{}), social, announcement, ads, ai, auth:{googleClientId:gid}, loyalty, mail:{from:fromV, replyTo:replyV}};
+  const layaway={enabled:$("sApOn").checked, depositPercent:parseInt($("sApPct").value,10)||30, days:parseInt($("sApDays").value,10)||30};
+  if(layaway.enabled && !$("sClubOn").checked) return toast("Los Apartados necesitan el Club Caneva activo.",{err:true});
+  if(layaway.depositPercent<5||layaway.depositPercent>90) return toast("La cuota inicial debe estar entre 5% y 90%.",{err:true});
+  if(layaway.days<1||layaway.days>120) return toast("Los días deben estar entre 1 y 120.",{err:true});
+  const cfg={...(siteConfig||{}), social, announcement, ads, ai, auth:{googleClientId:gid}, loyalty, mail:{from:fromV, replyTo:replyV}, layaway};
   busy(true,"Guardando ajustes…");
   try{
     const res=await api(API_BASE+"/admin/config",{method:"POST",headers:{"x-admin-token":token(),"Content-Type":"application/json"},body:JSON.stringify(cfg)});
@@ -790,7 +810,8 @@ function showTab(t){
   $("prodTools").classList.toggle("hidden",t!=="productos"); $("prodView").classList.toggle("hidden",t!=="productos");
   $("newBtn").classList.toggle("hidden",t!=="productos");
   $("ordersView").classList.toggle("hidden",t!=="pedidos"); $("clubView").classList.toggle("hidden",t!=="club");
-  if(t==="pedidos") loadOrders(); if(t==="club") loadClub();
+  $("apView").classList.toggle("hidden",t!=="apartados");
+  if(t==="pedidos") loadOrders(); if(t==="club") loadClub(); if(t==="apartados") loadLayaways();
   window.scrollTo(0,0);
 }
 const money=n=>"$"+Number(n||0).toLocaleString("es-CO");
@@ -798,6 +819,7 @@ const when=iso=>iso?new Date(iso).toLocaleString("es-CO",{day:"numeric",month:"s
 function clubOff(msg){ return `<div class="empty">${esc(msg)}<br><br>Para activarlo: crea la base de datos <b>D1</b> en Cloudflare y conéctala al Worker como <b>CANEVA_DB</b> (ver guía).</div>`; }
 async function refreshPendingCount(){
   try{ const d=await adminFetch("/admin/orders?status=pendiente"); $("pendCount").textContent=d.orders.length||""; }catch(e){ $("pendCount").textContent=""; }
+  try{ const d=await adminFetch("/admin/layaways?status=solicitado"); const c=d.counts||{}; $("apCount").textContent=(c.solicitado||0)+(c.activo||0)||""; }catch(e){ $("apCount").textContent=""; }
 }
 async function loadOrders(){
   $("ordersList").innerHTML=`<div class="empty">Cargando…</div>`;
@@ -842,6 +864,61 @@ async function resendReceipt(id,mail){
   busy(true,"Enviando recibo…");
   try{ const d=await adminFetch(`/admin/orders/${id}/resend`,{method:"POST",body:{email}}); busy(false); toast(`Recibo ${d.ticket} enviado a ${email} ✓`,{ms:7000}); loadOrders(); }
   catch(e){ busy(false); toast("Error: "+e.message,{err:true,ms:9000}); }
+}
+// ---------- Apartados ----------
+let apStatus="activo", AP={};
+const AP_LABEL={solicitado:"esperando cuota inicial",activo:"activos",completado:"pagados",vencido:"vencidos"};
+async function loadLayaways(){
+  $("apList").innerHTML=`<div class="empty">Cargando…</div>`;
+  try{
+    const d=await adminFetch("/admin/layaways?status="+apStatus);
+    const c=d.counts||{}; $("apCount").textContent=(c.solicitado||0)+(c.activo||0)||"";
+    AP={}; d.layaways.forEach(l=>AP[l.id]=l);
+    $("apList").innerHTML=d.layaways.length?d.layaways.map(apCard).join(""):`<div class="empty">No hay apartados ${AP_LABEL[apStatus]}.${apStatus==="activo"&&!(siteConfig&&siteConfig.layaway&&siteConfig.layaway.enabled)?"<br><br>Actívalos en <b>Ajustes → Apartados</b>.":""}</div>`;
+  }catch(e){ $("apList").innerHTML=/D1|activado/.test(e.message)?clubOff(e.message):`<div class="empty">${esc(e.message)}</div>`; }
+}
+function apCard(l){
+  const u=l.user||{}, it=l.item||{}, pct=l.price?Math.min(100,Math.round(l.paid/l.price*100)):0;
+  const phone=u.phone?String(u.phone).replace(/[^\d]/g,""):"";
+  const cli=`👤 <b>${esc(u.name||"")}</b> · ${esc(u.email||"")}${u.phone?` · <a href="https://wa.me/${phone.length===10?"57"+phone:phone}" target="_blank" rel="noopener">${esc(u.phone)}</a>`:""}`;
+  let info="";
+  if(l.status==="solicitado") info=`Cuota inicial pedida: <b>${money(l.deposit)}</b> <small>· solicitado ${esc(when(l.createdAt))} · se cancela solo a los 3 días sin cuota</small>`;
+  if(l.status==="activo") info=`Saldo <b>${money(l.balance)}</b> · vence <b>${esc(new Date(l.dueAt).toLocaleDateString("es-CO",{day:"numeric",month:"short"}))}</b> <span class="tag">${l.daysLeft} días</span>`;
+  if(l.status==="completado") info=`Pagado completo · Recibo <b>${esc(l.ticket)}</b>`;
+  if(l.status==="vencido") info=l.creditCode?`Saldo a favor <b>${money(l.paid)}</b> · código <b>${esc(l.creditCode)}</b>`:"Venció sin abonos";
+  const pays=(l.payments||[]).map(p=>`${money(p.amount)} <small>${esc(when(p.created_at))}</small>`).join(" · ");
+  const acts=l.status==="solicitado"
+    ?`<div class="oact"><button class="pay" data-appay="${l.id}">Recibí la cuota ✓</button><button class="cancel" data-apcancel="${l.id}">Cancelar</button></div>`
+    :l.status==="activo"?`<div class="oact"><button class="pay" data-appay="${l.id}">Registrar abono</button><button class="ext" data-apext="${l.id}">+ Días</button></div>`:"";
+  return `<div class="ocard"><div class="ohead"><span>Apartado <b>${esc(l.id.toUpperCase())}</b></span><span>${esc(when(l.createdAt))}</span></div><div class="ocli">${cli}</div>
+  <div class="oitem">${it.imagen?`<img src="${esc(it.imagen)}" alt="" loading="lazy">`:"<img alt=''>"}<span>${esc(it.nombre||"")}${it.size?` · Talla ${esc(it.size)}`:""}</span><b>${money(l.price)}</b></div>
+  <div class="apinfo">Abonado <b>${money(l.paid)}</b> de ${money(l.price)}<div class="apbar"><i style="width:${Math.max(2,pct)}%"></i></div>${info}${pays?`<br><small>Abonos: ${pays}</small>`:""}</div>${acts}</div>`;
+}
+async function apPay(id){
+  const l=AP[id]; if(!l) return;
+  const first=l.status==="solicitado", suggested=first?l.deposit:l.balance;
+  const v=prompt(first?`¿Cuánto pagó de cuota inicial? (pedida ${money(l.deposit)})`:`¿Cuánto abonó? (saldo ${money(l.balance)})`, String(suggested));
+  if(v===null) return; const amount=parseInt(String(v).replace(/[^\d]/g,""),10)||0;
+  if(amount<=0) return toast("Escribe un valor válido.",{err:true});
+  if(amount>l.balance) return toast(`El abono no puede ser mayor al saldo (${money(l.balance)}).`,{err:true});
+  busy(true,"Registrando…");
+  try{
+    const d=await adminFetch(`/admin/layaways/${id}/pay`,{method:"POST",body:{amount}}); busy(false);
+    const mail=d.email&&d.email.sent?" · correo enviado ✓":"";
+    toast(d.completed?`¡Apartado pagado! Recibo ${d.ticket}${d.points?` · +${d.points} pts`:""}${mail}`:(first?`Apartado activo hasta ${new Date(d.layaway.dueAt).toLocaleDateString("es-CO",{day:"numeric",month:"short"})}${mail}`:`Abono registrado · saldo ${money(d.layaway.balance)}${mail}`),{ms:9000});
+    loadLayaways();
+  }catch(e){ busy(false); toast("Error: "+e.message,{err:true,ms:8000}); }
+}
+async function apExtend(id){
+  const v=prompt("¿Cuántos días más le das?","7"); if(v===null) return;
+  const days=parseInt(v,10)||0; if(days<1||days>60) return toast("Entre 1 y 60 días.",{err:true});
+  try{ const d=await adminFetch(`/admin/layaways/${id}/extend`,{method:"POST",body:{days}}); toast("Nuevo vencimiento: "+new Date(d.dueAt).toLocaleDateString("es-CO",{day:"numeric",month:"short"})); loadLayaways(); }
+  catch(e){ toast("Error: "+e.message,{err:true}); }
+}
+async function apCancel(id){
+  if(!confirm("¿Cancelar este apartado? (solo si no pagó la cuota)")) return;
+  try{ await adminFetch(`/admin/layaways/${id}/cancel`,{method:"POST",body:{}}); toast("Apartado cancelado"); loadLayaways(); }
+  catch(e){ toast("Error: "+e.message,{err:true,ms:8000}); }
 }
 async function cancelOrder(id){
   if(!confirm("¿Cancelar este pedido?")) return;
@@ -931,6 +1008,8 @@ $("portadaInfo").onclick=openPortada;
 $("tabs").onclick=e=>{ const b=e.target.closest("button[data-tab]"); if(b) showTab(b.dataset.tab); };
 $("ordSeg").onclick=e=>{ const b=e.target.closest("button[data-st]"); if(!b) return; ordStatus=b.dataset.st; document.querySelectorAll("#ordSeg button").forEach(x=>x.classList.toggle("on",x===b)); loadOrders(); };
 $("ordersList").onclick=e=>{ const r=e.target.closest("[data-resend]"); if(r) return resendReceipt(r.dataset.resend, r.dataset.mail); const p=e.target.closest("[data-pay]"); if(p) return payOrder(p.dataset.pay, p.dataset.hasUser==="1", p.dataset.mail); const c=e.target.closest("[data-cancel]"); if(c) cancelOrder(c.dataset.cancel); };
+$("apSeg").onclick=e=>{ const b=e.target.closest("button[data-ap]"); if(!b) return; apStatus=b.dataset.ap; document.querySelectorAll("#apSeg button").forEach(x=>x.classList.toggle("on",x===b)); loadLayaways(); };
+$("apList").onclick=e=>{ const p=e.target.closest("[data-appay]"); if(p) return apPay(p.dataset.appay); const x=e.target.closest("[data-apext]"); if(x) return apExtend(x.dataset.apext); const c=e.target.closest("[data-apcancel]"); if(c) apCancel(c.dataset.apcancel); };
 $("clubView").onclick=e=>{ const a=e.target.closest("[data-adj]"); if(a) adjustPoints(a.dataset.adj,a.dataset.name); };
 $("pSheetBg").onclick=closePortada; $("pCancel").onclick=closePortada; $("pSave").onclick=savePortada;
 $("pSlots").addEventListener("input",onSlotsInput); $("pSlots").addEventListener("change",onSlotsInput);
