@@ -1504,6 +1504,28 @@ body.has-ann nav{top:34px}
 .pm-share-menu i{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:.7rem;font-weight:700;color:#fff;flex:none}
 .pm-share-menu .note{font-size:.62rem;color:rgba(247,247,244,.55);padding:.45rem .5rem .1rem;line-height:1.45}
 @media(max-width:760px){.pm-share{right:3.6rem!important;top:.85rem!important;border-radius:50%;background:rgba(5,4,3,.66)!important}.pm-share-menu{right:.85rem;top:3.7rem}}
+.club-ov.try-ov{z-index:1300}
+.pm-tryon[hidden]{display:none!important}
+.pm-tryon{display:flex;flex-direction:column;align-items:flex-start;gap:.2rem;width:100%;margin-top:.8rem;padding:.85rem 1rem;background:linear-gradient(120deg,rgba(201,179,138,.18),rgba(247,247,244,.04));border:1px solid rgba(201,179,138,.55);color:#f7f7f4;cursor:pointer;text-align:left;font-family:'Inter',sans-serif}
+.pm-tryon span{font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;font-weight:600}
+.pm-tryon small{font-size:.66rem;color:rgba(247,247,244,.65)}
+.ai-look-try{display:block;width:100%;margin-top:.55rem;padding:.7rem .8rem;background:linear-gradient(120deg,rgba(201,179,138,.22),rgba(247,247,244,.05));border:1px solid rgba(201,179,138,.6);color:#f7f7f4;font-family:'Inter',sans-serif;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
+.try-items{display:flex;gap:.5rem;margin:.9rem 0}
+.try-items img{width:58px;height:74px;object-fit:cover;border:1px solid rgba(247,247,244,.15)}
+.try-modes{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+.try-modes button{padding:.9rem .6rem;background:#0f0f0e;border:1px solid rgba(247,247,244,.2);color:#f7f7f4;cursor:pointer;font-family:'Inter',sans-serif;text-align:left}
+.try-modes button b{display:block;font-size:.8rem;font-weight:500;margin-bottom:.2rem}
+.try-modes button small{font-size:.64rem;color:rgba(247,247,244,.6);line-height:1.4}
+.try-modes button:hover{border-color:#c9b38a}
+.try-note{font-size:.64rem;color:rgba(247,247,244,.55);line-height:1.5;margin-top:.8rem}
+.try-load{display:grid;place-items:center;gap:.8rem;padding:2.2rem 0;text-align:center;font-size:.78rem;color:rgba(247,247,244,.75)}
+.try-spin{width:42px;height:42px;border:2px solid rgba(201,179,138,.25);border-top-color:#c9b38a;border-radius:50%;animation:trySpin 1s linear infinite}
+@keyframes trySpin{to{transform:rotate(360deg)}}
+.try-result img{display:block;width:100%;max-height:62vh;object-fit:contain;background:#0b0b0a;margin-top:.8rem}
+.try-acts{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.7rem}
+.try-acts a,.try-acts button{padding:.75rem .5rem;text-align:center;font-family:'Inter',sans-serif;font-size:.56rem;letter-spacing:.16em;text-transform:uppercase;font-weight:600;cursor:pointer;text-decoration:none;border:1px solid rgba(247,247,244,.3);background:none;color:#f7f7f4}
+.try-acts .main{background:#f7f7f4;color:#050505;border-color:#f7f7f4}
+.try-err{margin-top:.8rem;padding:.7rem .8rem;border:1px solid rgba(255,140,120,.5);font-size:.74rem;line-height:1.5}
 .pm-apartar-note{margin-top:.6rem;font-family:'Inter',sans-serif;font-size:.68rem;letter-spacing:.03em;line-height:1.5;color:rgba(247,247,244,.65)}
 .pm-apartar-note b{color:#c9b38a;font-weight:500}
 .club-ap{display:grid;grid-template-columns:60px 1fr;gap:.8rem;padding:.85rem 0;border-top:1px solid rgba(247,247,244,.12)}
@@ -1715,6 +1737,7 @@ body.has-ann nav{top:34px}
         <button class="btn-o" id="pmAsk" type="button">Preguntar a Caneva AI</button>
       </div>
       <div class="pm-apartar-note" id="pmApartarNote" hidden></div>
+      <button class="pm-tryon" id="pmTryon" type="button" hidden><span>✨ Verla puesta</span><small>Pruébatela con IA: en modelo o en tu foto</small></button>
       <div class="pm-cart-state" id="pmCartState" aria-live="polite">
         <div class="pm-cart-copy"><strong id="pmCartTitle">Agregado a tu carrito</strong><span id="pmCartMeta">1 prenda lista para comprar</span></div>
         <button class="pm-view-cart" id="pmViewCart" type="button">Ver carrito</button>
@@ -2602,6 +2625,7 @@ function aiExtras(ps,sugs){
     h+='<div class="ai-look">'+(ps.length>1?'<div class="ai-look-head"><small>Tu look Caneva · '+ps.length+' prendas</small><strong>$'+total.toLocaleString('es-CO')+'</strong></div>':'')+
        '<div class="ai-look-act">'+(ps.length>1?'<button type="button" class="ai-look-add">Agregar look a la bolsa</button>':'<button type="button" class="ai-look-view">Elegir talla y agregar</button>')+
        '<a class="ai-wa" href="'+lookWhatsLink(ps)+'" target="_blank" rel="noopener">WhatsApp →</a></div>'+
+       (window.clubTryOn&&clubTryOn()?'<button type="button" class="ai-look-try">✨ '+(ps.length>1?'Ver el look puesto':'Verla puesta')+' · IA</button>':'')+
        (function(){var L=window.clubLayaway&&clubLayaway();if(!L)return '';if(ps.length===1)return '<button type="button" class="ai-look-ap" data-api="0">Apártala con $'+L.deposit(ps[0].precio).toLocaleString('es-CO')+' · resto en '+L.days+' días</button>';return '<div class="ai-look-apl"><small>¿No te alcanza hoy? Aparta cada prenda con el '+L.pct+'%:</small>'+ps.map(function(p,i){return '<button type="button" class="ai-look-ap sm" data-api="'+i+'">'+escHtml(p.nombre)+' · $'+L.deposit(p.precio).toLocaleString('es-CO')+'</button>';}).join('')+'</div>';})()+
        '</div>';
   }
@@ -2616,6 +2640,7 @@ function bindAiExtras(d,ps){
     toastCart(sizes.indexOf('Por confirmar')>=0?'Look agregado · confirma tallas en la bolsa':'Look agregado a tu bolsa');
     setTimeout(openCart,450);
   });
+  var tr=d.querySelector('.ai-look-try');if(tr)tr.addEventListener('click',function(){if(window.tryStart)tryStart(ps);});
   d.querySelectorAll('.ai-look-ap').forEach(function(b){b.addEventListener('click',function(){var p=ps[parseInt(b.dataset.api,10)||0],i=P.indexOf(p);if(i<0)return;openProductModal(i);setTimeout(function(){var a=document.getElementById('pmApartar');if(a&&!a.hidden){a.scrollIntoView({behavior:'smooth',block:'center'});a.classList.add('pulse');setTimeout(function(){a.classList.remove('pulse');},1800);}},350);});});
   var view=d.querySelector('.ai-look-view');
   if(view)view.addEventListener('click',function(){var i=P.indexOf(ps[0]);if(i>=0)openProductModal(i);});
@@ -2843,6 +2868,7 @@ document.getElementById('csend').addEventListener('click',sendChat);
   });
 })();
 </script>
+<div class="club-ov try-ov" id="tryOv" aria-hidden="true"><div class="club-box" role="dialog" aria-modal="true" aria-label="Probador virtual Caneva"><button class="club-x" type="button" id="tryX" aria-label="Cerrar">×</button><div id="tryBody"></div></div></div>
 <div class="club-ov" id="clubOv" aria-hidden="true"><div class="club-box" role="dialog" aria-modal="true" aria-label="Club Caneva"><button class="club-x" type="button" id="clubX" aria-label="Cerrar">×</button><div id="clubBody"></div></div></div>
 <script id="v23-club-js">
 // V23 — Club Caneva: Google sign-in, points, rewards, order history. Hidden unless configured in the admin.
@@ -3061,6 +3087,63 @@ document.getElementById('csend').addEventListener('click',sendChat);
     var html=ls.length?'<div class="club-sec">Tus apartados</div>'+ls.map(layCard).join(''):(layOn()?'<div class="club-sec">Apartados</div><div class="club-ap-empty">Aparta cualquier prenda con el '+lay().pct+'% y paga el resto en '+lay().days+' días. Busca el botón <b>Apartar</b> en la prenda que te enamore.</div>':'');
     if(html)pts.insertAdjacentHTML('afterend',html);
   }catch(e){}};
+
+  // ---------- Probador virtual: see the garment (or the whole look) worn, on a model or on your own photo ----------
+  function tryOn(){return active()&&!!(C.cfg&&C.cfg.tryon&&C.cfg.tryon.enabled);}
+  window.clubTryOn=function(){return tryOn();};
+  var TRY={items:[]},tov=document.getElementById('tryOv'),tbody=document.getElementById('tryBody');
+  function tshow(){tov.classList.add('open');tov.setAttribute('aria-hidden','false');}
+  function tclose(){tov.classList.remove('open');tov.setAttribute('aria-hidden','true');}
+  document.getElementById('tryX').onclick=tclose;
+  tov.addEventListener('click',function(e){if(e.target===tov)tclose();});
+  function thumbs(){return '<div class="try-items">'+TRY.items.map(function(p){return p.imagen?'<img src="'+esc(p.imagen)+'" alt="'+esc(p.nombre)+'">':'';}).join('')+'</div>';}
+  function tryStart(items){
+    if(!tryOn())return;
+    TRY.items=(items||[]).filter(function(p){return p&&p.imagen;}).slice(0,3);if(!TRY.items.length)return;
+    if(!C.user){openClub();var m=document.getElementById('clubMsg');if(m){m.className='club-msg';m.textContent='Para probarte la ropa con IA, entra al Club Caneva: toma 10 segundos ✨';}return;}
+    tbody.innerHTML='<div class="club-kicker">Probador virtual · IA</div><h3 class="club-h">¿Cómo se vería <em>puesta</em>?</h3>'+thumbs()+
+      '<div class="try-modes"><button type="button" data-try="model"><b>✨ En modelo</b><small>Mira '+(TRY.items.length>1?'el look':'la prenda')+' puesta en una modelo</small></button>'+
+      '<button type="button" data-try="me"><b>📸 En mí</b><small>Sube una foto tuya de cuerpo completo</small></button></div>'+
+      '<input type="file" id="tryFile" accept="image/*" hidden>'+
+      '<p class="try-note">Imagen creada con inteligencia artificial: es una simulación y puede variar de la prenda real. Tu foto solo se usa para crear la imagen; no la guardamos.</p>';
+    tbody.querySelector('[data-try="model"]').onclick=function(){tryRun('model');};
+    var f=document.getElementById('tryFile');
+    tbody.querySelector('[data-try="me"]').onclick=function(){f.click();};
+    f.onchange=function(){if(f.files&&f.files[0])resizePhoto(f.files[0]).then(function(ph){tryRun('me',ph);},function(e){tryError(e.message);});};
+    tshow();
+  }
+  window.tryStart=tryStart;
+  function resizePhoto(file){return new Promise(function(res,rej){var img=new Image();img.onload=function(){var max=1280,k=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(img.src);res({mime:'image/jpeg',data:c.toDataURL('image/jpeg',.86).split(',')[1]});};img.onerror=function(){rej(new Error('No pude leer esa foto. Prueba con una JPG o PNG.'));};img.src=URL.createObjectURL(file);});}
+  function tryError(msg){tbody.insertAdjacentHTML('beforeend','<div class="try-err">'+esc(msg)+'</div>');}
+  var TRY_MSGS=['Eligiendo la luz perfecta…','Ajustando la prenda a la silueta…','Cuidando cada detalle de la tela…','Casi lista ✨'];
+  async function tryRun(mode,photo){
+    var i=0;tbody.innerHTML='<div class="club-kicker">Probador virtual · IA</div>'+thumbs()+'<div class="try-load"><div class="try-spin"></div><div id="tryMsg">Creando tu imagen… puede tardar hasta 30 segundos</div></div>';
+    var tick=setInterval(function(){var m=document.getElementById('tryMsg');if(m)m.textContent=TRY_MSGS[i++%TRY_MSGS.length];},4500);
+    try{
+      var d=await api('/me/tryon',{method:'POST',body:{mode:mode,items:TRY.items.map(function(p){return {nombre:p.nombre,categoria:p.categoria,precio:p.precio};}),photo:photo||undefined}});
+      clearInterval(tick);tryResult(d,mode);
+      if(window.canevaTrack)try{canevaTrack('TryOn',{mode:mode});}catch(e){}
+    }catch(e){clearInterval(tick);tryStart(TRY.items);tryError(e.message);}
+  }
+  function tryResult(d,mode){
+    var one=TRY.items.length===1,p=TRY.items[0],L=window.clubLayaway&&clubLayaway();
+    tbody.innerHTML='<div class="club-kicker">Probador virtual · IA</div><h3 class="club-h">'+(mode==='me'?'Así te verías ✨':'Así se ve puesta ✨')+'</h3>'+
+      '<div class="try-result"><img src="'+esc(d.image)+'" alt="Simulación con IA de la prenda puesta"></div>'+
+      '<div class="try-acts"><button type="button" class="main" id="tryAdd">'+(one?'Agregar a la bolsa':'Agregar el look')+'</button>'+
+      (L?'<button type="button" id="tryAp">Apartar · '+money(one?L.deposit(p.precio):TRY.items.reduce(function(s,x){return s+L.deposit(x.precio);},0))+'</button>':'<a href="'+esc(d.image)+'" download="caneva-probador.jpg">Descargar</a>')+
+      '<button type="button" id="tryOther">'+(mode==='me'?'Otra foto':'Probar en mí')+'</button>'+
+      '<a href="'+esc(d.image)+'" download="caneva-probador.jpg" target="_blank" rel="noopener">Guardar imagen</a></div>'+
+      (d.remaining!=null?'<p class="try-note">'+(d.remaining===1?'Te queda 1 prueba':'Te quedan '+d.remaining+' pruebas')+' hoy. Simulación con IA: el resultado puede variar de la prenda real.</p>':'<p class="try-note">Simulación con IA: el resultado puede variar de la prenda real.</p>');
+    document.getElementById('tryAdd').onclick=function(){
+      if(one){tclose();var i=P.indexOf(p);if(i>=0)openProductModal(i);if(typeof toastCart==='function')toastCart('Elige tu talla y agrégala');return;}
+      TRY.items.forEach(function(x){var i=P.indexOf(x);if(i>=0)addToCartByIndex(i,false,typeof chatSizeFor==='function'?chatSizeFor(x):'');});tclose();if(typeof openCart==='function')setTimeout(openCart,300);
+    };
+    var ap=document.getElementById('tryAp');if(ap)ap.onclick=function(){tclose();if(one){var i=P.indexOf(p);if(i>=0){openProductModal(i);setTimeout(function(){var a=document.getElementById('pmApartar');if(a){a.scrollIntoView({behavior:'smooth',block:'center'});a.classList.add('pulse');}},350);}}else{TRY.items.forEach(function(x){var i=P.indexOf(x);if(i>=0)addToCartByIndex(i,false,typeof chatSizeFor==='function'?chatSizeFor(x):'');});if(typeof openCart==='function')setTimeout(openCart,300);}};
+    document.getElementById('tryOther').onclick=function(){tryStart(TRY.items);if(mode==='model'||mode==='me'){var f=document.getElementById('tryFile');if(f)f.click();}};
+  }
+  function renderTryBtn(){var b=document.getElementById('pmTryon');if(!b)return;var p=curProduct();b.hidden=!(tryOn()&&p&&p.imagen&&!/domicilio|domicl|mayorista|others/i.test(p.categoria||''));}
+  var tb=document.getElementById('pmTryon');if(tb)tb.addEventListener('click',function(){var p=curProduct();if(p)tryStart([p]);});
+  var _rab=renderApartarBtn;renderApartarBtn=function(){_rab();try{renderTryBtn();}catch(e){}};window.renderApartarBtn=renderApartarBtn;
 
   // ---------- Wiring ----------
   ['navClub','mobileClub'].forEach(function(id){var b=document.getElementById(id);if(b)b.addEventListener('click',openClub);});

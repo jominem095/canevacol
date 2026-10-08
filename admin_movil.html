@@ -249,6 +249,10 @@ main{padding:14px 16px 120px}
     <div class="field"><label>Días para pagar el resto</label><input id="sApDays" type="text" inputmode="numeric" placeholder="30"></div>
   </div>
   <p class="hint">La clienta paga la cuota por WhatsApp y tú la registras en la pestaña Apartados. Si no completa a tiempo, lo abonado se convierte solo en un código de saldo a favor.</p>
+  <div class="sect">Probador virtual (IA)</div>
+  <label class="checkrow"><input type="checkbox" id="sTryOn"><span><b>Activar "Verla puesta"</b> (la IA muestra la prenda puesta en una modelo o en la foto de la clienta · solo miembros del Club)</span></label>
+  <div class="field"><label>Pruebas por clienta al día</label><input id="sTryLimit" type="text" inputmode="numeric" placeholder="3"></div>
+  <p class="hint">Cada imagen nueva cuesta unos US$0,03–0,07 en tu cuenta de Google AI (Gemini). La foto "en modelo" de cada prenda se guarda y se reutiliza gratis. La API key de Gemini debe tener facturación activa.</p>
   <div class="sect">Días de entrega por categoría</div>
   <div id="sDelivery"></div>
   <p class="hint">Días hábiles que se muestran en cada prenda y que Caneva AI le dice a la clienta. Vacío = 1 día (Atelier: 10).</p>
@@ -757,6 +761,7 @@ async function openSettings(){
   $("sFrom").value=ml.from||""; $("sReply").value=ml.replyTo||"";
   const dl=siteConfig.delivery||{}, dlFind=c=>{const k=Object.keys(dl).find(x=>x.trim().toLowerCase()===c.trim().toLowerCase());return k?dl[k]:"";};
   $("sDelivery").innerHTML=categories().map(({c},i)=>`<div class="dlrow"><span>${esc(c)}</span><input data-dlc="${esc(c)}" type="text" inputmode="numeric" placeholder="${/atelier|bajo pedido|encargo/i.test(c)?10:1}" value="${dlFind(c)}"> <small style="color:var(--dim)">días</small></div>`).join("")||`<p class="hint">Aún no hay categorías.</p>`;
+  const tr=siteConfig.tryon||{}; $("sTryOn").checked=!!tr.enabled; $("sTryLimit").value=tr.dailyLimit||3;
   const ly=siteConfig.layaway||{}; $("sApOn").checked=!!ly.enabled; $("sApPct").value=ly.depositPercent||30; $("sApDays").value=ly.days||30;
   $("sMeta").value=ad.metaPixel||""; $("sTtPx").value=ad.tiktokPixel||""; $("sGa").value=ad.ga4||"";
   $("sSheetBg").classList.remove("hidden"); $("sSheet").classList.remove("hidden");
@@ -786,9 +791,10 @@ async function saveSettings(){
   if(dlBad) return toast("Los días de entrega deben estar entre 1 y 60.",{err:true});
   const layaway={enabled:$("sApOn").checked, depositPercent:parseInt($("sApPct").value,10)||30, days:parseInt($("sApDays").value,10)||30};
   if(layaway.enabled && !$("sClubOn").checked) return toast("Los Apartados necesitan el Club Caneva activo.",{err:true});
+  if($("sTryOn").checked && !$("sClubOn").checked) return toast("El probador virtual necesita el Club Caneva activo.",{err:true});
   if(layaway.depositPercent<5||layaway.depositPercent>90) return toast("La cuota inicial debe estar entre 5% y 90%.",{err:true});
   if(layaway.days<1||layaway.days>120) return toast("Los días deben estar entre 1 y 120.",{err:true});
-  const cfg={...(siteConfig||{}), social, announcement, ads, ai, auth:{googleClientId:gid}, loyalty, mail:{from:fromV, replyTo:replyV}, layaway, delivery};
+  const cfg={...(siteConfig||{}), social, announcement, ads, ai, auth:{googleClientId:gid}, loyalty, mail:{from:fromV, replyTo:replyV}, layaway, delivery, tryon:{enabled:$("sTryOn").checked, dailyLimit:Math.max(1,Math.min(20,parseInt($("sTryLimit").value,10)||3))}};
   busy(true,"Guardando ajustes…");
   try{
     const res=await api(API_BASE+"/admin/config",{method:"POST",headers:{"x-admin-token":token(),"Content-Type":"application/json"},body:JSON.stringify(cfg)});
