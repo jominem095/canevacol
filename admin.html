@@ -3,92 +3,137 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#050505">
 <title>CANEVA Admin — Excel + Imágenes</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
-:root{--g:#c9a96e;--g2:#e8d5aa;--k:#050403;--k2:#0d0b08;--w:#faf9f6;--dim:#8d8675;--b:rgba(201,169,110,.22);--ok:#9de08f;--bad:#ffb4a8}
-*{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at 20% 0%,rgba(201,169,110,.13),transparent 32%),var(--k);color:var(--w);font-family:Inter,sans-serif}
-.wrap{max-width:1180px;margin:0 auto;padding:44px 18px}.logo{font-family:"Cormorant Garamond",serif;letter-spacing:.42em;color:var(--g);font-size:32px;margin-bottom:6px}
-h1{font-family:"Cormorant Garamond",serif;font-weight:300;font-size:clamp(36px,6vw,72px);line-height:.95;margin:16px 0 14px}p{color:rgba(250,249,246,.62);line-height:1.8;font-size:14px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:26px}.card{border:1px solid var(--b);background:rgba(255,255,255,.035);padding:22px;box-shadow:0 26px 80px rgba(0,0,0,.25)}
-label{display:block;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--g);margin:0 0 9px}input[type=password],input[type=file]{width:100%;border:1px solid var(--b);background:#090705;color:var(--w);padding:14px;font-family:Inter,sans-serif}
-.token-save{display:flex;gap:10px;align-items:center;margin-top:12px;color:rgba(250,249,246,.68);font-size:13px;line-height:1.5}.token-save input{accent-color:var(--g)}
-button{border:0;background:var(--g);color:#090705;padding:14px 18px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;cursor:pointer}button.secondary{background:transparent;color:var(--g);border:1px solid var(--b)}button:disabled{opacity:.45;cursor:not-allowed}.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
-.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:18px}.kpi{border:1px solid var(--b);padding:14px;background:rgba(0,0,0,.16)}.kpi b{display:block;font-family:"Cormorant Garamond",serif;font-weight:300;font-size:32px;color:var(--g);line-height:1}.kpi span{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim)}
-.table{overflow:auto;max-height:480px;border:1px solid var(--b);margin-top:20px}table{border-collapse:collapse;width:100%;min-width:980px;background:#080604}th,td{border-bottom:1px solid rgba(201,169,110,.1);padding:10px;text-align:left;font-size:12px;vertical-align:top}th{position:sticky;top:0;background:#141009;color:var(--g);font-size:10px;text-transform:uppercase;letter-spacing:.13em}td{color:rgba(250,249,246,.72)}
-.bad{color:var(--bad)}.ok{color:var(--ok)}.muted{color:var(--dim)}.note{border-left:1px solid var(--g);padding:12px 14px;background:rgba(201,169,110,.06);margin-top:16px}pre{white-space:pre-wrap;background:#090705;border:1px solid var(--b);padding:12px;color:#ddd;max-height:220px;overflow:auto}.mini{font-size:12px;color:rgba(250,249,246,.55)}.checkrow{display:flex;gap:10px;align-items:flex-start;margin-top:14px;color:rgba(250,249,246,.65);font-size:13px;line-height:1.6}.checkrow input{margin-top:4px}.imgthumb{width:52px;height:68px;object-fit:cover;border:1px solid rgba(201,169,110,.22);background:#141009}
-@media(max-width:900px){.grid,.kpis{grid-template-columns:1fr}.wrap{padding-top:28px}}
+/* Same look as admin_movil.html: black, white, soft borders, rounded cards */
+:root{--k:#050505;--k2:#111;--k3:#1b1b1b;--w:#f7f7f4;--dim:rgba(247,247,244,.55);--b:rgba(247,247,244,.14);--ok:#9de08f;--bad:#ffb4a8}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--k);color:var(--w);font-family:Inter,system-ui,sans-serif;font-size:15px}
+button,input{font:inherit;color:inherit}
+a{color:var(--w)}
+header{position:sticky;top:0;z-index:5;background:rgba(5,5,5,.94);backdrop-filter:blur(10px);border-bottom:1px solid var(--b)}
+.hrow{max-width:1120px;margin:0 auto;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.logo{font-family:"Cormorant Garamond",serif;letter-spacing:.38em;font-size:24px;font-weight:300}
+.nav{display:flex;gap:8px}
+.nav a,.nav span{border:1px solid var(--b);border-radius:999px;padding:8px 14px;font-size:12px;letter-spacing:.06em;text-decoration:none}
+.nav span{background:var(--w);color:var(--k);border-color:var(--w);font-weight:600}
+.wrap{max-width:1120px;margin:0 auto;padding:28px 20px 80px}
+.eyeb{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim)}
+h1{font-family:"Cormorant Garamond",serif;font-weight:300;font-size:clamp(34px,5vw,56px);line-height:1;margin:8px 0 10px}
+p{color:var(--dim);line-height:1.7;font-size:14px;margin:0}
+.lead{max-width:720px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:24px}
+.card{position:relative;border:1px solid var(--b);background:var(--k2);border-radius:16px;padding:20px}
+.card>label:first-child{display:flex;align-items:baseline;gap:10px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin:0 0 14px}
+.card>label:first-child b{font-family:"Cormorant Garamond",serif;font-weight:300;font-size:34px;letter-spacing:0;color:var(--w);line-height:.8}
+input[type=password]{width:100%;background:var(--k);border:1px solid var(--b);border-radius:12px;padding:13px 14px;font-size:16px;outline:none}
+input[type=password]:focus{border-color:var(--w)}
+input[type=file]{width:100%;background:var(--k);border:1px dashed rgba(247,247,244,.3);border-radius:12px;padding:14px;font-size:13px;color:var(--dim);cursor:pointer}
+input[type=file]::file-selector-button{background:var(--w);color:var(--k);border:0;border-radius:999px;padding:9px 16px;margin-right:12px;font-weight:600;cursor:pointer}
+input[type=file]:hover{border-color:var(--w)}
+.token-save,.checkrow{display:flex;gap:10px;align-items:flex-start;margin-top:12px;color:var(--dim);font-size:13px;line-height:1.55;text-transform:none;letter-spacing:0}
+.token-save input,.checkrow input{width:18px;height:18px;margin-top:1px;accent-color:#f7f7f4;flex:none}
+button{border:0;background:var(--w);color:var(--k);border-radius:12px;padding:14px 18px;font-weight:600;font-size:14px;cursor:pointer}
+button.secondary{background:none;color:var(--w);border:1px solid var(--b)}
+button:hover:not(:disabled){filter:brightness(.92)}
+button:disabled{opacity:.4;cursor:not-allowed}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:18px}
+.kpi{border:1px solid var(--b);border-radius:14px;padding:14px;background:linear-gradient(160deg,#161616,#0b0b0b)}
+.kpi b{display:block;font-family:"Cormorant Garamond",serif;font-weight:300;font-size:38px;line-height:1.05}
+.kpi span{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+.note{border:1px solid var(--b);border-radius:12px;padding:12px 14px;background:var(--k2);margin-top:14px}
+.card .note{background:var(--k);margin-top:12px}
+#status{margin-top:18px}#status p{font-size:14px}
+.table{overflow:auto;max-height:560px;border:1px solid var(--b);border-radius:16px;margin-top:16px}
+table{border-collapse:collapse;width:100%;min-width:900px;background:var(--k2)}
+th,td{border-bottom:1px solid var(--b);padding:10px 12px;text-align:left;font-size:13px;vertical-align:middle}
+th{position:sticky;top:0;background:#151515;color:var(--dim);font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.14em}
+td{color:rgba(247,247,244,.82)}tr:hover td{background:#161616}
+.imgthumb{width:46px;height:60px;object-fit:cover;border-radius:8px;background:var(--k3);display:block}
+.bad{color:var(--bad)}.ok{color:var(--ok)}.muted{color:var(--dim)}.mini{font-size:12.5px;margin-top:10px}.mini b{color:var(--w);font-weight:500}
+details.tech{margin-top:22px;border:1px solid var(--b);border-radius:14px;padding:12px 16px;background:var(--k2)}
+details.tech summary{cursor:pointer;font-size:13px;color:var(--dim)}
+pre{white-space:pre-wrap;background:var(--k);border:1px solid var(--b);border-radius:10px;padding:12px;color:#ddd;max-height:260px;overflow:auto;font-size:12px;margin:12px 0 0}
+@media(max-width:900px){.grid{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.kpis .kpi:first-child{grid-column:1/-1}.actions{grid-template-columns:1fr}}
+@media(max-width:430px){.logo{font-size:18px;letter-spacing:.28em}.nav a,.nav span{padding:7px 10px;font-size:11px}}
 </style>
 </head>
 <body>
+<header><div class="hrow">
+  <div class="logo">CΛNEVΛ</div>
+  <nav class="nav"><span>Excel</span><a href="admin_movil.html">Admin móvil ›</a></nav>
+</div></header>
 <div class="wrap">
-  <div class="logo">CANEVA</div>
-  <h1>Panel privado<br>Excel + imágenes</h1>
-  <p>Sube el Excel de Caneva y, si quieres, también las fotos desde el computador. El sistema guarda productos en Cloudflare KV y fotos en Cloudflare R2. La web y Caneva AI usan esa base sin tocar código.</p>
+  <div class="eyeb">Panel privado</div>
+  <h1>Catálogo desde Excel</h1>
+  <p class="lead">Sube el Excel de Caneva y, si quieres, las fotos desde el computador. Los productos quedan en la tienda y en Caneva AI sin tocar código. El inventario por talla se maneja en el Admin móvil → Inventario.</p>
 
   <div class="grid">
     <section class="card">
-      <label>1. Token privado</label>
+      <label><b>01</b>Token privado</label>
       <input id="token" type="password" placeholder="Pega aquí el ADMIN_TOKEN">
       <label class="token-save">
         <input id="rememberToken" type="checkbox">
-        <span>Recordar token en esta máquina</span>
+        <span>Recordar token en este computador (es el mismo del Admin móvil)</span>
       </label>
-      <div class="note"><p>El token autoriza la publicación. Solo queda guardado en este navegador si marcas <b>Recordar token</b>.</p></div>
     </section>
 
     <section class="card">
-      <label>2. Archivo Excel</label>
+      <label><b>02</b>Archivo Excel</label>
       <input id="file" type="file" accept=".xlsx,.xls">
-      <p class="mini">Columnas esperadas: Categoría, Nombre, Precio, Descripción, Variantes / Tallas, Stock, Imagen Principal, Imágenes Extra, URL Producto, Tela (opcional).</p>
+      <p class="mini">Columnas: <b>Categoría, Nombre, Precio, Descripción, Variantes / Tallas, Stock, Imagen Principal, Imágenes Extra, URL Producto</b> y Tela (opcional). Las prendas con inventario ignoran la columna Stock.</p>
     </section>
 
     <section class="card">
-      <label>3. Imágenes desde el computador</label>
+      <label><b>03</b>Fotos desde el computador</label>
       <input id="images" type="file" accept="image/*" multiple>
-      <p class="mini">En el Excel, la columna <b>Imagen Principal</b> puede traer una URL o el nombre del archivo: <b>bota-recta.jpg</b>. Si la celda queda vacía, el sistema intenta emparejar por nombre del producto.</p>
-      <label class="checkrow" style="text-transform:none;letter-spacing:0;color:rgba(250,249,246,.65);margin-top:12px">
+      <p class="mini">En <b>Imagen Principal</b> puede ir una URL o el nombre del archivo (ej: <b>bota-recta.jpg</b>). Si queda vacía, se empareja por el nombre del producto.</p>
+      <label class="checkrow">
         <input id="replaceUrlWithLocal" type="checkbox">
-        <span>Reemplazar la URL actual si selecciono una foto local que coincida con el nombre del producto.</span>
+        <span>Reemplazar la foto actual si subo una foto local con el mismo nombre del producto.</span>
       </label>
     </section>
 
     <section class="card">
-      <label>4. Publicar</label>
+      <label><b>04</b>Publicar</label>
       <div class="actions">
         <button id="previewBtn" type="button">Previsualizar</button>
         <button id="publishBtn" type="button" disabled>Publicar catálogo</button>
+        <button id="downloadBtn" class="secondary" type="button">⇩ Descargar Excel actualizado</button>
         <button id="migrateBtn" class="secondary" type="button">Migrar URLs a R2</button>
-        <button id="downloadBtn" class="secondary" type="button">Descargar Excel actualizado</button>
       </div>
       <div class="checkrow">
         <input id="autoMigrate" type="checkbox">
-        <span>Después de publicar, copiar a Cloudflare R2 las URLs externas actuales y reemplazarlas por URLs propias del Worker.</span>
+        <span>Después de publicar, copiar a Cloudflare las fotos que están en otros sitios.</span>
       </div>
     </section>
   </div>
 
   <div class="kpis">
-    <div class="kpi"><b id="kCount">0</b><span>productos</span></div>
-    <div class="kpi"><b id="kImages">0</b><span>con imagen</span></div>
-    <div class="kpi"><b id="kLocal">0</b><span>fotos locales</span></div>
-    <div class="kpi"><b id="kCats">0</b><span>categorías</span></div>
-    <div class="kpi"><b id="kMatch">0</b><span>matches foto</span></div>
+    <div class="kpi"><b id="kCount">0</b><span>Productos</span></div>
+    <div class="kpi"><b id="kImages">0</b><span>Con foto</span></div>
+    <div class="kpi"><b id="kLocal">0</b><span>Fotos locales</span></div>
+    <div class="kpi"><b id="kCats">0</b><span>Categorías</span></div>
+    <div class="kpi"><b id="kMatch">0</b><span>Fotos emparejadas</span></div>
   </div>
 
-  <div id="status" class="note"><p>Esperando Excel...</p></div>
+  <div id="status" class="note"><p>Esperando Excel…</p></div>
 
   <div class="table" id="tableWrap" style="display:none">
     <table>
-      <thead><tr><th>Imagen</th><th>Categoría</th><th>Nombre</th><th>Precio</th><th>Tallas</th><th>Fuente imagen</th><th>URL</th></tr></thead>
+      <thead><tr><th>Foto</th><th>Categoría</th><th>Nombre</th><th>Precio</th><th>Tallas</th><th>Fuente de la foto</th><th>URL</th></tr></thead>
       <tbody id="tbody"></tbody>
     </table>
   </div>
 
-  <h3 style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;color:var(--g);margin-top:26px">Respuesta técnica</h3>
-  <pre id="log">—</pre>
+  <details class="tech"><summary>Respuesta técnica (para soporte)</summary>
+  <pre id="log">—</pre></details>
 </div>
 
 <script>
@@ -191,7 +236,7 @@ function renderPreview(){
       <td>${img?`<img class="imgthumb" src="${escapeAttr(img)}">`:"—"}</td>
       <td>${escapeHtml(p.categoria)}</td><td>${escapeHtml(p.nombre)}</td><td>${escapeHtml(p.precio)}</td><td>${escapeHtml(p.tallas)}</td>
       <td class="${f||/^https?:\/\//i.test(p.imagen||"")?'ok':'bad'}">${escapeHtml(imageSourceLabel(p))}</td>
-      <td>${p.url?'<a style="color:#c9a96e" href="'+escapeAttr(p.url)+'" target="_blank">abrir</a>':'—'}</td>
+      <td>${p.url?'<a style="color:#f7f7f4" href="'+escapeAttr(p.url)+'" target="_blank">abrir</a>':'—'}</td>
     </tr>`;
   }).join("");
   document.getElementById("tableWrap").style.display="block";
