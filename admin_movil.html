@@ -158,6 +158,8 @@ main{padding:14px 16px 120px}
 .sz.none{border-style:dashed}
 .itot{text-align:right;min-width:62px}.itot b{display:block;font-family:"Cormorant Garamond",serif;font-weight:300;font-size:32px;line-height:1}
 .itot small{font-size:9.5px;letter-spacing:.08em;color:var(--dim)}
+.inone{display:inline-block;font-size:9.5px;letter-spacing:.08em;color:var(--dim);border:1px dashed var(--b);border-radius:6px;padding:3px 6px;white-space:nowrap}
+@media(min-width:760px){#invView{max-width:760px;margin:0 auto}}
 .irow.st-agotada .itot b,.irow.st-agotada .itot small{color:#ff8f80}.irow.st-baja .itot b,.irow.st-baja .itot small{color:#f4c46a}
 .ihead{display:grid;grid-template-columns:86px 1fr;gap:14px;align-items:start}.ihead img{width:86px;height:108px;object-fit:cover;border-radius:10px}
 .ibig{margin-top:6px;font-size:14px;color:var(--dim)}.ibig b{font-family:"Cormorant Garamond",serif;font-size:30px;font-weight:300;color:var(--w)}
@@ -1006,7 +1008,7 @@ function renderInvList(){
     return `<div class="irow st-${s}" data-ipid="${esc(p.id)}" role="button" tabindex="0">
       <div class="ith">${p.imagen?`<img src="${esc(p.imagen)}" alt="" loading="lazy">`:""}</div>
       <div class="iinfo"><b>${esc(p.nombre)}</b><small>${esc(p.categoria)} · ${esc(p.precio)}${p.cost?` · costo ${money(p.cost)}`:""}${p.hidden?' · <span class="bad">oculta</span>':""}</small><div class="szs">${chips}</div></div>
-      <div class="itot">${p.managed?`<b>${p.total}</b><small>${s==="agotada"?"AGOTADA":s==="baja"?"POR AGOTARSE":"unid."}</small>`:`<small>—</small>`}</div></div>`;
+      <div class="itot">${p.managed?`<b>${p.total}</b><small>${s==="agotada"?"AGOTADA":s==="baja"?"POR AGOTARSE":"unid."}</small>`:`<span class="inone">${/atelier/i.test(p.categoria)?"BAJO PEDIDO":"SIN CONTAR"}</span>`}</div></div>`;
   }).join(""):`<div class="empty">No hay prendas con ese filtro.</div>`;
 }
 function openInvSheet(pid){
