@@ -39,7 +39,7 @@ main{padding:14px 16px 120px}
 .card.off .vis{background:var(--bad);color:var(--k)}
 @media(max-width:430px){header .logo{font-size:18px;letter-spacing:.28em}header .iconbtn{padding:7px 9px;font-size:11px;letter-spacing:0}}
 .tabs{display:flex;gap:6px;margin-top:10px}
-.tabs button{flex:1;background:none;border:1px solid var(--b);border-radius:10px;padding:9px 6px;font-size:13px}
+.tabs button{flex:1;background:none;border:1px solid var(--b);border-radius:10px;padding:9px 3px;font-size:12px}
 .tabs button.on{background:var(--w);color:var(--k);border-color:var(--w)}
 .tabs b{display:inline-block;min-width:18px;border-radius:9px;background:var(--bad);color:var(--k);font-size:11px;padding:0 5px;margin-left:4px}
 .tabs b:empty{display:none}
@@ -154,6 +154,7 @@ main{padding:14px 16px 120px}
       <button type="button" data-tab="productos" class="on">Productos</button>
       <button type="button" data-tab="pedidos">Pedidos<b id="pendCount"></b></button>
       <button type="button" data-tab="apartados">Apartados<b id="apCount"></b></button>
+      <button type="button" data-tab="regalos">Regalos<b id="gfCount"></b></button>
       <button type="button" data-tab="club">Club</button>
     </div>
     <div id="prodTools">
@@ -169,6 +170,13 @@ main{padding:14px 16px 120px}
     <div id="apView" class="hidden">
       <div class="seg" id="apSeg"><button type="button" data-ap="solicitado">Por cuota</button><button type="button" data-ap="activo" class="on">Activos</button><button type="button" data-ap="completado">Pagados</button><button type="button" data-ap="vencido">Vencidos</button></div>
       <div id="apList"></div>
+    </div>
+    <div id="gfView" class="hidden">
+      <div class="ocard"><div style="font-weight:600;margin-bottom:6px">Usar una tarjeta regalo</div>
+        <div style="display:flex;gap:6px"><input id="gfCode" placeholder="REGALO-XXXX-XXXX" style="flex:1;min-width:0;background:var(--k2);border:1px solid var(--b);border-radius:10px;padding:10px;font-size:15px;text-transform:uppercase"><button class="btn" id="gfCheck" style="width:auto;margin:0;padding:0 14px">Ver saldo</button></div>
+        <div id="gfResult" style="margin-top:8px;font-size:13px"></div></div>
+      <div class="seg" id="gfSeg"><button type="button" data-gf="solicitada">Por pagar</button><button type="button" data-gf="activa" class="on">Activas</button><button type="button" data-gf="cerrada">Usadas/vencidas</button></div>
+      <div id="gfList"></div>
     </div>
     <div id="clubView" class="hidden"></div>
     <div id="prodView">
@@ -249,6 +257,14 @@ main{padding:14px 16px 120px}
     <div class="field"><label>Días para pagar el resto</label><input id="sApDays" type="text" inputmode="numeric" placeholder="30"></div>
   </div>
   <p class="hint">La clienta paga la cuota por WhatsApp y tú la registras en la pestaña Apartados. Si no completa a tiempo, lo abonado se convierte solo en un código de saldo a favor.</p>
+  <div class="sect">Tarjetas regalo</div>
+  <label class="checkrow"><input type="checkbox" id="sGfOn"><span><b>Activar Tarjetas Regalo</b> (botón "🎁 Regalo" en la tienda)</span></label>
+  <div class="field"><label>Valores sugeridos (separados por coma)</label><input id="sGfAmts" type="text" inputmode="numeric" placeholder="50000, 100000, 150000, 200000"></div>
+  <div class="row2">
+    <div class="field"><label>Valor mínimo "otro valor"</label><input id="sGfMin" type="text" inputmode="numeric" placeholder="30000"></div>
+    <div class="field"><label>Vigencia (meses)</label><input id="sGfMonths" type="text" inputmode="numeric" placeholder="12"></div>
+  </div>
+  <p class="hint">La clienta elige valor, diseño y mensaje, y paga por WhatsApp. Tú la activas en la pestaña Regalos y le llega por correo (o en la fecha que eligió). Se descuenta en una o varias compras.</p>
   <div class="sect">Probador virtual (IA)</div>
   <label class="checkrow"><input type="checkbox" id="sTryOn"><span><b>Activar "Verla puesta"</b> (la IA muestra la prenda puesta en una modelo o en la foto de la clienta · solo miembros del Club)</span></label>
   <div class="field"><label>Pruebas por clienta al día</label><input id="sTryLimit" type="text" inputmode="numeric" placeholder="3"></div>
@@ -761,6 +777,7 @@ async function openSettings(){
   $("sFrom").value=ml.from||""; $("sReply").value=ml.replyTo||"";
   const dl=siteConfig.delivery||{}, dlFind=c=>{const k=Object.keys(dl).find(x=>x.trim().toLowerCase()===c.trim().toLowerCase());return k?dl[k]:"";};
   $("sDelivery").innerHTML=categories().map(({c},i)=>`<div class="dlrow"><span>${esc(c)}</span><input data-dlc="${esc(c)}" type="text" inputmode="numeric" placeholder="${/atelier|bajo pedido|encargo/i.test(c)?10:1}" value="${dlFind(c)}"> <small style="color:var(--dim)">días</small></div>`).join("")||`<p class="hint">Aún no hay categorías.</p>`;
+  const gf=siteConfig.gift||{}; $("sGfOn").checked=!!gf.enabled; $("sGfAmts").value=(gf.amounts||[50000,100000,150000,200000]).join(", "); $("sGfMin").value=gf.minCustom||30000; $("sGfMonths").value=gf.months||12;
   const tr=siteConfig.tryon||{}; $("sTryOn").checked=!!tr.enabled; $("sTryLimit").value=tr.dailyLimit||3;
   const ly=siteConfig.layaway||{}; $("sApOn").checked=!!ly.enabled; $("sApPct").value=ly.depositPercent||30; $("sApDays").value=ly.days||30;
   $("sMeta").value=ad.metaPixel||""; $("sTtPx").value=ad.tiktokPixel||""; $("sGa").value=ad.ga4||"";
@@ -794,7 +811,7 @@ async function saveSettings(){
   if($("sTryOn").checked && !$("sClubOn").checked) return toast("El probador virtual necesita el Club Caneva activo.",{err:true});
   if(layaway.depositPercent<5||layaway.depositPercent>90) return toast("La cuota inicial debe estar entre 5% y 90%.",{err:true});
   if(layaway.days<1||layaway.days>120) return toast("Los días deben estar entre 1 y 120.",{err:true});
-  const cfg={...(siteConfig||{}), social, announcement, ads, ai, auth:{googleClientId:gid}, loyalty, mail:{from:fromV, replyTo:replyV}, layaway, delivery, tryon:{enabled:$("sTryOn").checked, dailyLimit:Math.max(1,Math.min(20,parseInt($("sTryLimit").value,10)||3))}};
+  const cfg={...(siteConfig||{}), social, announcement, ads, ai, auth:{googleClientId:gid}, loyalty, mail:{from:fromV, replyTo:replyV}, layaway, delivery, gift:{enabled:$("sGfOn").checked, amounts:$("sGfAmts").value.split(/[,;\s]+/).map(v=>parseInt(v.replace(/\D/g,""),10)).filter(v=>v>=10000).slice(0,6), minCustom:parseInt($("sGfMin").value.replace(/\D/g,""),10)||30000, months:parseInt($("sGfMonths").value,10)||12}, tryon:{enabled:$("sTryOn").checked, dailyLimit:Math.max(1,Math.min(20,parseInt($("sTryLimit").value,10)||3))}};
   busy(true,"Guardando ajustes…");
   try{
     const res=await api(API_BASE+"/admin/config",{method:"POST",headers:{"x-admin-token":token(),"Content-Type":"application/json"},body:JSON.stringify(cfg)});
@@ -825,7 +842,7 @@ function showTab(t){
   $("prodTools").classList.toggle("hidden",t!=="productos"); $("prodView").classList.toggle("hidden",t!=="productos");
   $("newBtn").classList.toggle("hidden",t!=="productos");
   $("ordersView").classList.toggle("hidden",t!=="pedidos"); $("clubView").classList.toggle("hidden",t!=="club");
-  $("apView").classList.toggle("hidden",t!=="apartados");
+  $("apView").classList.toggle("hidden",t!=="apartados"); $("gfView").classList.toggle("hidden",t!=="regalos"); if(t==="regalos") loadGifts();
   if(t==="pedidos") loadOrders(); if(t==="club") loadClub(); if(t==="apartados") loadLayaways();
   window.scrollTo(0,0);
 }
@@ -834,6 +851,7 @@ const when=iso=>iso?new Date(iso).toLocaleString("es-CO",{day:"numeric",month:"s
 function clubOff(msg){ return `<div class="empty">${esc(msg)}<br><br>Para activarlo: crea la base de datos <b>D1</b> en Cloudflare y conéctala al Worker como <b>CANEVA_DB</b> (ver guía).</div>`; }
 async function refreshPendingCount(){
   try{ const d=await adminFetch("/admin/orders?status=pendiente"); $("pendCount").textContent=d.orders.length||""; }catch(e){ $("pendCount").textContent=""; }
+  try{ const d=await adminFetch("/admin/gifts?status=solicitada"); $("gfCount").textContent=(d.counts&&d.counts.solicitada)||""; }catch(e){ $("gfCount").textContent=""; }
   try{ const d=await adminFetch("/admin/layaways?status=solicitado"); const c=d.counts||{}; $("apCount").textContent=(c.solicitado||0)+(c.activo||0)||""; }catch(e){ $("apCount").textContent=""; }
 }
 async function loadOrders(){
@@ -880,6 +898,51 @@ async function resendReceipt(id,mail){
   try{ const d=await adminFetch(`/admin/orders/${id}/resend`,{method:"POST",body:{email}}); busy(false); toast(`Recibo ${d.ticket} enviado a ${email} ✓`,{ms:7000}); loadOrders(); }
   catch(e){ busy(false); toast("Error: "+e.message,{err:true,ms:9000}); }
 }
+// ---------- Tarjetas regalo ----------
+let gfStatus="activa", GF={};
+const GF_BG={noir:"radial-gradient(#2a251c,#050505)",champagne:"linear-gradient(135deg,#e2cfa6,#b89a64)",perla:"linear-gradient(135deg,#fbf9f4,#e9e3d6)"};
+async function loadGifts(){
+  $("gfList").innerHTML=`<div class="empty">Cargando…</div>`;
+  try{
+    const d=await adminFetch("/admin/gifts?status="+gfStatus);
+    const c=d.counts||{}; $("gfCount").textContent=c.solicitada||"";
+    GF={}; d.gifts.forEach(g=>GF[g.id]=g);
+    $("gfList").innerHTML=d.gifts.length?d.gifts.map(gfCard).join(""):`<div class="empty">No hay tarjetas ${gfStatus==="solicitada"?"por pagar":gfStatus==="activa"?"activas":"usadas o vencidas"}.${!(siteConfig&&siteConfig.gift&&siteConfig.gift.enabled)?"<br><br>Actívalas en <b>Ajustes → Tarjetas regalo</b>.":""}</div>`;
+  }catch(e){ $("gfList").innerHTML=/D1|activado/.test(e.message)?clubOff(e.message):`<div class="empty">${esc(e.message)}</div>`; }
+}
+function gfCard(g){
+  const dark=g.design==="noir";
+  const card=`<div style="background:${GF_BG[g.design]||GF_BG.noir};color:${dark?"#f7f7f4":"#050505"};border:1px solid #c9b38a;border-radius:12px;padding:12px 14px;margin:8px 0"><div style="display:flex;justify-content:space-between;font-size:11px;letter-spacing:3px"><span>CΛNEVΛ</span><span>REGALO</span></div><div style="font-size:26px;margin:8px 0 2px">${money(g.status==="solicitada"?g.amount:g.balance)}${g.status!=="solicitada"&&g.balance!==g.amount?` <small style="font-size:12px;opacity:.7">de ${money(g.amount)}</small>`:""}</div><div style="font-size:12px;opacity:.85">Para <b>${esc(g.toName)}</b>${g.fromName?" · De "+esc(g.fromName):""}</div>${g.code?`<div style="font-family:monospace;font-size:14px;margin-top:6px;letter-spacing:1px">${esc(g.code)}</div>`:""}</div>`;
+  const info=[g.toEmail?`✉ ${esc(g.toEmail)}`:"Sin correo de destino (le llega a quien compró)", `Compró: ${esc(g.buyerEmail)}`, g.sendAt?`📅 Entrega: ${esc(new Date(g.sendAt).toLocaleDateString("es-CO",{day:"numeric",month:"short"}))}${g.sentAt?" ✓ enviada":""}`:(g.sentAt?"✓ Enviada por correo":""), g.expiresAt?`Vence: ${esc(new Date(g.expiresAt).toLocaleDateString("es-CO",{day:"numeric",month:"short",year:"numeric"}))}`:"", g.message?`💌 “${esc(g.message)}”`:""].filter(Boolean).join("<br>");
+  const reds=(g.redemptions||[]).map(r=>`−${money(r.amount)} <small>${esc(when(r.created_at))}${r.note?" · "+esc(r.note):""}</small>`).join("<br>");
+  const status={solicitada:"Por pagar",activa:"Activa",agotada:"Usada completa",vencida:"Vencida",cancelada:"Cancelada"}[g.status]||g.status;
+  const acts=g.status==="solicitada"?`<div class="oact"><button class="pay" data-gfact="${g.id}">Recibí el pago ✓ Activar</button><button class="cancel" data-gfcancel="${g.id}">Cancelar</button></div>`
+    :g.status==="activa"?`<div class="oact"><button class="pay" data-gfuse="${g.id}">Descontar</button><button class="ext" data-gfresend="${g.id}">Reenviar correo</button></div>`:"";
+  return `<div class="ocard"><div class="ohead"><span>Ref. <b>${esc(g.ref)}</b> <span class="tag">${status}</span></span><span>${esc(when(g.createdAt))}</span></div>${card}<div class="apinfo">${info}${reds?`<br><small>Usos:</small><br>${reds}`:""}</div>${acts}</div>`;
+}
+async function gfActivate(id){
+  const g=GF[id]; if(!g) return;
+  if(!confirm(`¿Confirmas que recibiste ${money(g.amount)} por la tarjeta de ${g.toName}? Se crea el código y ${g.sendAt&&new Date(g.sendAt)>new Date()?"se enviará en la fecha elegida":"se envía el correo ahora"}.`)) return;
+  busy(true,"Activando tarjeta…");
+  try{ const d=await adminFetch(`/admin/gifts/${id}/activate`,{method:"POST",body:{}}); busy(false); toast(`Tarjeta ${d.gift.code} activa${d.scheduled?" · se enviará en su fecha":d.sent?" · correo enviado ✓":""}`,{ms:9000}); loadGifts(); }
+  catch(e){ busy(false); toast("Error: "+e.message,{err:true,ms:8000}); }
+}
+async function gfUse(code){
+  const g=Object.values(GF).find(x=>x.code===code)||{};
+  const v=prompt(`¿Cuánto descontar de ${code}? (saldo ${money(g.balance||0)})`, String(g.balance||"")); if(v===null) return;
+  const amount=parseInt(String(v).replace(/\D/g,""),10)||0; if(amount<=0) return toast("Escribe un valor válido.",{err:true});
+  const note=prompt("Nota (opcional, ej: pedido de Ana)","")||"";
+  try{ const d=await adminFetch("/admin/gift/redeem",{method:"POST",body:{code,amount,note}}); toast(`Descontado ${money(d.redeemed)} · saldo ${money(d.gift.balance)}`,{ms:8000}); loadGifts(); if($("gfCode").value.trim()) gfCheck(); }
+  catch(e){ toast("Error: "+e.message,{err:true,ms:8000}); }
+}
+async function gfCheck(){
+  const code=$("gfCode").value.trim(); if(!code) return;
+  try{ const d=await adminFetch("/admin/gift/check",{method:"POST",body:{code}}); const g=d.gift; GF[g.id]=g;
+    $("gfResult").innerHTML=`<b>${esc(g.code)}</b> · ${g.status==="activa"?`saldo <b>${money(g.balance)}</b> de ${money(g.amount)} · para ${esc(g.toName)}`:{agotada:"ya se usó completa",vencida:"vencida",solicitada:"aún no está pagada",cancelada:"cancelada"}[g.status]}${g.status==="activa"?`<div class="oact"><button class="pay" data-gfuse2="${esc(g.code)}">Descontar de esta tarjeta</button></div>`:""}`;
+    const b=document.querySelector("[data-gfuse2]"); if(b) b.onclick=()=>gfUse(b.dataset.gfuse2);
+  }catch(e){ $("gfResult").innerHTML=`<span style="color:var(--bad)">${esc(e.message)}</span>`; }
+}
+
 // ---------- Apartados ----------
 let apStatus="activo", AP={};
 const AP_LABEL={solicitado:"esperando cuota inicial",activo:"activos",completado:"pagados",vencido:"vencidos"};
@@ -1024,6 +1087,12 @@ $("portadaInfo").onclick=openPortada;
 $("tabs").onclick=e=>{ const b=e.target.closest("button[data-tab]"); if(b) showTab(b.dataset.tab); };
 $("ordSeg").onclick=e=>{ const b=e.target.closest("button[data-st]"); if(!b) return; ordStatus=b.dataset.st; document.querySelectorAll("#ordSeg button").forEach(x=>x.classList.toggle("on",x===b)); loadOrders(); };
 $("ordersList").onclick=e=>{ const r=e.target.closest("[data-resend]"); if(r) return resendReceipt(r.dataset.resend, r.dataset.mail); const p=e.target.closest("[data-pay]"); if(p) return payOrder(p.dataset.pay, p.dataset.hasUser==="1", p.dataset.mail); const c=e.target.closest("[data-cancel]"); if(c) cancelOrder(c.dataset.cancel); };
+$("gfSeg").onclick=e=>{ const b=e.target.closest("button[data-gf]"); if(!b) return; gfStatus=b.dataset.gf; document.querySelectorAll("#gfSeg button").forEach(x=>x.classList.toggle("on",x===b)); loadGifts(); };
+$("gfCheck").onclick=gfCheck;
+$("gfList").onclick=async e=>{ const a=e.target.closest("[data-gfact]"); if(a) return gfActivate(a.dataset.gfact);
+  const u=e.target.closest("[data-gfuse]"); if(u) return gfUse(GF[u.dataset.gfuse].code);
+  const r=e.target.closest("[data-gfresend]"); if(r){ try{ const d=await adminFetch(`/admin/gifts/${r.dataset.gfresend}/resend`,{method:"POST",body:{}}); toast(d.sent?"Correo reenviado ✓":"Listo (sin correo de destino: se envió a quien compró)"); }catch(err){ toast("Error: "+err.message,{err:true}); } return; }
+  const c=e.target.closest("[data-gfcancel]"); if(c&&confirm("¿Cancelar esta tarjeta sin pagar?")){ try{ await adminFetch(`/admin/gifts/${c.dataset.gfcancel}/cancel`,{method:"POST",body:{}}); toast("Tarjeta cancelada"); loadGifts(); }catch(err){ toast("Error: "+err.message,{err:true}); } } };
 $("apSeg").onclick=e=>{ const b=e.target.closest("button[data-ap]"); if(!b) return; apStatus=b.dataset.ap; document.querySelectorAll("#apSeg button").forEach(x=>x.classList.toggle("on",x===b)); loadLayaways(); };
 $("apList").onclick=e=>{ const p=e.target.closest("[data-appay]"); if(p) return apPay(p.dataset.appay); const x=e.target.closest("[data-apext]"); if(x) return apExtend(x.dataset.apext); const c=e.target.closest("[data-apcancel]"); if(c) apCancel(c.dataset.apcancel); };
 $("clubView").onclick=e=>{ const a=e.target.closest("[data-adj]"); if(a) adjustPoints(a.dataset.adj,a.dataset.name); };

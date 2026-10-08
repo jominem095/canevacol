@@ -1505,6 +1505,38 @@ body.has-ann nav{top:34px}
 .pm-share-menu .note{font-size:.62rem;color:rgba(247,247,244,.55);padding:.45rem .5rem .1rem;line-height:1.45}
 @media(max-width:760px){.pm-share{right:3.6rem!important;top:.85rem!important;border-radius:50%;background:rgba(5,4,3,.66)!important}.pm-share-menu{right:.85rem;top:3.7rem}}
 .club-ov.try-ov{z-index:1300}
+.club-ov.gift-ov{z-index:1250}
+.gift-box{max-width:520px}
+.gcard{position:relative;aspect-ratio:1.6/1;border-radius:16px;padding:1.3rem 1.4rem;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;margin:1rem 0 1.1rem;box-shadow:0 30px 70px rgba(0,0,0,.55);transition:background .4s,color .4s;font-family:'Inter',sans-serif}
+.gcard::after{content:'';position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.14) 45%,transparent 60%);transform:translateX(-120%);animation:gShine 4.5s ease-in-out infinite;pointer-events:none}
+@keyframes gShine{0%,55%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
+.gcard[data-d=noir]{background:radial-gradient(ellipse at 80% 0%,#2a251c,#050505 70%);color:#f7f7f4;border:1px solid #c9b38a}
+.gcard[data-d=champagne]{background:linear-gradient(135deg,#e2cfa6,#b89a64);color:#050505;border:1px solid #8a6f3e}
+.gcard[data-d=perla]{background:linear-gradient(135deg,#fbf9f4,#e9e3d6);color:#050505;border:1px solid #c9b38a}
+.gcard .gt{display:flex;justify-content:space-between;align-items:flex-start}
+.gcard .gl{font-family:'Cormorant Garamond',Georgia,serif;font-size:1.25rem;letter-spacing:.42em}
+.gcard .gk{font-size:.52rem;letter-spacing:.3em;text-transform:uppercase;opacity:.75}
+.gcard .ga{font-family:'Cormorant Garamond',Georgia,serif;font-size:2.6rem;line-height:1}
+.gcard .gn{font-size:.7rem;letter-spacing:.06em;opacity:.85}
+.gcard .gc{display:inline-block;font-family:'Courier New',monospace;font-size:.82rem;letter-spacing:.14em;border:1px dashed currentColor;padding:.25rem .5rem;margin-top:.4rem}
+.gtabs{display:grid;grid-template-columns:1fr 1fr;border:1px solid rgba(247,247,244,.2);margin-bottom:1rem}
+.gtabs button{background:none;border:0;color:rgba(247,247,244,.65);padding:.6rem;font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;cursor:pointer}
+.gtabs button.on{background:#f7f7f4;color:#050505}
+.gsec{font-size:.56rem;letter-spacing:.24em;text-transform:uppercase;color:#c9b38a;margin:1rem 0 .5rem}
+.gchips{display:flex;flex-wrap:wrap;gap:.4rem}
+.gchips button{background:#0f0f0e;border:1px solid rgba(247,247,244,.2);color:#f7f7f4;padding:.55rem .75rem;font-size:.74rem;cursor:pointer}
+.gchips button.on{border-color:#c9b38a;background:rgba(201,179,138,.15)}
+.gchips .sw{width:32px;height:32px;padding:0;border-radius:50%}
+.gchips .sw.on{outline:2px solid #c9b38a;outline-offset:2px}
+.gf{width:100%;background:#0b0b0a;border:1px solid rgba(247,247,244,.22);color:#f7f7f4;padding:.7rem .8rem;font:inherit;font-size:.84rem;outline:none;margin-bottom:.5rem}
+.gf:focus{border-color:#c9b38a}
+textarea.gf{min-height:74px;resize:vertical}
+.grow{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.gopt{display:flex;gap:.5rem;align-items:center;font-size:.76rem;margin:.3rem 0;color:rgba(247,247,244,.85)}
+.gbuy{display:block;width:100%;margin-top:.9rem;padding:.95rem;background:#f7f7f4;color:#050505;border:0;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;font-weight:600;cursor:pointer}
+.gbuy:disabled{opacity:.5}
+.gnote{font-size:.66rem;line-height:1.55;color:rgba(247,247,244,.55);margin-top:.7rem}
+.gmsg{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-size:1.15rem;line-height:1.5;text-align:center;margin:.4rem 0 .6rem}
 .pm-tryon[hidden]{display:none!important}
 .pm-tryon{display:flex;flex-direction:column;align-items:flex-start;gap:.2rem;width:100%;margin-top:.8rem;padding:.85rem 1rem;background:linear-gradient(120deg,rgba(201,179,138,.18),rgba(247,247,244,.04));border:1px solid rgba(201,179,138,.55);color:#f7f7f4;cursor:pointer;text-align:left;font-family:'Inter',sans-serif}
 .pm-tryon span{font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;font-weight:600}
@@ -1654,6 +1686,7 @@ body.has-ann nav{top:34px}
   </ul>
   <div class="nav-actions">
     <div class="nsocial" id="navSocial"></div>
+    <button class="nclub" id="navGift" type="button" hidden>🎁 Regalo</button>
     <button class="nclub" id="navClub" type="button" hidden>Club Caneva</button>
     <button class="ncart" id="navCart" type="button" aria-label="Abrir Bolsa Caneva">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8a3 3 0 0 1 6 0"/></svg>
@@ -1670,6 +1703,7 @@ body.has-ann nav{top:34px}
   <a href="#nosotros">Nosotros</a>
   <a href="#agente">Asistente</a>
   <div class="msocial" id="mSocial"></div>
+  <button class="mclub" id="mobileGift" type="button" hidden>🎁 Tarjeta Regalo</button>
   <button class="mclub" id="mobileClub" type="button" hidden>Club Caneva</button>
   <button class="mcart" id="mobileCart" type="button">Bolsa · <b id="mobileCartCount">0</b></button>
   <a class="mwa" href="https://wa.me/573057637089" target="_blank"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg> WhatsApp</a>
@@ -2953,6 +2987,7 @@ document.getElementById('csend').addEventListener('click',sendChat);
   });
 })();
 </script>
+<div class="club-ov gift-ov" id="giftOv" aria-hidden="true"><div class="club-box gift-box" role="dialog" aria-modal="true" aria-label="Tarjeta Regalo CANEVA"><button class="club-x" type="button" id="giftX" aria-label="Cerrar">×</button><div id="giftBody"></div></div></div>
 <div class="club-ov try-ov" id="tryOv" aria-hidden="true"><div class="club-box" role="dialog" aria-modal="true" aria-label="Probador virtual Caneva"><button class="club-x" type="button" id="tryX" aria-label="Cerrar">×</button><div id="tryBody"></div></div></div>
 <div class="club-ov" id="clubOv" aria-hidden="true"><div class="club-box" role="dialog" aria-modal="true" aria-label="Club Caneva"><button class="club-x" type="button" id="clubX" aria-label="Cerrar">×</button><div id="clubBody"></div></div></div>
 <script id="v23-club-js">
@@ -3276,6 +3311,88 @@ document.getElementById('csend').addEventListener('click',sendChat);
   var tb=document.getElementById('pmTryon');if(tb)tb.addEventListener('click',function(){var p=curProduct();if(p)tryStart([p]);});
   var _rab=renderApartarBtn;renderApartarBtn=function(){_rab();try{renderTryBtn();}catch(e){}};window.renderApartarBtn=renderApartarBtn;
 
+  // ---------- Tarjetas Regalo: buy by WhatsApp, delivered by e-mail (now or on a date), balance check ----------
+  function giftCfg(){var g=(C.cfg&&C.cfg.gift)||{};return {enabled:!!g.enabled,amounts:(g.amounts&&g.amounts.length)?g.amounts:[50000,100000,150000,200000],min:g.minCustom||30000,months:g.months||12};}
+  function giftOn(){return giftCfg().enabled;}
+  var gov=document.getElementById('giftOv'),gbody=document.getElementById('giftBody');
+  var G={tab:'buy',amount:0,design:'noir',toName:'',fromName:'',toEmail:'',message:'',when:'now',date:'',buyer:''};
+  function gshow(){gov.classList.add('open');gov.setAttribute('aria-hidden','false');}
+  function gclose(){gov.classList.remove('open');gov.setAttribute('aria-hidden','true');}
+  document.getElementById('giftX').onclick=gclose;gov.addEventListener('click',function(e){if(e.target===gov)gclose();});
+  function gdate(iso,y){try{return new Date(iso).toLocaleDateString('es-CO',y?{day:'numeric',month:'long',year:'numeric'}:{day:'numeric',month:'long'});}catch(e){return '';}}
+  function gcardHtml(g){return '<div class="gcard" data-d="'+esc(g.design||'noir')+'"><div class="gt"><span class="gl">CΛNEVΛ</span><span class="gk">Tarjeta regalo</span></div><div><div class="ga">'+(g.amount?money(g.amount):'$—')+'</div><div class="gn">Para <b>'+esc(g.toName||'alguien especial')+'</b>'+(g.fromName?' · De '+esc(g.fromName):'')+'</div>'+(g.code?'<div class="gc">'+esc(g.code)+'</div>':'')+'</div></div>';}
+  function openGift(tab){if(!giftOn())return;G.tab=tab||'buy';if(!G.amount)G.amount=giftCfg().amounts[1]||giftCfg().amounts[0];if(C.user){G.buyer=G.buyer||C.user.email||'';G.fromName=G.fromName||C.user.firstName||'';}renderGift();gshow();var mm=document.getElementById('mm');if(mm)mm.classList.remove('o');}
+  window.openGift=openGift;
+  function renderGift(msg,err){
+    var gc=giftCfg();
+    var tabs='<div class="gtabs"><button type="button" data-gt="buy"'+(G.tab==='buy'?' class="on"':'')+'>Regalar</button><button type="button" data-gt="bal"'+(G.tab==='bal'?' class="on"':'')+'>Consultar saldo</button></div>';
+    var head='<div class="club-kicker">Tarjeta Regalo · CANEVA</div><h3 class="club-h">Regala <em>estilo</em></h3>';
+    if(G.tab==='bal'){
+      gbody.innerHTML=head+tabs+'<p class="club-p">Escribe el código de tu tarjeta para ver cuánto saldo te queda.</p><input class="gf" id="gCode" placeholder="REGALO-XXXX-XXXX" autocomplete="off" style="text-transform:uppercase;letter-spacing:.12em"><button type="button" class="gbuy" id="gCheck">Consultar saldo</button><div id="gBal"></div><div class="club-msg'+(err?' err':'')+'" id="gMsg">'+(msg||'')+'</div>';
+      bindGiftTabs();
+      document.getElementById('gCheck').onclick=async function(){var code=document.getElementById('gCode').value.trim();if(!code)return;var m=document.getElementById('gMsg');m.className='club-msg';m.textContent='Consultando…';
+        try{var d=await api('/gift/balance',{method:'POST',body:{code:code}});m.textContent='';document.getElementById('gBal').innerHTML=gcardHtml({amount:d.balance,design:'noir',toName:'ti'})+'<p class="gnote" style="text-align:center">'+(d.status==='activa'?'Saldo disponible de '+money(d.amount)+' iniciales · válida hasta el '+gdate(d.expiresAt,1):d.status==='agotada'?'Esta tarjeta ya se usó completa.':'Esta tarjeta venció.')+'</p>';}
+        catch(e){m.className='club-msg err';m.textContent=e.message;}};
+      return;
+    }
+    var chips=gc.amounts.map(function(a){return '<button type="button" data-ga="'+a+'"'+(G.amount===a?' class="on"':'')+'>'+money(a)+'</button>';}).join('')+'<button type="button" data-ga="other"'+(gc.amounts.indexOf(G.amount)<0?' class="on"':'')+'>Otro valor</button>';
+    var sw={noir:'radial-gradient(#2a251c,#050505)',champagne:'linear-gradient(135deg,#e2cfa6,#b89a64)',perla:'linear-gradient(135deg,#fbf9f4,#e9e3d6)'};
+    var designs=Object.keys(sw).map(function(k){return '<button type="button" class="sw'+(G.design===k?' on':'')+'" data-gd="'+k+'" title="'+k+'" aria-label="Diseño '+k+'" style="background:'+sw[k]+'"></button>';}).join('');
+    gbody.innerHTML=head+tabs+'<div id="gPrev">'+gcardHtml(G)+'</div>'+
+      '<div class="gsec">Valor</div><div class="gchips" id="gAmts">'+chips+'</div>'+
+      '<input class="gf" id="gOther" type="text" inputmode="numeric" placeholder="Desde '+money(gc.min)+'" style="margin-top:.5rem;'+(gc.amounts.indexOf(G.amount)<0?'':'display:none')+'" value="'+(gc.amounts.indexOf(G.amount)<0&&G.amount?G.amount:'')+'">'+
+      '<div class="gsec">Diseño</div><div class="gchips" id="gDes">'+designs+'</div>'+
+      '<div class="gsec">Para quién</div><div class="grow"><input class="gf" id="gTo" placeholder="Su nombre *" maxlength="60" value="'+esc(G.toName)+'"><input class="gf" id="gFrom" placeholder="De parte de" maxlength="60" value="'+esc(G.fromName)+'"></div>'+
+      '<input class="gf" id="gToMail" type="email" inputmode="email" placeholder="Su correo (para enviársela)" value="'+esc(G.toEmail)+'">'+
+      '<textarea class="gf" id="gMsgIn" maxlength="300" placeholder="Escribe un mensaje especial (opcional)">'+esc(G.message)+'</textarea>'+
+      '<div class="gsec">Entrega</div><label class="gopt"><input type="radio" name="gwhen" value="now"'+(G.when==='now'?' checked':'')+'> Apenas confirmemos el pago</label><label class="gopt"><input type="radio" name="gwhen" value="date"'+(G.when==='date'?' checked':'')+'> Programar fecha (ej: su cumpleaños)</label>'+
+      '<input class="gf" id="gDate" type="date" style="'+(G.when==='date'?'':'display:none')+'" value="'+esc(G.date)+'">'+
+      '<div class="gsec">Tu correo</div><input class="gf" id="gBuyer" type="email" inputmode="email" placeholder="Para enviarte la confirmación *" value="'+esc(G.buyer)+'">'+
+      '<button type="button" class="gbuy" id="gBuy">Regalar '+(G.amount?money(G.amount):'')+' · pagar por WhatsApp</button>'+
+      '<p class="gnote">Pagas por WhatsApp. Cuando confirmemos el pago, la tarjeta llega por correo con su código único. Vale '+gc.months+' meses y se puede usar en una o varias compras.</p>'+
+      '<div class="club-msg'+(err?' err':'')+'" id="gMsg">'+(msg||'')+'</div>';
+    bindGiftTabs();
+    var prev=function(){document.getElementById('gPrev').innerHTML=gcardHtml(G);var b=document.getElementById('gBuy');if(b)b.textContent='Regalar '+(G.amount?money(G.amount):'')+' · pagar por WhatsApp';};
+    gbody.querySelectorAll('[data-ga]').forEach(function(b){b.onclick=function(){var o=document.getElementById('gOther');gbody.querySelectorAll('[data-ga]').forEach(function(x){x.classList.toggle('on',x===b);});if(b.dataset.ga==='other'){o.style.display='';o.focus();G.amount=parseInt(o.value.replace(/\D/g,''),10)||0;}else{o.style.display='none';G.amount=+b.dataset.ga;}prev();};});
+    document.getElementById('gOther').oninput=function(){this.value=this.value.replace(/\D/g,'');G.amount=parseInt(this.value,10)||0;prev();};
+    gbody.querySelectorAll('[data-gd]').forEach(function(b){b.onclick=function(){G.design=b.dataset.gd;gbody.querySelectorAll('[data-gd]').forEach(function(x){x.classList.toggle('on',x===b);});prev();};});
+    [['gTo','toName'],['gFrom','fromName'],['gToMail','toEmail'],['gMsgIn','message'],['gBuyer','buyer'],['gDate','date']].forEach(function(f){var i=document.getElementById(f[0]);i.oninput=function(){G[f[1]]=i.value;if(f[0]==='gTo'||f[0]==='gFrom')prev();};});
+    gbody.querySelectorAll('[name=gwhen]').forEach(function(r){r.onchange=function(){G.when=r.value;document.getElementById('gDate').style.display=G.when==='date'?'':'none';};});
+    document.getElementById('gBuy').onclick=buyGift;
+  }
+  function bindGiftTabs(){gbody.querySelectorAll('[data-gt]').forEach(function(b){b.onclick=function(){G.tab=b.dataset.gt;renderGift();};});}
+  async function buyGift(){
+    var gc=giftCfg(),m=document.getElementById('gMsg'),err=function(t){m.className='club-msg err';m.textContent=t;};
+    if(!G.amount||(gc.amounts.indexOf(G.amount)<0&&G.amount<gc.min))return err('El valor mínimo es '+money(gc.min)+'.');
+    if(!G.toName.trim())return err('Escribe el nombre de quien recibe el regalo.');
+    if(G.toEmail&&!validEmail(G.toEmail.trim()))return err('Revisa el correo de quien recibe.');
+    if(!validEmail(G.buyer.trim()))return err('Escribe tu correo para enviarte la confirmación.');
+    if(G.when==='date'&&!G.date)return err('Elige la fecha de entrega.');
+    var win=null;try{win=window.open('','_blank');}catch(e){}
+    var b=document.getElementById('gBuy');b.disabled=true;m.className='club-msg';m.textContent='Preparando tu regalo…';
+    try{
+      var d=await api('/gift',{method:'POST',body:{amount:G.amount,design:G.design,toName:G.toName.trim(),fromName:G.fromName.trim(),toEmail:G.toEmail.trim(),message:G.message.trim(),buyerEmail:G.buyer.trim(),sendDate:G.when==='date'?G.date:''}});
+      var g=d.gift;
+      var txt='Hola Caneva ✨ Quiero comprar una TARJETA REGALO 🎁\n💳 Valor: '+money(g.amount)+'\n🎀 Para: '+g.toName+(g.toEmail?' ('+g.toEmail+')':'')+'\n'+(g.fromName?'💌 De: '+g.fromName+'\n':'')+(g.sendAt?'📅 Entregar el: '+gdate(g.sendAt)+'\n':'')+'🔖 Ref. regalo: '+g.ref+'\n\n¿Me envías los datos para pagar?';
+      var url='https://wa.me/'+WA_PHONE+'?text='+encodeURIComponent(txt);
+      if(win){win.location.href=url;}else{location.href=url;}
+      gbody.innerHTML='<div class="club-kicker">Tarjeta Regalo · CANEVA</div><h3 class="club-h">¡Tu regalo está <em>listo</em>!</h3>'+gcardHtml(g)+
+        '<p class="club-p">Envíanos el mensaje de WhatsApp para pagar (referencia <b>'+esc(g.ref)+'</b>). Cuando confirmemos el pago, '+(g.toEmail?'la tarjeta le llegará a <b>'+esc(g.toEmail)+'</b>'+(g.sendAt?' el '+gdate(g.sendAt):'')+' y a ti la confirmación.':'te la enviamos a tu correo para que se la entregues.')+'</p>'+
+        '<a class="gbuy" style="text-align:center;text-decoration:none" href="'+esc(url)+'" target="_blank" rel="noopener">Abrir WhatsApp de nuevo</a>';
+      G.toName='';G.toEmail='';G.message='';G.date='';G.when='now';
+      if(window.canevaTrack)try{canevaTrack('InitiateCheckout',{value:g.amount,currency:'COP',content_name:'Tarjeta Regalo'});}catch(e){}
+    }catch(e){if(win)try{win.close();}catch(x){}err(e.message);b.disabled=false;}
+  }
+  async function viewGift(id){
+    try{var d=await api('/gift/view?id='+encodeURIComponent(id));var g=d.gift;
+      gbody.innerHTML='<div class="club-kicker">Tarjeta Regalo · CANEVA</div><h3 class="club-h">'+(g.status==='solicitada'?'Tu regalo se está <em>preparando</em>':'Un regalo <em>para ti</em>')+'</h3>'+gcardHtml(g)+(g.message?'<p class="gmsg">“'+esc(g.message)+'”</p>':'')+
+        (g.status==='activa'?'<p class="club-p">Saldo disponible: <b>'+money(g.balance)+'</b>. Elige lo que más te guste y, al pedir por WhatsApp, comparte tu código. Válida hasta el '+gdate(g.expiresAt,1)+'.</p><button type="button" class="gbuy" id="gShop">Elegir mis prendas</button>':g.status==='solicitada'?'<p class="club-p">Apenas confirmemos el pago, la tarjeta se activa y llega por correo.</p>':'<p class="club-p">Esta tarjeta ya fue usada o venció.</p>');
+      var sh=document.getElementById('gShop');if(sh)sh.onclick=function(){gclose();location.hash='catalogo';};
+      gshow();
+    }catch(e){}
+  }
+  ['navGift','mobileGift'].forEach(function(id){var b=document.getElementById(id);if(b)b.addEventListener('click',function(){openGift('buy');});});
+
   // ---------- Hero chips: what only CANEVA has (shown only when active) ----------
   function renderPerks(){
     var el=document.getElementById('bwPerks');if(!el)return;
@@ -3283,6 +3400,7 @@ document.getElementById('csend').addEventListener('click',sendChat);
     if(tryOn())items.push(['✦ Pruébatela <b>con IA</b>',function(){location.hash='catalogo';}]);
     if(layOn())items.push(['✦ Aparta con el <b>'+lay().pct+'%</b>',function(){location.hash='catalogo';}]);
     if(active())items.push(['✦ Club · <b>'+loyalty().welcome+' pts</b> de regalo',function(){openClub();}]);
+    if(giftOn())items.push(['✦ <b>Tarjeta</b> Regalo',function(){openGift('buy');}]);
     el.innerHTML=items.map(function(it,i){return '<button type="button" data-perk="'+i+'" style="animation-delay:'+((window.CV_INTRO?1.9:.25)+i*.12)+'s">'+it[0]+'</button>';}).join('');
     el.querySelectorAll('[data-perk]').forEach(function(b){b.onclick=items[+b.dataset.perk][1];});
   }
@@ -3290,7 +3408,9 @@ document.getElementById('csend').addEventListener('click',sendChat);
   // ---------- Wiring ----------
   ['navClub','mobileClub'].forEach(function(id){var b=document.getElementById(id);if(b)b.addEventListener('click',openClub);});
   if(typeof renderCart==='function'){var _rc=renderCart;window.renderCart=renderCart=function(){var r=_rc.apply(this,arguments);try{renderCartNote();}catch(e){}return r;};}
-  function init(cfg){C.cfg=cfg||{};renderButtons();renderCartNote();try{renderApartarBtn();}catch(e){}try{renderPerks();}catch(e){}if(active()&&C.token)loadAccount();
+  function init(cfg){C.cfg=cfg||{};renderButtons();renderCartNote();try{renderApartarBtn();}catch(e){}try{renderPerks();}catch(e){}
+    ['navGift','mobileGift'].forEach(function(id){var b=document.getElementById(id);if(b)b.hidden=!giftOn();});
+    try{var gm=location.search.match(/[?&]regalo=([a-z0-9]+)/);if(giftOn()&&!init.gdone){init.gdone=1;if(gm&&gm[1].length===24)setTimeout(function(){viewGift(gm[1]);},500);else if(gm)setTimeout(function(){openGift('buy');},500);}}catch(e){}if(active()&&C.token)loadAccount();
     // Link from the guest receipt e-mail (?club=1) opens the Club directly
     try{if(active()&&/[?&]club=1\b/.test(location.search)&&!init.done){init.done=1;setTimeout(openClub,400);}}catch(e){}}
   var prev=window.applySiteConfig;
