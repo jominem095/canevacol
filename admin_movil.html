@@ -223,6 +223,7 @@ main{padding:14px 16px 120px}
   </div>
   <p class="muted" style="font-size:12px;line-height:1.6">Se guarda solo en este celular para no pedirlo cada vez. Úsalo únicamente en tu teléfono personal.</p>
   <button class="btn" id="loginBtn">Entrar</button>
+  <button class="btn ghost instbtn hidden" type="button">📲 Instalar como app en el iPhone</button>
 </section>
 
 <!-- Product list -->
@@ -322,6 +323,7 @@ main{padding:14px 16px 120px}
 <section id="sSheet" class="sheet hidden">
   <div class="grab"></div>
   <h2 class="ptitle">Ajustes de la tienda</h2>
+  <button class="btn ghost instbtn hidden" type="button" style="margin:4px 0 6px">📲 Instalar el admin como app en el iPhone</button>
   <div class="sect">Redes sociales</div>
   <div class="field"><label>Instagram</label><input id="sIg" type="text" placeholder="@caneva.col o enlace"></div>
   <div class="field"><label>TikTok</label><input id="sTt" type="text" placeholder="@caneva.col o enlace"></div>
@@ -1293,10 +1295,13 @@ token()?showList():showLogin();
 (function(){
   const ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
   const installed=navigator.standalone===true||matchMedia("(display-mode: standalone)").matches;
-  if(!ios||installed||getLS("caneva_inst_hint")==="x") return;
-  setTimeout(()=>$("instHint").classList.remove("hidden"),2500);
+  if(!ios||installed) return;
+  const guide=on=>{ $("instGuide").classList.toggle("hidden",!on); $("instHint").classList.add("hidden"); };
+  // Always reachable: buttons on the login screen and in Ajustes, plus ?instalar=1
+  document.querySelectorAll(".instbtn").forEach(b=>{ b.classList.remove("hidden"); b.onclick=()=>{ if(!$("sSheet").classList.contains("hidden")) closeSettings(); guide(true); }; });
+  if(/[?&]instalar=1/.test(location.search)) setTimeout(()=>guide(true),600);
+  else if(getLS("caneva_inst_hint")!=="x") setTimeout(()=>$("instHint").classList.remove("hidden"),2500);
   $("instX").onclick=e=>{ e.stopPropagation(); $("instHint").classList.add("hidden"); setLS("caneva_inst_hint","x"); };
-  const guide=on=>{ $("instGuide").classList.toggle("hidden",!on); $("instHint").classList.toggle("hidden",on); };
   $("instHint").onclick=()=>guide(true);
   $("instOk").onclick=()=>guide(false);
   $("instGuide").onclick=e=>{ if(e.target.id==="instGuide") guide(false); };
