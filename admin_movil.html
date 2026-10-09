@@ -82,7 +82,16 @@ main{padding:14px 16px 120px}
 .login{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:calc(24px + env(safe-area-inset-top)) 24px 24px}
 /* iPhone app install hint */
 .inst{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:9;display:flex;gap:12px;align-items:center;background:var(--w);color:var(--k);border-radius:16px;padding:12px 14px;box-shadow:0 14px 40px rgba(0,0,0,.6);font-size:13px;line-height:1.45}
-.inst img{width:44px;height:44px;border-radius:10px;flex:none}.inst b{font-weight:600}.inst button{flex:none;background:none;border:0;font-size:18px;color:var(--k);padding:4px}
+.inst img{width:44px;height:44px;border-radius:10px;flex:none}.inst{cursor:pointer}
+.instg{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.78);display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding:16px 16px calc(70px + env(safe-area-inset-bottom))}
+.instbox{width:100%;max-width:420px;background:var(--k);border:1px solid var(--b);border-radius:20px;padding:18px}
+.instico{display:block;width:64px;height:64px;border-radius:14px;margin:0 auto}
+.inststep{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--b);font-size:14px;line-height:1.5}
+.inststep>b{flex:none;width:26px;height:26px;border-radius:50%;background:var(--w);color:var(--k);display:flex;align-items:center;justify-content:center;font-size:13px}
+.shb{display:inline-block;border:1.5px solid var(--w);border-radius:4px;width:14px;height:16px;position:relative;vertical-align:-3px;margin:0 2px}.shb:after{content:"↑";position:absolute;left:1px;top:-7px;font-size:11px;font-weight:700}
+.addb{display:inline-flex;width:18px;height:18px;border:1.5px solid var(--w);border-radius:5px;align-items:center;justify-content:center;font-size:12px;vertical-align:-3px}
+.instarrow{position:absolute;left:50%;bottom:calc(10px + env(safe-area-inset-bottom));transform:translateX(-50%);font-size:40px;color:var(--w);animation:instb 1s ease-in-out infinite}
+@keyframes instb{50%{transform:translate(-50%,10px)}}.inst b{font-weight:600}.inst button{flex:none;background:none;border:0;font-size:18px;color:var(--k);padding:4px}
 .inst .sh{display:inline-block;border:1.5px solid var(--k);border-radius:4px;width:14px;height:16px;position:relative;vertical-align:-3px;margin:0 2px}.inst .sh:after{content:"↑";position:absolute;left:1px;top:-6px;font-size:11px;font-weight:700}
 .login h1{font-family:"Cormorant Garamond",serif;font-weight:300;font-size:40px;line-height:1;margin:18px 0 10px}
 .field{margin-top:14px}
@@ -407,7 +416,20 @@ main{padding:14px 16px 120px}
   <button class="btn ghost" id="delNo" type="button">No, cancelar</button>
 </section>
 
-<div id="instHint" class="inst hidden"><img src="admin-icon-180.png" alt=""><div>Instala el admin como <b>app</b>: toca <span class="sh"></span> <b>Compartir</b> y luego <b>"Agregar a inicio"</b>.</div><button type="button" id="instX" aria-label="Cerrar">✕</button></div>
+<div id="instHint" class="inst hidden" role="button" tabindex="0"><img src="admin-icon-180.png" alt=""><div><b>Instala el admin como app</b><br>Toca aquí y te muestro cómo (30 segundos).</div><button type="button" id="instX" aria-label="Cerrar">✕</button></div>
+<div id="instGuide" class="instg hidden" role="dialog" aria-modal="true">
+  <div class="instbox">
+    <img src="admin-icon-180.png" alt="" class="instico">
+    <h3 class="ptitle" style="margin:10px 0 4px;text-align:center">Caneva Admin en tu iPhone</h3>
+    <p class="muted" style="text-align:center;font-size:13px;margin:0 0 14px">El iPhone no deja que una página se instale sola: son 3 toques en Safari.</p>
+    <div class="inststep"><b>1</b><span>Toca el botón <span class="shb"></span> <b>Compartir</b> en la barra de Safari (abajo, en el centro).</span></div>
+    <div class="inststep"><b>2</b><span>Desliza hacia abajo y toca <b>"Agregar a inicio"</b> <span class="addb">＋</span></span></div>
+    <div class="inststep"><b>3</b><span>Toca <b>Agregar</b> arriba a la derecha. Abre <b>Caneva Admin</b> desde tu pantalla de inicio y pega el token una vez.</span></div>
+    <p class="hint" style="margin-top:10px">¿No ves "Compartir"? Toca una vez la dirección de la página para que aparezca la barra de Safari. Si estás en Chrome, abre esta página en Safari.</p>
+    <button class="btn" id="instOk" type="button">Entendido</button>
+  </div>
+  <div class="instarrow">↓</div>
+</div>
 
 <div id="toast" class="toast hidden"></div>
 <div id="busy" class="busy hidden"><div class="spin"></div><div id="busyMsg">Publicando…</div></div>
@@ -1273,7 +1295,11 @@ token()?showList():showLogin();
   const installed=navigator.standalone===true||matchMedia("(display-mode: standalone)").matches;
   if(!ios||installed||getLS("caneva_inst_hint")==="x") return;
   setTimeout(()=>$("instHint").classList.remove("hidden"),2500);
-  $("instX").onclick=()=>{ $("instHint").classList.add("hidden"); setLS("caneva_inst_hint","x"); };
+  $("instX").onclick=e=>{ e.stopPropagation(); $("instHint").classList.add("hidden"); setLS("caneva_inst_hint","x"); };
+  const guide=on=>{ $("instGuide").classList.toggle("hidden",!on); $("instHint").classList.toggle("hidden",on); };
+  $("instHint").onclick=()=>guide(true);
+  $("instOk").onclick=()=>guide(false);
+  $("instGuide").onclick=e=>{ if(e.target.id==="instGuide") guide(false); };
 })();
 </script>
 </body>
