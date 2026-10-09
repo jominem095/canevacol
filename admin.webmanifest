@@ -1,0 +1,17 @@
+{
+  "name": "CANEVA Admin",
+  "short_name": "Caneva Admin",
+  "description": "Administra la tienda CANEVA: productos, pedidos, inventario y reportes.",
+  "lang": "es",
+  "start_url": "admin_movil.html?app=1",
+  "scope": "admin_movil.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#050505",
+  "theme_color": "#050505",
+  "icons": [
+    { "src": "admin-icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "admin-icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "admin-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
