@@ -120,6 +120,32 @@ pre{white-space:pre-wrap;background:var(--k);border:1px solid var(--b);border-ra
 .clbusy{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;font-size:14px}
 .clspin{width:34px;height:34px;border:3px solid var(--b);border-top-color:var(--w);border-radius:50%;animation:clsp 1s linear infinite}@keyframes clsp{to{transform:rotate(360deg)}}
 @media(max-width:700px){.clm2{grid-template-columns:1fr}.clbar{left:12px;right:12px;transform:none;justify-content:space-between}}
+
+/* Product editor (mirrors the mobile sheet) */
+.clmbox{width:min(1040px,100%)}
+.cmgrid{display:grid;grid-template-columns:minmax(0,420px) 1fr;gap:26px}
+.cmphoto{position:relative;aspect-ratio:3/4;border-radius:14px;overflow:hidden;background:var(--k3);display:flex;align-items:center;justify-content:center;border:1px dashed transparent}
+.cmphoto.on{border-color:var(--w)}.cmphoto img{width:100%;height:100%;object-fit:cover}
+.cmempty{text-align:center;color:var(--dim);font-size:14px;line-height:1.6}.cmempty b{display:block;font-size:40px;font-weight:300;color:var(--w)}
+.cmthumbs{display:flex;gap:8px;overflow-x:auto;padding:10px 0 2px}
+.cmthumb{position:relative;flex:none;width:58px;height:76px;border-radius:8px;overflow:hidden;border:2px solid transparent;padding:0;background:var(--k3)}
+.cmthumb.on{border-color:var(--w)}.cmthumb img{width:100%;height:100%;object-fit:cover;display:block}
+.cmthumb .star{position:absolute;left:3px;top:3px;background:var(--w);color:var(--k);font-size:10px;border-radius:4px;padding:0 4px}
+.cmthumb .dot{position:absolute;right:3px;top:3px;width:8px;height:8px;border-radius:50%;background:var(--ok)}
+.cmphacts{display:flex;gap:10px;margin-top:8px}.cmphacts button{flex:1;padding:11px;font-size:13px}
+.cmadd{display:block;text-align:center;border:1px solid var(--b);border-radius:12px;padding:13px;font-weight:500;cursor:pointer;margin-top:10px;font-size:14px}.cmadd:hover{border-color:var(--w)}.cmadd input{display:none}
+.cmright .clmhead h2{margin-bottom:4px}
+.cmvis{margin:6px 0 4px;font-size:14px}.cmvis b{color:var(--w);font-weight:600}
+.cmf{margin-top:14px}.cmf label{display:block;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-bottom:6px}
+.cmf input,.cmf select,.cmf textarea{width:100%;background:var(--k2);border:1px solid var(--b);border-radius:10px;padding:13px 14px;font-size:15px;color:var(--w);font-family:inherit;outline:none}
+.cmf textarea{min-height:110px;resize:vertical}.cmf input:focus,.cmf select:focus,.cmf textarea:focus{border-color:var(--w)}
+.cm2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cminv{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--b);border-radius:10px;padding:12px;font-size:13px;background:var(--k2);text-decoration:none}
+.cmbtn{display:block;width:100%;margin-top:12px;padding:16px;font-size:15px}
+.cmbtn.ghost{background:none;color:var(--w);border:1px solid var(--b)}
+.cmbtn.danger{background:none;color:var(--bad);border:1px solid rgba(255,180,168,.4)}
+.cmbtn:first-of-type{margin-top:18px}
+@media(max-width:820px){.cmgrid{grid-template-columns:1fr}.cmphoto{max-height:56vh}}
 </style>
 </head>
 <body>
@@ -554,21 +580,17 @@ function clRowHtml(k){
   const stockCell=managed?`<span class="cltag ${clInvTotal(p)<=0?"r":""}" title="${escapeAttr(Object.entries(p.inv).map(([z,q])=>z+": "+q).join(" · "))}">${clInvTotal(p)} und · inventario</span>`
     :`<input class="clin num" data-f="stock" value="${escapeAttr(p.stock)}" placeholder="—">`;
   return `<tr data-k="${k}">
-    <td><div class="clph" data-ph="${k}" title="Clic o arrastra fotos aquí">${ph.length?`<img src="${escapeAttr(clThumb(ph[0]))}" alt="" loading="lazy">`:"<span>+ Foto</span>"}${ph.length>1?`<b>${ph.length}</b>`:""}</div></td>
+    <td><div class="clph" data-ph="${k}" title="Clic para editar · arrastra fotos aquí">${ph.length?`<img src="${escapeAttr(clThumb(ph[0]))}" alt="" loading="lazy">`:"<span>+ Foto</span>"}${ph.length>1?`<b>${ph.length}</b>`:""}</div></td>
     <td><input class="clin name" data-f="nombre" value="${escapeAttr(p.nombre)}" placeholder="Nombre del producto"></td>
     <td><input class="clin" data-f="categoria" value="${escapeAttr(p.categoria)}" list="clCatList" placeholder="Categoría"></td>
     <td><input class="clin num" data-f="precio" value="${escapeAttr(p.precio)}" placeholder="$0"></td>
     <td><input class="clin" data-f="tallas" value="${escapeAttr(p.tallas)}" placeholder="Ej: S M L"></td>
     <td>${stockCell}</td>
     <td><button type="button" class="cltog ${hidden?"off":""}" data-vis="${k}">${hidden?"Oculto":"Visible"}</button></td>
-    <td><button type="button" class="clmini" data-det="${k}">Fotos y detalle</button></td>
+    <td><button type="button" class="clmini" data-det="${k}">Editar</button></td>
     <td><button type="button" class="clx" data-del="${k}" title="${CL.deleted.has(k)?"Restaurar":"Eliminar"}">${CL.deleted.has(k)?"↺":"✕"}</button></td></tr>`;
 }
-function clNew(){
-  const key="n"+(++CL.seq);
-  CL.news.unshift({key,id:"",categoria:CL.cat!=="Todos"?CL.cat:"",nombre:"",precio:"",descripcion:"",tallas:"",stock:"",imagen:"",imagenesExtra:"",url:"",tela:"",photos:[]});
-  CL.flt="todos"; clRender(); const i=document.querySelector(`#clBody tr[data-k="${key}"] input[data-f="nombre"]`); if(i) i.focus();
-}
+function clNew(){ clOpen("new"); }
 // ---------- Photos ----------
 async function clCompress(file, base){
   const MAX=1600,Q=0.85;
@@ -583,33 +605,84 @@ async function clCompress(file, base){
   }catch(e){ const ext=(file.name.match(/\.[a-z0-9]+$/i)||[".jpg"])[0].toLowerCase(); return new File([file],base+ext,{type:file.type||"image/jpeg"}); }
 }
 function clStamp(){ const d=new Date(),p=n=>String(n).padStart(2,"0"); return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`; }
+function clRefreshRow(key){ const tr=document.querySelector(`#clBody tr[data-k="${key}"]`); if(tr) tr.outerHTML=clRowHtml(key); clBar(); }
+// ---------- Product editor (same fields and order as the mobile admin sheet) ----------
+// Works on a draft; nothing changes until "Guardar y publicar" (or "Cancelar" throws it away).
+const CL_NEWCAT="__new__";
+function clOpen(key){
+  const isNew=key==="new";
+  const p=isNew?{id:"",categoria:CL.cat!=="Todos"?CL.cat:(clCats()[0]||{}).c||"",nombre:"",precio:"",descripcion:"",tallas:"",stock:"",tela:"",imagen:"",imagenesExtra:"",url:""}:clRow(key);
+  CL.modal={key,isNew,sel:0,d:{...p,photos:isNew?[]:[...clPhotos(key)]}};
+  delete CL.modal.d.key;
+  $c("clModal").classList.remove("hidden"); document.body.style.overflow="hidden"; clModalRender();
+  setTimeout(()=>{ const n=$c("cmNombre"); if(n&&isNew) n.focus(); },50);
+}
+function clClose(){ CL.modal=null; $c("clModal").classList.add("hidden"); document.body.style.overflow=""; }
+function clModalDirty(){ if(!CL.modal) return false; const m=CL.modal; if(m.isNew) return !!(m.d.nombre||m.d.photos.length);
+  const o=clRow(m.key), op=clPhotos(m.key); return CL_FIELDS.some(k=>k!=="imagen"&&k!=="imagenesExtra"&&String(m.d[k]||"")!==String(o[k]||""))||m.d.photos.length!==op.length||m.d.photos.some((x,i)=>x!==op[i]); }
+function clTryClose(){ if(clModalDirty()&&!confirm("¿Salir sin guardar los cambios de este producto?")) return; clClose(); }
+function clModalRender(){
+  const m=CL.modal, d=m.d, ph=d.photos, sel=Math.min(m.sel,Math.max(0,ph.length-1)); m.sel=sel;
+  const managed=!!d.inv, hidden=managed?/^ocult/i.test(d.stock):clHidden(d);
+  const cats=clCats().map(x=>x.c); if(d.categoria&&!cats.includes(d.categoria)) cats.unshift(d.categoria);
+  const invHtml=managed?`<div class="cmf"><label>Inventario</label><a class="cminv" href="admin_movil.html" target="_blank" rel="noopener"><span><b>${clInvTotal(d)}</b> unidades · ${Object.entries(d.inv).map(([z,q])=>escapeHtml(z)+" "+q).join(" · ")}</span><b>Gestionar ›</b></a></div>`
+    :`<div class="cmf"><label>Stock</label><input id="cmStock" data-cm="stock" inputmode="numeric" value="${escapeAttr(d.stock)}"></div>`;
+  $c("clMBody").innerHTML=`
+  <div class="cmgrid">
+   <div class="cmleft">
+    <div class="cmphoto" id="clDrop">${ph.length?`<img src="${escapeAttr(clThumb(ph[sel]))}" alt="">${sel===0?'<span class="clstar">★ Principal</span>':""}${ph[sel].file?'<span class="clnew">Nueva</span>':""}`:`<div class="cmempty"><b>+</b>Arrastra fotos aquí<br><small>o usa los botones de abajo</small></div>`}</div>
+    <div class="cmthumbs">${ph.map((x,i)=>`<button type="button" class="cmthumb ${i===sel?"on":""}" data-sel="${i}"><img src="${escapeAttr(clThumb(x))}" alt="">${i===0?'<span class="star">★</span>':""}${x.file?'<span class="dot"></span>':""}</button>`).join("")}</div>
+    ${ph.length?`<div class="cmphacts"><button type="button" class="secondary" data-main ${sel===0?"disabled":""}>★ Hacer principal</button><button type="button" class="secondary" data-rm>✕ Quitar foto</button></div>`:""}
+    <label class="cmadd"><input type="file" id="clMFile" accept="image/*" multiple>🖼 Agregar fotos</label>
+    <p class="mini">La foto ★ es la principal. Las demás salen en el carrusel del detalle. También puedes arrastrarlas desde tu computador.</p>
+   </div>
+   <div class="cmright">
+    <div class="clmhead"><div><div class="eyeb">${m.isNew?"Nuevo producto":escapeHtml(d.categoria)}</div><h2>${escapeHtml(d.nombre||(m.isNew?"Nuevo producto":"Sin nombre"))}</h2></div><button type="button" class="clx" data-mclose title="Cerrar">✕</button></div>
+    <label class="checkrow cmvis"><input type="checkbox" id="cmVis" ${hidden?"":"checked"}><span><b>Visible en la tienda.</b> ${managed?"Si está agotada se oculta sola; vuelve cuando registres unidades en Inventario.":"Apágalo si se agotó; vuelve a prenderlo cuando llegue stock."}</span></label>
+    <div class="cmf"><label>Nombre</label><input id="cmNombre" data-cm="nombre" value="${escapeAttr(d.nombre)}"></div>
+    <div class="cm2"><div class="cmf"><label>Precio</label><input id="cmPrecio" data-cm="precio" inputmode="numeric" placeholder="85000" value="${escapeAttr(d.precio)}"></div>${invHtml}</div>
+    <div class="cmf"><label>Tallas</label><input data-cm="tallas" placeholder="S, M, L  ·  6, 8, 10  ·  Única" value="${escapeAttr(d.tallas)}"></div>
+    <div class="cmf"><label>Categoría</label><select id="cmCat">${cats.map(c=>`<option ${c===d.categoria?"selected":""}>${escapeHtml(c)}</option>`).join("")}<option value="${CL_NEWCAT}">+ Nueva categoría…</option></select></div>
+    <div class="cmf hidden" id="cmNewCatF"><label>Nueva categoría</label><input id="cmNewCat"></div>
+    <div class="cmf"><label>Tela</label><textarea data-cm="tela" maxlength="300" style="min-height:70px" placeholder="Ej: Lino 100%, fresco y liviano. Lavar a mano.">${escapeHtml(d.tela)}</textarea></div>
+    <div class="cmf"><label>Descripción</label><textarea data-cm="descripcion" maxlength="500">${escapeHtml(d.descripcion)}</textarea></div>
+    <button type="button" class="cmbtn" id="cmSave">${m.isNew?"Crear y publicar":"Guardar y publicar"}</button>
+    <button type="button" class="cmbtn ghost" data-mclose>Cancelar</button>
+    ${m.isNew?"":`<button type="button" class="cmbtn danger" id="cmDel">Eliminar producto</button>`}
+   </div>
+  </div>`;
+}
+function clModalSet(field,val){ CL.modal.d[field]=val; }
 async function clAddFiles(key, files){
   files=[...files].filter(f=>/^image\//.test(f.type)||/\.(jpe?g|png|webp|heic|gif)$/i.test(f.name)); if(!files.length) return;
   clBusy(true, files.length>1?`Preparando ${files.length} fotos…`:"Preparando foto…");
-  const name=norm(clRow(key).nombre)||"producto";
-  const ph=[...clPhotos(key)];
+  const inModal=CL.modal&&CL.modal.key===key;
+  const name=norm(inModal?CL.modal.d.nombre:clRow(key).nombre)||"producto";
+  const ph=inModal?CL.modal.d.photos:[...clPhotos(key)], first=ph.length;
   for(const f of files){ const file=await clCompress(f,`${name}-${clStamp()}-${++CL.seq}`); ph.push({file,src:URL.createObjectURL(file)}); }
-  clBusy(false); clEdit(key,null,ph);
-  if(CL.modal===key) clModalRender(); clRefreshRow(key);
+  clBusy(false);
+  if(inModal){ CL.modal.sel=first; clModalRender(); if(first>0) clToast("Foto agregada al carrusel. Toca ★ Hacer principal si quieres que sea la portada."); return; }
+  clEdit(key,null,ph); clRefreshRow(key);
   clToast(files.length>1?`${files.length} fotos agregadas · publica para guardarlas`:"Foto agregada · publica para guardarla");
 }
-function clRefreshRow(key){ const tr=document.querySelector(`#clBody tr[data-k="${key}"]`); if(tr) tr.outerHTML=clRowHtml(key); clBar(); }
-// ---------- Detail modal (photos, description, fabric) ----------
-function clOpen(key){ CL.modal=key; $c("clModal").classList.remove("hidden"); document.body.style.overflow="hidden"; clModalRender(); }
-function clClose(){ CL.modal=null; $c("clModal").classList.add("hidden"); document.body.style.overflow=""; }
-function clModalRender(){
-  const k=CL.modal, p=clRow(k), ph=clPhotos(k);
-  $c("clMBody").innerHTML=`
-  <div class="clmhead"><div><div class="eyeb">${escapeHtml(p.categoria||"Producto nuevo")}</div><h2>${escapeHtml(p.nombre||"Sin nombre")}</h2></div><button type="button" class="clx" data-mclose>✕</button></div>
-  <div class="clgal">${ph.map((x,i)=>`<div class="clgi ${i===0?"main":""}"><img src="${escapeAttr(clThumb(x))}" alt="">${i===0?'<span class="clstar">★ Principal</span>':""}${x.file?'<span class="clnew">Nueva</span>':""}
-    <div class="clgact">${i>0?`<button type="button" data-main="${i}" title="Hacer principal">★</button><button type="button" data-left="${i}" title="Mover">‹</button>`:""}${i<ph.length-1?`<button type="button" data-right="${i}" title="Mover">›</button>`:""}<button type="button" data-rm="${i}" title="Quitar">✕</button></div></div>`).join("")}
-    <label class="cldrop" id="clDrop"><input type="file" accept="image/*" multiple id="clMFile"><b>+</b><span>Agregar fotos<br><small>clic o arrastra aquí</small></span></label></div>
-  <p class="mini">La foto ★ es la principal (portada de la prenda). Las demás salen en el carrusel. Puedes arrastrar fotos desde tu computador.</p>
-  <div class="clm2"><div><label class="cll">Tela</label><textarea class="clta" data-mf="tela" maxlength="300" placeholder="Ej: Lino 100%, fresco y liviano.">${escapeHtml(p.tela)}</textarea></div>
-  <div><label class="cll">Descripción</label><textarea class="clta" data-mf="descripcion" maxlength="500" placeholder="Cómo es, cómo combinarla…">${escapeHtml(p.descripcion)}</textarea></div></div>
-  <div class="clmfoot"><button type="button" class="secondary" data-mclose>Listo</button></div>`;
+async function clModalSave(){
+  const m=CL.modal, d={...m.d};
+  let cat=$c("cmCat").value; if(cat===CL_NEWCAT) cat=$c("cmNewCat").value.trim();
+  d.categoria=cat; d.nombre=String(d.nombre||"").trim(); d.precio=cleanMoney(d.precio);
+  if(!d.nombre) return clToast("Falta el nombre.",true);
+  if(!d.categoria) return clToast("Falta la categoría.",true);
+  const photos=d.photos; delete d.photos;
+  if(m.isNew){ const key="n"+(++CL.seq); CL.news.unshift({...d,key,photos}); }
+  else{ const f={}; CL_FIELDS.forEach(k=>{ if(k!=="imagen"&&k!=="imagenesExtra") f[k]=d[k]; }); clEdit(m.key,f,photos); }
+  clClose(); clRender();
+  await clPublish();
 }
-function clMovePhoto(i,to){ const k=CL.modal, ph=[...clPhotos(k)]; const [x]=ph.splice(i,1); ph.splice(to,0,x); clEdit(k,null,ph); clModalRender(); clRefreshRow(k); }
+function clModalDelete(){
+  const k=CL.modal.key, p=clRow(k);
+  if(!confirm(`¿Eliminar "${p.nombre}" del catálogo?`)) return;
+  clClose(); if(k.startsWith("n")){ CL.news=CL.news.filter(x=>x.key!==k); clRender(); return; }
+  CL.deleted.add(k); clRender(); clPublish(true);
+}
 // ---------- Publish ----------
 function clPhotoRef(x){ return x.url||x.file.name; }
 function clFinal(k){
@@ -620,12 +693,12 @@ function clFinal(k){
   p.precio=cleanMoney(p.precio);
   return p;
 }
-async function clPublish(){
+async function clPublish(skipDelConfirm){
   for(const n of CL.news){ if(!n.nombre.trim()||!n.categoria.trim()) return clToast("Los productos nuevos necesitan nombre y categoría.",true); }
   for(const [k] of CL.edits){ const p=clRow(k); if(!p.nombre.trim()) return clToast("Hay un producto sin nombre.",true); }
   let tk=clToken();
   if(!tk){ tk=(prompt("Pega el ADMIN_TOKEN para publicar (se recuerda en este computador):")||"").trim(); if(!tk) return; try{ localStorage.setItem(TOKEN_KEY,tk); }catch(e){} }
-  const n=clDirtyCount(); if(CL.deleted.size&&!confirm(`Vas a eliminar ${CL.deleted.size} producto(s) de la tienda. ¿Continuar?`)) return;
+  const n=clDirtyCount(); if(CL.deleted.size&&skipDelConfirm!==true&&!confirm(`Vas a eliminar ${CL.deleted.size} producto(s) de la tienda. ¿Continuar?`)) return;
   clBusy(true,"Publicando…");
   try{
     // Apply on top of the freshest catalog so edits made from the phone are not lost
@@ -658,7 +731,7 @@ function clTab(t){
   if(t==="nube"&&!CL.list.length) clLoad();
 }
 document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>clTab(b.dataset.tab)));
-$c("clReload").onclick=clLoad; $c("clNewBtn").onclick=clNew; $c("clPub").onclick=clPublish; $c("clDisc").onclick=clDiscard;
+$c("clReload").onclick=clLoad; $c("clNewBtn").onclick=clNew; $c("clPub").onclick=()=>clPublish(); $c("clDisc").onclick=clDiscard;
 $c("clSearch").oninput=e=>{ CL.q=e.target.value; clRender(); };
 $c("clCats").onclick=e=>{ const b=e.target.closest("[data-cat]"); if(b){ CL.cat=b.dataset.cat; clRender(); } };
 $c("clFlt").onclick=e=>{ const b=e.target.closest("[data-flt]"); if(b){ CL.flt=b.dataset.flt; clRender(); } };
@@ -680,19 +753,27 @@ $c("clBody").addEventListener("dragover",e=>{ const r=e.target.closest("tr[data-
 $c("clBody").addEventListener("dragleave",e=>{ const r=e.target.closest("tr[data-k]"); if(r) r.classList.remove("drop"); });
 $c("clBody").addEventListener("drop",e=>{ const r=e.target.closest("tr[data-k]"); if(!r) return; e.preventDefault(); r.classList.remove("drop"); clAddFiles(r.dataset.k,e.dataTransfer.files); });
 $c("clMBody").addEventListener("click",e=>{
-  if(e.target.closest("[data-mclose]")) return clClose();
-  const k=CL.modal; let b;
-  if((b=e.target.closest("[data-main]"))) return clMovePhoto(Number(b.dataset.main),0);
-  if((b=e.target.closest("[data-left]"))) return clMovePhoto(Number(b.dataset.left),Number(b.dataset.left)-1);
-  if((b=e.target.closest("[data-right]"))) return clMovePhoto(Number(b.dataset.right),Number(b.dataset.right)+1);
-  if((b=e.target.closest("[data-rm]"))){ if(!confirm("¿Quitar esta foto?")) return; const ph=[...clPhotos(k)]; ph.splice(Number(b.dataset.rm),1); clEdit(k,null,ph); clModalRender(); clRefreshRow(k); }
+  if(e.target.closest("[data-mclose]")) return clTryClose();
+  const m=CL.modal; let b;
+  if((b=e.target.closest("[data-sel]"))){ m.sel=Number(b.dataset.sel); return clModalRender(); }
+  if(e.target.closest("[data-main]")){ const [x]=m.d.photos.splice(m.sel,1); m.d.photos.unshift(x); m.sel=0; return clModalRender(); }
+  if(e.target.closest("[data-rm]")){ if(!confirm("¿Quitar esta foto del producto?")) return; m.d.photos.splice(m.sel,1); m.sel=Math.max(0,m.sel-1); return clModalRender(); }
+  if(e.target.id==="cmSave") return clModalSave();
+  if(e.target.id==="cmDel") return clModalDelete();
 });
-$c("clMBody").addEventListener("change",e=>{ if(e.target.id==="clMFile"){ clAddFiles(CL.modal,e.target.files); e.target.value=""; } });
-$c("clMBody").addEventListener("input",e=>{ const t=e.target.closest("[data-mf]"); if(t){ clEdit(CL.modal,{[t.dataset.mf]:t.value}); clRefreshRow(CL.modal); } });
-$c("clMBody").addEventListener("dragover",e=>{ if(e.target.closest("#clDrop")){ e.preventDefault(); e.target.closest("#clDrop").classList.add("on"); } });
-$c("clMBody").addEventListener("drop",e=>{ if(e.target.closest("#clDrop")){ e.preventDefault(); clAddFiles(CL.modal,e.dataTransfer.files); } });
-$c("clModal").addEventListener("click",e=>{ if(e.target.id==="clModal") clClose(); });
-document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&CL.modal) clClose(); });
+$c("clMBody").addEventListener("change",e=>{
+  if(e.target.id==="clMFile"){ clAddFiles(CL.modal.key,e.target.files); e.target.value=""; return; }
+  if(e.target.id==="cmCat"){ $c("cmNewCatF").classList.toggle("hidden",e.target.value!==CL_NEWCAT); return; }
+  if(e.target.id==="cmPrecio"&&e.target.value.trim()){ e.target.value=cleanMoney(e.target.value); clModalSet("precio",e.target.value); return; }
+  if(e.target.id==="cmVis"){ const d=CL.modal.d; d.stock=e.target.checked?"":(d.inv?"oculto":"0"); const s=$c("cmStock"); if(s) s.value=d.stock; }
+});
+$c("clMBody").addEventListener("input",e=>{ const t=e.target.closest("[data-cm]"); if(!t) return; clModalSet(t.dataset.cm,t.value);
+  if(t.dataset.cm==="stock"){ const v=$c("cmVis"); if(v) v.checked=!clHidden({stock:t.value}); } });
+$c("clMBody").addEventListener("dragover",e=>{ const z=e.target.closest("#clDrop,.cmleft"); if(z){ e.preventDefault(); $c("clDrop").classList.add("on"); } });
+$c("clMBody").addEventListener("dragleave",e=>{ if(e.target.closest("#clDrop")) $c("clDrop").classList.remove("on"); });
+$c("clMBody").addEventListener("drop",e=>{ if(e.target.closest(".cmleft")){ e.preventDefault(); clAddFiles(CL.modal.key,e.dataTransfer.files); } });
+$c("clModal").addEventListener("click",e=>{ if(e.target.id==="clModal") clTryClose(); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&CL.modal) clTryClose(); });
 window.addEventListener("beforeunload",e=>{ if(clDirtyCount()){ e.preventDefault(); e.returnValue=""; } });
 clTab("nube");
 
