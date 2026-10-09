@@ -19,7 +19,7 @@ a{color:var(--w)}
 header{position:sticky;top:0;z-index:5;background:rgba(5,5,5,.94);backdrop-filter:blur(10px);border-bottom:1px solid var(--b)}
 .hrow{max-width:1120px;margin:0 auto;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px}
 .logo{font-family:"Cormorant Garamond",serif;letter-spacing:.38em;font-size:24px;font-weight:300}
-.nav{display:flex;gap:8px}
+.nav{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}.nav::-webkit-scrollbar{display:none}.nav>*{flex:none}
 .nav a,.nav span{border:1px solid var(--b);border-radius:999px;padding:8px 14px;font-size:12px;letter-spacing:.06em;text-decoration:none}
 .nav span{background:var(--w);color:var(--k);border-color:var(--w);font-weight:600}
 .wrap{max-width:1120px;margin:0 auto;padding:28px 20px 80px}
@@ -151,7 +151,7 @@ pre{white-space:pre-wrap;background:var(--k);border:1px solid var(--b);border-ra
 <body>
 <header><div class="hrow">
   <div class="logo">CΛNEVΛ</div>
-  <nav class="nav"><button type="button" data-tab="nube" class="on">Catálogo</button><button type="button" data-tab="excel">Excel</button><a href="admin_movil.html">Admin móvil ›</a></nav>
+  <nav class="nav"><button type="button" data-tab="nube" class="on">Catálogo</button><button type="button" data-tab="inventario">Inventario</button><button type="button" data-tab="reportes">Reportes</button><button type="button" data-tab="excel">Excel</button><a href="admin_movil.html">Admin móvil ›</a></nav>
 </div></header>
 <div class="wrap" id="cloudView">
   <div class="cltop"><div><div class="eyeb">Panel privado · en vivo</div><h1>Catálogo en la nube</h1>
@@ -170,6 +170,9 @@ pre{white-space:pre-wrap;background:var(--k);border:1px solid var(--b);border-ra
 <div class="clmodal hidden" id="clModal"><div class="clmbox" id="clMBody"></div></div>
 <div class="cltoast hidden" id="clToast"></div>
 <div class="clbusy hidden" id="clBusy"><div class="clspin"></div><div id="clBusyMsg">Publicando…</div></div>
+
+<div class="wrap hidden" id="invView"><div id="invBody" style="--cp-top:61px"></div></div>
+<div class="wrap hidden" id="repView"><div id="repBody"></div></div>
 
 <div class="wrap hidden" id="excelView">
   <div class="eyeb">Panel privado</div>
@@ -238,6 +241,7 @@ pre{white-space:pre-wrap;background:var(--k);border:1px solid var(--b);border-ra
   <pre id="log">—</pre></details>
 </div>
 
+<script src="admin_pro.js?v=23"></script>
 <script>
 const API_BASE = "https://caneva-ai.canevacol.workers.dev";
 let products = [];
@@ -728,6 +732,12 @@ function clDiscard(){ if(!confirm("¿Descartar todos los cambios sin publicar?")
 function clTab(t){
   document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("on",b.dataset.tab===t));
   $c("cloudView").classList.toggle("hidden",t!=="nube"); $c("excelView").classList.toggle("hidden",t!=="excel");
+  $c("invView").classList.toggle("hidden",t!=="inventario"); $c("repView").classList.toggle("hidden",t!=="reportes");
+  const pro={api:API_BASE, token:clToken, onChange:()=>{ if(!clDirtyCount()) clLoad(); }};
+  if((t==="inventario"||t==="reportes")&&!clToken()){ const tk=(prompt("Pega el ADMIN_TOKEN (se recuerda en este computador):")||"").trim(); if(!tk) return clTab("nube"); try{ localStorage.setItem(TOKEN_KEY,tk); }catch(e){} }
+  if(t==="inventario") CanevaPro.mount($c("invBody"),"inventario",pro);
+  if(t==="reportes") CanevaPro.mount($c("repBody"),"reportes",pro);
+  window.scrollTo(0,0);
   if(t==="nube"&&!CL.list.length) clLoad();
 }
 document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>clTab(b.dataset.tab)));

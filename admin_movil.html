@@ -224,6 +224,7 @@ main{padding:14px 16px 120px}
       <button type="button" data-tab="apartados">Apartados<b id="apCount"></b></button>
       <button type="button" data-tab="regalos">Regalos<b id="gfCount"></b></button>
       <button type="button" data-tab="inventario">Inventario<b id="invCount"></b></button>
+      <button type="button" data-tab="reportes">Reportes</button>
       <button type="button" data-tab="club">Club</button>
     </div>
     <div id="prodTools">
@@ -248,7 +249,8 @@ main{padding:14px 16px 120px}
       <div id="gfList"></div>
     </div>
     <div id="clubView" class="hidden"></div>
-    <div id="invView" class="hidden"><div id="invBody"></div></div>
+    <div id="invView" class="hidden"><div id="invBody" style="--cp-top:var(--hdr,118px)"></div></div>
+    <div id="repView" class="hidden"><div id="repBody"></div></div>
     <div id="prodView">
     <button id="portadaInfo" class="promo" type="button"></button>
     <div class="hrow" style="margin:0 0 10px">
@@ -295,8 +297,7 @@ main{padding:14px 16px 120px}
 </section>
 
 <!-- Inventory sheet -->
-<div id="iSheetBg" class="sheet-bg hidden"></div>
-<section id="iSheet" class="sheet hidden"><div class="grab"></div><div id="iSheetBody"></div></section>
+
 
 <!-- Settings: social, announcement bar, ad pixels -->
 <div id="sSheetBg" class="sheet-bg hidden"></div>
@@ -400,6 +401,7 @@ main{padding:14px 16px 120px}
 <div id="toast" class="toast hidden"></div>
 <div id="busy" class="busy hidden"><div class="spin"></div><div id="busyMsg">Publicando…</div></div>
 
+<script src="admin_pro.js?v=23"></script>
 <script>
 // Mobile admin for Caneva: edits the live catalog (Worker /catalog) and republishes via /admin/catalog.
 // Uses the same Worker endpoints and product shape as admin.html, so no Worker changes are needed.
@@ -959,233 +961,8 @@ function invTotal(p){ return Object.values(p.inv||{}).reduce((s,q)=>s+Math.max(0
 function invTag(p){ const t=invTotal(p), low=(siteConfig&&siteConfig.inventory&&siteConfig.inventory.low!==undefined)?siteConfig.inventory.low:2;
   if(/^ocult/i.test(p.stock)) return '<span class="badge">OCULTO</span>';
   return t<=0?'<span class="ptag">AGOTADO</span>':t<=low?`<span class="ptag l">QUEDAN ${t}</span>`:`<span class="ptag g">${t} UND</span>`; }
-// ---------- Inventario ----------
-// Stock per size lives in the Worker (D1). The store reads it to hide sold-out sizes.
-let INV=null, invFilter="todas", invDays=30, invSel=null, invMode="entrada", invDraft={}, invExtra=[];
-const INV_MODES={
-  entrada:{t:"➕ Entrada",h:"Llegó mercancía: escribe cuántas unidades nuevas entraron de cada talla.",btn:"Registrar entrada",sign:1},
-  tienda:{t:"💵 Venta",h:"Vendiste en persona o por fuera de la página: escribe cuántas salieron.",btn:"Registrar venta",sign:-1},
-  ajuste:{t:"✏️ Conteo",h:"Contaste lo que hay en físico: escribe la cantidad REAL de cada talla.",btn:"Guardar conteo",sign:0},
-  devolucion:{t:"↩ Devolución",h:"Una clienta devolvió prendas: vuelven al inventario.",btn:"Registrar devolución",sign:1},
-  merma:{t:"✖ Daño",h:"Prendas dañadas, perdidas o regaladas: salen del inventario sin venta.",btn:"Registrar salida",sign:-1}
-};
-const KIND_ICON={entrada:"➕",tienda:"💵",venta:"🛍",apartado:"🔖",liberado:"↩",devolucion:"↩",merma:"✖",ajuste:"✏️"};
-const pct=(a,b)=>b?Math.round(a/b*100):0;
-function invState(p){ if(!p.managed) return "sin"; if(p.total<=0) return "agotada"; if(p.total<=p.low) return "baja"; return "ok"; }
-function invSizes(p){
-  const s=[...p.sizes];
-  Object.keys(p.stock||{}).forEach(k=>{ if(!s.includes(k)) s.push(k); });
-  if(s.length>1) { const u=s.indexOf("Única"); if(u>=0 && !(p.stock&&p.stock["Única"])) s.splice(u,1); }
-  return s;
-}
-async function loadInventory(){
-  $("invBody").innerHTML=`<div class="empty">Cargando inventario…</div>`;
-  try{ INV=await adminFetch("/admin/inventory?days="+invDays); renderInventory(); }
-  catch(e){ $("invBody").innerHTML=/D1|activado/.test(e.message)?clubOff(e.message):`<div class="empty">${esc(e.message)}</div>`; }
-}
-function renderInventory(){
-  if(!INV) return;
-  const ps=INV.products, man=ps.filter(p=>p.managed);
-  const units=man.reduce((s,p)=>s+p.total,0);
-  const vCost=man.reduce((s,p)=>s+p.total*p.cost,0), vSale=man.reduce((s,p)=>s+p.total*p.price,0);
-  // Profit only where the cost is known (a missing cost must not look like 100% margin)
-  const vSaleCosted=man.filter(p=>p.cost).reduce((s,p)=>s+p.total*p.price,0);
-  const noCost=man.filter(p=>!p.cost&&p.total>0).length;
-  const n={agotada:0,baja:0,sin:0,quieta:(INV.idle||[]).length}; ps.forEach(p=>{const s=invState(p); if(n[s]!==undefined) n[s]++;});
-  const r=INV.report||{};
-  const margin=pct(r.profit,r.costed);
-  const topHtml=(r.top||[]).map((t,i)=>`<div class="itop"><span>${i+1}</span><b>${esc(t.name)}</b><em>${t.units} und · ${money(t.revenue)}</em></div>`).join("");
-  $("invBody").innerHTML=`
-  <div class="ihero">
-    <div class="ik"><span>En bodega</span><b>${units.toLocaleString("es-CO")}</b><small>unidades · ${man.length} prendas</small></div>
-    <div class="ik"><span>Vale (a precio de venta)</span><b>${money(vSale)}</b><small>${vCost?`Te costó ${money(vCost)}`:"Agrega costos para ver tu inversión"}</small></div>
-    <div class="ik gold"><span>Ganancia en bodega</span><b>${vCost?money(vSaleCosted-vCost):"—"}</b><small>${vCost?`margen ${pct(vSaleCosted-vCost,vSaleCosted)}%`:""}${noCost?`${vCost?" · ":""}${noCost} sin costo`:""}</small></div>
-  </div>
-  <div class="ialerts">
-    <button type="button" data-if="agotada" class="ia red ${invFilter==="agotada"?"on":""}"><b>${n.agotada}</b>Agotadas</button>
-    <button type="button" data-if="baja" class="ia amber ${invFilter==="baja"?"on":""}"><b>${n.baja}</b>Por agotarse</button>
-    <button type="button" data-if="quieta" class="ia ${invFilter==="quieta"?"on":""}"><b>${n.quieta}</b>Sin vender 60 días</button>
-    <button type="button" data-if="sin" class="ia ${invFilter==="sin"?"on":""}"><b>${n.sin}</b>Sin inventario</button>
-  </div>
-  <div class="isales">
-    <div class="ish"><div><span class="eyeb">Ventas</span></div><div class="seg mini" id="invDaysSeg">${[7,30,90].map(d=>`<button type="button" data-days="${d}" class="${d===invDays?"on":""}">${d} días</button>`).join("")}</div></div>
-    <div class="igrid4"><div><b>${money(r.revenue)}</b><span>Vendido</span></div><div><b>${r.cost?money(r.profit):"—"}</b><span>Ganancia</span></div><div><b>${r.cost?margin+"%":"—"}</b><span>Margen</span></div><div><b>${r.units||0}</b><span>Unidades</span></div></div>
-    ${r.uncosted>0?`<p class="hint" style="margin-top:8px">${money(r.uncosted)} vendidos en prendas sin costo: agrégalo en cada prenda para ver la ganancia completa.</p>`:""}
-    ${topHtml?`<div class="eyeb" style="margin-top:12px">Lo más vendido</div>${topHtml}`:`<p class="hint" style="margin-top:10px">Aquí verás lo más vendido. Cuenta las ventas web (al marcar pagado), las ventas en tienda y los apartados.</p>`}
-  </div>
-  <div class="itools">
-    <input id="invQ" class="search" style="margin:0" type="search" placeholder="Buscar prenda…" value="${esc($("invQ")?$("invQ").value:"")}">
-    <div class="seg" style="margin:10px 0 0" id="invSeg">${[["todas","Todas"],["ok","Con stock"],["baja","Bajas"],["agotada","Agotadas"],["sin","Sin inv."]].map(([k,t])=>`<button type="button" data-if="${k}" class="${invFilter===k?"on":""}">${t}</button>`).join("")}</div>
-    <div class="ibtns"><button type="button" class="iconbtn" id="invMoves">🧾 Movimientos</button><button type="button" class="iconbtn" id="invCsv">⇩ Exportar Excel</button></div>
-  </div>
-  <div id="invList"></div>`;
-  renderInvList();
-}
-function renderInvList(){
-  const q=norm($("invQ")?$("invQ").value:"");
-  const idle=new Set(INV.idle||[]);
-  const order={agotada:0,baja:1,ok:2,sin:3};
-  const rows=INV.products.filter(p=>{
-    const s=invState(p);
-    if(invFilter==="quieta"&&!idle.has(p.id)) return false;
-    if(!["todas","quieta"].includes(invFilter)&&s!==invFilter) return false;
-    return !q||norm(p.nombre+" "+p.categoria).includes(q);
-  }).sort((a,b)=>order[invState(a)]-order[invState(b)]||a.nombre.localeCompare(b.nombre));
-  $("invList").innerHTML=rows.length?rows.map(p=>{
-    const s=invState(p);
-    const chips=p.managed?invSizes(p).map(z=>{const q=(p.stock||{})[z]||0;return `<span class="sz ${q<=0?"z":q<=Math.max(1,Math.floor(p.low/2))?"l":""}">${esc(z)}<i>${q}</i></span>`;}).join(""):`<span class="sz none">Toca para contar</span>`;
-    return `<div class="irow st-${s}" data-ipid="${esc(p.id)}" role="button" tabindex="0">
-      <div class="ith">${p.imagen?`<img src="${esc(p.imagen)}" alt="" loading="lazy">`:""}</div>
-      <div class="iinfo"><b>${esc(p.nombre)}</b><small>${esc(p.categoria)} · ${esc(p.precio)}${p.cost?` · costo ${money(p.cost)}`:""}${p.hidden?' · <span class="bad">oculta</span>':""}</small><div class="szs">${chips}</div></div>
-      <div class="itot">${p.managed?`<b>${p.total}</b><small>${s==="agotada"?"AGOTADA":s==="baja"?"POR AGOTARSE":"unid."}</small>`:`<span class="inone">${/atelier/i.test(p.categoria)?"BAJO PEDIDO":"SIN CONTAR"}</span>`}</div></div>`;
-  }).join(""):`<div class="empty">No hay prendas con ese filtro.</div>`;
-}
-function openInvSheet(pid){
-  const p=INV.products.find(x=>x.id===pid); if(!p) return;
-  invSel=p; invMode=p.managed?"entrada":"ajuste"; invDraft={}; invExtra=[];
-  $("iSheetBg").classList.remove("hidden"); $("iSheet").classList.remove("hidden"); document.body.style.overflow="hidden";
-  renderInvSheet(); refreshInvCalc(); $("iSheet").scrollTop=0; loadInvHistory(pid);
-}
-function closeInvSheet(){ $("iSheetBg").classList.add("hidden"); $("iSheet").classList.add("hidden"); document.body.style.overflow=""; invSel=null; }
-function renderInvSheet(){
-  const p=invSel, m=INV_MODES[invMode];
-  const sizes=[...invSizes(p),...invExtra.filter(z=>!invSizes(p).includes(z))];
-  const cur=z=>(p.stock||{})[z]||0;
-  const val=z=>invDraft[z]!==undefined?invDraft[z]:(invMode==="ajuste"&&p.managed?String(cur(z)):"");
-  const after=z=>invAfter(z);
-  const margin=p.cost&&p.price?pct(p.price-p.cost,p.price):null;
-  $("iSheetBody").innerHTML=`
-  <div class="ihead">${p.imagen?`<img src="${esc(p.imagen)}" alt="">`:"<div></div>"}<div><div class="eyeb">${esc(p.categoria)}</div><h2 class="ptitle" style="margin:2px 0">${esc(p.nombre)}</h2>
-    <div class="muted" style="font-size:13px">${esc(p.precio)}${p.cost?` · costo ${money(p.cost)} · <b class="ok">margen ${margin}%</b>`:" · sin costo"}</div>
-    <div class="ibig">${p.managed?`<b>${p.total}</b> unidades`:`<span class="bad">Sin inventario todavía</span>`}</div></div></div>
-  ${p.managed?"":`<div class="ocard" style="font-size:13px;line-height:1.55">Escribe cuántas hay <b>hoy</b> de cada talla y toca <b>Guardar conteo</b>. Desde ahí la tienda descuenta sola cada venta y oculta las tallas agotadas.</div>`}
-  <div class="imodes">${Object.entries(INV_MODES).filter(([k])=>p.managed||k==="ajuste").map(([k,v])=>`<button type="button" data-im="${k}" class="${k===invMode?"on":""}">${v.t}</button>`).join("")}</div>
-  <p class="hint" style="margin:8px 0 4px">${m.h}</p>
-  <div class="isz">${sizes.map(z=>`<div class="iszr"><span class="iszn">${esc(z)}</span><span class="iszc">hay <b>${cur(z)}</b></span>
-    <div class="step"><button type="button" data-st="-1" data-z="${esc(z)}">−</button><input inputmode="numeric" data-z="${esc(z)}" value="${esc(val(z))}" placeholder="0"><button type="button" data-st="1" data-z="${esc(z)}">+</button></div>
-    <span class="iszf ${after(z)<=0?"bad":""}">→ ${Math.max(0,after(z))}</span></div>`).join("")}</div>
-  <div class="iaddsz"><input id="iNewSz" placeholder="Otra talla (ej: 18, XL)" maxlength="8"><button type="button" id="iAddSz">+ Talla</button></div>
-  ${invMode==="entrada"?`<div class="field"><label>Costo por unidad (lo que te costó)</label><input id="iCost" inputmode="numeric" value="${p.cost||""}" placeholder="Ej: 45000"></div>`:""}
-  ${invMode==="tienda"||invMode==="devolucion"?`<div class="field"><label>Precio por unidad</label><input id="iPrice" inputmode="numeric" value="${p.price||""}"></div>`:""}
-  <div class="field"><label>Nota (opcional)</label><input id="iNote" maxlength="200" placeholder="${invMode==="entrada"?"Ej: Pedido proveedor Medellín":invMode==="tienda"?"Ej: Venta a Laura en el local":"Ej: detalle"}"></div>
-  <div class="iprev">Quedarán <b id="iPrevN">0</b> unidades${p.managed?` (hoy ${p.total})`:""}</div>
-  <button class="btn" id="iGo" disabled>${m.btn}</button>
-  <details class="icfg"><summary>Ajustes de esta prenda</summary>
-    <div class="row2"><div class="field"><label>Costo por unidad</label><input id="iCfgCost" inputmode="numeric" value="${p.cost||""}" placeholder="0"></div>
-    <div class="field"><label>Avisar cuando queden</label><input id="iCfgMin" inputmode="numeric" value="${p.min===null?"":p.min}" placeholder="${INV.lowDefault} (general)"></div></div>
-    <button class="btn ghost" id="iCfgSave" type="button">Guardar ajustes</button>
-    ${p.managed?`<button class="btn danger" id="iUntrack" type="button">Dejar de controlar esta prenda</button>`:""}
-  </details>
-  <div class="sect">Historial</div><div id="iHist"><div class="empty">Cargando…</div></div>
-  <button class="btn ghost" id="iClose" type="button">Cerrar</button>`;
-}
-async function loadInvHistory(pid){
-  try{ const d=await adminFetch("/admin/inventory/moves?limit=30&pid="+encodeURIComponent(pid)); if(invSel&&invSel.id===pid) $("iHist").innerHTML=movesHtml(d.moves,false); }
-  catch(e){ if($("iHist")) $("iHist").innerHTML=`<div class="empty">${esc(e.message)}</div>`; }
-}
-function movesHtml(moves,withName){
-  if(!moves.length) return `<div class="empty">Todavía no hay movimientos.</div>`;
-  return moves.map(m=>`<div class="imv"><span class="imi">${KIND_ICON[m.kind]||"•"}</span><div><b>${esc(m.label)}</b>${withName?` · ${esc(m.name)}`:""}<br><small>${esc(when(m.createdAt))}${m.ref?` · ${esc(m.ref.toUpperCase())}`:""}${m.note?` · ${esc(m.note)}`:""}${m.unitPrice&&m.delta<0?` · ${money(m.unitPrice*-m.delta)}`:""}</small></div>
-    <div class="imd"><b class="${m.delta<0?"bad":"ok"}">${m.delta>0?"+":""}${m.delta}</b><small>${m.size==="Única"?"":"T. "+esc(m.size)} → ${m.after}</small></div></div>`).join("");
-}
-function invAfter(z){
-  const p=invSel, m=INV_MODES[invMode], cur=(p.stock||{})[z]||0, v=parseInt(invDraft[z],10);
-  if(invMode==="ajuste") return isNaN(v)?(p.managed?cur:0):v;
-  return cur+(isNaN(v)?0:v)*m.sign;
-}
-// Updates "→ N", the preview and the button without re-rendering (keeps the keyboard open)
-function refreshInvCalc(){
-  const p=invSel; if(!p||!$("iGo")) return;
-  let total=0, changed=false;
-  document.querySelectorAll("#iSheetBody input[data-z]").forEach(i=>{
-    const z=i.dataset.z, a=Math.max(0,invAfter(z)), cur=(p.stock||{})[z]||0; total+=a;
-    const f=i.closest(".iszr").querySelector(".iszf"); f.textContent="→ "+a; f.classList.toggle("bad",a<=0);
-    if(invDraft[z]!==undefined&&invDraft[z]!==""&&(invMode==="ajuste"?(!p.managed||parseInt(invDraft[z],10)!==cur):parseInt(invDraft[z],10)>0)) changed=true;
-  });
-  $("iPrevN").textContent=total; $("iGo").disabled=!changed;
-}
-function onInvSheetInput(e){
-  const i=e.target.closest("input[data-z]"); if(!i) return;
-  const clean=i.value.replace(/[^\d]/g,""); if(clean!==i.value) i.value=clean;
-  const z=i.dataset.z, p=invSel;
-  if(INV_MODES[invMode].sign<0 && parseInt(clean,10)>((p.stock||{})[z]||0)){ i.value=String((p.stock||{})[z]||0); toast(`Talla ${z}: solo hay ${(p.stock||{})[z]||0}.`,{err:true,ms:2500}); }
-  invDraft[z]=i.value; refreshInvCalc();
-}
-let invHistCache="";
-function keepHist(){ const h=$("iHist"); if(h) invHistCache=h.innerHTML; }
-function rerenderInv(){ keepHist(); renderInvSheet(); if(invHistCache) $("iHist").innerHTML=invHistCache; refreshInvCalc(); }
-async function onInvSheetClick(e){
-  const md=e.target.closest("[data-im]"); if(md){ invMode=md.dataset.im; invDraft={}; rerenderInv(); return; }
-  const st=e.target.closest("[data-st]");
-  if(st){ const z=st.dataset.z, p=invSel, i=st.parentNode.querySelector("input");
-    const base=i.value!==""?parseInt(i.value,10):(invMode==="ajuste"?((p.stock||{})[z]||0):0);
-    let v=base+Number(st.dataset.st); if(v<0) v=0; if(INV_MODES[invMode].sign<0) v=Math.min(v,(p.stock||{})[z]||0);
-    i.value=String(v); invDraft[z]=i.value; refreshInvCalc(); return; }
-  if(e.target.id==="iAddSz"){ const z=$("iNewSz").value.trim().toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,8); if(!z) return; if(!invExtra.includes(z)&&!invSizes(invSel).includes(z)) invExtra.push(z); if(invMode!=="ajuste"&&invMode!=="entrada") invMode="entrada"; rerenderInv(); return; }
-  if(e.target.id==="iClose") return closeInvSheet();
-  if(e.target.id==="iGo") return submitInvMove();
-  if(e.target.id==="iCfgSave") return saveInvMeta();
-  if(e.target.id==="iUntrack") return untrackInv();
-  const mk=e.target.closest("[data-mk]"); if(mk) return openInvMoves(mk.dataset.mk);
-}
-async function submitInvMove(){
-  const p=invSel, m=INV_MODES[invMode];
-  const sizes=[...invSizes(p),...invExtra];
-  // In a count every listed size is saved (blank = 0), so the store knows exactly what exists
-  const lines=sizes.map(z=>({size:z,qty:invDraft[z]!==undefined&&invDraft[z]!==""?invDraft[z]:(invMode==="ajuste"?String((p.stock||{})[z]||0):"")})).filter(l=>l.qty!=="");
-  const body={pid:p.id,kind:invMode,lines,note:$("iNote").value.trim()};
-  if($("iCost")) body.cost=$("iCost").value.replace(/[^\d]/g,"");
-  if($("iPrice")) body.unitPrice=$("iPrice").value.replace(/[^\d]/g,"");
-  const n=lines.reduce((s,l)=>s+(parseInt(l.qty,10)||0),0);
-  if(invMode!=="ajuste"&&!confirm(`${m.btn}: ${n} unidad${n===1?"":"es"} de "${p.nombre}"?`)) return;
-  busy(true,"Guardando…");
-  try{
-    const d=await adminFetch("/admin/inventory/move",{method:"POST",body}); busy(false);
-    toast(`${m.btn.replace("Registrar ","").replace("Guardar ","")} ✓ · quedan ${d.total} unidades`);
-    const pid=p.id; await loadInventory(); const fresh=INV&&INV.products.find(x=>x.id===pid);
-    if(fresh){ invSel=fresh; invDraft={}; invExtra=[]; invMode="entrada"; renderInvSheet(); refreshInvCalc(); loadInvHistory(pid); }
-    products=await fetchCatalog().catch(()=>products); renderAll();
-  }catch(e){ busy(false); toast("Error: "+e.message,{err:true,ms:8000}); }
-}
-async function saveInvMeta(){
-  const p=invSel;
-  try{ await adminFetch("/admin/inventory/meta",{method:"POST",body:{pid:p.id,cost:$("iCfgCost").value.replace(/[^\d]/g,""),min:$("iCfgMin").value.replace(/[^\d]/g,"")}});
-    toast("Ajustes guardados ✓"); const pid=p.id; await loadInventory(); const f=INV.products.find(x=>x.id===pid); if(f){ invSel=f; renderInvSheet(); refreshInvCalc(); loadInvHistory(pid); } }
-  catch(e){ toast("Error: "+e.message,{err:true}); }
-}
-async function untrackInv(){
-  if(!confirm(`¿Dejar de controlar el inventario de "${invSel.nombre}"? El historial se conserva, pero la tienda dejará de descontar sus ventas.`)) return;
-  try{ await adminFetch("/admin/inventory/untrack",{method:"POST",body:{pid:invSel.id}}); toast("Listo, ya no se controla"); closeInvSheet(); loadInventory(); }
-  catch(e){ toast("Error: "+e.message,{err:true}); }
-}
-async function openInvMoves(kind){
-  invSel=null;
-  $("iSheetBg").classList.remove("hidden"); $("iSheet").classList.remove("hidden"); document.body.style.overflow="hidden";
-  const kinds=[["","Todos"],["venta","🛍 Web"],["tienda","💵 Tienda"],["entrada","➕ Entradas"],["apartado","🔖 Apartados"],["ajuste","✏️ Conteos"],["merma","✖ Daños"],["devolucion","↩ Devol."]];
-  $("iSheetBody").innerHTML=`<h2 class="ptitle">Movimientos</h2><p class="muted" style="font-size:13px;margin:0 0 10px">Todo lo que entró y salió, con fecha y motivo.</p>
-    <div class="imodes" id="imvSeg">${kinds.map(([k,t])=>`<button type="button" data-mk="${k}" class="${k===(kind||"")?"on":""}">${t}</button>`).join("")}</div>
-    <div id="imvList" style="margin-top:8px"><div class="empty">Cargando…</div></div><button class="btn ghost" id="iClose" type="button">Cerrar</button>`;
-  try{ const d=await adminFetch("/admin/inventory/moves?limit=150"+(kind?"&kind="+kind:"")); $("imvList").innerHTML=movesHtml(d.moves,true); }
-  catch(e){ $("imvList").innerHTML=`<div class="empty">${esc(e.message)}</div>`; }
-}
-function exportInvCsv(){
-  if(!INV) return;
-  const q=v=>{ const s=String(v===null||v===undefined?"":v); return /[;"\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; };
-  const rows=[["Prenda","Categoría","Talla","Unidades","Costo unidad","Precio unidad","Valor a costo","Valor de venta","Estado"]];
-  INV.products.filter(p=>p.managed).forEach(p=>invSizes(p).forEach(z=>{ const u=(p.stock||{})[z]||0;
-    rows.push([p.nombre,p.categoria,z,u,p.cost,p.price,u*p.cost,u*p.price,{agotada:"Agotada",baja:"Por agotarse",ok:"Con stock"}[invState(p)]]); }));
-  const csv="﻿"+rows.map(r=>r.map(q).join(";")).join("\r\n");
-  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
-  const d=new Date(); a.download=`inventario-caneva-${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}.csv`;
-  document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);
-}
-function onInvBodyClick(e){
-  const f=e.target.closest("[data-if]"); if(f){ invFilter=invFilter===f.dataset.if&&f.classList.contains("ia")?"todas":f.dataset.if; renderInventory(); return; }
-  const d=e.target.closest("[data-days]"); if(d){ invDays=Number(d.dataset.days); loadInventory(); return; }
-  if(e.target.id==="invMoves") return openInvMoves("");
-  if(e.target.id==="invCsv") return exportInvCsv();
-  const r=e.target.closest("[data-ipid]"); if(r) openInvSheet(r.dataset.ipid);
-}
+// Inventario y Reportes live in admin_pro.js (shared with admin.html)
+function proOpts(){ return {api:API_BASE, token:token, onChange:()=>fetchCatalog().then(x=>{products=x;renderAll();updateInvCount();}).catch(()=>{})}; }
 
 function showTab(t){
   currentTab=t;
@@ -1194,7 +971,9 @@ function showTab(t){
   $("newBtn").classList.toggle("hidden",t!=="productos");
   $("ordersView").classList.toggle("hidden",t!=="pedidos"); $("clubView").classList.toggle("hidden",t!=="club");
   $("apView").classList.toggle("hidden",t!=="apartados"); $("gfView").classList.toggle("hidden",t!=="regalos"); if(t==="regalos") loadGifts();
-  $("invView").classList.toggle("hidden",t!=="inventario"); if(t==="inventario") loadInventory();
+  $("invView").classList.toggle("hidden",t!=="inventario"); $("repView").classList.toggle("hidden",t!=="reportes");
+  if(t==="inventario") CanevaPro.mount($("invBody"),"inventario",proOpts());
+  if(t==="reportes") CanevaPro.mount($("repBody"),"reportes",proOpts());
   requestAnimationFrame(()=>document.documentElement.style.setProperty("--hdr",document.querySelector("#listView header").offsetHeight+"px"));
   if(t==="pedidos") loadOrders(); if(t==="club") loadClub(); if(t==="apartados") loadLayaways();
   window.scrollTo(0,0);
@@ -1437,12 +1216,11 @@ function showList(){ $("loginView").classList.add("hidden"); $("listView").class
 
 $("loginBtn").onclick=()=>{ const t=$("tokenInput").value.trim(); if(!t){ toast("Pega el token.",{err:true}); return; } setLS(TOKEN_KEY,t); showList(); };
 $("logoutBtn").onclick=()=>{ if(confirm("¿Cerrar sesión y borrar el token de este celular?")){ delLS(TOKEN_KEY); showLogin(); } };
-$("reloadBtn").onclick=()=>{ if(currentTab==="pedidos") loadOrders(); else if(currentTab==="club") loadClub(); else if(currentTab==="inventario") loadInventory(); else loadList(); };
-$("invBody").addEventListener("click",onInvBodyClick);
-$("invBody").addEventListener("input",e=>{ if(e.target.id==="invQ") renderInvList(); });
-$("iSheetBody").addEventListener("click",onInvSheetClick); $("iSheetBody").addEventListener("input",onInvSheetInput);
-$("iSheetBg").onclick=closeInvSheet;
-$("fInvBtn").onclick=async()=>{ const pid=$("fInvBtn").dataset.pid; closeEditor(); showTab("inventario"); const wait=()=>INV?openInvSheet(pid):setTimeout(wait,150); setTimeout(wait,150); };
+$("reloadBtn").onclick=()=>{ if(currentTab==="pedidos") loadOrders(); else if(currentTab==="club") loadClub(); else if(currentTab==="inventario"||currentTab==="reportes") showTab(currentTab); else loadList(); };
+$("fInvBtn").onclick=()=>{ const pid=$("fInvBtn").dataset.pid; closeEditor(); currentTab="inventario";
+  document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("on",b.dataset.tab==="inventario"));
+  ["prodTools","prodView","newBtn","ordersView","clubView","apView","gfView","repView"].forEach(id=>$(id).classList.add("hidden")); $("invView").classList.remove("hidden");
+  CanevaPro.mount($("invBody"),"inventario",proOpts()).then(()=>CanevaPro.openItem(pid)); };
 $("renameCatBtn").onclick=renameCategory;
 $("portadaInfo").onclick=openPortada;
 $("tabs").onclick=e=>{ const b=e.target.closest("button[data-tab]"); if(b) showTab(b.dataset.tab); };
