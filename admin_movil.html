@@ -183,6 +183,13 @@ main{padding:14px 16px 120px}
 .ptag{display:inline-block;font-size:10px;letter-spacing:.06em;border-radius:6px;padding:1px 6px;margin-left:4px;background:#2a1f1f;color:#ff8f80}
 .ptag.l{background:#2a2414;color:#f4c46a}.ptag.g{background:#17221a;color:var(--ok)}
 .invinfo{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--b);border-radius:10px;padding:11px 12px;font-size:13px;background:var(--k2);width:100%;text-align:left}
+/* Editor top actions + delete confirmation */
+.edtop{display:flex;justify-content:space-between;gap:10px;margin:-4px 0 10px}
+.edtop button{background:none;border:1px solid var(--b);border-radius:999px;padding:8px 14px;font-size:13px}
+.edtop .del{color:var(--bad);border-color:rgba(255,180,168,.4)}
+.delbox{position:fixed;left:16px;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:25;max-width:440px;margin:0 auto;background:var(--k);border:1px solid var(--b);border-radius:20px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.7)}
+.delimg{width:72px;height:92px;border-radius:10px;overflow:hidden;background:var(--k3)}.delimg img{width:100%;height:100%;object-fit:cover}
+.btn.danger.solid{background:var(--bad);color:var(--k);border:0}
 </style>
 </head>
 <body>
@@ -258,6 +265,7 @@ main{padding:14px 16px 120px}
 <div id="sheetBg" class="sheet-bg hidden"></div>
 <section id="sheet" class="sheet hidden">
   <div class="grab"></div>
+  <div class="edtop"><button type="button" id="edClose">✕ Cerrar</button><button type="button" id="edDel" class="del">🗑 Eliminar</button></div>
   <div class="photo" id="photoBox"></div>
   <div class="thumbs" id="thumbs"></div>
   <div class="photoacts hidden" id="photoActs">
@@ -376,6 +384,17 @@ main{padding:14px 16px 120px}
   </header>
   <main><div id="pickGrid" class="grid"></div></main>
   <div id="pickChoice" class="pickchoice hidden"></div>
+</section>
+
+<!-- Delete confirmation -->
+<div id="delBg" class="sheet-bg hidden" style="z-index:24"></div>
+<section id="delBox" class="delbox hidden" role="alertdialog" aria-modal="true">
+  <div id="delImg" class="delimg"></div>
+  <h3 class="ptitle" style="margin:12px 0 4px">¿Eliminar este producto?</h3>
+  <p id="delTxt" class="muted" style="font-size:14px;line-height:1.55;margin:0"></p>
+  <p class="hint" style="margin-top:8px">Si solo se agotó, mejor apaga "Visible en la tienda": así no pierdes las fotos ni los datos.</p>
+  <button class="btn danger solid" id="delYes" type="button">Sí, eliminar</button>
+  <button class="btn ghost" id="delNo" type="button">No, cancelar</button>
 </section>
 
 <div id="toast" class="toast hidden"></div>
@@ -729,7 +748,7 @@ function openEditor(index){
   else syncVisibleFromStock();
   fillCategorySelect(p.categoria);
   renderPhotos();
-  $("deleteBtn").classList.toggle("hidden",isNew);
+  $("deleteBtn").classList.toggle("hidden",isNew); $("edDel").classList.toggle("hidden",isNew);
   $("saveBtn").textContent=isNew?"Crear y publicar":"Guardar y publicar";
   $("sheetBg").classList.remove("hidden"); $("sheet").classList.remove("hidden");
   $("sheet").scrollTop=0; document.body.style.overflow="hidden";
@@ -804,10 +823,20 @@ async function save(){
     list[i]=updated; return list;
   }, newFiles, isNew?"Producto creado ✓":"Cambios publicados ✓");
 }
+// Asks with a clear dialog (photo + name) before deleting
+function askDelete(p){
+  return new Promise(res=>{
+    $("delImg").innerHTML=isUrl(p.imagen)?`<img src="${esc(p.imagen)}" alt="">`:"";
+    $("delTxt").innerHTML=`<b style="color:var(--w)">${esc(p.nombre)}</b> · ${esc(p.precio||"")}<br>Se quita de la tienda y de Caneva AI. Podrás deshacerlo solo justo después de eliminarlo.`;
+    const done=v=>{ $("delBg").classList.add("hidden"); $("delBox").classList.add("hidden"); res(v); };
+    $("delYes").onclick=()=>done(true); $("delNo").onclick=()=>done(false); $("delBg").onclick=()=>done(false);
+    $("delBg").classList.remove("hidden"); $("delBox").classList.remove("hidden");
+  });
+}
 async function removeProduct(){
   if(!editing||editing.index<0) return;
   const original=editing.original;
-  if(!confirm(`¿Eliminar "${original.nombre}" del catálogo?`)) return;
+  if(!(await askDelete(original))) return;
   await applyAndPublish(list=>{
     const i=findOriginal(list, original, editing.index);
     if(i<0) throw new Error("No se encontró el producto. Toca Recargar.");
@@ -1442,7 +1471,7 @@ $("fVisible").onchange=onVisibleChange; $("fStock").addEventListener("input",syn
 $("settingsBtn").onclick=openSettings; $("sSheetBg").onclick=closeSettings; $("sCancel").onclick=closeSettings; $("sSave").onclick=saveSettings;
 $("newBtn").onclick=()=>openEditor(-1);
 $("sheetBg").onclick=closeEditor; $("cancelBtn").onclick=closeEditor;
-$("saveBtn").onclick=save; $("deleteBtn").onclick=removeProduct;
+$("saveBtn").onclick=save; $("deleteBtn").onclick=removeProduct; $("edDel").onclick=removeProduct; $("edClose").onclick=closeEditor;
 $("thumbs").onclick=e=>{ const t=e.target.closest(".thumb"); if(!t) return; selPhoto=Number(t.dataset.i); renderPhotos(); };
 $("makeMainBtn").onclick=makeMain; $("removePhotoBtn").onclick=removePhoto;
 $("camInput").onchange=onPhotoPicked; $("galInput").onchange=onPhotoPicked;
