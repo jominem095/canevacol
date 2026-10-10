@@ -325,6 +325,9 @@ main{padding:14px 16px 120px}
   <div class="grab"></div>
   <h2 class="ptitle">Ajustes de la tienda</h2>
   <button class="btn ghost instbtn hidden" type="button" style="margin:4px 0 6px">📲 Instalar el admin como app en el iPhone</button>
+  <div class="sect">Estilo de la tienda</div>
+  <div class="field"><label>Apariencia de canevacol.com</label><select id="sTheme"><option value="negro">Negro (logo grande, lujo)</option><option value="claro">Boutique clara (fondo crema, fotos primero)</option></select></div>
+  <p class="hint">Mira cómo queda antes de guardar: <a href="index_prueba.html?tema=claro" target="_blank" rel="noopener" style="color:var(--w)">ver clara</a> · <a href="index_prueba.html?tema=negro" target="_blank" rel="noopener" style="color:var(--w)">ver negra</a>. Al guardar, la tienda cambia para todas las clientas.</p>
   <div class="sect">Redes sociales</div>
   <div class="field"><label>Instagram</label><input id="sIg" type="text" placeholder="@caneva.col o enlace"></div>
   <div class="field"><label>TikTok</label><input id="sTt" type="text" placeholder="@caneva.col o enlace"></div>
@@ -934,6 +937,7 @@ async function openSettings(){
   $("sDelivery").innerHTML=categories().map(({c},i)=>`<div class="dlrow"><span>${esc(c)}</span><input data-dlc="${esc(c)}" type="text" inputmode="numeric" placeholder="${/atelier|bajo pedido|encargo/i.test(c)?10:1}" value="${dlFind(c)}"> <small style="color:var(--dim)">días</small></div>`).join("")||`<p class="hint">Aún no hay categorías.</p>`;
   const gf=siteConfig.gift||{}; $("sGfOn").checked=!!gf.enabled; $("sGfAmts").value=(gf.amounts||[50000,100000,150000,200000]).join(", "); $("sGfMin").value=gf.minCustom||30000; $("sGfMonths").value=gf.months||12;
   const tr=siteConfig.tryon||{}; $("sTryOn").checked=!!tr.enabled; $("sTryLimit").value=tr.dailyLimit||3;
+  $("sTheme").value=siteConfig.theme==="claro"?"claro":"negro";
   const iv=siteConfig.inventory||{}; $("sInvLow").value=iv.low===undefined?2:iv.low; $("sInvLeft").checked=iv.showLeft!==false;
   const ly=siteConfig.layaway||{}; $("sApOn").checked=!!ly.enabled; $("sApPct").value=ly.depositPercent||30; $("sApDays").value=ly.days||30;
   $("sMeta").value=ad.metaPixel||""; $("sTtPx").value=ad.tiktokPixel||""; $("sGa").value=ad.ga4||"";
@@ -967,7 +971,7 @@ async function saveSettings(){
   if($("sTryOn").checked && !$("sClubOn").checked) return toast("El probador virtual necesita el Club Caneva activo.",{err:true});
   if(layaway.depositPercent<5||layaway.depositPercent>90) return toast("La cuota inicial debe estar entre 5% y 90%.",{err:true});
   if(layaway.days<1||layaway.days>120) return toast("Los días deben estar entre 1 y 120.",{err:true});
-  const cfg={...(siteConfig||{}), social, announcement, ads, ai, auth:{googleClientId:gid}, loyalty, mail:{from:fromV, replyTo:replyV}, layaway, delivery, gift:{enabled:$("sGfOn").checked, amounts:$("sGfAmts").value.split(/[,;\s]+/).map(v=>parseInt(v.replace(/\D/g,""),10)).filter(v=>v>=10000).slice(0,6), minCustom:parseInt($("sGfMin").value.replace(/\D/g,""),10)||30000, months:parseInt($("sGfMonths").value,10)||12}, tryon:{enabled:$("sTryOn").checked, dailyLimit:Math.max(1,Math.min(20,parseInt($("sTryLimit").value,10)||3))}, inventory:{low:Math.max(0,Math.min(50,parseInt($("sInvLow").value,10)||0)), showLeft:$("sInvLeft").checked}};
+  const cfg={...(siteConfig||{}), social, announcement, ads, ai, auth:{googleClientId:gid}, loyalty, mail:{from:fromV, replyTo:replyV}, layaway, delivery, gift:{enabled:$("sGfOn").checked, amounts:$("sGfAmts").value.split(/[,;\s]+/).map(v=>parseInt(v.replace(/\D/g,""),10)).filter(v=>v>=10000).slice(0,6), minCustom:parseInt($("sGfMin").value.replace(/\D/g,""),10)||30000, months:parseInt($("sGfMonths").value,10)||12}, tryon:{enabled:$("sTryOn").checked, dailyLimit:Math.max(1,Math.min(20,parseInt($("sTryLimit").value,10)||3))}, inventory:{low:Math.max(0,Math.min(50,parseInt($("sInvLow").value,10)||0)), showLeft:$("sInvLeft").checked}, theme:$("sTheme").value};
   busy(true,"Guardando ajustes…");
   try{
     const res=await api(API_BASE+"/admin/config",{method:"POST",headers:{"x-admin-token":token(),"Content-Type":"application/json"},body:JSON.stringify(cfg)});
