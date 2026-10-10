@@ -512,7 +512,7 @@
     C.el.innerHTML='<div class="cp-head"><div><div class="cp-eyeb"><span class="cp-livedot"></span> En vivo · se actualiza solo</div><h2 class="cp-h">Centro de control</h2></div>'+
       '<div class="cp-seg">'+[[1,"Hoy"],[7,"7 días"],[30,"30 días"]].map(function(x){return '<button type="button" data-cdays="'+x[0]+'" class="'+(x[0]===C.days?"on":"")+'">'+x[1]+'</button>';}).join("")+'</div></div>'+
       '<div class="cp-ctl-top"><div class="cp-card cp-livecard" id="ctlLive"></div><div class="cp-card cp-mapcard"><div id="ctlMap" class="cp-vmap cp-ctlmap"></div></div></div>'+
-      '<div id="ctlNums"></div><div id="ctlIg"></div><div id="ctlTasks"></div><div id="ctlOrig"></div><div id="ctlSet"></div>';
+      '<div id="ctlNums"></div><div id="ctlIg"></div><div id="ctlLinks"></div><div id="ctlTasks"></div><div id="ctlOrig"></div><div id="ctlSet"></div>';
     ctlFill();
     if(!C.timer)C.timer=setInterval(function(){if(C.el&&C.el._cpKind==="control"&&C.el.offsetParent&&document.visibilityState==="visible")ctlLoad(true);},30000);
   }
@@ -524,7 +524,7 @@
       '<div class="cp-eyeb" style="margin:12px 0 4px">Actividad reciente</div>'+
       (F.length?'<div class="cp-feed">'+F.slice(0,12).map(function(f){return '<div class="cp-fi"><i class="'+(Date.now()-f.ts<300000?"on":"")+'"></i><div><b>'+esc(f.who)+'</b> '+esc(String(f.last).replace(/^clic: /,"tocó "))+'<small>'+esc(ago(f.ts))+(f.origen?" · "+esc(f.origen):"")+(f.ref?" · 🔖 "+esc(f.ref):"")+'</small></div></div>';}).join("")+'</div>':empty("Nadie en las últimas 3 horas."));
     ctlMap(L.concat(F));
-    igLoad();
+    igLoad();lkLoad();
     // numbers
     var T=D.numbers.today,Y=D.numbers.yesterday,M=D.numbers.month;
     var proj=M.dayOfMonth?Math.round(M.revenue/M.dayOfMonth*M.daysInMonth):0,gpct=M.goal?Math.min(100,Math.round(M.revenue/M.goal*100)):0;
@@ -555,7 +555,7 @@
     var O=D.origins||{};
     function ob(title,k){var l=O[k]||[];if(!l.length)return "";var mx=Math.max.apply(null,l.map(function(x){return x.n;}));return '<div class="cp-card"><div class="cp-cardh"><span class="cp-eyeb">'+title+'</span></div>'+l.map(function(x){return '<div class="cp-hbar"><span class="cp-hl" title="'+esc(x.key)+'">'+esc(x.key)+'</span><span class="cp-ht"><i style="width:'+Math.max(3,Math.round(x.n/mx*100))+'%"></i></span><b>'+num(x.n)+' <em class="cp-dim" style="font-style:normal;font-weight:400">'+pct(x.n,O.total)+'%</em></b></div>';}).join("")+'</div>';}
     document.getElementById("ctlOrig").innerHTML='<div class="cp-sect" style="margin-top:22px">🧭 De dónde vienen · '+num(O.total||0)+' visitas en '+(C.days===1?"hoy":C.days+" días")+'</div>'+
-      ((O.total||0)?'<div class="cp-grid3">'+ob("Cómo llegaron","origen")+ob("Desde qué app","app")+ob("Ciudades","ciudad")+ob("Departamentos","departamento")+ob("Celular o computador","equipo")+ob("Tipo de red","red")+ob("Empresa de internet","operador")+ob("Campañas","campana")+ob("Anuncios","anuncio")+ob("Hora en su celular","hora")+ob("Países","pais")+'</div>':empty("Todavía no hay visitas guardadas en este período."))+
+      ((O.total||0)?'<div class="cp-grid3">'+ob("🔗 Enlaces de seguimiento","enlace")+ob("Ubicación del anuncio","ubicacion")+ob("Cómo llegaron","origen")+ob("Desde qué app","app")+ob("Ciudades","ciudad")+ob("Departamentos","departamento")+ob("Celular o computador","equipo")+ob("Tipo de red","red")+ob("Empresa de internet","operador")+ob("Campañas","campana")+ob("Anuncios","anuncio")+ob("Hora en su celular","hora")+ob("Países","pais")+'</div>':empty("Todavía no hay visitas guardadas en este período."))+
       '<p class="cp-hint">Para saber qué anuncio trae más gente, usa enlaces como <b>canevacol.com/?utm_source=tiktok&amp;utm_campaign=octubre&amp;utm_content=vestido-rojo</b>.</p>';
     // settings
     var S=D.settings||{};
@@ -585,6 +585,30 @@
         '<div class="cp-tra" style="max-width:none;justify-content:flex-start;margin-top:8px">'+(c.username?'<a class="cp-mini'+(open?"":" pri")+'" href="https://ig.me/m/'+encodeURIComponent(c.username)+'" target="_blank" rel="noopener">Abrir chat</a><a class="cp-mini" href="https://instagram.com/'+encodeURIComponent(c.username)+'" target="_blank" rel="noopener">Ver perfil</a>':'')+'<button type="button" class="cp-mini" data-igopen="'+esc(c.igsid)+'">'+(open?"Cerrar":"Ver conversación")+'</button>'+(c.ref?'<button type="button" class="cp-mini" data-igvisit="'+esc(c.ref)+'">Ver su visita</button>':'')+'</div></div>';
     }).join("")+'</div>':empty("Todavía nadie ha escrito desde que conectaste Instagram."));
   }
+  // ---------- Tracked links: one link per story / reel / bio / ad to know exactly what brings people ----------
+  var K2={data:null,form:false};
+  var META_PARAMS="utm_source=meta&utm_medium=paid&utm_campaign={{campaign.name}}&utm_content={{ad.name}}&utm_term={{placement}}";
+  function lkUrl(l){return "https://canevacol.com/?ref="+l.code+(l.cat?"&cat="+encodeURIComponent(l.cat):"");}
+  function lkLoad(){return api("/admin/links?days=30").then(function(d){K2.data=d;lkRender();}).catch(function(e){var el=document.getElementById("ctlLinks");if(el&&/Worker|Ruta|404/.test(e.message||""))el.innerHTML='<div class="cp-sect" style="margin-top:22px">🔗 Enlaces de seguimiento</div>'+empty("Pega el Worker v36 para crear enlaces de seguimiento.");});}
+  function copy(t){try{navigator.clipboard.writeText(t);toast("Copiado ✓");}catch(e){prompt("Copia el enlace:",t);}}
+  function lkRender(){
+    var el=document.getElementById("ctlLinks"),D=K2.data;if(!el||!D)return;
+    var L=D.links||[],best=L.slice().sort(function(a,b){return (b.wa+b.dm+b.bag)-(a.wa+a.dm+a.bag)||b.visits-a.visits;})[0];
+    var cats=(window.P||[]).map?[]:[];
+    el.innerHTML='<div class="cp-sect" style="margin-top:22px">🔗 Enlaces de seguimiento · saber qué historia, reel o anuncio te trae clientas</div>'+
+      '<div class="cp-card"><div class="cp-cardh"><div><b style="font-size:14.5px">Crea un enlace para cada cosa que publiques</b><div class="cp-dim" style="font-size:12.5px;margin-top:3px">Ej: "Historia vestido rojo", "Bio", "Reel jeans". Pega ese enlace en la historia o en la bio y aquí verás cuántas personas trajo y qué hicieron.</div></div>'+
+      '<button type="button" class="cp-btn'+(K2.form?" ghost":"")+'" data-a="lkform">'+(K2.form?"Cerrar":"+ Nuevo enlace")+'</button></div>'+
+      (K2.form?'<div class="cp-2"><div class="cp-field"><label>Nombre</label><input id="lkName" maxlength="80" placeholder="Historia vestido rojo"></div><div class="cp-field"><label>¿Dónde lo vas a poner?</label><select id="lkPlace" class="cp-sel">'+(D.places||[]).map(function(p){return '<option>'+esc(p)+'</option>';}).join("")+'</select></div></div>'+
+        '<div class="cp-field"><label>Abrir directo en una categoría (opcional)</label><input id="lkCat" maxlength="60" placeholder="Ej: Vestidos / sets — déjalo vacío para la tienda completa"></div><button type="button" class="cp-btn full" data-a="lkcreate">Crear enlace</button>':"")+
+      '</div>'+
+      (L.length?'<div class="cp-lklist">'+L.map(function(l){var conv=l.visits?Math.round((l.wa+l.dm)/l.visits*100):0;
+        return '<div class="cp-card cp-lk'+(best&&best===l&&(l.wa+l.dm+l.bag)>0?" best":"")+'"><div class="cp-cardh"><div style="min-width:0"><b class="cp-lkn">'+(best===l&&(l.wa+l.dm+l.bag)>0?"🏆 ":"")+esc(l.name)+'</b><div class="cp-dim" style="font-size:12px">'+esc(l.place)+(l.cat?" · abre en "+esc(l.cat):"")+'</div></div><button type="button" class="cp-x" data-lkdel="'+esc(l.code)+'" title="Quitar">✕</button></div>'+
+          '<div class="cp-lkurl"><code>'+esc(lkUrl(l).replace("https://",""))+'</code><button type="button" class="cp-mini pri" data-lkcopy="'+esc(lkUrl(l))+'">Copiar</button></div>'+
+          '<div class="cp-lks"><div><b>'+num(l.visits)+'</b><span>visitas</span></div><div><b>'+num(l.people)+'</b><span>personas</span></div><div><b>'+num(l.viewed)+'</b><span>vieron prendas</span></div><div><b>'+num(l.bag)+'</b><span>a la bolsa</span></div><div><b>'+num(l.wa+l.dm)+'</b><span>escribieron</span></div><div><b>'+conv+'%</b><span>conversión</span></div></div>'+
+          (l.cities&&l.cities.length?'<div class="cp-dim" style="font-size:12px;margin-top:6px">📍 '+esc(l.cities.join(" · "))+'</div>':'')+'</div>';}).join("")+'</div>':'')+
+      '<div class="cp-card" style="margin-top:12px"><div class="cp-cardh"><div><b style="font-size:14px">📢 Para tus anuncios de Meta</b><div class="cp-dim" style="font-size:12.5px;margin-top:3px">En el Administrador de anuncios, al crear el anuncio, abajo en <b>Parámetros de URL</b> pega esto. Así sabrás qué campaña, qué anuncio y si fue en historias, reels o feed.</div></div></div>'+
+      '<div class="cp-lkurl"><code>'+esc(META_PARAMS)+'</code><button type="button" class="cp-mini pri" data-lkcopy="'+esc(META_PARAMS)+'">Copiar</button></div></div>';
+  }
   function ctlMap(list){
     var box=document.getElementById("ctlMap");if(!box)return;
     var seen={},pts=[];list.forEach(function(x){if(!x.coords||seen[x.vid])return;seen[x.vid]=1;var m=String(x.coords).split(",").map(Number);if(m.length===2&&isFinite(m[0])&&isFinite(m[1]))pts.push({lat:m[0],lon:m[1],x:x,live:Date.now()-x.ts<300000});});
@@ -601,6 +625,11 @@
   function ctlClick(e){
     var b;
     if((b=e.target.closest("[data-cdays]"))){C.days=Number(b.dataset.cdays);return ctlLoad(true);}
+    if((b=e.target.closest("[data-lkcopy]")))return copy(b.dataset.lkcopy);
+    if((b=e.target.closest("[data-lkdel]"))){if(!confirm("¿Quitar este enlace? Las visitas que trajo se conservan."))return;return api("/admin/links",{method:"POST",body:{remove:b.dataset.lkdel}}).then(lkLoad).catch(function(x){toast(x.message,true);});}
+    if((b=e.target.closest("[data-a]"))&&b.dataset.a==="lkform"){K2.form=!K2.form;return lkRender();}
+    if((b=e.target.closest("[data-a]"))&&b.dataset.a==="lkcreate"){var nm=document.getElementById("lkName").value.trim();if(!nm){toast("Ponle un nombre",true);return;}
+      busy(true,"Creando enlace…");return api("/admin/links",{method:"POST",body:{name:nm,place:document.getElementById("lkPlace").value,cat:document.getElementById("lkCat").value.trim()}}).then(function(d){busy(false);K2.form=false;var cat=document.getElementById("lkCat");copy("https://canevacol.com/?ref="+d.code+(cat&&cat.value.trim()?"&cat="+encodeURIComponent(cat.value.trim()):""));return lkLoad();}).catch(function(x){busy(false);toast(x.message,true);});}
     if((b=e.target.closest("[data-igopen]"))&&!e.target.closest("a")){var id=b.dataset.igopen;G.open[id]=!G.open[id];return igRender();}
     if((b=e.target.closest("[data-igvisit]"))){var t=document.querySelector('[data-tab="reportes"]');if(t){V.q=b.dataset.igvisit;t.click();}return;}
     if((b=e.target.closest("[data-igsend]"))){var sid=b.dataset.igsend,inp=document.querySelector('[data-igtext="'+sid+'"]'),txt=inp&&inp.value.trim();if(!txt)return;
@@ -794,6 +823,11 @@
   ".cp-igchat{margin-top:10px;display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto}.cp-igmsg{align-self:flex-start;max-width:82%;background:#1c1c1c;border-radius:14px 14px 14px 4px;padding:8px 11px;font-size:13px;line-height:1.4}.cp-igmsg.us{align-self:flex-end;background:linear-gradient(135deg,#6228d7,#ee2a7b);border-radius:14px 14px 4px 14px}.cp-igmsg small{display:block;font-size:10.5px;opacity:.6;margin-top:3px}",
   ".cp-igrep{display:flex;gap:6px;margin-top:8px}.cp-igrep input{flex:1;min-width:0;background:var(--k);border:1px solid var(--b);border-radius:999px;padding:9px 13px;color:var(--w);font-size:14px;outline:none}",
   ".cp-igsetup b{font-size:15px}",
+  ".cp-lklist{display:grid;gap:10px;grid-template-columns:1fr;margin-top:12px}@media(min-width:900px){.cp-lklist{grid-template-columns:1fr 1fr}}",
+  ".cp-lk.best{border-color:rgba(217,196,155,.6);background:linear-gradient(160deg,rgba(217,196,155,.08),var(--k2))}.cp-lkn{font-size:15px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
+  ".cp-lkurl{display:flex;gap:8px;align-items:center;background:var(--k);border:1px solid var(--b);border-radius:10px;padding:8px 8px 8px 12px;margin-top:6px}.cp-lkurl code{flex:1;min-width:0;font-size:12.5px;color:#e9dcc1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
+  ".cp-lks{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:10px}@media(max-width:600px){.cp-lks{grid-template-columns:repeat(3,1fr)}}.cp-lks div{background:var(--k);border-radius:10px;padding:8px;text-align:center}.cp-lks b{display:block;font-size:18px;font-variant-numeric:tabular-nums}.cp-lks span{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}",
+  ".cp-sel{width:100%;background:var(--k2);color:var(--w);border:1px solid var(--b);border-radius:10px;padding:12px 14px;font-size:16px;font-family:inherit}",
   ".cp-idea{margin-top:14px;border:1px solid rgba(217,196,155,.5);background:linear-gradient(120deg,rgba(217,196,155,.14),rgba(247,247,244,.02));border-radius:12px;padding:12px 14px;font-size:14px;line-height:1.45;color:#f1e6cf}",
   ".cp-vbtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.cp-vbtns .cp-btn{text-decoration:none;display:inline-block}",
   ".cp-kv{display:grid;grid-template-columns:150px 1fr;gap:10px;padding:7px 0;border-top:1px solid var(--b);font-size:13px}.cp-kv span{color:var(--dim)}.cp-kv b{font-weight:500;word-break:break-word}",
