@@ -2747,7 +2747,7 @@ var CHAT_HISTORY=[],AI_CONTEXT={},CHAT_LOG=[];
 var CHAT_KEY='caneva_chat_v1';
 // Conversation survives page navigation within the visit
 function saveChat(){try{sessionStorage.setItem(CHAT_KEY,JSON.stringify({h:CHAT_HISTORY.slice(-12),l:CHAT_LOG.slice(-16)}));}catch(e){}}
-function restoreChat(){try{var raw=sessionStorage.getItem(CHAT_KEY);if(!raw)return false;var d=JSON.parse(raw);if(!d||!d.l||!d.l.length)return false;CHAT_HISTORY=d.h||[];CHAT_LOG=d.l;cmsgs.classList.add('no-anim');CHAT_LOG.forEach(function(m){addMsg(m.t,m.r,m.r==='a'?aiPicked(m.p):undefined,m.s);});var last=cmsgs.querySelectorAll('.ai-sugs');for(var i=0;i<last.length-1;i++)last[i].remove();setTimeout(function(){cmsgs.classList.remove('no-anim');},50);return true;}catch(e){return false;}}
+function restoreChat(){try{var raw=sessionStorage.getItem(CHAT_KEY);if(!raw)return false;var d=JSON.parse(raw);if(!d||!d.l||!d.l.length)return false;CHAT_HISTORY=d.h||[];CHAT_LOG=d.l;cmsgs.classList.add('no-anim');CHAT_LOG.forEach(function(m){addMsg(m.t,m.r,m.r==='a'?aiPicked(m.p):undefined,m.s,m.lk);});var last=cmsgs.querySelectorAll('.ai-sugs');for(var i=0;i<last.length-1;i++)last[i].remove();setTimeout(function(){cmsgs.classList.remove('no-anim');},50);return true;}catch(e){return false;}}
 function resetChat(){CHAT_HISTORY=[];CHAT_LOG=[];try{sessionStorage.removeItem(CHAT_KEY);}catch(e){}cmsgs.innerHTML='';hasWelcomed=false;welcome();}
 // Size the client mentioned in the chat ("talla 10", "talla M"), if the product has it
 function chatSizeFor(p){var sizes=productSizes(p);if(!sizes.length)return '';var t='';CHAT_HISTORY.forEach(function(h){if(h.role==='user'){var m=String(h.text).match(/talla\s*([a-z0-9]{1,4})/i);if(m)t=m[1];}});if(t){var hit=sizes.find(function(x){return String(x).toLowerCase()===t.toLowerCase();});if(hit)return hit;}return 'Por confirmar';}
@@ -2863,7 +2863,7 @@ async function sendChat(retryMsg){
     if(!res.ok||!data.ok||!data.reply){giveUp();return;}
     rmTyp();
     CHAT_HISTORY.push({role:'model',text:data.reply});
-    var sugs=Array.isArray(data.suggestions)?data.suggestions.slice(0,3):[];addMsg(escHtml(data.reply),'a',aiPicked(data.products),sugs);CHAT_LOG.push({r:'a',t:escHtml(data.reply),p:data.products||[],s:sugs});saveChat();
+    var sugs=Array.isArray(data.suggestions)?data.suggestions.slice(0,3):[];addMsg(escHtml(data.reply),'a',aiPicked(data.products),sugs,data.looks);CHAT_LOG.push({r:'a',t:escHtml(data.reply),p:data.products||[],s:sugs,lk:data.looks||[]});saveChat();
   }catch(e){
     giveUp();
   }finally{
@@ -3724,6 +3724,81 @@ body.cv-on .bw-inner{min-width:0;max-width:100%}body.cv-on .bw-inner>*{min-width
     d.querySelector('.no').onclick=function(){close(7);};d.querySelector('.x').onclick=function(){close(7);};
   }
   setTimeout(function(){maybeWelcome(true);},45000);
+})();
+</script>
+<style id="cv-ai-pro-css">
+/* ===== Caneva AI stylist: look carousel, product carousel, photo try-on button ===== */
+.lk-wrap{margin:.2rem 0 .3rem 44px;width:calc(100% - 44px)}
+.lk-row{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:2px 2px 4px}
+.lk-row::-webkit-scrollbar{display:none}
+.lk{flex:0 0 min(270px,86%);scroll-snap-align:start;border:1px solid rgba(247,247,244,.16);background:linear-gradient(170deg,#141414,#070707);color:#f7f7f4;font-family:Inter,sans-serif;animation:aiIn .5s cubic-bezier(.16,1,.3,1) both}
+.lk-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:.75rem .8rem .55rem}
+.lk-h small{display:block;font-size:.5rem;letter-spacing:.24em;text-transform:uppercase;color:rgba(247,247,244,.5)}
+.lk-h b{font-family:"Cormorant Garamond",serif;font-weight:400;font-size:1.3rem;line-height:1.05}
+.lk-h strong{font-size:.86rem;font-weight:600;white-space:nowrap}
+.lk-ph{display:grid;grid-template-columns:repeat(var(--n,2),1fr);gap:2px;padding:0 2px}
+.lk-ph button{position:relative;border:0;padding:0;aspect-ratio:3/4;overflow:hidden;background:#1a1a1a;cursor:pointer}
+.lk-ph img{width:100%;height:100%;object-fit:cover;transition:transform .6s}
+.lk-ph button:hover img{transform:scale(1.05)}
+.lk-ph span{position:absolute;left:4px;right:4px;bottom:4px;background:rgba(2,2,2,.78);font-size:.55rem;line-height:1.25;padding:.3rem .35rem;text-align:left;color:#f7f7f4}
+.lk-a{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:.65rem .7rem .75rem}
+.lk-a button,.lk-a a{border:1px solid rgba(247,247,244,.22);background:none;color:#f7f7f4;padding:.62rem .4rem;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;text-align:center;text-decoration:none;cursor:pointer;font-family:Inter,sans-serif}
+.lk-a .add{background:#f7f7f4;color:#020202;border-color:#f7f7f4;font-weight:600}
+.lk-a .try{grid-column:1/-1;border-color:rgba(217,196,155,.65);background:linear-gradient(120deg,rgba(217,196,155,.2),rgba(247,247,244,.03));letter-spacing:.06em;text-transform:none;font-size:.74rem}
+.lk-dots{display:flex;gap:5px;justify-content:center;margin-top:.35rem}.lk-dots i{width:14px;height:2px;background:rgba(247,247,244,.22)}.lk-dots i.on{background:#f7f7f4}
+/* product suggestions as a swipeable carousel */
+#cmsgs .rcards{scroll-snap-type:x mandatory;padding-bottom:.5rem}
+#cmsgs .rc{scroll-snap-align:start}
+@media(max-width:640px){#cmsgs .rc{width:44%!important;flex:0 0 44%!important}#cmsgs .rc-img{width:100%!important;height:auto!important;aspect-ratio:3/4}}
+/* photo button in the chat bar */
+.ai-cam{flex:none;width:46px;border:1px solid rgba(247,247,244,.22);background:none;color:#f7f7f4;font-size:1.05rem;cursor:pointer}
+.ai-cam[hidden]{display:none}
+</style>
+<script id="cv-ai-pro-js">
+// Caneva AI stylist: shows the combos (looks) the AI builds as a carousel with "add look", "see it on me" and WhatsApp
+(function(){
+  if(typeof addMsg!=='function')return;
+  var LAST=[];
+  function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function tryOk(){return !!(window.clubTryOn&&clubTryOn());}
+  function lookHtml(l,k){
+    var total=l.items.reduce(function(s,p){var n=priceNum(p.precio);return s+(n<999999999?n:0);},0);
+    return '<div class="lk" data-lk="'+k+'"><div class="lk-h"><div><small>Look '+(k+1)+' · '+l.items.length+' prendas</small><b>'+esc(l.name)+'</b></div><strong>$'+total.toLocaleString('es-CO')+'</strong></div>'+
+      '<div class="lk-ph" style="--n:'+Math.min(l.items.length,3)+'">'+l.items.slice(0,3).map(function(p){var i=P.indexOf(p);return '<button type="button" data-pid="'+i+'">'+(p.imagen&&p.imagen.indexOf('http')===0?'<img src="'+esc(p.imagen)+'" alt="" loading="lazy">':'')+'<span>'+esc(p.nombre)+' · '+esc(p.precio)+'</span></button>';}).join('')+'</div>'+
+      '<div class="lk-a"><button type="button" class="add">Agregar look</button><a href="'+lookWhatsLink(l.items)+'" target="_blank" rel="noopener">WhatsApp</a>'+
+      (tryOk()?'<button type="button" class="try">📸 Mírame con este look</button>':'')+'</div></div>';
+  }
+  function looksOf(list){return (list||[]).map(function(l){return {name:l.name,items:aiPicked(l.items)};}).filter(function(l){return l.items.length>=2;});}
+  var _add=window.addMsg;
+  window.addMsg=addMsg=function(t,r,explicit,sugs,looks){
+    var L=r==='a'?looksOf(looks):[];
+    if(!L.length){var res=_add(t,r,explicit,sugs);if(r==='a'&&explicit&&explicit.length)LAST=explicit;return res;}
+    _add(t,r,[],sugs);
+    var d=cmsgs.lastElementChild;LAST=L[0].items;
+    var box=document.createElement('div');box.className='lk-wrap';
+    box.innerHTML='<div class="lk-row">'+L.map(lookHtml).join('')+'</div>'+(L.length>1?'<div class="lk-dots">'+L.map(function(_,i){return '<i class="'+(i?'':'on')+'"></i>';}).join('')+'</div>':'');
+    var sg=d.querySelector('.ai-sugs');d.insertBefore(box,sg||null);
+    var row=box.querySelector('.lk-row');
+    row.addEventListener('scroll',function(){var w=row.firstElementChild.offsetWidth+10,i=Math.round(row.scrollLeft/w);box.querySelectorAll('.lk-dots i').forEach(function(x,k){x.classList.toggle('on',k===i);});},{passive:true});
+    box.addEventListener('click',function(e){
+      var c=e.target.closest('.lk');if(!c)return;var l=L[+c.dataset.lk];LAST=l.items;
+      var ph=e.target.closest('[data-pid]');if(ph){openProductModal(parseInt(ph.dataset.pid,10));return;}
+      if(e.target.closest('.add')){l.items.forEach(function(p){var i=P.indexOf(p);if(i>=0)addToCartByIndex(i,false,chatSizeFor(p));});toastCart('Look agregado a la bolsa ✨');return;}
+      if(e.target.closest('.try')&&window.tryStart){tryStart(l.items);}
+    });
+    cmsgs.scrollTop=cmsgs.scrollHeight;
+  };
+  // 📸 in the chat bar: try on the last look or garment the AI suggested
+  var bar=document.querySelector('.cbar'),send=document.getElementById('csend');
+  if(bar&&send){
+    var cam=document.createElement('button');cam.type='button';cam.className='ai-cam';cam.title='Mírate con la ropa (sube tu foto)';cam.setAttribute('aria-label','Probarme la ropa con una foto');cam.textContent='📸';
+    bar.insertBefore(cam,send);
+    var sync=function(){cam.hidden=!tryOk();};sync();setInterval(sync,4000);
+    cam.addEventListener('click',function(){
+      if(LAST.length&&window.tryStart){tryStart(LAST);return;}
+      addMsg('Primero pídeme un look o elige una prenda ✨ y luego toca <strong>📸 Mírame con este look</strong> para verte con ella.','a');
+    });
+  }
 })();
 </script>
 </body>
