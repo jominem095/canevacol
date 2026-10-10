@@ -380,7 +380,11 @@
   function visRender(){
     var el=document.getElementById("cpVis"),D=V.data;if(!el||!D)return;
     var c=D.counts||{},list=D.visits||[];
-    el.innerHTML='<div class="cp-cardh"><div><span class="cp-eyeb">Visitantes en detalle</span><div class="cp-dim" style="font-size:12px;margin-top:4px">Últimos '+visDays()+' días · toca una visita para ver todo y escribirle</div></div></div>'+
+    var im=D.import||{},imMsg="";
+    if(im.status==="no_token")imMsg='<div class="cp-note" style="margin:0 0 10px">Para traer solas las visitas que están en los Logs de Cloudflare, falta conectar el token <b>CF_API_TOKEN</b> en el Worker.</div>';
+    else if(im.status==="error")imMsg='<div class="cp-note" style="margin:0 0 10px;border-color:rgba(255,180,168,.4)">No se pudieron traer las visitas de los Logs: '+esc(im.msg||"")+'</div>';
+    else if(im.status==="ok"&&im.n)imMsg='<div class="cp-note" style="margin:0 0 10px">✓ Se trajeron '+num(im.n)+' visitas nuevas desde los Logs de Cloudflare.</div>';
+    el.innerHTML='<div class="cp-cardh"><div><span class="cp-eyeb">Visitantes en detalle</span><div class="cp-dim" style="font-size:12px;margin-top:4px">Últimos '+visDays()+' días · toca una visita para ver todo y escribirle</div></div>'+(im.status&&im.status!=="no_token"?'<button type="button" class="cp-btn ghost" data-a="vimport">↻ Traer de Cloudflare</button>':'')+'</div>'+imMsg+
       '<div class="cp-chips">'+VF.map(function(f){return '<button type="button" class="cp-chip '+(V.f===f[0]?"on":"")+'" data-vf="'+f[0]+'">'+f[1]+' <i>'+num(c[f[2]]||0)+'</i></button>';}).join("")+'</div>'+
       '<input class="cp-search" type="search" data-vq placeholder="Buscar código Ref (ej. K7Q2), @instagram, ciudad o prenda…" value="'+esc(V.q)+'">'+
       (V.map?'<div class="cp-mapw'+(V.full?" full":"")+'"><div id="cpVisMap" class="cp-vmap"></div><div class="cp-mtools"><button type="button" data-a="vfit" title="Ver todos">◎</button><button type="button" data-a="vfull" title="Pantalla completa">'+(V.full?"✕":"⛶")+'</button></div><div class="cp-vleg"><span><i class="ex"></i>Exacta (ella la autorizó)</span><span><i class="ap"></i>Zona por su internet</span><span><i class="lv"></i>Hace menos de 30 min</span></div></div><div id="cpVisMapStat" class="cp-mstats"></div>':"")+
@@ -450,6 +454,7 @@
     if((b=e.target.closest("[data-sort]"))){var k=b.dataset.sort;if(R.sort===k)R.dir=-R.dir;else{R.sort=k;R.dir=k==="nombre"?1:-1;}return repTable();}
     if((b=e.target.closest("[data-a]"))&&b.dataset.a==="rcsv")return repCsv();
     if((b=e.target.closest("[data-a]"))&&b.dataset.a==="vmore"){V.n+=30;return visRender();}
+    if((b=e.target.closest("[data-a]"))&&b.dataset.a==="vimport"){busy(true,"Trayendo visitas de Cloudflare…");return api("/admin/visits/import",{method:"POST"}).then(function(d){busy(false);var r=d.import||{};toast(r.status==="ok"?(r.n?"✓ "+r.n+" visitas nuevas":"Ya estaban todas las visitas"):(r.msg||"No se pudo"),r.status==="error");return visLoad();}).catch(function(x){busy(false);toast(x.message,true);});}
     if((b=e.target.closest("[data-a]"))&&b.dataset.a==="vfit"){if(V.lmap&&V.lbounds&&V.lbounds.length)V.lmap.fitBounds(V.lbounds,{padding:[40,40],maxZoom:13});return;}
     if((b=e.target.closest("[data-a]"))&&b.dataset.a==="vfull"){V.full=!V.full;var w=document.querySelector(".cp-mapw");if(w)w.classList.toggle("full",V.full);b.textContent=V.full?"✕":"⛶";document.body.style.overflow=V.full?"hidden":"";if(V.lmap)setTimeout(function(){V.lmap.invalidateSize();if(V.lbounds&&V.lbounds.length>1)V.lmap.fitBounds(V.lbounds,{padding:[40,40],maxZoom:13});},120);return;}
     if((b=e.target.closest("[data-vcity]"))){V.q=b.dataset.vcity==="Sin ciudad"?"":b.dataset.vcity;V.n=20;return visLoad();}
