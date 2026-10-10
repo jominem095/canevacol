@@ -4038,8 +4038,25 @@ body.cv-on .bw-inner{min-width:0;max-width:100%}body.cv-on .bw-inner>*{min-width
     if(busy()){setTimeout(function(){maybeWelcome(true);},2500);return;}
     shown=true;var pts=(clubInfo().welcome)||100;
     var d=document.createElement('div');d.className='cv-wel';d.setAttribute('role','dialog');d.setAttribute('aria-label','Club Caneva');
-    d.innerHTML='<button class="x" type="button" aria-label="Cerrar">✕</button><small>Solo para Canevalovers</small><h4>Te regalamos <b>'+pts+' puntos</b> 🖤</h4><p>Únete al Club Caneva en 10 segundos, con Google o tu correo. Sumas puntos en cada compra y los cambias por descuentos y una prenda sorpresa.</p><div class="cv-wb"><button class="yes" type="button">Reclamar mis puntos</button><button class="no" type="button">Ahora no</button></div>';
+    d.innerHTML='<button class="x" type="button" aria-label="Cerrar">✕</button><small>Solo para Canevalovers</small><h4>Tienes un <b>regalo</b> 🖤</h4>'+
+      '<div class="cv-scr"><div class="cv-scr-prize"><span>🎁</span><b>'+pts+' puntos</b><em>para tu primera compra</em></div><canvas aria-label="Raspa para descubrir tu regalo"></canvas><div class="cv-scr-hint">Raspa con el dedo ✨</div></div>'+
+      '<p>Únete al Club Caneva en 10 segundos, con Google o tu correo. Sumas puntos en cada compra y los cambias por descuentos y una prenda sorpresa.</p><div class="cv-wb"><button class="yes" type="button">Reclamar mis puntos</button><button class="no" type="button">Ahora no</button></div>';
     document.body.appendChild(d);requestAnimationFrame(function(){requestAnimationFrame(function(){d.classList.add('show');});});
+    // Scratch layer: black-and-gold foil that she scratches with the finger to reveal the prize
+    (function(){var box=d.querySelector('.cv-scr'),cv=box.querySelector('canvas'),x=cv.getContext('2d'),done=false,down=false,last=null;
+      function size(){var r=box.getBoundingClientRect(),k=Math.min(devicePixelRatio||1,2);cv.width=r.width*k;cv.height=r.height*k;x.setTransform(k,0,0,k,0,0);
+        var g=x.createLinearGradient(0,0,r.width,r.height);g.addColorStop(0,'#2a2418');g.addColorStop(.45,'#c9a96e');g.addColorStop(.55,'#f1e0b8');g.addColorStop(1,'#3a2f1c');x.fillStyle=g;x.fillRect(0,0,r.width,r.height);
+        x.fillStyle='rgba(5,5,5,.75)';x.font='600 12px Inter,sans-serif';x.textAlign='center';x.fillText('RASPA AQUÍ',r.width/2,r.height/2+4);x.globalCompositeOperation='destination-out';}
+      setTimeout(size,60);
+      function pos(e){var r=cv.getBoundingClientRect(),t=e.touches?e.touches[0]:e;return {x:t.clientX-r.left,y:t.clientY-r.top};}
+      function scratch(e){if(!down||done)return;e.preventDefault();var p=pos(e);x.lineWidth=34;x.lineCap='round';x.beginPath();x.moveTo((last||p).x,(last||p).y);x.lineTo(p.x,p.y);x.stroke();last=p;
+        if(window.cvBurst&&Math.random()<.3){var r=cv.getBoundingClientRect();cvBurst(r.left+p.x,r.top+p.y,2,1,.3);}}
+      function check(){if(done)return;var dta=x.getImageData(0,0,cv.width,cv.height).data,clear=0,step=40;for(var i=3;i<dta.length;i+=4*step)if(dta[i]===0)clear++;
+        if(clear/(dta.length/(4*step))>.45){done=true;cv.style.transition='opacity .5s';cv.style.opacity='0';box.classList.add('won');var r=box.getBoundingClientRect();if(window.cvBurst)cvBurst(r.left+r.width/2,r.top+r.height/2,60,3.4,1.4);if(navigator.vibrate)try{navigator.vibrate([20,40,30]);}catch(e){}}}
+      ['mousedown','touchstart'].forEach(function(ev){cv.addEventListener(ev,function(e){down=true;last=null;scratch(e);},{passive:false});});
+      ['mousemove','touchmove'].forEach(function(ev){cv.addEventListener(ev,scratch,{passive:false});});
+      ['mouseup','mouseleave','touchend'].forEach(function(ev){cv.addEventListener(ev,function(){if(down){down=false;check();}});});
+    })();
     var close=function(days){d.classList.remove('show');lsSet(WK,String(Date.now()+days*86400000));setTimeout(function(){d.remove();},700);};
     d.querySelector('.yes').onclick=function(){close(30);if(window.openClub)openClub();};
     d.querySelector('.no').onclick=function(){close(7);};d.querySelector('.x').onclick=function(){close(7);};
@@ -4494,6 +4511,62 @@ body.cv-fast .bw-logo-wrap{transform:scale(.82);transform-origin:center top;marg
   setTimeout(load,1500);setInterval(load,60000);
   var g=document.getElementById('pgrid');if(g)new MutationObserver(badge).observe(g,{childList:true});
   setTimeout(badge,2500);
+})();
+</script>
+<style id="cvhook-css">
+/* scratch card */
+.cv-scr{position:relative;height:96px;margin:.6rem 0 .8rem;border-radius:14px;overflow:hidden;border:1px solid rgba(217,196,155,.45);background:radial-gradient(circle at 30% 20%,#1d1a12,#070707)}
+.cv-scr canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab}
+.cv-scr-prize{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:.7rem;font-family:Inter,sans-serif}
+.cv-scr-prize span{font-size:1.9rem}.cv-scr-prize b{font-family:"Cormorant Garamond",serif;font-size:2rem;font-weight:500;color:#f1e0b8}.cv-scr-prize em{font-style:normal;font-size:.7rem;color:rgba(247,247,244,.6);max-width:90px;line-height:1.3}
+.cv-scr-hint{position:absolute;right:10px;bottom:6px;font:600 .55rem Inter,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:rgba(5,5,5,.7);pointer-events:none}
+.cv-scr.won .cv-scr-hint{display:none}.cv-scr.won{box-shadow:0 0 0 1px #d9c49b,0 0 40px rgba(217,196,155,.35)}
+/* real views of this garment */
+.cv-views{display:inline-flex;align-items:center;gap:.45rem;margin:.35rem 0 .2rem;padding:.35rem .7rem;border-radius:999px;background:rgba(217,196,155,.1);border:1px solid rgba(217,196,155,.3);font:600 .62rem Inter,sans-serif;letter-spacing:.06em;color:#f1e0b8}
+/* bag reminder */
+.cv-bagn{position:fixed;left:50%;bottom:calc(90px + var(--mobile-dock-h,0px));transform:translate(-50%,30px);opacity:0;z-index:965;width:min(400px,calc(100vw - 24px));background:#0b0b0b;border:1px solid rgba(217,196,155,.45);border-radius:18px;padding:14px;color:#f7f7f4;font-family:Inter,sans-serif;box-shadow:0 26px 80px rgba(0,0,0,.7);transition:transform .55s cubic-bezier(.16,1,.3,1),opacity .55s}
+.cv-bagn.show{transform:translate(-50%,0);opacity:1}
+.cv-bagn h5{margin:0 0 .3rem;font:500 1.25rem "Cormorant Garamond",serif}.cv-bagn p{margin:0 0 .7rem;font-size:.78rem;color:rgba(247,247,244,.7);line-height:1.45}
+.cv-bagn .im{display:flex;gap:6px;margin-bottom:.7rem}.cv-bagn .im img{width:46px;height:58px;object-fit:cover;border-radius:6px}
+.cv-bagn .bt{display:flex;gap:8px}.cv-bagn button{flex:1;border-radius:12px;padding:.8rem;font:600 .75rem Inter,sans-serif;cursor:pointer}
+.cv-bagn .go{background:#f7f7f4;color:#050505;border:0}.cv-bagn .later{background:none;color:#f7f7f4;border:1px solid rgba(247,247,244,.2)}
+@media(min-width:900px){.cv-bagn{left:auto;right:28px;transform:translateY(30px)}.cv-bagn.show{transform:none}}
+</style>
+<script id="cvhook-js">
+// Real views on each garment (from /pulse) and a gentle reminder when she leaves items in the bag.
+(function(){
+  var API=(typeof API_BASE!=='undefined'&&API_BASE)||'https://caneva-ai.canevacol.workers.dev',views={};
+  function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  fetch(API+'/pulse').then(function(r){return r.json();}).then(function(d){views=(d&&d.views)||{};}).catch(function(){});
+  var _o=window.openProductModal;
+  if(typeof _o==='function')window.openProductModal=openProductModal=function(i){var r=_o.apply(this,arguments);
+    try{var p=P[i],price=document.getElementById('pmPrice'),old=document.getElementById('cvViews');if(old)old.remove();
+      var n=p&&views[p.nombre];if(p&&n>=3&&price){var v=document.createElement('div');v.id='cvViews';v.className='cv-views';v.textContent='👀 '+n+' personas la vieron en las últimas 24 h';price.parentNode.insertBefore(v,price.nextSibling);}}catch(e){}
+    return r;};
+  // bag reminder: once per session, when she has items, isn't buying and stays still for 25 s (or moves the mouse out on a computer)
+  var done=false,idle=null;try{done=sessionStorage.getItem('cv_bagn')==='1';}catch(e){}
+  function hasBag(){return (window.CART||[]).length>0;}
+  function busy(){return !!document.querySelector('.pmodal.open,.ai-dock.open,#cvGeo,#cvIg,.cv-wel.show,#cvLuxIntro,.club-ov.open')||document.body.classList.contains('cart-open');}
+  function show(){
+    if(done||!hasBag())return;if(busy()){arm();return;}
+    done=true;try{sessionStorage.setItem('cv_bagn','1');}catch(e){}
+    clearTimeout(idle);
+    var items=CART.slice(0,4),total=typeof cartTotal==='function'?cartTotal():0,n=CART.reduce(function(s,x){return s+(x.qty||1);},0);
+    var d=document.createElement('div');d.className='cv-bagn';d.setAttribute('role','dialog');
+    d.innerHTML='<h5>💛 Tu bolsa te está esperando</h5><p>Tienes '+n+(n===1?' prenda':' prendas')+(total?' por $'+Number(total).toLocaleString('es-CO'):'')+'. Escríbenos y te las apartamos antes de que se agoten.</p>'+
+      '<div class="im">'+items.map(function(it){return it.imagen?'<img src="'+esc(it.imagen)+'" alt="">':'';}).join('')+'</div>'+
+      '<div class="bt"><button type="button" class="go">Pedir por WhatsApp</button><button type="button" class="later">Seguir viendo</button></div>';
+    document.body.appendChild(d);requestAnimationFrame(function(){d.classList.add('show');});
+    var close=function(){d.classList.remove('show');setTimeout(function(){d.remove();},600);};
+    d.querySelector('.go').onclick=function(){close();if(window.sendCartWhatsApp)sendCartWhatsApp();};
+    d.querySelector('.later').onclick=close;
+    setTimeout(function(){if(d.parentNode)close();},16000);
+  }
+  var lastAct=Date.now();
+  function arm(){lastAct=Date.now();}
+  ['scroll','pointerdown','keydown'].forEach(function(ev){addEventListener(ev,arm,{passive:true});});
+  document.addEventListener('mouseout',function(e){if(!e.relatedTarget&&e.clientY<=0&&hasBag())show();});
+  setInterval(function(){if(!done&&hasBag()&&Date.now()-lastAct>25000)show();},4000);
 })();
 </script>
 </body>

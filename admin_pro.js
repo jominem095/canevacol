@@ -530,7 +530,13 @@
   function wa(phone,text){var n=waNum(phone);return n?"https://wa.me/"+n+"?text="+encodeURIComponent(text):"";}
   function igdm(h){h=String(h||"").replace(/^@/,"");return h?"https://ig.me/m/"+encodeURIComponent(h):"";}
   function dl(cur,prev){if(!prev&&!cur)return '<em class="cp-dim">—</em>';if(!prev)return '<em class="cp-up">nuevo</em>';var d=Math.round((cur-prev)/prev*100);return '<em class="'+(d>=0?"cp-up":"cp-down")+'">'+(d>=0?"▲ ":"▼ ")+Math.abs(d)+'%</em> <span class="cp-dim">vs ayer</span>';}
+  // This admin device is registered automatically, so "Apagar admins tracking" can leave it out of the stats
+  function myVid(){try{var v=localStorage.getItem("caneva_vid");if(!/^[a-z0-9]{8,32}$/.test(v||"")){v=(Math.random().toString(36).slice(2)+Date.now().toString(36)).slice(0,20);localStorage.setItem("caneva_vid",v);}return v;}catch(e){return "";}}
+  function myName(){var u=navigator.userAgent;return (/iphone/i.test(u)?"iPhone":/ipad/i.test(u)?"iPad":/android/i.test(u)?"Android":/windows/i.test(u)?"Computador Windows":/mac/i.test(u)?"Mac":"Dispositivo")+" · "+(/admin_movil/.test(location.pathname)?"admin móvil":"admin web");}
+  var regDone=false;
+  function regDevice(){if(regDone)return;regDone=true;var v=myVid();if(v)api("/admin/devices",{method:"POST",body:{vid:v,name:myName()}}).catch(function(){regDone=false;});}
   function ctlLoad(silent){
+    regDevice();
     if(!silent)C.el.innerHTML=empty("Cargando el Centro de control…");
     return api("/admin/dashboard?days="+C.days).then(function(d){C.data=d;if(silent&&document.getElementById("ctlLive"))ctlFill();else ctlRender();})
       .catch(function(e){if(silent)return;var m=e.message||"";if(/Worker|Ruta|404/.test(m))m="Para ver el Centro de control, pega el Worker v33 en Cloudflare.";C.el.innerHTML=empty(esc(m));});
@@ -590,7 +596,12 @@
     document.getElementById("ctlSet").innerHTML='<div class="cp-card" style="margin-top:18px"><div class="cp-cardh"><span class="cp-eyeb">⚙️ Ajustes del Centro de control</span></div>'+
       '<div class="cp-2"><div class="cp-field"><label>Meta de ventas del mes</label><input id="ctlGoal" inputmode="numeric" placeholder="Ej: 8000000" value="'+(S.goal||"")+'"></div><div class="cp-field"><label>Correo para el resumen diario (8 a. m.)</label><input id="ctlMail" type="email" placeholder="mayra@correo.com" value="'+esc(S.email||"")+'"></div></div>'+
       '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button type="button" class="cp-btn" data-a="csave">Guardar</button><button type="button" class="cp-btn ghost" data-a="ctest">📧 Enviarme el resumen ahora</button></div>'+
-      (S.lastDaily?'<p class="cp-hint">Último resumen enviado: '+esc(S.lastDaily)+'</p>':'')+'</div>';
+      (S.lastDaily?'<p class="cp-hint">Último resumen enviado: '+esc(S.lastDaily)+'</p>':'')+
+      (function(){var A=D.adminTracking||{off:false,devices:[]},me=myVid();
+        return '<div class="cp-sect">🧹 Apagar admins tracking</div><label class="cp-switch"><input type="checkbox" data-atoff '+(A.off?"checked":"")+'><span></span><b>'+(A.off?"Encendido: las visitas de los dispositivos admin NO se cuentan":"Apagado: se cuentan todas las visitas (también las tuyas)")+'</b></label>'+
+          '<p class="cp-hint">Cada celular o computador donde abres este admin queda registrado solo. Cuando lo enciendes, las visitas de esos dispositivos a la tienda dejan de contarse desde ese momento y se ocultan del Control, Visitantes, mapa y bolsas.</p>'+
+          ((A.devices||[]).length?(A.devices||[]).map(function(d){return '<div class="cp-tr"><div><b>'+esc(d.name||"Dispositivo")+(d.vid===me?' <span class="cp-dim">(este)</span>':'')+'</b><small>visto '+esc(ago(d.seen||d.added||Date.now()))+'</small></div><button type="button" class="cp-mini" data-adel="'+esc(d.vid)+'">Quitar</button></div>';}).join(""):'<p class="cp-hint">Aún no hay dispositivos registrados.</p>');})()+
+      '</div>';
   }
   // ---------- Instagram DMs: who wrote to @canevacol, linked to her store visit by the Ref code ----------
   var G={data:null,open:{}};
@@ -654,6 +665,8 @@
     var b;
     if((b=e.target.closest("[data-cdays]"))){C.days=Number(b.dataset.cdays);return ctlLoad(true);}
     if((b=e.target.closest("[data-lkcopy]")))return copy(b.dataset.lkcopy);
+    if((b=e.target.closest("[data-adel]"))){return api("/admin/devices",{method:"POST",body:{remove:b.dataset.adel}}).then(function(){toast("Quitado ✓");return ctlLoad(true);}).catch(function(x){toast(x.message,true);});}
+    if((b=e.target.closest("[data-atoff]"))){var on=b.checked;return api("/admin/devices",{method:"POST",body:{vid:myVid(),name:myName(),off:on}}).then(function(){toast(on?"Listo: tus visitas ya no se cuentan":"Se vuelven a contar todas las visitas");return ctlLoad(true);}).catch(function(x){b.checked=!on;toast(x.message,true);});}
     if((b=e.target.closest("[data-lkdel]"))){if(!confirm("¿Quitar este enlace? Las visitas que trajo se conservan."))return;return api("/admin/links",{method:"POST",body:{remove:b.dataset.lkdel}}).then(lkLoad).catch(function(x){toast(x.message,true);});}
     if((b=e.target.closest("[data-a]"))&&b.dataset.a==="lkform"){K2.form=!K2.form;return lkRender();}
     if((b=e.target.closest("[data-a]"))&&b.dataset.a==="lkcreate"){var nm=document.getElementById("lkName").value.trim();if(!nm){toast("Ponle un nombre",true);return;}
@@ -859,6 +872,7 @@
   ".cp-audit{margin-top:6px}.cp-audsum{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.cp-audsum div{background:var(--k2);border:1px solid var(--b);border-radius:10px;padding:8px;text-align:center}.cp-audsum b{display:block;font-size:17px}.cp-audsum span{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}",
   ".cp-kv a{color:#d9c49b}.cp-audh{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;width:100%;text-align:left;background:var(--k2);border:1px solid var(--b);border-radius:10px;padding:9px 11px;color:var(--w);cursor:pointer;font-family:inherit;margin-top:6px}.cp-audh span{font-size:12px;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
   ".cp-tl code{font-size:11px;color:#d9c49b;background:rgba(217,196,155,.1);border-radius:4px;padding:1px 4px;margin-right:4px}",
+  ".cp-switch{display:flex;align-items:center;gap:12px;cursor:pointer;margin:6px 0}.cp-switch input{display:none}.cp-switch span{flex:none;width:46px;height:26px;border-radius:999px;background:#2a2a2a;position:relative;transition:background .25s}.cp-switch span::after{content:'';position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#f7f7f4;transition:transform .25s}.cp-switch input:checked+span{background:#5ef0a0}.cp-switch input:checked+span::after{transform:translateX(20px)}.cp-switch b{font-size:13.5px;font-weight:500}",
   ".cp-idea{margin-top:14px;border:1px solid rgba(217,196,155,.5);background:linear-gradient(120deg,rgba(217,196,155,.14),rgba(247,247,244,.02));border-radius:12px;padding:12px 14px;font-size:14px;line-height:1.45;color:#f1e6cf}",
   ".cp-vbtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.cp-vbtns .cp-btn{text-decoration:none;display:inline-block}",
   ".cp-kv{display:grid;grid-template-columns:150px 1fr;gap:10px;padding:7px 0;border-top:1px solid var(--b);font-size:13px}.cp-kv span{color:var(--dim)}.cp-kv b{font-weight:500;word-break:break-word}",
