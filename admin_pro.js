@@ -512,7 +512,7 @@
     C.el.innerHTML='<div class="cp-head"><div><div class="cp-eyeb"><span class="cp-livedot"></span> En vivo · se actualiza solo</div><h2 class="cp-h">Centro de control</h2></div>'+
       '<div class="cp-seg">'+[[1,"Hoy"],[7,"7 días"],[30,"30 días"]].map(function(x){return '<button type="button" data-cdays="'+x[0]+'" class="'+(x[0]===C.days?"on":"")+'">'+x[1]+'</button>';}).join("")+'</div></div>'+
       '<div class="cp-ctl-top"><div class="cp-card cp-livecard" id="ctlLive"></div><div class="cp-card cp-mapcard"><div id="ctlMap" class="cp-vmap cp-ctlmap"></div></div></div>'+
-      '<div id="ctlNums"></div><div id="ctlTasks"></div><div id="ctlOrig"></div><div id="ctlSet"></div>';
+      '<div id="ctlNums"></div><div id="ctlIg"></div><div id="ctlTasks"></div><div id="ctlOrig"></div><div id="ctlSet"></div>';
     ctlFill();
     if(!C.timer)C.timer=setInterval(function(){if(C.el&&C.el._cpKind==="control"&&C.el.offsetParent&&document.visibilityState==="visible")ctlLoad(true);},30000);
   }
@@ -524,6 +524,7 @@
       '<div class="cp-eyeb" style="margin:12px 0 4px">Actividad reciente</div>'+
       (F.length?'<div class="cp-feed">'+F.slice(0,12).map(function(f){return '<div class="cp-fi"><i class="'+(Date.now()-f.ts<300000?"on":"")+'"></i><div><b>'+esc(f.who)+'</b> '+esc(String(f.last).replace(/^clic: /,"tocó "))+'<small>'+esc(ago(f.ts))+(f.origen?" · "+esc(f.origen):"")+(f.ref?" · 🔖 "+esc(f.ref):"")+'</small></div></div>';}).join("")+'</div>':empty("Nadie en las últimas 3 horas."));
     ctlMap(L.concat(F));
+    igLoad();
     // numbers
     var T=D.numbers.today,Y=D.numbers.yesterday,M=D.numbers.month;
     var proj=M.dayOfMonth?Math.round(M.revenue/M.dayOfMonth*M.daysInMonth):0,gpct=M.goal?Math.min(100,Math.round(M.revenue/M.goal*100)):0;
@@ -563,6 +564,27 @@
       '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button type="button" class="cp-btn" data-a="csave">Guardar</button><button type="button" class="cp-btn ghost" data-a="ctest">📧 Enviarme el resumen ahora</button></div>'+
       (S.lastDaily?'<p class="cp-hint">Último resumen enviado: '+esc(S.lastDaily)+'</p>':'')+'</div>';
   }
+  // ---------- Instagram DMs: who wrote to @canevacol, linked to her store visit by the Ref code ----------
+  var G={data:null,open:{}};
+  function igLoad(){
+    return api("/admin/instagram").then(function(d){G.data=d;igRender();}).catch(function(e){var el=document.getElementById("ctlIg");if(el&&/Worker|Ruta|404/.test(e.message||""))el.innerHTML='<div class="cp-sect" style="margin-top:22px">💌 Instagram</div>'+empty("Pega el Worker v35 para ver aquí los DMs de Instagram.");});
+  }
+  function igRender(){
+    var el=document.getElementById("ctlIg"),D=G.data;if(!el||!D)return;
+    if(!D.connected){el.innerHTML='<div class="cp-sect" style="margin-top:22px">💌 Instagram</div><div class="cp-card cp-igsetup"><b>Conecta los DMs de @canevacol</b><p class="cp-hint">Cuando alguien le escriba a la tienda por Instagram, aparecerá aquí con su @, nombre, foto y seguidores; y si su mensaje trae el 🔖 Ref, verás qué miró en la página. También podrás responderle desde aquí.</p><p class="cp-hint">Falta agregar en Cloudflare los secretos <b>IG_TOKEN</b> e <b>IG_VERIFY</b> y conectar el webhook en Meta (te pasé los pasos).</p></div>';return;}
+    var L=D.contacts||[];
+    el.innerHTML='<div class="cp-sect" style="margin-top:22px">💌 Instagram · '+num(L.length)+' personas te escribieron</div>'+(L.length?'<div class="cp-iglist">'+L.slice(0,40).map(function(c,i){
+      var v=c.visit,open=G.open[c.igsid];
+      var meta=[c.followers!=null?num(c.followers)+" seguidores":"",c.follows_us?"✓ te sigue":c.follows_us===0?"no te sigue":"",c.verified?"verificada":""].filter(Boolean).join(" · ");
+      return '<div class="cp-card cp-igc'+(c.last_from==="clienta"&&Date.now()-c.last_ts<864e5?" new":"")+'">'+
+        '<div class="cp-igh" data-igopen="'+esc(c.igsid)+'">'+(c.pic?'<img src="'+esc(c.pic)+'" alt="" loading="lazy" referrerpolicy="no-referrer">':'<span class="cp-igav">'+esc((c.username||"?").charAt(0).toUpperCase())+'</span>')+
+        '<div class="cp-igm"><b>'+(c.username?"@"+esc(c.username):"Usuario de Instagram")+'</b>'+(c.name?'<small>'+esc(c.name)+'</small>':'')+(meta?'<small>'+esc(meta)+'</small>':'')+'<em>'+(c.last_from==="tienda"?"Tú: ":"")+esc(c.last_text||"")+'</em></div><span class="cp-dim" style="font-size:11.5px;white-space:nowrap">'+esc(ago(c.last_ts))+'</span></div>'+
+        (v?'<div class="cp-igv">🔖 '+esc(c.ref)+' · '+esc([v.ciudad,v.dispositivo,v.origen].filter(Boolean).join(" · "))+(v.dejo_en_la_bolsa?'<br>🛍 Dejó en la bolsa: '+esc([].concat(v.dejo_en_la_bolsa).join(", ")):'')+(v.idea_para_dm?'<br><b>💡 '+esc(v.idea_para_dm)+'</b>':'')+'</div>':(c.ref?'<div class="cp-igv">🔖 '+esc(c.ref)+' · no se encontró la visita</div>':''))+
+        (open?'<div class="cp-igchat">'+(c.messages||[]).map(function(m){return '<div class="cp-igmsg'+(m.from_us?" us":"")+'">'+esc(m.text||"")+'<small>'+esc(ago(m.ts))+'</small></div>';}).join("")+'</div>'+
+          (c.canReply?'<div class="cp-igrep"><input data-igtext="'+esc(c.igsid)+'" placeholder="Responder a @'+esc(c.username||"")+'…"><button type="button" class="cp-mini pri" data-igsend="'+esc(c.igsid)+'">Enviar</button></div>':'<p class="cp-hint">Instagram solo deja responder desde aquí durante 24 h después de su último mensaje. Responde desde la app:</p>'):"")+
+        '<div class="cp-tra" style="max-width:none;justify-content:flex-start;margin-top:8px">'+(c.username?'<a class="cp-mini'+(open?"":" pri")+'" href="https://ig.me/m/'+encodeURIComponent(c.username)+'" target="_blank" rel="noopener">Abrir chat</a><a class="cp-mini" href="https://instagram.com/'+encodeURIComponent(c.username)+'" target="_blank" rel="noopener">Ver perfil</a>':'')+'<button type="button" class="cp-mini" data-igopen="'+esc(c.igsid)+'">'+(open?"Cerrar":"Ver conversación")+'</button>'+(c.ref?'<button type="button" class="cp-mini" data-igvisit="'+esc(c.ref)+'">Ver su visita</button>':'')+'</div></div>';
+    }).join("")+'</div>':empty("Todavía nadie ha escrito desde que conectaste Instagram."));
+  }
   function ctlMap(list){
     var box=document.getElementById("ctlMap");if(!box)return;
     var seen={},pts=[];list.forEach(function(x){if(!x.coords||seen[x.vid])return;seen[x.vid]=1;var m=String(x.coords).split(",").map(Number);if(m.length===2&&isFinite(m[0])&&isFinite(m[1]))pts.push({lat:m[0],lon:m[1],x:x,live:Date.now()-x.ts<300000});});
@@ -579,6 +601,10 @@
   function ctlClick(e){
     var b;
     if((b=e.target.closest("[data-cdays]"))){C.days=Number(b.dataset.cdays);return ctlLoad(true);}
+    if((b=e.target.closest("[data-igopen]"))&&!e.target.closest("a")){var id=b.dataset.igopen;G.open[id]=!G.open[id];return igRender();}
+    if((b=e.target.closest("[data-igvisit]"))){var t=document.querySelector('[data-tab="reportes"]');if(t){V.q=b.dataset.igvisit;t.click();}return;}
+    if((b=e.target.closest("[data-igsend]"))){var sid=b.dataset.igsend,inp=document.querySelector('[data-igtext="'+sid+'"]'),txt=inp&&inp.value.trim();if(!txt)return;
+      b.disabled=true;return api("/admin/instagram/reply",{method:"POST",body:{igsid:sid,text:txt}}).then(function(){toast("Enviado ✓");return igLoad();}).catch(function(x){b.disabled=false;toast(x.message,true);});}
     if((b=e.target.closest("[data-goto]"))){var t=document.querySelector('[data-tab="'+b.dataset.goto+'"]');if(t)t.click();return;}
     if((b=e.target.closest("[data-stock]"))){var tb=document.querySelector('[data-tab="inventario"]');if(tb){tb.click();var id=b.dataset.stock;setTimeout(function(){if(window.CanevaPro&&CanevaPro.inventoryData())CanevaPro.openItem(id);else setTimeout(function(){CanevaPro.openItem(id);},1500);},600);}return;}
     if((b=e.target.closest("[data-a]"))){
@@ -760,6 +786,14 @@
   ".cp-tr{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--b)}.cp-tr b{font-size:13.5px;font-weight:600}.cp-tr small{display:block;font-size:12px;color:var(--dim);margin-top:2px}.cp-tr em{display:block;font-style:normal;font-size:12px;color:#d9c49b;margin-top:3px}",
   ".cp-trp{display:flex;align-items:center;gap:10px}.cp-trp img{width:34px;height:44px;object-fit:cover;border-radius:6px}.cp-tra{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;flex:none;max-width:52%}",
   ".cp-mini{display:inline-block;border:1px solid var(--b);background:none;color:var(--w);border-radius:999px;padding:7px 12px;font-size:12px;text-decoration:none;cursor:pointer;font-family:inherit;white-space:nowrap}.cp-mini.pri{background:var(--w);color:var(--k);border-color:var(--w);font-weight:600}",
+  ".cp-iglist{display:grid;gap:10px;grid-template-columns:1fr}@media(min-width:900px){.cp-iglist{grid-template-columns:1fr 1fr}}",
+  ".cp-igc.new{border-color:rgba(217,196,155,.55);box-shadow:0 0 0 1px rgba(217,196,155,.18)}.cp-igh{display:grid;grid-template-columns:46px 1fr auto;gap:10px;align-items:center;cursor:pointer}",
+  ".cp-igh img,.cp-igav{width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid transparent;background:linear-gradient(#0b0b0b,#0b0b0b) padding-box,linear-gradient(45deg,#f9ce34,#ee2a7b,#6228d7) border-box}.cp-igav{display:flex;align-items:center;justify-content:center;font-weight:700}",
+  ".cp-igm{min-width:0}.cp-igm b{display:block;font-size:14.5px}.cp-igm small{display:block;font-size:12px;color:var(--dim)}.cp-igm em{display:block;font-style:normal;font-size:13px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
+  ".cp-igv{margin-top:10px;font-size:12.5px;line-height:1.5;color:#e9dcc1;background:rgba(217,196,155,.07);border:1px solid rgba(217,196,155,.25);border-radius:10px;padding:8px 10px}",
+  ".cp-igchat{margin-top:10px;display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto}.cp-igmsg{align-self:flex-start;max-width:82%;background:#1c1c1c;border-radius:14px 14px 14px 4px;padding:8px 11px;font-size:13px;line-height:1.4}.cp-igmsg.us{align-self:flex-end;background:linear-gradient(135deg,#6228d7,#ee2a7b);border-radius:14px 14px 4px 14px}.cp-igmsg small{display:block;font-size:10.5px;opacity:.6;margin-top:3px}",
+  ".cp-igrep{display:flex;gap:6px;margin-top:8px}.cp-igrep input{flex:1;min-width:0;background:var(--k);border:1px solid var(--b);border-radius:999px;padding:9px 13px;color:var(--w);font-size:14px;outline:none}",
+  ".cp-igsetup b{font-size:15px}",
   ".cp-idea{margin-top:14px;border:1px solid rgba(217,196,155,.5);background:linear-gradient(120deg,rgba(217,196,155,.14),rgba(247,247,244,.02));border-radius:12px;padding:12px 14px;font-size:14px;line-height:1.45;color:#f1e6cf}",
   ".cp-vbtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.cp-vbtns .cp-btn{text-decoration:none;display:inline-block}",
   ".cp-kv{display:grid;grid-template-columns:150px 1fr;gap:10px;padding:7px 0;border-top:1px solid var(--b);font-size:13px}.cp-kv span{color:var(--dim)}.cp-kv b{font-weight:500;word-break:break-word}",

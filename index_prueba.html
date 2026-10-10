@@ -4382,7 +4382,7 @@ body.cv-on .bw-inner{min-width:0;max-width:100%}body.cv-on .bw-inner>*{min-width
     // Copy and open in the same tap (phones block pop-ups opened later)
     try{if(navigator.clipboard)navigator.clipboard.writeText(txt).catch(function(){});}catch(e){}
     if(window.toastCart)toastCart('Copiamos tu mensaje 💌 pégalo en el chat');
-    var wnd=window.open('https://ig.me/m/'+h,'_blank');if(!wnd)location.href='https://ig.me/m/'+h;
+    var link='https://ig.me/m/'+h+(ref?'?ref='+ref:'');var wnd=window.open(link,'_blank');if(!wnd)location.href=link;
     try{if(window.canevaTrack)canevaTrack('contact',p||null);}catch(e){}
   });
 })();
