@@ -416,13 +416,38 @@
     whatsapp_clienta:"WhatsApp",talla_perfil:"Talla del perfil",llego_desde:"Llegó desde",vino_de_anuncio:"Vino de anuncio",campana:"Campaña",referencia:"Página de origen",visita_numero:"Visita número",primera_visita:"Primera visita",
     visita_anterior:"Visita anterior",pantalla:"Pantalla",ventana:"Ventana",densidad_pantalla:"Densidad de pantalla",pantalla_tactil:"Pantalla táctil",nucleos_cpu:"Núcleos del procesador",memoria_celular_gb:"Memoria (GB)",bateria:"Batería",
     idioma:"Idioma",zona_horaria:"Zona horaria",zona_horaria_red:"Zona horaria (red)",hora_en_su_celular:"Hora en su celular",conexion:"Conexión",ahorro_de_datos:"Ahorro de datos",modo_oscuro:"Modo oscuro",abrio_como_app:"Abrió como app",
-    no_rastrear:"No rastrear",escribio_por_whatsapp:"Escribió por WhatsApp",dejo_en_la_bolsa:"Dejó en la bolsa",idea_para_dm:"Idea para DM",pagina:"Página",importado_de_logs:"Traída de los Logs",ip:"Dirección IP",ip_version:"Tipo de IP",tipo_de_red:"Tipo de red",origen:"Cómo llegó",anuncio:"Anuncio",campana_nombre:"Nombre de la campaña",escribio_por_instagram:"Abrió el DM de Instagram",meta_fbp:"ID de navegador Meta (fbp)",meta_fbc:"Clic de anuncio Meta (fbc)",tiktok_ttp:"ID de navegador TikTok (ttp)",tiktok_ttclid:"Clic de anuncio TikTok"};
+    no_rastrear:"No rastrear",escribio_por_whatsapp:"Escribió por WhatsApp",dejo_en_la_bolsa:"Dejó en la bolsa",idea_para_dm:"Idea para DM",pagina:"Página",pagina_de_entrada:"Página donde entró",version_app:"App y versión",idioma_app:"Idioma de la app",meta_campana_id:"Campaña de Meta (ID)",meta_anuncio_id:"Anuncio de Meta (ID)",meta_conjunto_id:"Conjunto de anuncios (ID)",medio:"Medio",fuente_utm:"Fuente (utm)",enlace:"Enlace de seguimiento",ubicacion_anuncio:"Ubicación del anuncio",inicio:"Entró",importado_de_logs:"Traída de los Logs",ip:"Dirección IP",ip_version:"Tipo de IP",tipo_de_red:"Tipo de red",origen:"Cómo llegó",anuncio:"Anuncio",campana_nombre:"Nombre de la campaña",escribio_por_instagram:"Abrió el DM de Instagram",meta_fbp:"ID de navegador Meta (fbp)",meta_fbc:"Clic de anuncio Meta (fbc)",tiktok_ttp:"ID de navegador TikTok (ttp)",tiktok_ttclid:"Clic de anuncio TikTok"};
   function allData(v){
     var skip={vid:1,day:1,ts:1,firstTs:1,acciones:1,perfil:1,evento:1};
     var rows=Object.keys(v).filter(function(k){return !skip[k]&&v[k]!==""&&v[k]!==null&&v[k]!==undefined;}).map(function(k){
       var val=v[k];if(Array.isArray(val))val=val.join(" · ");else if(typeof val==="object")val=JSON.stringify(val);
       return kv(LBL[k]||k.replace(/_/g," "),String(val));}).join("");
     return rows?'<details class="cp-all"><summary>🔎 Todos los datos de la visita ('+(rows.split('class="cp-kv"').length-1)+')</summary>'+rows+'</details>':"";
+  }
+  // 🕵️ Audit of one visitor: exact source (ad / link / app), every day she came with a timed journey, same-IP visitors
+  function adsLink(kind,id,act){return "https://adsmanager.facebook.com/adsmanager/manage/"+kind+"?act="+act+"&selected_"+(kind==="campaigns"?"campaign":kind==="adsets"?"adset":"ad")+"_ids="+id;}
+  function auditLoad(v){
+    if(!v.vid)return;
+    api("/admin/visitor?vid="+encodeURIComponent(v.vid)).then(function(d){
+      var box=document.getElementById("cpAudit");if(!box)return;
+      var D=d.days||[],last=D[0]||v,act=d.adAccount;
+      var src=[];
+      src.push(kv("Cómo llegó",last.origen||last.llego_desde||"Sin dato"));
+      if(last.enlace)src.push(kv("Enlace de seguimiento",last.enlace));
+      if(last.meta_campana_id)src.push('<div class="cp-kv"><span>Campaña de Meta</span><b><a href="'+adsLink("campaigns",last.meta_campana_id,act)+'" target="_blank" rel="noopener">#'+esc(last.meta_campana_id)+' ↗</a></b></div>');
+      if(last.meta_conjunto_id)src.push('<div class="cp-kv"><span>Conjunto de anuncios</span><b><a href="'+adsLink("adsets",last.meta_conjunto_id,act)+'" target="_blank" rel="noopener">#'+esc(last.meta_conjunto_id)+' ↗</a></b></div>');
+      if(last.meta_anuncio_id)src.push('<div class="cp-kv"><span>Anuncio exacto</span><b><a href="'+adsLink("ads",last.meta_anuncio_id,act)+'" target="_blank" rel="noopener">#'+esc(last.meta_anuncio_id)+' ↗ ver en Meta</a></b></div>');
+      src.push(kv("Fuente / medio",[last.fuente_utm,last.medio].filter(Boolean).join(" / "))+kv("Página donde entró",last.pagina_de_entrada||last.pagina)+kv("App y versión",last.version_app||last.navegador)+kv("Idioma de la app",last.idioma_app)+kv("Clic de anuncio",last.meta_fbc?"Meta ✓":last.tiktok_ttclid?"TikTok ✓":""));
+      var first=D.length?D[D.length-1]:null;
+      var hist=D.map(function(x){var acts=x.acciones||[];return '<div class="cp-auday"><button type="button" data-auday class="cp-audh"><b>'+esc(new Date(x.firstTs||x.ts).toLocaleDateString("es-CO",{weekday:"short",day:"numeric",month:"short"}))+'</b><span>'+esc(new Date(x.firstTs||x.ts).toLocaleTimeString("es-CO",{hour:"numeric",minute:"2-digit"}))+' → '+esc(new Date(x.ts).toLocaleTimeString("es-CO",{hour:"numeric",minute:"2-digit"}))+' · '+acts.length+' acciones · '+esc(x.origen||x.llego_desde||"")+'</span><i>▾</i></button><ol class="cp-tl" hidden>'+acts.map(function(a){var m=String(a).match(/^\[([\d:]+)\] (.*)$/);return '<li>'+(m?'<code>'+esc(m[1])+'</code> '+esc(m[2]):esc(a))+'</li>';}).join("")+'</ol></div>';}).join("");
+      var sib=(d.siblings||[]).map(function(x){return '<div class="cp-tr"><div><b>'+esc(x.who||"Otro visitante")+'</b><small>'+esc([x.city,x.device].filter(Boolean).join(" · "))+(x.ref?" · 🔖 "+esc(x.ref):"")+'</small></div><span class="cp-dim" style="font-size:11.5px">'+esc(ago(x.ts))+'</span></div>';}).join("");
+      box.innerHTML='<div class="cp-sect" style="margin-top:16px">🕵️ Auditoría completa</div>'+
+        '<div class="cp-audsum"><div><b>'+D.length+'</b><span>días que vino</span></div><div><b>'+(last.visita_numero||D.length)+'</b><span>visitas en total</span></div><div><b>'+(first?esc(new Date(first.firstTs||first.ts).toLocaleDateString("es-CO",{day:"numeric",month:"short"})):"—")+'</b><span>primera vez</span></div><div><b>'+((d.siblings||[]).length)+'</b><span>con su misma IP</span></div></div>'+
+        '<div class="cp-eyeb" style="margin:14px 0 4px">De dónde salió</div>'+src.join("")+
+        (d.ig?'<div class="cp-igv" style="margin-top:10px">💌 Escribió por Instagram como <b>@'+esc(d.ig.username||"")+'</b>'+(d.ig.name?" ("+esc(d.ig.name)+")":"")+(d.ig.followers!=null?" · "+num(d.ig.followers)+" seguidores":"")+'<br>“'+esc(d.ig.last_text||"")+'”</div>':'')+
+        '<div class="cp-eyeb" style="margin:14px 0 4px">Cada día que vino (toca para ver el recorrido con hora)</div>'+(hist||'<p class="cp-hint">Sin historial.</p>')+
+        (sib?'<div class="cp-eyeb" style="margin:14px 0 4px">Otros visitantes con la misma IP (misma casa, oficina o red)</div>'+sib:'');
+    }).catch(function(e){var box=document.getElementById("cpAudit");if(box)box.innerHTML=/Worker|Ruta|404/.test(e.message||"")?'<p class="cp-hint">Pega el Worker v37 para ver la auditoría completa.</p>':'';});
   }
   function visOpen(i){
     var v=(V.data.visits||[])[i];if(!v)return;
@@ -436,6 +461,7 @@
     var html='<div class="cp-shead"><div style="flex:1;min-width:0"><div class="cp-eyeb">'+esc(vTime(v))+(v.codigo_ref?' · 🔖 Ref '+esc(v.codigo_ref):"")+'</div><h3 class="cp-h3">'+esc(vTitle(v))+'</h3><div class="cp-vb">'+vBadges(v)+'</div></div><button type="button" class="cp-x" data-cpclose aria-label="Cerrar">✕</button></div>'+
       (v.idea_para_dm?'<div class="cp-idea">💡 '+esc(v.idea_para_dm)+'</div>':"")+
       (btns.length?'<div class="cp-vbtns">'+btns.join("")+'</div>':"")+
+      '<div id="cpAudit" class="cp-audit"><div class="cp-dim" style="font-size:12.5px">🕵️ Cargando auditoría completa…</div></div>'+
       (!igh&&!wn?'<p class="cp-hint" style="margin-top:10px">No dejó Instagram ni WhatsApp. Si te escribe, busca su código 🔖 '+esc(v.codigo_ref||"")+' en el mensaje.</p>':"")+
       sect("Quién",kv("Instagram",v.instagram)+kv("Club Caneva",v.clienta)+kv("WhatsApp",v.whatsapp_clienta)+kv("Talla del perfil",v.talla_perfil))+
       sect("Dejó en la bolsa",kv("Prendas",v.dejo_en_la_bolsa))+
@@ -444,8 +470,10 @@
       sect("Lo que le gusta",kv("Categorías",p.le_gusta)+kv("Tallas",p.tallas)+kv("Precios que mira",p.rango_precios)+kv("Vio antes",p.vio_antes)+kv("Puso en la bolsa antes",p.puso_en_bolsa_antes)+kv("Le preguntó a la IA",p.pregunto_antes_a_la_ia)+kv("Tiempo total en la tienda",p.tiempo_total_en_la_tienda))+
       sect("Su equipo",kv("Celular / computador",v.dispositivo)+kv("Modelo exacto",v.modelo_celular)+kv("Sistema",[v.sistema,v.version_sistema].filter(Boolean).join(" "))+kv("Abrió en",v.navegador)+kv("Versión del navegador",v.version_navegador)+kv("Pantalla",v.pantalla)+kv("Ventana",v.ventana)+kv("Batería",v.bateria)+kv("Hora en su celular",v.hora_en_su_celular)+kv("Idioma",v.idioma)+kv("Modo oscuro",v.modo_oscuro)+kv("Como app",v.abrio_como_app))+
       allData(v)+
-      sect("Lo que hizo hoy",(v.acciones||[]).length?'<ol class="cp-tl">'+v.acciones.map(function(a){return "<li>"+esc(a)+"</li>";}).join("")+'</ol>':"");
-    openSheet(html,{click:function(e){var b=e.target.closest("[data-vcopy]");if(b){try{navigator.clipboard.writeText(v.idea_para_dm);toast("Idea copiada ✓");}catch(x){}}}});
+      sect("Lo que hizo hoy",(v.acciones||[]).length?'<ol class="cp-tl">'+v.acciones.map(function(a){var m=String(a).match(/^\[([\d:]+)\] (.*)$/);return "<li>"+(m?'<code>'+esc(m[1])+'</code> '+esc(m[2]):esc(a))+"</li>";}).join("")+'</ol>':"");
+    openSheet(html,{click:function(e){var b=e.target.closest("[data-vcopy]");if(b){try{navigator.clipboard.writeText(v.idea_para_dm);toast("Idea copiada ✓");}catch(x){}}
+      var dd=e.target.closest("[data-auday]");if(dd){var tl=dd.parentNode.querySelector(".cp-tl");if(tl)tl.hidden=!tl.hidden;}}});
+    auditLoad(v);
   }
   function repTop(field,unit){
     var top=R.data.products.filter(function(p){return p[field]>0;}).sort(function(a,b){return b[field]-a[field];}).slice(0,5);
@@ -522,7 +550,7 @@
     var L=D.live||[],F=D.feed||[];
     document.getElementById("ctlLive").innerHTML='<div class="cp-livebig"><b>'+num(L.length)+'</b><span>'+(L.length===1?"persona en la tienda ahora":"personas en la tienda ahora")+'</span></div>'+
       '<div class="cp-eyeb" style="margin:12px 0 4px">Actividad reciente</div>'+
-      (F.length?'<div class="cp-feed">'+F.slice(0,12).map(function(f){return '<div class="cp-fi"><i class="'+(Date.now()-f.ts<300000?"on":"")+'"></i><div><b>'+esc(f.who)+'</b> '+esc(String(f.last).replace(/^clic: /,"tocó "))+'<small>'+esc(ago(f.ts))+(f.origen?" · "+esc(f.origen):"")+(f.ref?" · 🔖 "+esc(f.ref):"")+'</small></div></div>';}).join("")+'</div>':empty("Nadie en las últimas 3 horas."));
+      (F.length?'<div class="cp-feed">'+F.slice(0,12).map(function(f){return '<div class="cp-fi"><i class="'+(Date.now()-f.ts<300000?"on":"")+'"></i><div><b>'+esc(f.who)+'</b> '+esc(String(f.last).replace(/^\[[\d:]+\] /,"").replace(/^clic: /,"tocó "))+'<small>'+esc(ago(f.ts))+(f.origen?" · "+esc(f.origen):"")+(f.ref?" · 🔖 "+esc(f.ref):"")+'</small></div></div>';}).join("")+'</div>':empty("Nadie en las últimas 3 horas."));
     ctlMap(L.concat(F));
     igLoad();lkLoad();
     // numbers
@@ -828,6 +856,9 @@
   ".cp-lkurl{display:flex;gap:8px;align-items:center;background:var(--k);border:1px solid var(--b);border-radius:10px;padding:8px 8px 8px 12px;margin-top:6px}.cp-lkurl code{flex:1;min-width:0;font-size:12.5px;color:#e9dcc1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
   ".cp-lks{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:10px}@media(max-width:600px){.cp-lks{grid-template-columns:repeat(3,1fr)}}.cp-lks div{background:var(--k);border-radius:10px;padding:8px;text-align:center}.cp-lks b{display:block;font-size:18px;font-variant-numeric:tabular-nums}.cp-lks span{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}",
   ".cp-sel{width:100%;background:var(--k2);color:var(--w);border:1px solid var(--b);border-radius:10px;padding:12px 14px;font-size:16px;font-family:inherit}",
+  ".cp-audit{margin-top:6px}.cp-audsum{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.cp-audsum div{background:var(--k2);border:1px solid var(--b);border-radius:10px;padding:8px;text-align:center}.cp-audsum b{display:block;font-size:17px}.cp-audsum span{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}",
+  ".cp-kv a{color:#d9c49b}.cp-audh{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;width:100%;text-align:left;background:var(--k2);border:1px solid var(--b);border-radius:10px;padding:9px 11px;color:var(--w);cursor:pointer;font-family:inherit;margin-top:6px}.cp-audh span{font-size:12px;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
+  ".cp-tl code{font-size:11px;color:#d9c49b;background:rgba(217,196,155,.1);border-radius:4px;padding:1px 4px;margin-right:4px}",
   ".cp-idea{margin-top:14px;border:1px solid rgba(217,196,155,.5);background:linear-gradient(120deg,rgba(217,196,155,.14),rgba(247,247,244,.02));border-radius:12px;padding:12px 14px;font-size:14px;line-height:1.45;color:#f1e6cf}",
   ".cp-vbtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.cp-vbtns .cp-btn{text-decoration:none;display:inline-block}",
   ".cp-kv{display:grid;grid-template-columns:150px 1fr;gap:10px;padding:7px 0;border-top:1px solid var(--b);font-size:13px}.cp-kv span{color:var(--dim)}.cp-kv b{font-weight:500;word-break:break-word}",

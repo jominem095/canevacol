@@ -3680,7 +3680,7 @@ document.getElementById('csend').addEventListener('click',sendChat);
   ['ttclid','gclid','fbclid'].forEach(function(k){if(sp.get(k))camp[k]='1';});
   var con=navigator.connection||{},pmin=prof.pmin||0,pmax=prof.pmax||0;
   push({t:'pv',s:src,d:matchMedia('(min-width:900px)').matches?'d':'m',nv:nv,f:first,cp:camp,ad:!!(sp.get('fbclid')||sp.get('utm_campaign')),
-    sw:screen.width+'x'+screen.height,lang:(navigator.language||'').slice(0,10),ref:(document.referrer||'').slice(0,100),
+    sw:screen.width+'x'+screen.height,lang:(navigator.language||'').slice(0,10),ref:(document.referrer||'').slice(0,100),u:(location.pathname+location.search).slice(0,160),
     tz:(function(){try{return Intl.DateTimeFormat().resolvedOptions().timeZone||'';}catch(e){return '';}})(),
     hr:new Date().getHours(),net:con.type||con.effectiveType||'',sd:!!con.saveData,dark:matchMedia('(prefers-color-scheme: dark)').matches,
     app:!!(matchMedia('(display-mode: standalone)').matches||navigator.standalone),mem:navigator.deviceMemory||0,
@@ -4212,7 +4212,8 @@ body.cv-on .bw-inner{min-width:0;max-width:100%}body.cv-on .bw-inner>*{min-width
   function intro(done){
     var today=new Date().toISOString().slice(0,10);
     var pre=document.querySelector('.bw-preloader');
-    if(LITE||sp.get('nointro')==='1'||(lg('cv_intro_day')===today&&sp.get('intro')!=='1')){if(pre)pre.style.animationDelay='.35s';done();return;}
+    var fromAd=/fbclid|ttclid|gclid|utm_|[?&]ref=/.test(location.search)||/Instagram|FBAN|FBAV|FB_IAB|TikTok|musical_ly|BytedanceWebview/i.test(navigator.userAgent);
+    if(LITE||sp.get('nointro')==='1'||(fromAd&&sp.get('intro')!=='1')||(lg('cv_intro_day')===today&&sp.get('intro')!=='1')){if(pre)pre.style.animationDelay='.35s';done();return;}
     ls('cv_intro_day',today);
     // replaces the store's previous intros (preloader + short logo intro) so only one plays
     if(pre)pre.remove();var old=document.getElementById('cvIntro');if(old)old.remove();document.documentElement.classList.remove('cv-intro-on');
@@ -4385,6 +4386,56 @@ body.cv-on .bw-inner{min-width:0;max-width:100%}body.cv-on .bw-inner>*{min-width
     var link='https://ig.me/m/'+h+(ref?'?ref='+ref:'');var wnd=window.open(link,'_blank');if(!wnd)location.href=link;
     try{if(window.canevaTrack)canevaTrack('contact',p||null);}catch(e){}
   });
+})();
+</script>
+<style id="cvfast-css">
+/* ===== Fast hook for people coming from ads or social apps: real garments with prices on the first screen ===== */
+.cv-strip{width:100%;margin:clamp(1rem,2.6vh,1.6rem) 0 0;text-align:left}
+.cv-strip-h{display:flex;justify-content:space-between;align-items:baseline;margin:0 2px .6rem;font-family:Inter,sans-serif}
+.cv-strip-h b{font-size:.6rem;letter-spacing:.26em;text-transform:uppercase;color:#f7f7f4;font-weight:600}.cv-strip-h b i{font-style:normal;color:#5ef0a0;margin-right:.4rem}
+.cv-strip-h span{font-size:.55rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(247,247,244,.5)}
+.cv-strip-row{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding-bottom:4px}.cv-strip-row::-webkit-scrollbar{display:none}
+.cv-si{flex:0 0 clamp(118px,31vw,170px);scroll-snap-align:start;background:#0b0b0b;border:1px solid rgba(247,247,244,.12);padding:0;cursor:pointer;color:#f7f7f4;text-align:left;font-family:Inter,sans-serif;animation:cvSi .7s cubic-bezier(.16,1,.3,1) both;animation-delay:calc(var(--i)*60ms)}
+@keyframes cvSi{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+.cv-si span{display:block;aspect-ratio:3/4;overflow:hidden;background:#151515;position:relative}.cv-si img{width:100%;height:100%;object-fit:cover;transition:transform .8s}.cv-si:hover img{transform:scale(1.06)}
+.cv-si em{position:absolute;left:6px;top:6px;font-style:normal;background:#f7f7f4;color:#050505;font-size:.45rem;letter-spacing:.16em;font-weight:700;padding:.25rem .4rem}
+.cv-si b{display:block;font-family:"Cormorant Garamond",serif;font-weight:400;font-size:.98rem;line-height:1.15;padding:.45rem .5rem 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cv-si small{display:block;font-size:.72rem;font-weight:600;padding:.1rem .5rem .55rem;color:#e9dcc1}
+.cv-si.all{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:.4rem;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;min-height:100%}
+body.cv-fast .bw-micro{display:none!important}
+body.cv-fast .bw-hero{padding-top:4.6rem!important}
+body.cv-fast .bw-logo-wrap{transform:scale(.82);transform-origin:center top;margin-bottom:-.6rem}
+.cv-swipe{position:fixed;left:50%;bottom:calc(84px + var(--mobile-dock-h,0px));transform:translateX(-50%);z-index:900;background:rgba(5,5,5,.86);border:1px solid rgba(247,247,244,.25);color:#f7f7f4;border-radius:999px;padding:.6rem 1rem;font:600 .62rem Inter,sans-serif;letter-spacing:.18em;text-transform:uppercase;backdrop-filter:blur(10px);animation:cvSw 1.6s ease-in-out infinite;cursor:pointer}
+@keyframes cvSw{50%{transform:translate(-50%,6px)}}
+</style>
+<script id="cvfast-js">
+// Shows real garments with prices on the first screen, and a gentle "swipe" hint if she doesn't move.
+(function(){
+  if(!window.P||!document.getElementById('cvVit'))return;
+  var fromAd=/fbclid|ttclid|gclid|utm_|[?&]ref=/.test(location.search)||/Instagram|FBAN|FBAV|FB_IAB|TikTok|musical_ly|BytedanceWebview/i.test(navigator.userAgent);
+  if(fromAd)document.body.classList.add('cv-fast');
+  function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function build(){
+    var vit=document.getElementById('cvVit');if(!vit||document.getElementById('cvStrip'))return;
+    var list=(typeof catalogProducts==='function'?catalogProducts():P).filter(function(p){return p.imagen&&p.imagen.indexOf('http')===0;}).slice(0,10);
+    if(list.length<3)return;
+    var d=document.createElement('div');d.id='cvStrip';d.className='cv-strip';
+    d.innerHTML='<div class="cv-strip-h"><b><i>●</i>Lo más nuevo</b><span>Desliza →</span></div><div class="cv-strip-row">'+list.map(function(p,i){var idx=P.indexOf(p);
+      return '<button type="button" class="cv-si" style="--i:'+i+'" data-cvsi="'+idx+'"><span><img src="'+esc(p.imagen)+'" alt="" loading="'+(i<4?'eager':'lazy')+'">'+(i<3?'<em>NUEVO</em>':'')+'</span><b>'+esc(p.nombre)+'</b><small>'+esc(p.precio)+'</small></button>';}).join('')+
+      '<button type="button" class="cv-si all" data-cvall>Ver todo<br>→</button></div>';
+    // for ad visitors the garments go first; for everyone else, right after the category cards
+    if(fromAd)vit.parentNode.insertBefore(d,vit);else vit.appendChild(d);
+    d.addEventListener('click',function(e){var b=e.target.closest('[data-cvsi]');if(b){openProductModal(parseInt(b.dataset.cvsi,10));return;}if(e.target.closest('[data-cvall]')&&window.cvSetCat)cvSetCat('Nuevo');});
+  }
+  build();setTimeout(build,1500);
+  // swipe hint: only if after 7 s she hasn't scrolled nor opened anything
+  var moved=false;addEventListener('scroll',function(){if(scrollY>40){moved=true;var h=document.getElementById('cvSwipe');if(h)h.remove();}},{passive:true});
+  document.addEventListener('pointerdown',function(e){if(e.target.closest&&e.target.closest('[data-cvsi],.cv-vc,.pc'))moved=true;},true);
+  setTimeout(function(){if(moved||document.querySelector('.pmodal.open,.ai-dock.open,#cvGeo,#cvIg,#cvLuxIntro'))return;
+    var h=document.createElement('button');h.type='button';h.id='cvSwipe';h.className='cv-swipe';h.textContent='Desliza y mira la colección ↓';
+    h.onclick=function(){h.remove();var g=document.getElementById('cvStrip')||document.getElementById('catalogo');if(g)g.scrollIntoView({behavior:'smooth',block:'center'});};
+    document.body.appendChild(h);setTimeout(function(){if(h.parentNode)h.remove();},9000);
+  },7000);
 })();
 </script>
 </body>
