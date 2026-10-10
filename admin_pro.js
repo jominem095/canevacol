@@ -1,7 +1,7 @@
 /* CANEVA Admin PRO — Inventario + Reportes.
    Shared by admin_movil.html (phone) and admin.html (computer).
    Usage: CanevaPro.mount(element, "inventario" | "reportes", { api, token: () => "...", onChange: () => {} })
-   Needs Worker v23 (routes /admin/inventory*, /admin/reports). */
+   Needs Worker v23 (routes /admin/inventory*, /admin/reports); the "Visitantes" card needs Worker v30 (/admin/visits). */
 (function(){
   "use strict";
   var OPT={api:"https://caneva-ai.canevacol.workers.dev",token:function(){try{return localStorage.getItem("caneva_admin_token_v1")||"";}catch(e){return "";}},onChange:function(){}};
@@ -296,6 +296,7 @@
       '<div class="cp-kpi"><span>Conversión</span><b>'+(t.visitors?conv.toFixed(1).replace(".",",")+"%":"—")+'</b><small>pedidos por cada 100 visitantes</small></div>'+
       '<div class="cp-kpi"><span>Por cobrar</span><b>'+num(t.pending)+'</b><small>pedidos pendientes</small></div>'+
     '</div>'+
+    '<div class="cp-card cp-vis" id="cpVis">'+empty("Cargando visitantes…")+'</div>'+
     '<div class="cp-grid2">'+
       '<div class="cp-card"><div class="cp-cardh"><span class="cp-eyeb">Visitantes por día</span><span class="cp-dim" style="font-size:12px">pasa el dedo o el mouse</span></div>'+chart(D.byDay)+'</div>'+
       '<div class="cp-card"><div class="cp-cardh"><span class="cp-eyeb">Embudo de compra</span></div>'+funnel.map(function(f,i){return '<div class="cp-fun"><div class="cp-funl"><span>'+f[0]+'</span><b>'+num(f[1])+'</b>'+(i?'<em>'+pct(f[1],funnel[0][1])+'%</em>':"")+'</div><div class="cp-funt"><i style="width:'+Math.max(f[1]?2:0,Math.round(f[1]/fmax*100))+'%"></i></div></div>';}).join("")+'</div>'+
@@ -311,6 +312,56 @@
       '<input class="cp-search" style="margin-top:10px" type="search" data-rq placeholder="Buscar prenda…" value="'+esc(R.q)+'">'+
       '<div id="cpRepTable"></div></div>';
     repTable();
+    visLoad();
+  }
+  // ---------- Visitantes: detailed journey of each visitor (Worker v30, kept 30 days) ----------
+  var V={q:"",f:"",n:20,data:null,t:null};
+  var VF=[["","Todos","total"],["ig","💌 Con Instagram","ig"],["wa","💬 Escribieron","wa"],["bag","🛍 Dejaron bolsa","bag"],["geo","📍 Con ubicación","geo"]];
+  function visDays(){return Math.min(30,R.days||7);}
+  function visLoad(){
+    var el=document.getElementById("cpVis");if(!el)return;
+    return api("/admin/visits?days="+visDays()+"&f="+encodeURIComponent(V.f)+"&q="+encodeURIComponent(V.q)).then(function(d){V.data=d;visRender();})
+      .catch(function(e){var m=e.message||"";if(/Worker|Ruta|404/.test(m))m="Para ver los visitantes aquí, pega el Worker v30 en Cloudflare.";el.innerHTML='<div class="cp-cardh"><span class="cp-eyeb">Visitantes en detalle</span></div>'+empty(esc(m));});
+  }
+  function vTitle(v){return v.instagram||(v.clienta?String(v.clienta).split(" · ")[0]:"")||"Visitante"+(v.ciudad?" de "+v.ciudad:"");}
+  function vTime(v){var d=new Date(v.ts);return d.toLocaleDateString("es-CO",{day:"numeric",month:"short"})+" · "+d.toLocaleTimeString("es-CO",{hour:"numeric",minute:"2-digit"});}
+  function vBadges(v){var b=[];if(v.codigo_ref)b.push('<i class="ref">🔖 '+esc(v.codigo_ref)+'</i>');if(v.instagram)b.push('<i class="ig">💌 IG</i>');if(v.escribio_por_whatsapp)b.push('<i>💬 WhatsApp</i>');if(v.dejo_en_la_bolsa)b.push('<i>🛍 Bolsa</i>');if(v.ubicacion_exacta)b.push('<i>📍 Ubicación</i>');if(v.vino_de_anuncio)b.push('<i>📢 Anuncio</i>');if(v.clienta)b.push('<i>👑 Club</i>');return b.join("");}
+  function visRender(){
+    var el=document.getElementById("cpVis"),D=V.data;if(!el||!D)return;
+    var c=D.counts||{},list=D.visits||[];
+    el.innerHTML='<div class="cp-cardh"><div><span class="cp-eyeb">Visitantes en detalle</span><div class="cp-dim" style="font-size:12px;margin-top:4px">Últimos '+visDays()+' días · toca una visita para ver todo y escribirle</div></div></div>'+
+      '<div class="cp-chips">'+VF.map(function(f){return '<button type="button" class="cp-chip '+(V.f===f[0]?"on":"")+'" data-vf="'+f[0]+'">'+f[1]+' <i>'+num(c[f[2]]||0)+'</i></button>';}).join("")+'</div>'+
+      '<input class="cp-search" type="search" data-vq placeholder="Buscar código Ref (ej. K7Q2), @instagram, ciudad o prenda…" value="'+esc(V.q)+'">'+
+      (list.length?'<div class="cp-vlist">'+list.slice(0,V.n).map(function(v,i){
+        var sub=[v.ciudad,v.dispositivo,v.navegador,v.visita_numero?"visita #"+v.visita_numero:""].filter(Boolean).join(" · ");
+        return '<button type="button" class="cp-vr" data-vi="'+i+'"><span class="cp-vt">'+esc(vTime(v))+'</span><span class="cp-vm"><b>'+esc(vTitle(v))+'</b><small>'+esc(sub)+'</small><span class="cp-vb">'+vBadges(v)+'</span>'+(v.idea_para_dm?'<em>💡 '+esc(v.idea_para_dm)+'</em>':"")+'</span><span class="cp-va">›</span></button>';}).join("")+'</div>'+
+        (list.length>V.n?'<button type="button" class="cp-btn ghost full" data-a="vmore">Ver más ('+(list.length-V.n)+')</button>':"")
+      :empty(V.q||V.f?"No hay visitas con ese filtro.":"Todavía no hay visitas guardadas. Aparecen cuando alguien entra a la tienda (con el Worker v30)."));
+  }
+  function waNum(p){var d=String(p||"").replace(/\D/g,"");if(d.length===10&&d.charAt(0)==="3")d="57"+d;return d.length>=10?d:"";}
+  function kv(label,val){if(val===undefined||val===null||val===""||(Array.isArray(val)&&!val.length))return "";return '<div class="cp-kv"><span>'+esc(label)+'</span><b>'+(Array.isArray(val)?val.map(esc).join("<br>"):esc(val))+'</b></div>';}
+  function sect(title,body){return body?'<div class="cp-sect">'+title+'</div>'+body:"";}
+  function visOpen(i){
+    var v=(V.data.visits||[])[i];if(!v)return;
+    var p=v.perfil||{},igh=v.instagram?String(v.instagram).replace(/^@/,""):"",wn=waNum(v.whatsapp_clienta);
+    var btns=[];
+    if(igh)btns.push('<a class="cp-btn" href="https://ig.me/m/'+encodeURIComponent(igh)+'" target="_blank" rel="noopener">💌 Escribir por DM</a>','<a class="cp-btn ghost" href="https://instagram.com/'+encodeURIComponent(igh)+'" target="_blank" rel="noopener">Ver perfil</a>');
+    if(wn)btns.push('<a class="cp-btn'+(igh?" ghost":"")+'" href="https://wa.me/'+wn+'" target="_blank" rel="noopener">💬 WhatsApp</a>');
+    if(v.mapa)btns.push('<a class="cp-btn ghost" href="'+esc(v.mapa)+'" target="_blank" rel="noopener">📍 Ver en mapa</a>');
+    else if(v.coordenadas_aprox)btns.push('<a class="cp-btn ghost" href="https://maps.google.com/?q='+encodeURIComponent(v.coordenadas_aprox)+'" target="_blank" rel="noopener">🗺 Zona aproximada</a>');
+    if(v.idea_para_dm)btns.push('<button type="button" class="cp-btn ghost" data-vcopy="'+i+'">Copiar idea</button>');
+    var html='<div class="cp-shead"><div style="flex:1;min-width:0"><div class="cp-eyeb">'+esc(vTime(v))+(v.codigo_ref?' · 🔖 Ref '+esc(v.codigo_ref):"")+'</div><h3 class="cp-h3">'+esc(vTitle(v))+'</h3><div class="cp-vb">'+vBadges(v)+'</div></div><button type="button" class="cp-x" data-cpclose aria-label="Cerrar">✕</button></div>'+
+      (v.idea_para_dm?'<div class="cp-idea">💡 '+esc(v.idea_para_dm)+'</div>':"")+
+      (btns.length?'<div class="cp-vbtns">'+btns.join("")+'</div>':"")+
+      (!igh&&!wn?'<p class="cp-hint" style="margin-top:10px">No dejó Instagram ni WhatsApp. Si te escribe, busca su código 🔖 '+esc(v.codigo_ref||"")+' en el mensaje.</p>':"")+
+      sect("Quién",kv("Instagram",v.instagram)+kv("Club Caneva",v.clienta)+kv("WhatsApp",v.whatsapp_clienta)+kv("Talla del perfil",v.talla_perfil))+
+      sect("Dejó en la bolsa",kv("Prendas",v.dejo_en_la_bolsa))+
+      sect("Dónde está",kv("Ciudad",[v.ciudad,v.region,v.pais].filter(Boolean).join(", "))+kv("Código postal",v.codigo_postal)+kv("Ubicación exacta",v.ubicacion_exacta?v.ubicacion_exacta+(v.precision_metros?" (±"+v.precision_metros+" m)":""):"")+kv("Zona aproximada",v.coordenadas_aprox)+kv("Internet",v.operador)+kv("Conexión",v.conexion))+
+      sect("Cómo llegó",kv("Desde",v.llego_desde)+kv("Anuncio",v.vino_de_anuncio)+kv("Campaña",v.campana)+kv("Página de origen",v.referencia)+kv("Visita número",v.visita_numero)+kv("Primera visita",v.primera_visita)+kv("Visita anterior",v.visita_anterior))+
+      sect("Lo que le gusta",kv("Categorías",p.le_gusta)+kv("Tallas",p.tallas)+kv("Precios que mira",p.rango_precios)+kv("Vio antes",p.vio_antes)+kv("Puso en la bolsa antes",p.puso_en_bolsa_antes)+kv("Le preguntó a la IA",p.pregunto_antes_a_la_ia)+kv("Tiempo total en la tienda",p.tiempo_total_en_la_tienda))+
+      sect("Su equipo",kv("Celular / computador",v.dispositivo)+kv("Abrió en",v.navegador)+kv("Pantalla",v.pantalla)+kv("Hora en su celular",v.hora_en_su_celular)+kv("Idioma",v.idioma)+kv("Modo oscuro",v.modo_oscuro)+kv("Como app",v.abrio_como_app))+
+      sect("Lo que hizo hoy",(v.acciones||[]).length?'<ol class="cp-tl">'+v.acciones.map(function(a){return "<li>"+esc(a)+"</li>";}).join("")+'</ol>':"");
+    openSheet(html,{click:function(e){var b=e.target.closest("[data-vcopy]");if(b){try{navigator.clipboard.writeText(v.idea_para_dm);toast("Idea copiada ✓");}catch(x){}}}});
   }
   function repTop(field,unit){
     var top=R.data.products.filter(function(p){return p[field]>0;}).sort(function(a,b){return b[field]-a[field];}).slice(0,5);
@@ -342,6 +393,9 @@
     if((b=e.target.closest("[data-rcat]"))){R.cat=b.dataset.rcat;return repRender();}
     if((b=e.target.closest("[data-sort]"))){var k=b.dataset.sort;if(R.sort===k)R.dir=-R.dir;else{R.sort=k;R.dir=k==="nombre"?1:-1;}return repTable();}
     if((b=e.target.closest("[data-a]"))&&b.dataset.a==="rcsv")return repCsv();
+    if((b=e.target.closest("[data-a]"))&&b.dataset.a==="vmore"){V.n+=30;return visRender();}
+    if((b=e.target.closest("[data-vf]"))){V.f=b.dataset.vf;V.n=20;return visLoad();}
+    if((b=e.target.closest("[data-vi]")))return visOpen(Number(b.dataset.vi));
   }
   function repHover(e){
     var g=e.target.closest&&e.target.closest(".cp-bar"),tip=document.getElementById("cpTip");if(!tip)return;
@@ -358,7 +412,7 @@
     ensureChrome();if(!bound.has(document.body)){bindSheet();bound.add(document.body);}
     if(!bound.has(el)){bound.add(el);el.classList.add("cp");
       el.addEventListener("click",function(e){if(el._cpKind==="inventario")invClick(e);else repClick(e);});
-      el.addEventListener("input",function(e){if(e.target.matches("[data-iq]")){I.q=e.target.value;invList();}if(e.target.matches("[data-rq]")){R.q=e.target.value;repTable();}});
+      el.addEventListener("input",function(e){if(e.target.matches("[data-iq]")){I.q=e.target.value;invList();}if(e.target.matches("[data-rq]")){R.q=e.target.value;repTable();}if(e.target.matches("[data-vq]")){V.q=e.target.value;clearTimeout(V.t);V.t=setTimeout(function(){V.n=20;visLoad().then(function(){var i=document.querySelector("[data-vq]");if(i){i.focus();var L=i.value.length;try{i.setSelectionRange(L,L);}catch(x){}}});},450);}});
       el.addEventListener("pointermove",repHover);el.addEventListener("pointerdown",repHover);el.addEventListener("pointerleave",function(){var t=document.getElementById("cpTip");if(t)t.className="cp-tip cp-hide";});
     }
     el._cpKind=kind;
@@ -471,6 +525,17 @@
   ".cp-md{text-align:right}.cp-md b{font-size:16px}.cp-md small{display:block}",
   ".cp-toast{position:fixed;left:16px;right:16px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:60;background:var(--w);color:var(--k);border-radius:12px;padding:14px 16px;font-size:14px;box-shadow:0 10px 30px rgba(0,0,0,.5);max-width:480px;margin:0 auto}.cp-toast.err{background:var(--bad)}",
   ".cp-busy{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;font-size:14px;color:var(--w)}",
+  ".cp-vis{margin-top:14px}.cp-vlist{margin-top:10px}",
+  ".cp-vr{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:flex-start;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--b);padding:12px 2px;color:var(--w);cursor:pointer;font-family:inherit}.cp-vr:hover{background:#141414}",
+  ".cp-vt{font-size:11.5px;color:var(--dim);white-space:nowrap;padding-top:2px;min-width:92px}.cp-vm{min-width:0}.cp-vm b{display:block;font-size:14.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
+  ".cp-vm small{display:block;font-size:12px;color:var(--dim);margin-top:2px}.cp-vm em{display:block;font-style:normal;font-size:12.5px;color:#d9c49b;margin-top:6px;line-height:1.35}.cp-va{color:var(--dim);font-size:20px}",
+  ".cp-vb{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}.cp-vb i{font-style:normal;font-size:11px;border:1px solid var(--b);border-radius:999px;padding:3px 8px;color:var(--w)}.cp-vb i.ref{border-color:rgba(217,196,155,.55);color:#d9c49b}.cp-vb i.ig{background:var(--w);color:var(--k);border-color:var(--w)}",
+  "@media(max-width:600px){.cp-vr{grid-template-columns:1fr auto}.cp-vt{grid-column:1/-1;min-width:0}}",
+  ".cp-idea{margin-top:14px;border:1px solid rgba(217,196,155,.5);background:linear-gradient(120deg,rgba(217,196,155,.14),rgba(247,247,244,.02));border-radius:12px;padding:12px 14px;font-size:14px;line-height:1.45;color:#f1e6cf}",
+  ".cp-vbtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.cp-vbtns .cp-btn{text-decoration:none;display:inline-block}",
+  ".cp-kv{display:grid;grid-template-columns:150px 1fr;gap:10px;padding:7px 0;border-top:1px solid var(--b);font-size:13px}.cp-kv span{color:var(--dim)}.cp-kv b{font-weight:500;word-break:break-word}",
+  "@media(max-width:520px){.cp-kv{grid-template-columns:1fr;gap:2px}}",
+  ".cp-tl{margin:6px 0 0;padding-left:20px;font-size:13px;line-height:1.5}.cp-tl li{padding:4px 0;border-bottom:1px dashed var(--b)}.cp-tl li::marker{color:var(--dim)}",
   ".cp-spin{width:34px;height:34px;border:3px solid var(--b);border-top-color:var(--w);border-radius:50%;animation:cpsp 1s linear infinite}@keyframes cpsp{to{transform:rotate(360deg)}}"
   ].join("\n");
 })();
