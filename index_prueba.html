@@ -4438,5 +4438,63 @@ body.cv-fast .bw-logo-wrap{transform:scale(.82);transform-origin:center top;marg
   },7000);
 })();
 </script>
+<style id="cvpulse-css">
+/* ===== Live store pulse: real visitors now, most viewed today, real recent add-to-bag ===== */
+.cv-live{display:inline-flex;align-items:center;gap:.5rem;margin:0 auto .9rem;padding:.42rem .85rem;border:1px solid rgba(94,240,160,.35);border-radius:999px;background:rgba(94,240,160,.06);font:600 .56rem Inter,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#d9f7e6;animation:cvLiveIn .8s cubic-bezier(.16,1,.3,1) both}
+.cv-live i{width:7px;height:7px;border-radius:50%;background:#5ef0a0;box-shadow:0 0 0 0 rgba(94,240,160,.6);animation:cvLiveDot 1.6s infinite}
+@keyframes cvLiveDot{70%{box-shadow:0 0 0 7px rgba(94,240,160,0)}100%{box-shadow:0 0 0 0 rgba(94,240,160,0)}}
+@keyframes cvLiveIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.cv-hot{position:absolute;left:.55rem;bottom:.55rem;z-index:3;background:linear-gradient(120deg,#f6e7c8,#d9c49b);color:#050505;font:700 .46rem Inter,sans-serif;letter-spacing:.14em;text-transform:uppercase;padding:.32rem .5rem;box-shadow:0 6px 20px rgba(217,196,155,.35)}
+.cv-si .cv-hot{left:6px;bottom:6px;font-size:.42rem}
+.cv-act{position:fixed;left:14px;bottom:calc(92px + var(--mobile-dock-h,0px));z-index:960;max-width:min(330px,calc(100vw - 28px));display:flex;gap:.65rem;align-items:center;background:rgba(8,8,8,.94);border:1px solid rgba(247,247,244,.16);border-radius:14px;padding:.7rem .85rem;color:#f7f7f4;font:400 .78rem/1.35 Inter,sans-serif;box-shadow:0 18px 50px rgba(0,0,0,.6);backdrop-filter:blur(12px);transform:translateY(20px);opacity:0;transition:transform .5s cubic-bezier(.16,1,.3,1),opacity .5s}
+.cv-act.show{transform:none;opacity:1}.cv-act b{font-weight:600}.cv-act small{display:block;color:rgba(247,247,244,.5);font-size:.68rem}
+.cv-act span{font-size:1.2rem}
+@media(min-width:900px){.cv-act{bottom:28px}}
+</style>
+<script id="cvpulse-js">
+// Real-time pulse from the Worker (/pulse). Only shows real numbers; hides itself when there's little activity.
+(function(){
+  var API=(typeof API_BASE!=='undefined'&&API_BASE)||'https://caneva-ai.canevacol.workers.dev';
+  var hot=[],adds=[],shown=0,first=true;
+  function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function n(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').trim();}
+  function liveTag(d){
+    var inner=document.querySelector('#inicio .bw-inner');if(!inner)return;
+    var el=document.getElementById('cvLive'),txt='';
+    if(d.live>=2)txt=d.live+' personas viendo la tienda ahora';else if(d.visitors>=12)txt=d.visitors+' personas visitaron la tienda hoy';
+    if(!txt){if(el)el.remove();return;}
+    if(!el){el=document.createElement('div');el.id='cvLive';el.className='cv-live';inner.insertBefore(el,inner.firstChild);}
+    el.innerHTML='<i></i>'+esc(txt);
+  }
+  function badge(){
+    if(!hot.length)return;var H=hot.slice(0,4).map(n);
+    document.querySelectorAll('#pgrid .pc,#cvStrip .cv-si').forEach(function(c){
+      var nm=c.querySelector('.pname,b');if(!nm)return;var box=c.querySelector('.pimg,span');if(!box||box.querySelector('.cv-hot'))return;
+      if(H.indexOf(n(nm.textContent))>=0){var t=document.createElement('div');t.className='cv-hot';t.textContent='🔥 Lo más visto';box.appendChild(t);}
+    });
+  }
+  function busy(){return !!document.querySelector('.pmodal.open,.ai-dock.open,#cvGeo,#cvIg,#cvLuxIntro,.cv-wel.show,#cvSwipe')||document.body.classList.contains('cart-open');}
+  function toast(){
+    if(shown>=3||!adds.length)return;
+    if(busy()){setTimeout(toast,6000);return;}
+    var a=adds.shift();shown++;
+    var el=document.createElement('div');el.className='cv-act';el.setAttribute('role','status');
+    el.innerHTML='<span>🛍</span><div><b>Alguien'+(a.city?' en '+esc(a.city):'')+'</b> agregó <b>'+esc(a.item)+'</b> a su bolsa<small>hace '+(a.ago<60?a.ago+' min':Math.round(a.ago/60)+' h')+'</small></div>';
+    el.onclick=function(){var i=-1;(window.P||[]).forEach(function(p,k){if(i<0&&n(p.nombre)===n(a.item))i=k;});if(i>=0&&window.openProductModal)openProductModal(i);el.remove();};
+    document.body.appendChild(el);requestAnimationFrame(function(){el.classList.add('show');});
+    setTimeout(function(){el.classList.remove('show');setTimeout(function(){el.remove();},600);},5200);
+    setTimeout(toast,24000);
+  }
+  function load(){
+    fetch(API+'/pulse').then(function(r){return r.json();}).then(function(d){
+      if(!d||!d.ok)return;liveTag(d);hot=d.hot||[];badge();
+      if(first){first=false;adds=(d.adds||[]).filter(function(a){return a.ago<=180;});setTimeout(toast,9000);}
+    }).catch(function(){});
+  }
+  setTimeout(load,1500);setInterval(load,60000);
+  var g=document.getElementById('pgrid');if(g)new MutationObserver(badge).observe(g,{childList:true});
+  setTimeout(badge,2500);
+})();
+</script>
 </body>
 </html>

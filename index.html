@@ -1877,6 +1877,7 @@ textarea.gf{min-height:74px;resize:vertical}
         <button class="btn-p cart-add" id="pmAddCart" type="button"><span>Agregar al carrito</span></button>
         <button class="btn-o pm-apartar" id="pmApartar" type="button" hidden><span>Apartar</span></button>
         <a class="btn-o" id="pmWhats" href="#" target="_blank" rel="noopener"><span>Comprar por WhatsApp</span></a>
+        <button class="btn-o" id="pmIgDm" type="button" hidden><span>💌 Pedir por Instagram</span></button>
         <button class="btn-o" id="pmAsk" type="button">Preguntar a Caneva AI</button>
       </div>
       <div class="pm-apartar-note" id="pmApartarNote" hidden></div>
@@ -3674,10 +3675,12 @@ document.getElementById('csend').addEventListener('click',sendChat);
   addEventListener('scroll',function(){var h=document.documentElement.scrollHeight-innerHeight;if(h>0){var p=Math.round(scrollY/h*100);if(p>maxScroll)maxScroll=Math.min(100,p);}},{passive:true});
   // Page view with its source, campaign, device details and what we already know from earlier visits
   var sp=new URLSearchParams(location.search),src=sp.get('utm_source')||sp.get('ref')||(sp.get('fbclid')?'facebook':'')||(document.referrer&&document.referrer.indexOf(location.host)<0?document.referrer:'');
-  var camp={};['utm_campaign','utm_content','utm_medium','utm_term','ref','cat','p'].forEach(function(k){var v=sp.get(k);if(v)camp[k.replace('utm_','')]=v.slice(0,60);});
+  var camp={};['utm_source','utm_campaign','utm_content','utm_medium','utm_term','ref','cat','p'].forEach(function(k){var v=sp.get(k);if(v)camp[k.replace('utm_','')]=v.slice(0,60);});
+  // Ad click ids only as a flag (TikTok, Google, Meta) so we know which ad network brought her
+  ['ttclid','gclid','fbclid'].forEach(function(k){if(sp.get(k))camp[k]='1';});
   var con=navigator.connection||{},pmin=prof.pmin||0,pmax=prof.pmax||0;
   push({t:'pv',s:src,d:matchMedia('(min-width:900px)').matches?'d':'m',nv:nv,f:first,cp:camp,ad:!!(sp.get('fbclid')||sp.get('utm_campaign')),
-    sw:screen.width+'x'+screen.height,lang:(navigator.language||'').slice(0,10),ref:(document.referrer||'').slice(0,100),
+    sw:screen.width+'x'+screen.height,lang:(navigator.language||'').slice(0,10),ref:(document.referrer||'').slice(0,100),u:(location.pathname+location.search).slice(0,160),
     tz:(function(){try{return Intl.DateTimeFormat().resolvedOptions().timeZone||'';}catch(e){return '';}})(),
     hr:new Date().getHours(),net:con.type||con.effectiveType||'',sd:!!con.saveData,dark:matchMedia('(prefers-color-scheme: dark)').matches,
     app:!!(matchMedia('(display-mode: standalone)').matches||navigator.standalone),mem:navigator.deviceMemory||0,
@@ -3689,6 +3692,14 @@ document.getElementById('csend').addEventListener('click',sendChat);
     try{if(navigator.getBattery)jobs.push(navigator.getBattery().then(function(b){dv.bat=Math.round(b.level*100)+'%'+(b.charging?' cargando':'');}).catch(function(){}));}catch(e){}
     Promise.all(jobs).then(function(){push(dv);});
   })();
+  // Meta and TikTok browser ids (cookies set by their pixels, or built from the ad click). They are not the person's
+  // profile: they only let Meta/TikTok match the visit to their own user for ads and conversions.
+  setTimeout(function(){
+    function ck(n){var m=document.cookie.match(new RegExp('(?:^|; )'+n+'=([^;]*)'));return m?decodeURIComponent(m[1]):'';}
+    var fbclid=sp.get('fbclid')||'',ttclid=sp.get('ttclid')||'';
+    var ids={t:'ids',fbp:ck('_fbp').slice(0,120),fbc:(ck('_fbc')||(fbclid?'fb.1.'+Date.now()+'.'+fbclid:'')).slice(0,300),ttp:ck('_ttp').slice(0,120),ttclid:ttclid.slice(0,200)};
+    if(ids.fbp||ids.fbc||ids.ttp||ids.ttclid)push(ids);
+  },3500);
   function prod(i){var p=window.P&&P[i];return p?{id:p.id||'',n:p.nombre,pr:p.precio,c:p.categoria,v:typeof priceNum==='function'?priceNum(p.precio):0}:null;}
   function learn(p,size){if(p.c)prof.cats[p.c]=(prof.cats[p.c]||0)+1;if(size)prof.sizes[size]=(prof.sizes[size]||0)+1;if(p.v>0&&p.v<999999999){prof.pmin=prof.pmin?Math.min(prof.pmin,p.v):p.v;prof.pmax=Math.max(prof.pmax||0,p.v);}saveProf();}
   function wrapG(name,fn){var f=window[name];if(typeof f!=='function')return;window[name]=function(){var r=f.apply(this,arguments);try{fn.apply(this,arguments);}catch(e){}return r;};}
@@ -3765,7 +3776,7 @@ document.getElementById('csend').addEventListener('click',sendChat);
   },8000);
 
   var map=[['#pmWhats','whatsapp_prenda'],['#cartWhats','whatsapp_bolsa'],['#pmShare','compartir'],['[data-share-story]','compartir_historia'],['#pmShareMenu a,[data-share-native]','compartir_red'],
-    ['#pmApartar,#cartApartar','apartar'],['#pmTryon,.lk .try,.ai-look-try,.ai-cam','probador'],['#navGift,#mobileGift','regalo'],['#navClub,#mobileClub,.cv-wel .yes','club'],['#clubGbtn,#clubCodeBtn','club_login'],
+    ['#pmIgDm','instagram_dm'],['#pmApartar,#cartApartar','apartar'],['#pmTryon,.lk .try,.ai-look-try,.ai-cam','probador'],['#navGift,#mobileGift','regalo'],['#navClub,#mobileClub,.cv-wel .yes','club'],['#clubGbtn,#clubCodeBtn','club_login'],
     ['#aiOrb,#aiHeroBtn,#mobileDockAi,#aiDock,#aiTease,[data-cvai]','caneva_ai'],['#cartFab,#navCart,#mobileCart,#mobileDockCart','ver_bolsa'],['[data-soc="instagram"]','red_instagram'],['[data-soc="tiktok"]','red_tiktok'],['[data-soc="facebook"]','red_facebook']];
   document.addEventListener('click',function(e){
     var t=e.target;if(!t||!t.closest)return;
@@ -4201,7 +4212,8 @@ body.cv-on .bw-inner{min-width:0;max-width:100%}body.cv-on .bw-inner>*{min-width
   function intro(done){
     var today=new Date().toISOString().slice(0,10);
     var pre=document.querySelector('.bw-preloader');
-    if(LITE||sp.get('nointro')==='1'||(lg('cv_intro_day')===today&&sp.get('intro')!=='1')){if(pre)pre.style.animationDelay='.35s';done();return;}
+    var fromAd=/fbclid|ttclid|gclid|utm_|[?&]ref=/.test(location.search)||/Instagram|FBAN|FBAV|FB_IAB|TikTok|musical_ly|BytedanceWebview/i.test(navigator.userAgent);
+    if(LITE||sp.get('nointro')==='1'||(fromAd&&sp.get('intro')!=='1')||(lg('cv_intro_day')===today&&sp.get('intro')!=='1')){if(pre)pre.style.animationDelay='.35s';done();return;}
     ls('cv_intro_day',today);
     // replaces the store's previous intros (preloader + short logo intro) so only one plays
     if(pre)pre.remove();var old=document.getElementById('cvIntro');if(old)old.remove();document.documentElement.classList.remove('cv-intro-on');
@@ -4349,6 +4361,139 @@ body.cv-on .bw-inner{min-width:0;max-width:100%}body.cv-on .bw-inner>*{min-width
     goTag();spotlight();tilt();ink();
     if(hero&&!LITE){var b=hero.getBoundingClientRect();setTimeout(function(){burst(b.left+b.width/2,Math.min(innerHeight*.35,b.top+b.height*.3),40,2.6,1);},250);}
   });
+})();
+</script>
+<script id="cv-igdm">
+// "Pedir por Instagram": copies a ready message (garment + Ref code) and opens a DM with the store's Instagram.
+// When she sends it, the store sees her Instagram user and can match it with her visit using the Ref code.
+(function(){
+  var btn=document.getElementById('pmIgDm');if(!btn)return;
+  function handle(){
+    var u=(window.SITE_CONFIG&&SITE_CONFIG.social&&SITE_CONFIG.social.instagram)||((document.getElementById('ftIg')||{}).href)||'';
+    var m=String(u).match(/instagram\.com\/([A-Za-z0-9._]{1,30})/);return m?m[1]:'';
+  }
+  function sync(){btn.hidden=!handle();}
+  var _open=window.openProductModal;
+  if(typeof _open==='function')window.openProductModal=openProductModal=function(){var r=_open.apply(this,arguments);try{sync();}catch(e){}return r;};
+  setTimeout(sync,2500);
+  btn.addEventListener('click',function(){
+    var h=handle();if(!h)return;
+    var p=window.P&&P[currentProductIndex],ref=window.canevaRef?canevaRef():'';
+    var txt='Hola ✨ me interesa '+(p?p.nombre+' ('+p.precio+')':'una prenda de la página')+'. ¿Está disponible?'+(ref?'\n🔖 Ref: '+ref:'');
+    // Copy and open in the same tap (phones block pop-ups opened later)
+    try{if(navigator.clipboard)navigator.clipboard.writeText(txt).catch(function(){});}catch(e){}
+    if(window.toastCart)toastCart('Copiamos tu mensaje 💌 pégalo en el chat');
+    var link='https://ig.me/m/'+h+(ref?'?ref='+ref:'');var wnd=window.open(link,'_blank');if(!wnd)location.href=link;
+    try{if(window.canevaTrack)canevaTrack('contact',p||null);}catch(e){}
+  });
+})();
+</script>
+<style id="cvfast-css">
+/* ===== Fast hook for people coming from ads or social apps: real garments with prices on the first screen ===== */
+.cv-strip{width:100%;margin:clamp(1rem,2.6vh,1.6rem) 0 0;text-align:left}
+.cv-strip-h{display:flex;justify-content:space-between;align-items:baseline;margin:0 2px .6rem;font-family:Inter,sans-serif}
+.cv-strip-h b{font-size:.6rem;letter-spacing:.26em;text-transform:uppercase;color:#f7f7f4;font-weight:600}.cv-strip-h b i{font-style:normal;color:#5ef0a0;margin-right:.4rem}
+.cv-strip-h span{font-size:.55rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(247,247,244,.5)}
+.cv-strip-row{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding-bottom:4px}.cv-strip-row::-webkit-scrollbar{display:none}
+.cv-si{flex:0 0 clamp(118px,31vw,170px);scroll-snap-align:start;background:#0b0b0b;border:1px solid rgba(247,247,244,.12);padding:0;cursor:pointer;color:#f7f7f4;text-align:left;font-family:Inter,sans-serif;animation:cvSi .7s cubic-bezier(.16,1,.3,1) both;animation-delay:calc(var(--i)*60ms)}
+@keyframes cvSi{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+.cv-si span{display:block;aspect-ratio:3/4;overflow:hidden;background:#151515;position:relative}.cv-si img{width:100%;height:100%;object-fit:cover;transition:transform .8s}.cv-si:hover img{transform:scale(1.06)}
+.cv-si em{position:absolute;left:6px;top:6px;font-style:normal;background:#f7f7f4;color:#050505;font-size:.45rem;letter-spacing:.16em;font-weight:700;padding:.25rem .4rem}
+.cv-si b{display:block;font-family:"Cormorant Garamond",serif;font-weight:400;font-size:.98rem;line-height:1.15;padding:.45rem .5rem 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cv-si small{display:block;font-size:.72rem;font-weight:600;padding:.1rem .5rem .55rem;color:#e9dcc1}
+.cv-si.all{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:.4rem;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;min-height:100%}
+body.cv-fast .bw-micro{display:none!important}
+body.cv-fast .bw-hero{padding-top:4.6rem!important}
+body.cv-fast .bw-logo-wrap{transform:scale(.82);transform-origin:center top;margin-bottom:-.6rem}
+.cv-swipe{position:fixed;left:50%;bottom:calc(84px + var(--mobile-dock-h,0px));transform:translateX(-50%);z-index:900;background:rgba(5,5,5,.86);border:1px solid rgba(247,247,244,.25);color:#f7f7f4;border-radius:999px;padding:.6rem 1rem;font:600 .62rem Inter,sans-serif;letter-spacing:.18em;text-transform:uppercase;backdrop-filter:blur(10px);animation:cvSw 1.6s ease-in-out infinite;cursor:pointer}
+@keyframes cvSw{50%{transform:translate(-50%,6px)}}
+</style>
+<script id="cvfast-js">
+// Shows real garments with prices on the first screen, and a gentle "swipe" hint if she doesn't move.
+(function(){
+  if(!window.P||!document.getElementById('cvVit'))return;
+  var fromAd=/fbclid|ttclid|gclid|utm_|[?&]ref=/.test(location.search)||/Instagram|FBAN|FBAV|FB_IAB|TikTok|musical_ly|BytedanceWebview/i.test(navigator.userAgent);
+  if(fromAd)document.body.classList.add('cv-fast');
+  function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function build(){
+    var vit=document.getElementById('cvVit');if(!vit||document.getElementById('cvStrip'))return;
+    var list=(typeof catalogProducts==='function'?catalogProducts():P).filter(function(p){return p.imagen&&p.imagen.indexOf('http')===0;}).slice(0,10);
+    if(list.length<3)return;
+    var d=document.createElement('div');d.id='cvStrip';d.className='cv-strip';
+    d.innerHTML='<div class="cv-strip-h"><b><i>●</i>Lo más nuevo</b><span>Desliza →</span></div><div class="cv-strip-row">'+list.map(function(p,i){var idx=P.indexOf(p);
+      return '<button type="button" class="cv-si" style="--i:'+i+'" data-cvsi="'+idx+'"><span><img src="'+esc(p.imagen)+'" alt="" loading="'+(i<4?'eager':'lazy')+'">'+(i<3?'<em>NUEVO</em>':'')+'</span><b>'+esc(p.nombre)+'</b><small>'+esc(p.precio)+'</small></button>';}).join('')+
+      '<button type="button" class="cv-si all" data-cvall>Ver todo<br>→</button></div>';
+    // for ad visitors the garments go first; for everyone else, right after the category cards
+    if(fromAd)vit.parentNode.insertBefore(d,vit);else vit.appendChild(d);
+    d.addEventListener('click',function(e){var b=e.target.closest('[data-cvsi]');if(b){openProductModal(parseInt(b.dataset.cvsi,10));return;}if(e.target.closest('[data-cvall]')&&window.cvSetCat)cvSetCat('Nuevo');});
+  }
+  build();setTimeout(build,1500);
+  // swipe hint: only if after 7 s she hasn't scrolled nor opened anything
+  var moved=false;addEventListener('scroll',function(){if(scrollY>40){moved=true;var h=document.getElementById('cvSwipe');if(h)h.remove();}},{passive:true});
+  document.addEventListener('pointerdown',function(e){if(e.target.closest&&e.target.closest('[data-cvsi],.cv-vc,.pc'))moved=true;},true);
+  setTimeout(function(){if(moved||document.querySelector('.pmodal.open,.ai-dock.open,#cvGeo,#cvIg,#cvLuxIntro'))return;
+    var h=document.createElement('button');h.type='button';h.id='cvSwipe';h.className='cv-swipe';h.textContent='Desliza y mira la colección ↓';
+    h.onclick=function(){h.remove();var g=document.getElementById('cvStrip')||document.getElementById('catalogo');if(g)g.scrollIntoView({behavior:'smooth',block:'center'});};
+    document.body.appendChild(h);setTimeout(function(){if(h.parentNode)h.remove();},9000);
+  },7000);
+})();
+</script>
+<style id="cvpulse-css">
+/* ===== Live store pulse: real visitors now, most viewed today, real recent add-to-bag ===== */
+.cv-live{display:inline-flex;align-items:center;gap:.5rem;margin:0 auto .9rem;padding:.42rem .85rem;border:1px solid rgba(94,240,160,.35);border-radius:999px;background:rgba(94,240,160,.06);font:600 .56rem Inter,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#d9f7e6;animation:cvLiveIn .8s cubic-bezier(.16,1,.3,1) both}
+.cv-live i{width:7px;height:7px;border-radius:50%;background:#5ef0a0;box-shadow:0 0 0 0 rgba(94,240,160,.6);animation:cvLiveDot 1.6s infinite}
+@keyframes cvLiveDot{70%{box-shadow:0 0 0 7px rgba(94,240,160,0)}100%{box-shadow:0 0 0 0 rgba(94,240,160,0)}}
+@keyframes cvLiveIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.cv-hot{position:absolute;left:.55rem;bottom:.55rem;z-index:3;background:linear-gradient(120deg,#f6e7c8,#d9c49b);color:#050505;font:700 .46rem Inter,sans-serif;letter-spacing:.14em;text-transform:uppercase;padding:.32rem .5rem;box-shadow:0 6px 20px rgba(217,196,155,.35)}
+.cv-si .cv-hot{left:6px;bottom:6px;font-size:.42rem}
+.cv-act{position:fixed;left:14px;bottom:calc(92px + var(--mobile-dock-h,0px));z-index:960;max-width:min(330px,calc(100vw - 28px));display:flex;gap:.65rem;align-items:center;background:rgba(8,8,8,.94);border:1px solid rgba(247,247,244,.16);border-radius:14px;padding:.7rem .85rem;color:#f7f7f4;font:400 .78rem/1.35 Inter,sans-serif;box-shadow:0 18px 50px rgba(0,0,0,.6);backdrop-filter:blur(12px);transform:translateY(20px);opacity:0;transition:transform .5s cubic-bezier(.16,1,.3,1),opacity .5s}
+.cv-act.show{transform:none;opacity:1}.cv-act b{font-weight:600}.cv-act small{display:block;color:rgba(247,247,244,.5);font-size:.68rem}
+.cv-act span{font-size:1.2rem}
+@media(min-width:900px){.cv-act{bottom:28px}}
+</style>
+<script id="cvpulse-js">
+// Real-time pulse from the Worker (/pulse). Only shows real numbers; hides itself when there's little activity.
+(function(){
+  var API=(typeof API_BASE!=='undefined'&&API_BASE)||'https://caneva-ai.canevacol.workers.dev';
+  var hot=[],adds=[],shown=0,first=true;
+  function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function n(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').trim();}
+  function liveTag(d){
+    var inner=document.querySelector('#inicio .bw-inner');if(!inner)return;
+    var el=document.getElementById('cvLive'),txt='';
+    if(d.live>=2)txt=d.live+' personas viendo la tienda ahora';else if(d.visitors>=12)txt=d.visitors+' personas visitaron la tienda hoy';
+    if(!txt){if(el)el.remove();return;}
+    if(!el){el=document.createElement('div');el.id='cvLive';el.className='cv-live';inner.insertBefore(el,inner.firstChild);}
+    el.innerHTML='<i></i>'+esc(txt);
+  }
+  function badge(){
+    if(!hot.length)return;var H=hot.slice(0,4).map(n);
+    document.querySelectorAll('#pgrid .pc,#cvStrip .cv-si').forEach(function(c){
+      var nm=c.querySelector('.pname,b');if(!nm)return;var box=c.querySelector('.pimg,span');if(!box||box.querySelector('.cv-hot'))return;
+      if(H.indexOf(n(nm.textContent))>=0){var t=document.createElement('div');t.className='cv-hot';t.textContent='🔥 Lo más visto';box.appendChild(t);}
+    });
+  }
+  function busy(){return !!document.querySelector('.pmodal.open,.ai-dock.open,#cvGeo,#cvIg,#cvLuxIntro,.cv-wel.show,#cvSwipe')||document.body.classList.contains('cart-open');}
+  function toast(){
+    if(shown>=3||!adds.length)return;
+    if(busy()){setTimeout(toast,6000);return;}
+    var a=adds.shift();shown++;
+    var el=document.createElement('div');el.className='cv-act';el.setAttribute('role','status');
+    el.innerHTML='<span>🛍</span><div><b>Alguien'+(a.city?' en '+esc(a.city):'')+'</b> agregó <b>'+esc(a.item)+'</b> a su bolsa<small>hace '+(a.ago<60?a.ago+' min':Math.round(a.ago/60)+' h')+'</small></div>';
+    el.onclick=function(){var i=-1;(window.P||[]).forEach(function(p,k){if(i<0&&n(p.nombre)===n(a.item))i=k;});if(i>=0&&window.openProductModal)openProductModal(i);el.remove();};
+    document.body.appendChild(el);requestAnimationFrame(function(){el.classList.add('show');});
+    setTimeout(function(){el.classList.remove('show');setTimeout(function(){el.remove();},600);},5200);
+    setTimeout(toast,24000);
+  }
+  function load(){
+    fetch(API+'/pulse').then(function(r){return r.json();}).then(function(d){
+      if(!d||!d.ok)return;liveTag(d);hot=d.hot||[];badge();
+      if(first){first=false;adds=(d.adds||[]).filter(function(a){return a.ago<=180;});setTimeout(toast,9000);}
+    }).catch(function(){});
+  }
+  setTimeout(load,1500);setInterval(load,60000);
+  var g=document.getElementById('pgrid');if(g)new MutationObserver(badge).observe(g,{childList:true});
+  setTimeout(badge,2500);
 })();
 </script>
 </body>
