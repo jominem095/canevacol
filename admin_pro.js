@@ -345,7 +345,8 @@
     loadLeaflet().then(function(){
       if(V.lmap){try{V.lmap.remove();}catch(e){}V.lmap=null;}
       box.innerHTML="";var map=L.map(box,{scrollWheelZoom:false,zoomControl:true,attributionControl:true,worldCopyJump:true});V.lmap=map;
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{maxZoom:19,subdomains:"abcd",attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/attributions">CARTO</a>'}).addTo(map);
+      // Free OpenStreetMap tiles (no key), darkened with CSS to match the black admin
+      L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,className:"cp-darktiles",attribution:'© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'}).addTo(map);
       var bounds=[],max=Math.max.apply(null,G.map(function(g){return g.items.length;}));
       G.forEach(function(g){
         var n=g.items.length,isLive=g.items.some(function(p){return Date.now()-p.v.ts<30*60000;});
@@ -592,6 +593,7 @@
   ".cp-mapw{position:relative;margin-top:10px}.cp-vmap{height:420px;border-radius:14px;overflow:hidden;border:1px solid var(--b);background:#0d0d0d}.cp-vmap.leaflet-container{background:#0d0d0d}",
   "@media(max-width:700px){.cp-vmap{height:360px}}",
   ".cp-mapw.full{position:fixed;inset:0;z-index:45;margin:0;background:#050505;padding:10px}.cp-mapw.full .cp-vmap{height:calc(100vh - 56px);border-radius:12px}",
+  ".cp-vmap .cp-darktiles{filter:invert(1) hue-rotate(180deg) brightness(.82) contrast(1.1) saturate(.25)}",
   ".cp-vmap .leaflet-control-attribution{background:rgba(5,5,5,.7)!important;color:#888!important;font-size:10px}.cp-vmap .leaflet-control-attribution a{color:#bbb!important}",
   ".cp-vmap .leaflet-bar a{background:#111!important;color:#f7f7f4!important;border-color:#222!important}",
   ".cp-mtools{position:absolute;top:10px;right:10px;z-index:500;display:flex;gap:6px}.cp-mapw.full .cp-mtools{top:20px;right:20px}",
