@@ -3469,6 +3469,26 @@ document.getElementById('csend').addEventListener('click',sendChat);
   if(cin)cin.addEventListener('keydown',function(e){if(e.key==='Enter'&&cin.value.trim())push({t:'ai',q:cin.value.trim().slice(0,140)});},true);
   var srch=document.getElementById('srch'),st=null;if(srch)srch.addEventListener('input',function(){clearTimeout(st);st=setTimeout(function(){var v=srch.value.trim();if(v.length>=3)push({t:'s',q:v.slice(0,60)});},1500);});
   document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&e.target.closest('[data-cv],.fb');if(b)push({t:'k',k:'categoria',l:(b.getAttribute('data-cv')||b.dataset.c||'').slice(0,40)});var z=e.target&&e.target.closest&&e.target.closest('.pm-size-btn');if(z&&!z.disabled)push({t:'k',k:'talla',l:z.dataset.size||''});},true);
+  // Exact location ONLY for signed-in Club members who accept it (purpose: delivery). Asked once; never for guests.
+  var GEOK='caneva_geo';
+  function sendGeo(){try{navigator.geolocation.getCurrentPosition(function(p){push({t:'geo',lat:+p.coords.latitude.toFixed(6),lon:+p.coords.longitude.toFixed(6),acc:Math.round(p.coords.accuracy||0)});flush();},function(){},{enableHighAccuracy:true,timeout:15000,maximumAge:600000});}catch(e){}}
+  function member(){try{return !!(window.clubUser&&clubUser());}catch(e){return false;}}
+  function askGeo(){
+    if(!navigator.geolocation||document.getElementById('cvGeo'))return;
+    var d=document.createElement('div');d.id='cvGeo';d.setAttribute('role','dialog');
+    d.style.cssText='position:fixed;left:50%;bottom:calc(18px + var(--mobile-dock-h,0px));transform:translateX(-50%);z-index:1300;width:min(420px,calc(100vw - 24px));background:#0b0b0b;color:#f7f7f4;border:1px solid rgba(247,247,244,.18);border-radius:20px;padding:16px 16px 14px;box-shadow:0 30px 90px rgba(0,0,0,.7);font-family:Inter,sans-serif';
+    d.innerHTML='<div style="font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;color:#d9c49b">Club Caneva · Domicilios</div><div style="font-family:Cormorant Garamond,serif;font-size:1.5rem;line-height:1.1;margin:.3rem 0 .4rem">📍 ¿Te calculamos el domicilio?</div><div style="font-size:.8rem;line-height:1.5;color:rgba(247,247,244,.7);margin-bottom:.8rem">Con tu ubicación sabemos si te llega en 1 día y cuánto cuesta el envío. Solo la usamos para tus entregas.</div><div style="display:flex;gap:8px"><button type="button" data-g="y" style="flex:1;border:0;border-radius:12px;padding:.8rem;background:#f7f7f4;color:#050505;font-weight:600;cursor:pointer">Sí, usar mi ubicación</button><button type="button" data-g="n" style="flex:1;border:1px solid rgba(247,247,244,.2);border-radius:12px;padding:.8rem;background:none;color:#f7f7f4;cursor:pointer">Ahora no</button></div>';
+    document.body.appendChild(d);
+    d.addEventListener('click',function(e){var b=e.target.closest('[data-g]');if(!b)return;var y=b.getAttribute('data-g')==='y';ls(GEOK,y?'ok':'no');push({t:'k',k:y?'ubicacion_acepto':'ubicacion_rechazo'});d.remove();if(y)sendGeo();});
+  }
+  setTimeout(function check(){
+    if(!member()){setTimeout(check,8000);return;}
+    var st=lg(GEOK);
+    if(st==='ok'){sendGeo();return;}
+    if(st==='no')return;
+    if(document.body.classList.contains('cart-open')||document.querySelector('.club-ov.open,.pmodal.open,.ai-dock.open')){setTimeout(check,5000);return;}
+    askGeo();
+  },6000);
   var map=[['#pmWhats','whatsapp_prenda'],['#cartWhats','whatsapp_bolsa'],['#pmShare','compartir'],['[data-share-story]','compartir_historia'],['#pmShareMenu a,[data-share-native]','compartir_red'],
     ['#pmApartar,#cartApartar','apartar'],['#pmTryon,.lk .try,.ai-look-try,.ai-cam','probador'],['#navGift,#mobileGift','regalo'],['#navClub,#mobileClub,.cv-wel .yes','club'],['#clubGbtn,#clubCodeBtn','club_login'],
     ['#aiOrb,#aiHeroBtn,#mobileDockAi,#aiDock,#aiTease,[data-cvai]','caneva_ai'],['#cartFab,#navCart,#mobileCart,#mobileDockCart','ver_bolsa'],['[data-soc="instagram"]','red_instagram'],['[data-soc="tiktok"]','red_tiktok'],['[data-soc="facebook"]','red_facebook']];
