@@ -408,6 +408,22 @@
   function waNum(p){var d=String(p||"").replace(/\D/g,"");if(d.length===10&&d.charAt(0)==="3")d="57"+d;return d.length>=10?d:"";}
   function kv(label,val){if(val===undefined||val===null||val===""||(Array.isArray(val)&&!val.length))return "";return '<div class="cp-kv"><span>'+esc(label)+'</span><b>'+(Array.isArray(val)?val.map(esc).join("<br>"):esc(val))+'</b></div>';}
   function sect(title,body){return body?'<div class="cp-sect">'+title+'</div>'+body:"";}
+  // Every field the Worker saved for this visit, so nothing stays hidden
+  var LBL={hora:"Última actividad",inicio:"Entró",visitante:"ID anónimo del visitante",ciudad:"Ciudad",region:"Departamento",pais:"País",codigo_postal:"Código postal",codigo_region:"Código de departamento",codigo_metro:"Código metro",continente:"Continente",
+    operador:"Internet (empresa)",red_asn:"Red (ASN)",centro_cloudflare:"Centro de Cloudflare",latencia_ms:"Velocidad de respuesta (ms)",protocolo:"Protocolo",seguridad_tls:"Seguridad",dispositivo:"Dispositivo",navegador:"Abrió en",
+    modelo_celular:"Modelo exacto",sistema:"Sistema",version_sistema:"Versión del sistema",version_navegador:"Versión del navegador",es_celular:"Es celular",agente:"Firma completa del navegador",idiomas_del_celular:"Idiomas del celular",
+    coordenadas_aprox:"Zona aproximada",ubicacion_exacta:"Ubicación exacta",precision_metros:"Precisión (m)",mapa:"Mapa",codigo_ref:"Código Ref",instagram:"Instagram",instagram_link:"Perfil de Instagram",clienta:"Club Caneva",
+    whatsapp_clienta:"WhatsApp",talla_perfil:"Talla del perfil",llego_desde:"Llegó desde",vino_de_anuncio:"Vino de anuncio",campana:"Campaña",referencia:"Página de origen",visita_numero:"Visita número",primera_visita:"Primera visita",
+    visita_anterior:"Visita anterior",pantalla:"Pantalla",ventana:"Ventana",densidad_pantalla:"Densidad de pantalla",pantalla_tactil:"Pantalla táctil",nucleos_cpu:"Núcleos del procesador",memoria_celular_gb:"Memoria (GB)",bateria:"Batería",
+    idioma:"Idioma",zona_horaria:"Zona horaria",zona_horaria_red:"Zona horaria (red)",hora_en_su_celular:"Hora en su celular",conexion:"Conexión",ahorro_de_datos:"Ahorro de datos",modo_oscuro:"Modo oscuro",abrio_como_app:"Abrió como app",
+    no_rastrear:"No rastrear",escribio_por_whatsapp:"Escribió por WhatsApp",dejo_en_la_bolsa:"Dejó en la bolsa",idea_para_dm:"Idea para DM",pagina:"Página",importado_de_logs:"Traída de los Logs"};
+  function allData(v){
+    var skip={vid:1,day:1,ts:1,firstTs:1,acciones:1,perfil:1,evento:1};
+    var rows=Object.keys(v).filter(function(k){return !skip[k]&&v[k]!==""&&v[k]!==null&&v[k]!==undefined;}).map(function(k){
+      var val=v[k];if(Array.isArray(val))val=val.join(" · ");else if(typeof val==="object")val=JSON.stringify(val);
+      return kv(LBL[k]||k.replace(/_/g," "),String(val));}).join("");
+    return rows?'<details class="cp-all"><summary>🔎 Todos los datos de la visita ('+(rows.split('class="cp-kv"').length-1)+')</summary>'+rows+'</details>':"";
+  }
   function visOpen(i){
     var v=(V.data.visits||[])[i];if(!v)return;
     var p=v.perfil||{},igh=v.instagram?String(v.instagram).replace(/^@/,""):"",wn=waNum(v.whatsapp_clienta);
@@ -423,10 +439,11 @@
       (!igh&&!wn?'<p class="cp-hint" style="margin-top:10px">No dejó Instagram ni WhatsApp. Si te escribe, busca su código 🔖 '+esc(v.codigo_ref||"")+' en el mensaje.</p>':"")+
       sect("Quién",kv("Instagram",v.instagram)+kv("Club Caneva",v.clienta)+kv("WhatsApp",v.whatsapp_clienta)+kv("Talla del perfil",v.talla_perfil))+
       sect("Dejó en la bolsa",kv("Prendas",v.dejo_en_la_bolsa))+
-      sect("Dónde está",kv("Ciudad",[v.ciudad,v.region,v.pais].filter(Boolean).join(", "))+kv("Código postal",v.codigo_postal)+kv("Ubicación exacta (GPS)",v.ubicacion_exacta?v.ubicacion_exacta+(v.precision_metros?" (±"+v.precision_metros+" m)":""):"No la compartió")+kv("Zona aproximada (internet)",v.coordenadas_aprox||(cityGeo(v)?"Visita antigua: se ubica en el centro de "+(v.ciudad||v.region):"Cloudflare no la envió"))+kv("Internet",v.operador)+kv("Conexión",v.conexion))+
+      sect("Dónde está",kv("Ciudad",[v.ciudad,v.region,v.pais].filter(Boolean).join(", "))+kv("Código postal",v.codigo_postal)+kv("Ubicación exacta (GPS)",v.ubicacion_exacta?v.ubicacion_exacta+(v.precision_metros?" (±"+v.precision_metros+" m)":""):"No la compartió")+kv("Zona aproximada (internet)",v.coordenadas_aprox||(cityGeo(v)?"Visita antigua: se ubica en el centro de "+(v.ciudad||v.region):"Cloudflare no la envió"))+kv("Internet",v.operador)+kv("Red",v.red_asn)+kv("Conexión",v.conexion)+kv("Velocidad de respuesta",v.latencia_ms?v.latencia_ms+" ms":"")+kv("Zona horaria",v.zona_horaria||v.zona_horaria_red))+
       sect("Cómo llegó",kv("Desde",v.llego_desde)+kv("Anuncio",v.vino_de_anuncio)+kv("Campaña",v.campana)+kv("Página de origen",v.referencia)+kv("Visita número",v.visita_numero)+kv("Primera visita",v.primera_visita)+kv("Visita anterior",v.visita_anterior))+
       sect("Lo que le gusta",kv("Categorías",p.le_gusta)+kv("Tallas",p.tallas)+kv("Precios que mira",p.rango_precios)+kv("Vio antes",p.vio_antes)+kv("Puso en la bolsa antes",p.puso_en_bolsa_antes)+kv("Le preguntó a la IA",p.pregunto_antes_a_la_ia)+kv("Tiempo total en la tienda",p.tiempo_total_en_la_tienda))+
-      sect("Su equipo",kv("Celular / computador",v.dispositivo)+kv("Abrió en",v.navegador)+kv("Pantalla",v.pantalla)+kv("Hora en su celular",v.hora_en_su_celular)+kv("Idioma",v.idioma)+kv("Modo oscuro",v.modo_oscuro)+kv("Como app",v.abrio_como_app))+
+      sect("Su equipo",kv("Celular / computador",v.dispositivo)+kv("Modelo exacto",v.modelo_celular)+kv("Sistema",[v.sistema,v.version_sistema].filter(Boolean).join(" "))+kv("Abrió en",v.navegador)+kv("Versión del navegador",v.version_navegador)+kv("Pantalla",v.pantalla)+kv("Ventana",v.ventana)+kv("Batería",v.bateria)+kv("Hora en su celular",v.hora_en_su_celular)+kv("Idioma",v.idioma)+kv("Modo oscuro",v.modo_oscuro)+kv("Como app",v.abrio_como_app))+
+      allData(v)+
       sect("Lo que hizo hoy",(v.acciones||[]).length?'<ol class="cp-tl">'+v.acciones.map(function(a){return "<li>"+esc(a)+"</li>";}).join("")+'</ol>':"");
     openSheet(html,{click:function(e){var b=e.target.closest("[data-vcopy]");if(b){try{navigator.clipboard.writeText(v.idea_para_dm);toast("Idea copiada ✓");}catch(x){}}}});
   }
@@ -635,6 +652,7 @@
   ".cp-vbtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.cp-vbtns .cp-btn{text-decoration:none;display:inline-block}",
   ".cp-kv{display:grid;grid-template-columns:150px 1fr;gap:10px;padding:7px 0;border-top:1px solid var(--b);font-size:13px}.cp-kv span{color:var(--dim)}.cp-kv b{font-weight:500;word-break:break-word}",
   "@media(max-width:520px){.cp-kv{grid-template-columns:1fr;gap:2px}}",
+  ".cp-all{margin-top:18px;border:1px solid var(--b);border-radius:12px;padding:10px 12px}.cp-all summary{cursor:pointer;font-size:13px;font-weight:600}.cp-all .cp-kv b{font-size:12.5px}",
   ".cp-tl{margin:6px 0 0;padding-left:20px;font-size:13px;line-height:1.5}.cp-tl li{padding:4px 0;border-bottom:1px dashed var(--b)}.cp-tl li::marker{color:var(--dim)}",
   ".cp-spin{width:34px;height:34px;border:3px solid var(--b);border-top-color:var(--w);border-radius:50%;animation:cpsp 1s linear infinite}@keyframes cpsp{to{transform:rotate(360deg)}}"
   ].join("\n");

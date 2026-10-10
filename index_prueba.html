@@ -3682,6 +3682,13 @@ document.getElementById('csend').addEventListener('click',sendChat);
     hr:new Date().getHours(),net:con.type||con.effectiveType||'',sd:!!con.saveData,dark:matchMedia('(prefers-color-scheme: dark)').matches,
     app:!!(matchMedia('(display-mode: standalone)').matches||navigator.standalone),mem:navigator.deviceMemory||0,
     lv:prevVisit,pc:top(prof.cats,3),pz:top(prof.sizes,3),ps:prevSeen,pb:prevBag,pa:prevAi,pr:pmin&&pmax?[pmin,pmax]:null,tt:prof.tsec||0});
+  // Device details: exact phone model and OS version (Android Chrome), screen, CPU and battery
+  (function(){
+    var dv={t:'dv',cores:navigator.hardwareConcurrency||0,vp:innerWidth+'x'+innerHeight,dpr:Math.round((window.devicePixelRatio||1)*100)/100,touch:(navigator.maxTouchPoints||0)>0},jobs=[];
+    try{if(navigator.userAgentData&&navigator.userAgentData.getHighEntropyValues)jobs.push(navigator.userAgentData.getHighEntropyValues(['model','platformVersion']).then(function(h){if(h.model)dv.md=String(h.model).slice(0,40);if(h.platformVersion)dv.osv=String(h.platformVersion).slice(0,20);}).catch(function(){}));}catch(e){}
+    try{if(navigator.getBattery)jobs.push(navigator.getBattery().then(function(b){dv.bat=Math.round(b.level*100)+'%'+(b.charging?' cargando':'');}).catch(function(){}));}catch(e){}
+    Promise.all(jobs).then(function(){push(dv);});
+  })();
   function prod(i){var p=window.P&&P[i];return p?{id:p.id||'',n:p.nombre,pr:p.precio,c:p.categoria,v:typeof priceNum==='function'?priceNum(p.precio):0}:null;}
   function learn(p,size){if(p.c)prof.cats[p.c]=(prof.cats[p.c]||0)+1;if(size)prof.sizes[size]=(prof.sizes[size]||0)+1;if(p.v>0&&p.v<999999999){prof.pmin=prof.pmin?Math.min(prof.pmin,p.v):p.v;prof.pmax=Math.max(prof.pmax||0,p.v);}saveProf();}
   function wrapG(name,fn){var f=window[name];if(typeof f!=='function')return;window[name]=function(){var r=f.apply(this,arguments);try{fn.apply(this,arguments);}catch(e){}return r;};}
