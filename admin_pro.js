@@ -315,7 +315,55 @@
     visLoad();
   }
   // ---------- Visitantes: detailed journey of each visitor (Worker v30, kept 30 days) ----------
-  var V={q:"",f:"",n:20,data:null,t:null};
+  var V={q:"",f:"",n:20,data:null,t:null,map:true,lmap:null,full:false};
+  // Coordinates of a visit: exact GPS when she allowed it, otherwise the approximate point of her internet connection
+  function vGeo(v){
+    var ex=String(v.ubicacion_exacta||""),ap=String(v.coordenadas_aprox||""),s=ex||ap;if(!s)return null;
+    var m=s.split(",").map(Number);if(m.length!==2||!isFinite(m[0])||!isFinite(m[1]))return null;
+    return {lat:m[0],lon:m[1],exact:!!ex,acc:Number(v.precision_metros)||0,txt:m[0].toFixed(ex?6:4)+", "+m[1].toFixed(ex?6:4)};
+  }
+  function loadLeaflet(){
+    if(window.L)return Promise.resolve();
+    return new Promise(function(ok,ko){
+      var css=document.createElement("link");css.rel="stylesheet";css.href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css";document.head.appendChild(css);
+      var sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js";sc.onload=ok;sc.onerror=function(){ko(new Error("No se pudo cargar el mapa."));};document.head.appendChild(sc);
+    });
+  }
+  function visMap(){
+    var box=document.getElementById("cpVisMap");if(!box)return;
+    var all=(V.data.visits||[]).map(function(v,i){var g=vGeo(v);return g?{g:g,v:v,i:i}:null;}).filter(Boolean);
+    var stat=document.getElementById("cpVisMapStat");
+    if(!all.length){box.innerHTML=empty("Ninguna visita de este filtro trae coordenadas todavía.");if(stat)stat.innerHTML="";return;}
+    // Group visits by place: exact points stay alone, approximate points of the same zone become one bubble
+    var groups={};all.forEach(function(p){var k=p.g.exact?"x"+p.i:p.g.lat.toFixed(2)+","+p.g.lon.toFixed(2);(groups[k]=groups[k]||{lat:p.g.lat,lon:p.g.lon,exact:p.g.exact,items:[]}).items.push(p);});
+    var G=Object.keys(groups).map(function(k){return groups[k];});
+    var cities={};all.forEach(function(p){var c=p.v.ciudad||"Sin ciudad";cities[c]=(cities[c]||0)+1;});
+    var top=Object.keys(cities).sort(function(x,y){return cities[y]-cities[x];});
+    var exact=all.filter(function(p){return p.g.exact;}).length,live=all.filter(function(p){return Date.now()-p.v.ts<30*60000;}).length;
+    if(stat)stat.innerHTML='<div class="cp-mstat"><b>'+num(all.length)+'</b><span>en el mapa</span></div><div class="cp-mstat"><b>'+num(top.length)+'</b><span>ciudades</span></div><div class="cp-mstat"><b>'+num(exact)+'</b><span>exactas</span></div><div class="cp-mstat live"><b>'+num(live)+'</b><span>últimos 30 min</span></div>'+
+      '<div class="cp-mcities">'+top.slice(0,8).map(function(c,i){return '<button type="button" data-vcity="'+esc(c)+'"><em>'+(i+1)+'</em>'+esc(c)+'<i>'+cities[c]+'</i></button>';}).join("")+'</div>';
+    loadLeaflet().then(function(){
+      if(V.lmap){try{V.lmap.remove();}catch(e){}V.lmap=null;}
+      box.innerHTML="";var map=L.map(box,{scrollWheelZoom:false,zoomControl:true,attributionControl:true,worldCopyJump:true});V.lmap=map;
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{maxZoom:19,subdomains:"abcd",attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/attributions">CARTO</a>'}).addTo(map);
+      var bounds=[],max=Math.max.apply(null,G.map(function(g){return g.items.length;}));
+      G.forEach(function(g){
+        var n=g.items.length,isLive=g.items.some(function(p){return Date.now()-p.v.ts<30*60000;});
+        var size=g.exact?18:Math.round(24+Math.sqrt(n/max)*38);
+        var html='<div class="cp-pin'+(g.exact?" ex":"")+(isLive?" live":"")+'" style="width:'+size+'px;height:'+size+'px"><span>'+(g.exact?"":n)+'</span></div>';
+        var mk=L.marker([g.lat,g.lon],{icon:L.divIcon({className:"cp-pinw",html:html,iconSize:[size,size],iconAnchor:[size/2,size/2]}),riseOnHover:true}).addTo(map);
+        var first=g.items[0].v;
+        mk.bindTooltip((g.exact?"📍 "+esc(vTitle(first))+" · exacta":esc(first.ciudad||"Zona")+" · "+n+(n>1?" visitas":" visita")),{direction:"top",offset:[0,-size/2]});
+        if(n===1)mk.on("click",function(){visOpen(g.items[0].i);});
+        else mk.bindPopup('<div class="cp-mpop"><b>'+esc(first.ciudad||"Zona")+' · '+n+' visitas</b>'+g.items.slice(0,12).map(function(p){return '<button type="button" data-mvi="'+p.i+'">'+esc(vTitle(p.v))+'<small>'+esc(vTime(p.v))+(p.v.idea_para_dm?' · 💡':'')+'</small></button>';}).join("")+(n>12?'<small>y '+(n-12)+' más…</small>':'')+'</div>',{maxWidth:260});
+        bounds.push([g.lat,g.lon]);
+      });
+      map.on("popupopen",function(e){var el=e.popup.getElement();if(el)el.addEventListener("click",function(ev){var b=ev.target.closest("[data-mvi]");if(b){map.closePopup();visOpen(Number(b.dataset.mvi));}});});
+      if(bounds.length===1)map.setView(bounds[0],12);else map.fitBounds(bounds,{padding:[40,40],maxZoom:13});
+      V.lbounds=bounds;
+      setTimeout(function(){map.invalidateSize();},80);
+    }).catch(function(e){box.innerHTML=empty(esc(e.message));});
+  }
   var VF=[["","Todos","total"],["ig","💌 Con Instagram","ig"],["wa","💬 Escribieron","wa"],["bag","🛍 Dejaron bolsa","bag"],["geo","📍 Con ubicación","geo"]];
   function visDays(){return Math.min(30,R.days||7);}
   function visLoad(){
@@ -332,11 +380,16 @@
     el.innerHTML='<div class="cp-cardh"><div><span class="cp-eyeb">Visitantes en detalle</span><div class="cp-dim" style="font-size:12px;margin-top:4px">Últimos '+visDays()+' días · toca una visita para ver todo y escribirle</div></div></div>'+
       '<div class="cp-chips">'+VF.map(function(f){return '<button type="button" class="cp-chip '+(V.f===f[0]?"on":"")+'" data-vf="'+f[0]+'">'+f[1]+' <i>'+num(c[f[2]]||0)+'</i></button>';}).join("")+'</div>'+
       '<input class="cp-search" type="search" data-vq placeholder="Buscar código Ref (ej. K7Q2), @instagram, ciudad o prenda…" value="'+esc(V.q)+'">'+
+      (V.map?'<div class="cp-mapw'+(V.full?" full":"")+'"><div id="cpVisMap" class="cp-vmap"></div><div class="cp-mtools"><button type="button" data-a="vfit" title="Ver todos">◎</button><button type="button" data-a="vfull" title="Pantalla completa">'+(V.full?"✕":"⛶")+'</button></div><div class="cp-vleg"><span><i class="ex"></i>Exacta (ella la autorizó)</span><span><i class="ap"></i>Zona por su internet</span><span><i class="lv"></i>Hace menos de 30 min</span></div></div><div id="cpVisMapStat" class="cp-mstats"></div>':"")+
+      '<button type="button" class="cp-btn ghost full" data-a="vmap">'+(V.map?"Ocultar mapa":"🗺 Ver mapa de visitantes")+'</button>'+
       (list.length?'<div class="cp-vlist">'+list.slice(0,V.n).map(function(v,i){
         var sub=[v.ciudad,v.dispositivo,v.navegador,v.visita_numero?"visita #"+v.visita_numero:""].filter(Boolean).join(" · ");
-        return '<button type="button" class="cp-vr" data-vi="'+i+'"><span class="cp-vt">'+esc(vTime(v))+'</span><span class="cp-vm"><b>'+esc(vTitle(v))+'</b><small>'+esc(sub)+'</small><span class="cp-vb">'+vBadges(v)+'</span>'+(v.idea_para_dm?'<em>💡 '+esc(v.idea_para_dm)+'</em>':"")+'</span><span class="cp-va">›</span></button>';}).join("")+'</div>'+
+        var g=vGeo(v);
+        return '<button type="button" class="cp-vr" data-vi="'+i+'"><span class="cp-vt">'+esc(vTime(v))+'</span><span class="cp-vm"><b>'+esc(vTitle(v))+'</b><small>'+esc(sub)+'</small>'+
+          '<small class="cp-vgeo'+(g&&g.exact?" ex":"")+'">'+(g?'📍 '+esc(g.txt)+(g.exact?' · exacta'+(g.acc?' ±'+g.acc+' m':''):' · aprox'):'📍 sin coordenadas')+'</small><span class="cp-vb">'+vBadges(v)+'</span>'+(v.idea_para_dm?'<em>💡 '+esc(v.idea_para_dm)+'</em>':"")+'</span><span class="cp-va">›</span></button>';}).join("")+'</div>'+
         (list.length>V.n?'<button type="button" class="cp-btn ghost full" data-a="vmore">Ver más ('+(list.length-V.n)+')</button>':"")
       :empty(V.q||V.f?"No hay visitas con ese filtro.":"Todavía no hay visitas guardadas. Aparecen cuando alguien entra a la tienda (con el Worker v30)."));
+    if(V.map)visMap();
   }
   function waNum(p){var d=String(p||"").replace(/\D/g,"");if(d.length===10&&d.charAt(0)==="3")d="57"+d;return d.length>=10?d:"";}
   function kv(label,val){if(val===undefined||val===null||val===""||(Array.isArray(val)&&!val.length))return "";return '<div class="cp-kv"><span>'+esc(label)+'</span><b>'+(Array.isArray(val)?val.map(esc).join("<br>"):esc(val))+'</b></div>';}
@@ -356,7 +409,7 @@
       (!igh&&!wn?'<p class="cp-hint" style="margin-top:10px">No dejó Instagram ni WhatsApp. Si te escribe, busca su código 🔖 '+esc(v.codigo_ref||"")+' en el mensaje.</p>':"")+
       sect("Quién",kv("Instagram",v.instagram)+kv("Club Caneva",v.clienta)+kv("WhatsApp",v.whatsapp_clienta)+kv("Talla del perfil",v.talla_perfil))+
       sect("Dejó en la bolsa",kv("Prendas",v.dejo_en_la_bolsa))+
-      sect("Dónde está",kv("Ciudad",[v.ciudad,v.region,v.pais].filter(Boolean).join(", "))+kv("Código postal",v.codigo_postal)+kv("Ubicación exacta",v.ubicacion_exacta?v.ubicacion_exacta+(v.precision_metros?" (±"+v.precision_metros+" m)":""):"")+kv("Zona aproximada",v.coordenadas_aprox)+kv("Internet",v.operador)+kv("Conexión",v.conexion))+
+      sect("Dónde está",kv("Ciudad",[v.ciudad,v.region,v.pais].filter(Boolean).join(", "))+kv("Código postal",v.codigo_postal)+kv("Ubicación exacta (GPS)",v.ubicacion_exacta?v.ubicacion_exacta+(v.precision_metros?" (±"+v.precision_metros+" m)":""):"No la compartió")+kv("Zona aproximada (internet)",v.coordenadas_aprox||"Cloudflare no la envió")+kv("Internet",v.operador)+kv("Conexión",v.conexion))+
       sect("Cómo llegó",kv("Desde",v.llego_desde)+kv("Anuncio",v.vino_de_anuncio)+kv("Campaña",v.campana)+kv("Página de origen",v.referencia)+kv("Visita número",v.visita_numero)+kv("Primera visita",v.primera_visita)+kv("Visita anterior",v.visita_anterior))+
       sect("Lo que le gusta",kv("Categorías",p.le_gusta)+kv("Tallas",p.tallas)+kv("Precios que mira",p.rango_precios)+kv("Vio antes",p.vio_antes)+kv("Puso en la bolsa antes",p.puso_en_bolsa_antes)+kv("Le preguntó a la IA",p.pregunto_antes_a_la_ia)+kv("Tiempo total en la tienda",p.tiempo_total_en_la_tienda))+
       sect("Su equipo",kv("Celular / computador",v.dispositivo)+kv("Abrió en",v.navegador)+kv("Pantalla",v.pantalla)+kv("Hora en su celular",v.hora_en_su_celular)+kv("Idioma",v.idioma)+kv("Modo oscuro",v.modo_oscuro)+kv("Como app",v.abrio_como_app))+
@@ -394,6 +447,10 @@
     if((b=e.target.closest("[data-sort]"))){var k=b.dataset.sort;if(R.sort===k)R.dir=-R.dir;else{R.sort=k;R.dir=k==="nombre"?1:-1;}return repTable();}
     if((b=e.target.closest("[data-a]"))&&b.dataset.a==="rcsv")return repCsv();
     if((b=e.target.closest("[data-a]"))&&b.dataset.a==="vmore"){V.n+=30;return visRender();}
+    if((b=e.target.closest("[data-a]"))&&b.dataset.a==="vfit"){if(V.lmap&&V.lbounds&&V.lbounds.length)V.lmap.fitBounds(V.lbounds,{padding:[40,40],maxZoom:13});return;}
+    if((b=e.target.closest("[data-a]"))&&b.dataset.a==="vfull"){V.full=!V.full;var w=document.querySelector(".cp-mapw");if(w)w.classList.toggle("full",V.full);b.textContent=V.full?"✕":"⛶";document.body.style.overflow=V.full?"hidden":"";if(V.lmap)setTimeout(function(){V.lmap.invalidateSize();if(V.lbounds&&V.lbounds.length>1)V.lmap.fitBounds(V.lbounds,{padding:[40,40],maxZoom:13});},120);return;}
+    if((b=e.target.closest("[data-vcity]"))){V.q=b.dataset.vcity==="Sin ciudad"?"":b.dataset.vcity;V.n=20;return visLoad();}
+    if((b=e.target.closest("[data-a]"))&&b.dataset.a==="vmap"){V.map=!V.map;if(!V.map&&V.lmap){try{V.lmap.remove();}catch(x){}V.lmap=null;}return visRender();}
     if((b=e.target.closest("[data-vf]"))){V.f=b.dataset.vf;V.n=20;return visLoad();}
     if((b=e.target.closest("[data-vi]")))return visOpen(Number(b.dataset.vi));
   }
@@ -531,6 +588,31 @@
   ".cp-vm small{display:block;font-size:12px;color:var(--dim);margin-top:2px}.cp-vm em{display:block;font-style:normal;font-size:12.5px;color:#d9c49b;margin-top:6px;line-height:1.35}.cp-va{color:var(--dim);font-size:20px}",
   ".cp-vb{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}.cp-vb i{font-style:normal;font-size:11px;border:1px solid var(--b);border-radius:999px;padding:3px 8px;color:var(--w)}.cp-vb i.ref{border-color:rgba(217,196,155,.55);color:#d9c49b}.cp-vb i.ig{background:var(--w);color:var(--k);border-color:var(--w)}",
   "@media(max-width:600px){.cp-vr{grid-template-columns:1fr auto}.cp-vt{grid-column:1/-1;min-width:0}}",
+  ".cp-vgeo{color:#a9a9a4!important;font-variant-numeric:tabular-nums}.cp-vgeo.ex{color:#f7f7f4!important}",
+  ".cp-mapw{position:relative;margin-top:10px}.cp-vmap{height:420px;border-radius:14px;overflow:hidden;border:1px solid var(--b);background:#0d0d0d}.cp-vmap.leaflet-container{background:#0d0d0d}",
+  "@media(max-width:700px){.cp-vmap{height:360px}}",
+  ".cp-mapw.full{position:fixed;inset:0;z-index:45;margin:0;background:#050505;padding:10px}.cp-mapw.full .cp-vmap{height:calc(100vh - 56px);border-radius:12px}",
+  ".cp-vmap .leaflet-control-attribution{background:rgba(5,5,5,.7)!important;color:#888!important;font-size:10px}.cp-vmap .leaflet-control-attribution a{color:#bbb!important}",
+  ".cp-vmap .leaflet-bar a{background:#111!important;color:#f7f7f4!important;border-color:#222!important}",
+  ".cp-mtools{position:absolute;top:10px;right:10px;z-index:500;display:flex;gap:6px}.cp-mapw.full .cp-mtools{top:20px;right:20px}",
+  ".cp-mtools button{width:36px;height:36px;border-radius:10px;border:1px solid rgba(247,247,244,.2);background:rgba(10,10,10,.85);color:#f7f7f4;font-size:16px;cursor:pointer;backdrop-filter:blur(8px)}",
+  ".cp-vleg{display:flex;flex-wrap:wrap;gap:14px;font-size:11.5px;color:var(--dim);margin-top:8px}.cp-mapw.full .cp-vleg{position:absolute;left:20px;bottom:20px;z-index:500;background:rgba(5,5,5,.8);padding:8px 12px;border-radius:10px}",
+  ".cp-vleg i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}.cp-vleg i.ex{background:#fff;box-shadow:0 0 8px #fff}.cp-vleg i.ap{background:rgba(217,196,155,.45);border:2px solid #d9c49b}.cp-vleg i.lv{background:#5ef0a0;box-shadow:0 0 8px #5ef0a0}",
+  ".cp-pinw{background:none;border:0}",
+  ".cp-pin{position:relative;border-radius:50%;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 35% 30%,rgba(241,230,207,.95),rgba(217,196,155,.75) 45%,rgba(122,97,54,.55));border:1.5px solid #f1e6cf;box-shadow:0 0 0 4px rgba(217,196,155,.15),0 0 22px rgba(217,196,155,.55);color:#050505;font:700 12px Inter,sans-serif;transition:transform .25s}",
+  ".cp-pin:hover{transform:scale(1.15)}",
+  ".cp-pin.ex{background:#fff;border:2px solid #050505;box-shadow:0 0 0 3px rgba(255,255,255,.35),0 0 18px #fff}",
+  ".cp-pin.live::after{content:'';position:absolute;inset:-3px;border-radius:50%;border:2px solid #5ef0a0;animation:cppulse 1.8s ease-out infinite}",
+  ".cp-pin::before{content:'';position:absolute;inset:0;border-radius:50%;border:1px solid rgba(217,196,155,.6);animation:cpring 2.8s ease-out infinite}.cp-pin.ex::before{border-color:rgba(255,255,255,.7)}",
+  "@keyframes cppulse{0%{transform:scale(1);opacity:1}100%{transform:scale(2.2);opacity:0}}@keyframes cpring{0%{transform:scale(1);opacity:.8}100%{transform:scale(1.9);opacity:0}}",
+  ".cp-vmap .leaflet-tooltip{background:#0b0b0b;color:#f7f7f4;border:1px solid rgba(247,247,244,.2);border-radius:8px;font:12px Inter,sans-serif;box-shadow:0 8px 20px rgba(0,0,0,.6)}.cp-vmap .leaflet-tooltip-top:before{border-top-color:#0b0b0b}",
+  ".cp-vmap .leaflet-popup-content-wrapper,.cp-vmap .leaflet-popup-tip{background:#0b0b0b;color:#f7f7f4;border:1px solid rgba(247,247,244,.15)}.cp-vmap .leaflet-popup-content{margin:12px}.cp-vmap .leaflet-popup-close-button{color:#aaa!important}",
+  ".cp-mpop b{display:block;font:600 13px Inter,sans-serif;margin-bottom:6px}.cp-mpop button{display:block;width:100%;text-align:left;background:none;border:0;border-top:1px solid #222;color:#f7f7f4;padding:7px 0;font:13px Inter,sans-serif;cursor:pointer}.cp-mpop button small,.cp-mpop>small{display:block;color:#999;font-size:11px}",
+  ".cp-mstats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.cp-mstat{border:1px solid var(--b);border-radius:12px;padding:10px;background:linear-gradient(160deg,#171717,#0b0b0b)}",
+  ".cp-mstat b{display:block;font-family:'Cormorant Garamond',serif;font-weight:300;font-size:28px;line-height:1}.cp-mstat span{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}.cp-mstat.live b{color:#5ef0a0}",
+  ".cp-mcities{grid-column:1/-1;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 0}.cp-mcities::-webkit-scrollbar{display:none}",
+  ".cp-mcities button{flex:none;display:flex;align-items:center;gap:7px;background:none;border:1px solid var(--b);border-radius:999px;color:var(--w);padding:6px 11px;font:12.5px Inter,sans-serif;cursor:pointer}.cp-mcities em{font-style:normal;color:#d9c49b;font-weight:600}.cp-mcities i{font-style:normal;color:var(--dim)}",
+  "@media(max-width:600px){.cp-mstats{grid-template-columns:repeat(2,1fr)}}",
   ".cp-idea{margin-top:14px;border:1px solid rgba(217,196,155,.5);background:linear-gradient(120deg,rgba(217,196,155,.14),rgba(247,247,244,.02));border-radius:12px;padding:12px 14px;font-size:14px;line-height:1.45;color:#f1e6cf}",
   ".cp-vbtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.cp-vbtns .cp-btn{text-decoration:none;display:inline-block}",
   ".cp-kv{display:grid;grid-template-columns:150px 1fr;gap:10px;padding:7px 0;border-top:1px solid var(--b);font-size:13px}.cp-kv span{color:var(--dim)}.cp-kv b{font-weight:500;word-break:break-word}",
