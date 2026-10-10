@@ -3720,11 +3720,13 @@ document.getElementById('csend').addEventListener('click',sendChat);
   function withRef(h){
     if(typeof h!=='string'||h.indexOf('wa.me/'+PHONE)<0)return h;
     try{if(decodeURIComponent(h).indexOf(TAG)>=0)return h;}catch(e){}
-    var add=encodeURIComponent('\n\n'+TAG);
+    var ship='';try{var sh=JSON.parse(localStorage.getItem('caneva_ship')||'{}');ship=sh.lat?'mi ubicación https://maps.google.com/?q='+sh.lat+','+sh.lon:(sh.label||'');}catch(e){}
+    var add=encodeURIComponent('\n\n'+(ship?'📍 Envío a: '+ship+'\n':'')+TAG);
     if(/[?&]text=/.test(h))return h.replace(/([?&]text=)([^&#]*)/,function(m,a,b){return a+b+add;});
     return h+(h.indexOf('?')<0?'?':'&')+'text='+encodeURIComponent('Hola Caneva ✨')+add;
   }
   window.canevaWithRef=withRef;
+  window.cvStatsPush=function(ev){push(ev);flush();};
   function waEvent(where){push({t:'wa',r:REF,k:where,bag:bagNow()});flush();}
   document.addEventListener('click',function(e){
     var a=e.target&&e.target.closest&&e.target.closest('a[href*="wa.me/"]');if(!a)return;
@@ -4567,6 +4569,66 @@ body.cv-fast .bw-logo-wrap{transform:scale(.82);transform-origin:center top;marg
   ['scroll','pointerdown','keydown'].forEach(function(ev){addEventListener(ev,arm,{passive:true});});
   document.addEventListener('mouseout',function(e){if(!e.relatedTarget&&e.clientY<=0&&hasBag())show();});
   setInterval(function(){if(!done&&hasBag()&&Date.now()-lastAct>25000)show();},4000);
+})();
+</script>
+<style id="cvship-css">
+/* ===== "¿A dónde te lo enviamos?": delivery place with GPS or typed barrio ===== */
+.cv-ship{margin:14px 0 4px;border:1px solid rgba(217,196,155,.35);border-radius:14px;padding:12px 12px 10px;background:linear-gradient(160deg,rgba(217,196,155,.07),rgba(255,255,255,.01));font-family:Inter,sans-serif;color:#f7f7f4}
+.cv-ship h6{margin:0 0 .55rem;font-size:.8rem;font-weight:600;letter-spacing:.02em}
+.cv-ship .row{display:flex;gap:6px}
+.cv-ship input{flex:1;min-width:0;background:#0b0b0b;border:1px solid rgba(247,247,244,.18);border-radius:10px;padding:.7rem .8rem;color:#f7f7f4;font-size:16px;outline:none}
+.cv-ship input:focus{border-color:#d9c49b}
+.cv-ship button{border-radius:10px;border:1px solid rgba(247,247,244,.2);background:none;color:#f7f7f4;padding:0 .8rem;font:600 .72rem Inter,sans-serif;cursor:pointer;white-space:nowrap}
+.cv-ship .gps{width:100%;margin-top:6px;padding:.7rem;background:#f7f7f4;color:#050505;border:0}
+.cv-ship .res{margin-top:.6rem;font-size:.78rem;line-height:1.45;color:#e9dcc1}.cv-ship .res b{color:#fff}
+.cv-ship .chg{background:none;border:0;color:rgba(247,247,244,.6);text-decoration:underline;padding:0;font-size:.7rem;margin-left:.3rem}
+.cart-foot .cv-ship{margin:10px 0}
+</style>
+<script id="cvship-js">
+// Delivery place: GPS (with her permission) or a barrio/city she types. Used to tell her the delivery time,
+// sent with her WhatsApp message, and saved with her visit so the store knows where she writes from.
+(function(){
+  var KEY='caneva_ship';
+  function lg(){try{return JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){return {};}}
+  function ls(v){try{localStorage.setItem(KEY,JSON.stringify(v));}catch(e){}}
+  function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function inBaq(s){return /barranquilla|soledad|puerto colombia|malambo|galapa/i.test(s.label||'')||(s.lat&&s.lat>10.85&&s.lat<11.10&&s.lon>-74.95&&s.lon<-74.70);}
+  function verdict(s){
+    var days=(document.getElementById('pmTrustDays')||{}).textContent||'1 día';
+    if(inBaq(s))return '✨ A <b>'+esc(s.label||'tu ubicación')+'</b> te llega en <b>'+esc(days)+' hábil</b>. Pago contraentrega.';
+    if(!/,/.test(s.label||'')&&!s.lat)return '📦 Enviamos a <b>'+esc(s.label)+'</b>. En Barranquilla llega en <b>'+esc(days)+' hábil</b>; a otras ciudades te confirmamos tiempo y costo por WhatsApp.';
+    return '🚚 Enviamos a <b>'+esc(s.label||'tu ciudad')+'</b>. Te confirmamos tiempo y costo de envío por WhatsApp.';
+  }
+  function html(){
+    var s=lg();
+    if(s.label)return '<h6>📍 Envío</h6><div class="res">'+verdict(s)+'<button type="button" class="chg" data-shipchg>cambiar</button></div>';
+    return '<h6>📍 ¿A dónde te lo enviamos?</h6><div class="row"><input data-shipin placeholder="Barrio y ciudad · ej: Riomar, Barranquilla" maxlength="100" autocomplete="address-level3"><button type="button" data-shipok>Listo</button></div><button type="button" class="gps" data-shipgps>📍 Usar mi ubicación</button>';
+  }
+  function paint(){document.querySelectorAll('.cv-ship').forEach(function(b){b.innerHTML=html();});}
+  function mount(){
+    var t=document.getElementById('pmLookKit');if(t&&!document.getElementById('cvShipPm')){var d=document.createElement('div');d.id='cvShipPm';d.className='cv-ship';t.parentNode.insertBefore(d,t);}
+    var a=document.querySelector('#cartDrawer .cart-actions');if(a&&!document.getElementById('cvShipCart')){var c=document.createElement('div');c.id='cvShipCart';c.className='cv-ship';a.parentNode.insertBefore(c,a);}
+    paint();
+  }
+  function save(s,gps){ls(s);paint();if(window.cvStatsPush)cvStatsPush({t:'ship',txt:gps?'':(s.label||''),gps:!!gps});}
+  document.addEventListener('click',function(e){
+    var b;
+    if((b=e.target.closest('[data-shipok]'))){var i=b.parentNode.querySelector('[data-shipin]'),v=(i&&i.value||'').trim();if(v.length<3){if(i)i.focus();return;}save({label:v.slice(0,100)});return;}
+    if((b=e.target.closest('[data-shipchg]'))){ls({});paint();return;}
+    if((b=e.target.closest('[data-shipgps]'))){
+      if(!navigator.geolocation){b.textContent='Tu celular no permite ubicación: escribe tu barrio';return;}
+      b.disabled=true;b.textContent='Buscando tu ubicación…';
+      navigator.geolocation.getCurrentPosition(function(p){
+        var lat=+p.coords.latitude.toFixed(6),lon=+p.coords.longitude.toFixed(6),acc=Math.round(p.coords.accuracy||0);
+        try{localStorage.setItem('caneva_geo','ok');}catch(x){}
+        if(window.cvStatsPush)cvStatsPush({t:'geo',lat:lat,lon:lon,acc:acc});
+        save({label:'mi ubicación',lat:lat,lon:lon,acc:acc},true);
+      },function(){b.disabled=false;b.textContent='No se pudo · escribe tu barrio arriba';},{enableHighAccuracy:true,timeout:15000,maximumAge:600000});
+    }
+  });
+  document.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.matches&&e.target.matches('[data-shipin]')){e.preventDefault();var ok=e.target.parentNode.querySelector('[data-shipok]');if(ok)ok.click();}});
+  mount();setTimeout(mount,2000);
+  var _oc=window.openCart;if(typeof _oc==='function')window.openCart=openCart=function(){var r=_oc.apply(this,arguments);try{mount();}catch(e){}return r;};
 })();
 </script>
 </body>
