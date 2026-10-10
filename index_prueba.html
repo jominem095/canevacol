@@ -3674,7 +3674,9 @@ document.getElementById('csend').addEventListener('click',sendChat);
   addEventListener('scroll',function(){var h=document.documentElement.scrollHeight-innerHeight;if(h>0){var p=Math.round(scrollY/h*100);if(p>maxScroll)maxScroll=Math.min(100,p);}},{passive:true});
   // Page view with its source, campaign, device details and what we already know from earlier visits
   var sp=new URLSearchParams(location.search),src=sp.get('utm_source')||sp.get('ref')||(sp.get('fbclid')?'facebook':'')||(document.referrer&&document.referrer.indexOf(location.host)<0?document.referrer:'');
-  var camp={};['utm_campaign','utm_content','utm_medium','utm_term','ref','cat','p'].forEach(function(k){var v=sp.get(k);if(v)camp[k.replace('utm_','')]=v.slice(0,60);});
+  var camp={};['utm_source','utm_campaign','utm_content','utm_medium','utm_term','ref','cat','p'].forEach(function(k){var v=sp.get(k);if(v)camp[k.replace('utm_','')]=v.slice(0,60);});
+  // Ad click ids only as a flag (TikTok, Google, Meta) so we know which ad network brought her
+  ['ttclid','gclid','fbclid'].forEach(function(k){if(sp.get(k))camp[k]='1';});
   var con=navigator.connection||{},pmin=prof.pmin||0,pmax=prof.pmax||0;
   push({t:'pv',s:src,d:matchMedia('(min-width:900px)').matches?'d':'m',nv:nv,f:first,cp:camp,ad:!!(sp.get('fbclid')||sp.get('utm_campaign')),
     sw:screen.width+'x'+screen.height,lang:(navigator.language||'').slice(0,10),ref:(document.referrer||'').slice(0,100),

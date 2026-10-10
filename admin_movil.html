@@ -239,6 +239,7 @@ main{padding:14px 16px 120px}
       </div>
     </div>
     <div class="tabs" id="tabs">
+      <button type="button" data-tab="control">⚡ Control</button>
       <button type="button" data-tab="productos" class="on">Productos</button>
       <button type="button" data-tab="pedidos">Pedidos<b id="pendCount"></b></button>
       <button type="button" data-tab="apartados">Apartados<b id="apCount"></b></button>
@@ -271,6 +272,7 @@ main{padding:14px 16px 120px}
     <div id="clubView" class="hidden"></div>
     <div id="invView" class="hidden"><div id="invBody" style="--cp-top:var(--hdr,118px)"></div></div>
     <div id="repView" class="hidden"><div id="repBody"></div></div>
+    <div id="ctlView" class="hidden"><div id="ctlBody"></div></div>
     <div id="prodView">
     <button id="portadaInfo" class="promo" type="button"></button>
     <div class="hrow" style="margin:0 0 10px">
@@ -438,7 +440,7 @@ main{padding:14px 16px 120px}
 <div id="toast" class="toast hidden"></div>
 <div id="busy" class="busy hidden"><div class="spin"></div><div id="busyMsg">Publicando…</div></div>
 
-<script src="admin_pro.js?v=36"></script>
+<script src="admin_pro.js?v=37"></script>
 <script>
 // Mobile admin for Caneva: edits the live catalog (Worker /catalog) and republishes via /admin/catalog.
 // Uses the same Worker endpoints and product shape as admin.html, so no Worker changes are needed.
@@ -1008,7 +1010,8 @@ function showTab(t){
   $("newBtn").classList.toggle("hidden",t!=="productos");
   $("ordersView").classList.toggle("hidden",t!=="pedidos"); $("clubView").classList.toggle("hidden",t!=="club");
   $("apView").classList.toggle("hidden",t!=="apartados"); $("gfView").classList.toggle("hidden",t!=="regalos"); if(t==="regalos") loadGifts();
-  $("invView").classList.toggle("hidden",t!=="inventario"); $("repView").classList.toggle("hidden",t!=="reportes");
+  $("invView").classList.toggle("hidden",t!=="inventario"); $("repView").classList.toggle("hidden",t!=="reportes"); $("ctlView").classList.toggle("hidden",t!=="control");
+  if(t==="control") CanevaPro.mount($("ctlBody"),"control",proOpts());
   if(t==="inventario") CanevaPro.mount($("invBody"),"inventario",proOpts());
   if(t==="reportes") CanevaPro.mount($("repBody"),"reportes",proOpts());
   requestAnimationFrame(()=>document.documentElement.style.setProperty("--hdr",document.querySelector("#listView header").offsetHeight+"px"));
@@ -1253,7 +1256,7 @@ function showList(){ $("loginView").classList.add("hidden"); $("listView").class
 
 $("loginBtn").onclick=()=>{ const t=$("tokenInput").value.trim(); if(!t){ toast("Pega el token.",{err:true}); return; } setLS(TOKEN_KEY,t); showList(); };
 $("logoutBtn").onclick=()=>{ if(confirm("¿Cerrar sesión y borrar el token de este celular?")){ delLS(TOKEN_KEY); showLogin(); } };
-$("reloadBtn").onclick=()=>{ if(currentTab==="pedidos") loadOrders(); else if(currentTab==="club") loadClub(); else if(currentTab==="inventario"||currentTab==="reportes") showTab(currentTab); else loadList(); };
+$("reloadBtn").onclick=()=>{ if(currentTab==="pedidos") loadOrders(); else if(currentTab==="club") loadClub(); else if(currentTab==="inventario"||currentTab==="reportes"||currentTab==="control") showTab(currentTab); else loadList(); };
 $("fInvBtn").onclick=()=>{ const pid=$("fInvBtn").dataset.pid; closeEditor(); currentTab="inventario";
   document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("on",b.dataset.tab==="inventario"));
   ["prodTools","prodView","newBtn","ordersView","clubView","apView","gfView","repView"].forEach(id=>$(id).classList.add("hidden")); $("invView").classList.remove("hidden");

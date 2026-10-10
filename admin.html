@@ -151,7 +151,7 @@ pre{white-space:pre-wrap;background:var(--k);border:1px solid var(--b);border-ra
 <body>
 <header><div class="hrow">
   <div class="logo">CΛNEVΛ</div>
-  <nav class="nav"><button type="button" data-tab="nube" class="on">Catálogo</button><button type="button" data-tab="inventario">Inventario</button><button type="button" data-tab="reportes">Reportes</button><button type="button" data-tab="excel">Excel</button><a href="admin_movil.html">Admin móvil ›</a></nav>
+  <nav class="nav"><button type="button" data-tab="control">⚡ Control</button><button type="button" data-tab="nube" class="on">Catálogo</button><button type="button" data-tab="inventario">Inventario</button><button type="button" data-tab="reportes">Reportes</button><button type="button" data-tab="excel">Excel</button><a href="admin_movil.html">Admin móvil ›</a></nav>
 </div></header>
 <div class="wrap" id="cloudView">
   <div class="cltop"><div><div class="eyeb">Panel privado · en vivo</div><h1>Catálogo en la nube</h1>
@@ -173,6 +173,7 @@ pre{white-space:pre-wrap;background:var(--k);border:1px solid var(--b);border-ra
 
 <div class="wrap hidden" id="invView"><div id="invBody" style="--cp-top:61px"></div></div>
 <div class="wrap hidden" id="repView"><div id="repBody"></div></div>
+<div class="wrap hidden" id="ctlView"><div id="ctlBody"></div></div>
 
 <div class="wrap hidden" id="excelView">
   <div class="eyeb">Panel privado</div>
@@ -241,7 +242,7 @@ pre{white-space:pre-wrap;background:var(--k);border:1px solid var(--b);border-ra
   <pre id="log">—</pre></details>
 </div>
 
-<script src="admin_pro.js?v=36"></script>
+<script src="admin_pro.js?v=37"></script>
 <script>
 const API_BASE = "https://caneva-ai.canevacol.workers.dev";
 let products = [];
@@ -732,11 +733,12 @@ function clDiscard(){ if(!confirm("¿Descartar todos los cambios sin publicar?")
 function clTab(t){
   document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("on",b.dataset.tab===t));
   $c("cloudView").classList.toggle("hidden",t!=="nube"); $c("excelView").classList.toggle("hidden",t!=="excel");
-  $c("invView").classList.toggle("hidden",t!=="inventario"); $c("repView").classList.toggle("hidden",t!=="reportes");
+  $c("invView").classList.toggle("hidden",t!=="inventario"); $c("repView").classList.toggle("hidden",t!=="reportes"); $c("ctlView").classList.toggle("hidden",t!=="control");
   const pro={api:API_BASE, token:clToken, onChange:()=>{ if(!clDirtyCount()) clLoad(); }};
-  if((t==="inventario"||t==="reportes")&&!clToken()){ const tk=(prompt("Pega el ADMIN_TOKEN (se recuerda en este computador):")||"").trim(); if(!tk) return clTab("nube"); try{ localStorage.setItem(TOKEN_KEY,tk); }catch(e){} }
+  if((t==="inventario"||t==="reportes"||t==="control")&&!clToken()){ const tk=(prompt("Pega el ADMIN_TOKEN (se recuerda en este computador):")||"").trim(); if(!tk) return clTab("nube"); try{ localStorage.setItem(TOKEN_KEY,tk); }catch(e){} }
   if(t==="inventario") CanevaPro.mount($c("invBody"),"inventario",pro);
   if(t==="reportes") CanevaPro.mount($c("repBody"),"reportes",pro);
+  if(t==="control") CanevaPro.mount($c("ctlBody"),"control",pro);
   window.scrollTo(0,0);
   if(t==="nube"&&!CL.list.length) clLoad();
 }
