@@ -253,7 +253,7 @@
   // =====================================================================
   // REPORTES
   // =====================================================================
-  var CLICK_LABEL={whatsapp_prenda:"WhatsApp desde una prenda",whatsapp_bolsa:"WhatsApp con la bolsa",whatsapp:"WhatsApp (botón general)",compartir:"Compartir prenda",compartir_historia:"Historia Instagram / TikTok",
+  var CLICK_LABEL={whatsapp_prenda:"WhatsApp desde una prenda",whatsapp_bolsa:"WhatsApp con la bolsa",whatsapp:"WhatsApp (botón general)",instagram_dm:"DM por Instagram",compartir:"Compartir prenda",compartir_historia:"Historia Instagram / TikTok",
     compartir_red:"Compartir en otra red",apartar:"Apartar",probador:"Probador virtual",regalo:"Tarjeta Regalo",club:"Club Caneva",club_login:"Ingresos al Club",caneva_ai:"Abrir Caneva AI",ai_mensaje:"Mensajes a Caneva AI",
     ver_bolsa:"Ver la bolsa",red_instagram:"Ir a Instagram",red_tiktok:"Ir a TikTok",red_facebook:"Ir a Facebook",buscar:"Búsquedas"};
   var SRC_LABEL={directo:"Directo / guardado",instagram:"Instagram",tiktok:"TikTok",facebook:"Facebook",whatsapp:"WhatsApp",google:"Google"};
@@ -383,7 +383,7 @@
   }
   function vTitle(v){return v.instagram||(v.clienta?String(v.clienta).split(" · ")[0]:"")||"Visitante"+(v.ciudad?" de "+v.ciudad:"");}
   function vTime(v){var d=new Date(v.ts);return d.toLocaleDateString("es-CO",{day:"numeric",month:"short"})+" · "+d.toLocaleTimeString("es-CO",{hour:"numeric",minute:"2-digit"});}
-  function vBadges(v){var b=[];if(v.codigo_ref)b.push('<i class="ref">🔖 '+esc(v.codigo_ref)+'</i>');if(v.instagram)b.push('<i class="ig">💌 IG</i>');if(v.escribio_por_whatsapp)b.push('<i>💬 WhatsApp</i>');if(v.dejo_en_la_bolsa)b.push('<i>🛍 Bolsa</i>');if(v.ubicacion_exacta)b.push('<i>📍 Ubicación</i>');if(v.vino_de_anuncio)b.push('<i>📢 Anuncio</i>');if(v.clienta)b.push('<i>👑 Club</i>');return b.join("");}
+  function vBadges(v){var b=[];if(v.codigo_ref)b.push('<i class="ref">🔖 '+esc(v.codigo_ref)+'</i>');if(v.instagram)b.push('<i class="ig">💌 IG</i>');if(v.escribio_por_whatsapp)b.push('<i>💬 WhatsApp</i>');if(v.escribio_por_instagram)b.push('<i class="ig">💌 DM Instagram</i>');if(v.dejo_en_la_bolsa)b.push('<i>🛍 Bolsa</i>');if(v.ubicacion_exacta)b.push('<i>📍 Ubicación</i>');if(v.vino_de_anuncio)b.push('<i>📢 Anuncio</i>');if(v.clienta)b.push('<i>👑 Club</i>');return b.join("");}
   function visRender(){
     var el=document.getElementById("cpVis"),D=V.data;if(!el||!D)return;
     var c=D.counts||{},list=D.visits||[];
@@ -416,7 +416,7 @@
     whatsapp_clienta:"WhatsApp",talla_perfil:"Talla del perfil",llego_desde:"Llegó desde",vino_de_anuncio:"Vino de anuncio",campana:"Campaña",referencia:"Página de origen",visita_numero:"Visita número",primera_visita:"Primera visita",
     visita_anterior:"Visita anterior",pantalla:"Pantalla",ventana:"Ventana",densidad_pantalla:"Densidad de pantalla",pantalla_tactil:"Pantalla táctil",nucleos_cpu:"Núcleos del procesador",memoria_celular_gb:"Memoria (GB)",bateria:"Batería",
     idioma:"Idioma",zona_horaria:"Zona horaria",zona_horaria_red:"Zona horaria (red)",hora_en_su_celular:"Hora en su celular",conexion:"Conexión",ahorro_de_datos:"Ahorro de datos",modo_oscuro:"Modo oscuro",abrio_como_app:"Abrió como app",
-    no_rastrear:"No rastrear",escribio_por_whatsapp:"Escribió por WhatsApp",dejo_en_la_bolsa:"Dejó en la bolsa",idea_para_dm:"Idea para DM",pagina:"Página",importado_de_logs:"Traída de los Logs",ip:"Dirección IP",ip_version:"Tipo de IP",tipo_de_red:"Tipo de red",origen:"Cómo llegó",anuncio:"Anuncio",campana_nombre:"Nombre de la campaña"};
+    no_rastrear:"No rastrear",escribio_por_whatsapp:"Escribió por WhatsApp",dejo_en_la_bolsa:"Dejó en la bolsa",idea_para_dm:"Idea para DM",pagina:"Página",importado_de_logs:"Traída de los Logs",ip:"Dirección IP",ip_version:"Tipo de IP",tipo_de_red:"Tipo de red",origen:"Cómo llegó",anuncio:"Anuncio",campana_nombre:"Nombre de la campaña",escribio_por_instagram:"Abrió el DM de Instagram",meta_fbp:"ID de navegador Meta (fbp)",meta_fbc:"Clic de anuncio Meta (fbc)",tiktok_ttp:"ID de navegador TikTok (ttp)",tiktok_ttclid:"Clic de anuncio TikTok"};
   function allData(v){
     var skip={vid:1,day:1,ts:1,firstTs:1,acciones:1,perfil:1,evento:1};
     var rows=Object.keys(v).filter(function(k){return !skip[k]&&v[k]!==""&&v[k]!==null&&v[k]!==undefined;}).map(function(k){

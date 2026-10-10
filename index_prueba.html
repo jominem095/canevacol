@@ -1877,6 +1877,7 @@ textarea.gf{min-height:74px;resize:vertical}
         <button class="btn-p cart-add" id="pmAddCart" type="button"><span>Agregar al carrito</span></button>
         <button class="btn-o pm-apartar" id="pmApartar" type="button" hidden><span>Apartar</span></button>
         <a class="btn-o" id="pmWhats" href="#" target="_blank" rel="noopener"><span>Comprar por WhatsApp</span></a>
+        <button class="btn-o" id="pmIgDm" type="button" hidden><span>💌 Pedir por Instagram</span></button>
         <button class="btn-o" id="pmAsk" type="button">Preguntar a Caneva AI</button>
       </div>
       <div class="pm-apartar-note" id="pmApartarNote" hidden></div>
@@ -3691,6 +3692,14 @@ document.getElementById('csend').addEventListener('click',sendChat);
     try{if(navigator.getBattery)jobs.push(navigator.getBattery().then(function(b){dv.bat=Math.round(b.level*100)+'%'+(b.charging?' cargando':'');}).catch(function(){}));}catch(e){}
     Promise.all(jobs).then(function(){push(dv);});
   })();
+  // Meta and TikTok browser ids (cookies set by their pixels, or built from the ad click). They are not the person's
+  // profile: they only let Meta/TikTok match the visit to their own user for ads and conversions.
+  setTimeout(function(){
+    function ck(n){var m=document.cookie.match(new RegExp('(?:^|; )'+n+'=([^;]*)'));return m?decodeURIComponent(m[1]):'';}
+    var fbclid=sp.get('fbclid')||'',ttclid=sp.get('ttclid')||'';
+    var ids={t:'ids',fbp:ck('_fbp').slice(0,120),fbc:(ck('_fbc')||(fbclid?'fb.1.'+Date.now()+'.'+fbclid:'')).slice(0,300),ttp:ck('_ttp').slice(0,120),ttclid:ttclid.slice(0,200)};
+    if(ids.fbp||ids.fbc||ids.ttp||ids.ttclid)push(ids);
+  },3500);
   function prod(i){var p=window.P&&P[i];return p?{id:p.id||'',n:p.nombre,pr:p.precio,c:p.categoria,v:typeof priceNum==='function'?priceNum(p.precio):0}:null;}
   function learn(p,size){if(p.c)prof.cats[p.c]=(prof.cats[p.c]||0)+1;if(size)prof.sizes[size]=(prof.sizes[size]||0)+1;if(p.v>0&&p.v<999999999){prof.pmin=prof.pmin?Math.min(prof.pmin,p.v):p.v;prof.pmax=Math.max(prof.pmax||0,p.v);}saveProf();}
   function wrapG(name,fn){var f=window[name];if(typeof f!=='function')return;window[name]=function(){var r=f.apply(this,arguments);try{fn.apply(this,arguments);}catch(e){}return r;};}
@@ -3767,7 +3776,7 @@ document.getElementById('csend').addEventListener('click',sendChat);
   },8000);
 
   var map=[['#pmWhats','whatsapp_prenda'],['#cartWhats','whatsapp_bolsa'],['#pmShare','compartir'],['[data-share-story]','compartir_historia'],['#pmShareMenu a,[data-share-native]','compartir_red'],
-    ['#pmApartar,#cartApartar','apartar'],['#pmTryon,.lk .try,.ai-look-try,.ai-cam','probador'],['#navGift,#mobileGift','regalo'],['#navClub,#mobileClub,.cv-wel .yes','club'],['#clubGbtn,#clubCodeBtn','club_login'],
+    ['#pmIgDm','instagram_dm'],['#pmApartar,#cartApartar','apartar'],['#pmTryon,.lk .try,.ai-look-try,.ai-cam','probador'],['#navGift,#mobileGift','regalo'],['#navClub,#mobileClub,.cv-wel .yes','club'],['#clubGbtn,#clubCodeBtn','club_login'],
     ['#aiOrb,#aiHeroBtn,#mobileDockAi,#aiDock,#aiTease,[data-cvai]','caneva_ai'],['#cartFab,#navCart,#mobileCart,#mobileDockCart','ver_bolsa'],['[data-soc="instagram"]','red_instagram'],['[data-soc="tiktok"]','red_tiktok'],['[data-soc="facebook"]','red_facebook']];
   document.addEventListener('click',function(e){
     var t=e.target;if(!t||!t.closest)return;
@@ -4350,6 +4359,31 @@ body.cv-on .bw-inner{min-width:0;max-width:100%}body.cv-on .bw-inner>*{min-width
   intro(function(){
     goTag();spotlight();tilt();ink();
     if(hero&&!LITE){var b=hero.getBoundingClientRect();setTimeout(function(){burst(b.left+b.width/2,Math.min(innerHeight*.35,b.top+b.height*.3),40,2.6,1);},250);}
+  });
+})();
+</script>
+<script id="cv-igdm">
+// "Pedir por Instagram": copies a ready message (garment + Ref code) and opens a DM with the store's Instagram.
+// When she sends it, the store sees her Instagram user and can match it with her visit using the Ref code.
+(function(){
+  var btn=document.getElementById('pmIgDm');if(!btn)return;
+  function handle(){
+    var u=(window.SITE_CONFIG&&SITE_CONFIG.social&&SITE_CONFIG.social.instagram)||((document.getElementById('ftIg')||{}).href)||'';
+    var m=String(u).match(/instagram\.com\/([A-Za-z0-9._]{1,30})/);return m?m[1]:'';
+  }
+  function sync(){btn.hidden=!handle();}
+  var _open=window.openProductModal;
+  if(typeof _open==='function')window.openProductModal=openProductModal=function(){var r=_open.apply(this,arguments);try{sync();}catch(e){}return r;};
+  setTimeout(sync,2500);
+  btn.addEventListener('click',function(){
+    var h=handle();if(!h)return;
+    var p=window.P&&P[currentProductIndex],ref=window.canevaRef?canevaRef():'';
+    var txt='Hola ✨ me interesa '+(p?p.nombre+' ('+p.precio+')':'una prenda de la página')+'. ¿Está disponible?'+(ref?'\n🔖 Ref: '+ref:'');
+    // Copy and open in the same tap (phones block pop-ups opened later)
+    try{if(navigator.clipboard)navigator.clipboard.writeText(txt).catch(function(){});}catch(e){}
+    if(window.toastCart)toastCart('Copiamos tu mensaje 💌 pégalo en el chat');
+    var wnd=window.open('https://ig.me/m/'+h,'_blank');if(!wnd)location.href='https://ig.me/m/'+h;
+    try{if(window.canevaTrack)canevaTrack('contact',p||null);}catch(e){}
   });
 })();
 </script>
