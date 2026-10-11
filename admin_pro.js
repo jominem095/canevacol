@@ -684,10 +684,15 @@
     if(K2.prods)return;K2.prods=[];
     fetch(OPT.api+"/catalog?ts="+Date.now(),{cache:"no-store"}).then(function(r){return r.json();}).then(function(d){
       K2.prods=(d.products||[]).filter(function(p){return !/domicil|domicl|mayorista|others/i.test(p.categoria||"")&&!/^0+$|^agotad|^ocult/i.test(String(p.stock||"").trim());}).sort(function(a,b){return String(a.nombre).localeCompare(String(b.nombre));});
-      var sel=document.getElementById("lkProd");if(sel)sel.innerHTML=lkProdOpts();
+      var sel=document.getElementById("lkProd");if(sel)sel.innerHTML=lkProdOpts();var sc=document.getElementById("lkCat");if(sc){var v=sc.value;sc.innerHTML=lkCatOpts();sc.value=v;}
     }).catch(function(){});
   }
-  function lkProdOpts(){return '<option value="">— Ninguna: abrir la tienda o la categoría —</option>'+(K2.prods||[]).map(function(p){return '<option value="'+esc(prodSlug(p))+'">'+esc(p.nombre+" · "+p.precio+" · "+p.categoria)+'</option>';}).join("");}
+  // Categories exactly as the store names them (?cat= opens that tab of the catalog)
+  function lkCatOpts(){
+    var cnt={};(K2.prods||[]).forEach(function(p){if(p.categoria)cnt[p.categoria]=(cnt[p.categoria]||0)+1;});
+    return '<option value="">Toda la tienda (portada)</option><option value="Nuevo">✨ Lo nuevo</option>'+Object.keys(cnt).sort(function(a,b){return cnt[b]-cnt[a];}).map(function(c){return '<option value="'+esc(c)+'">'+esc(c)+' ('+cnt[c]+(cnt[c]===1?' prenda':' prendas')+')</option>';}).join("");
+  }
+  function lkProdOpts(){return '<option value="">— Ninguna: abrir la categoría de arriba —</option>'+(K2.prods||[]).map(function(p){return '<option value="'+esc(prodSlug(p))+'">'+esc(p.nombre+" · "+p.precio+" · "+p.categoria)+'</option>';}).join("");}
   function lkLoad(){return api("/admin/links?days=30").then(function(d){K2.data=d;lkRender();}).catch(function(e){var el=document.getElementById("ctlLinks");if(el&&/Worker|Ruta|404/.test(e.message||""))el.innerHTML='<div class="cp-sect" style="margin-top:22px">🔗 Enlaces de seguimiento</div>'+empty("Pega el Worker v36 para crear enlaces de seguimiento.");});}
   function copy(t){try{navigator.clipboard.writeText(t);toast("Copiado ✓");}catch(e){prompt("Copia el enlace:",t);}}
   function lkRender(){
@@ -698,8 +703,9 @@
       '<div class="cp-card"><div class="cp-cardh"><div><b style="font-size:14.5px">Crea un enlace para cada cosa que publiques</b><div class="cp-dim" style="font-size:12.5px;margin-top:3px">Ej: "Historia vestido rojo", "Bio", "Reel jeans". Pega ese enlace en la historia o en la bio y aquí verás cuántas personas trajo y qué hicieron.</div></div>'+
       '<button type="button" class="cp-btn'+(K2.form?" ghost":"")+'" data-a="lkform">'+(K2.form?"Cerrar":"+ Nuevo enlace")+'</button></div>'+
       (K2.form?'<div class="cp-2"><div class="cp-field"><label>Nombre</label><input id="lkName" maxlength="80" placeholder="Historia vestido rojo"></div><div class="cp-field"><label>¿Dónde lo vas a poner?</label><select id="lkPlace" class="cp-sel">'+(D.places||[]).map(function(p){return '<option>'+esc(p)+'</option>';}).join("")+'</select></div></div>'+
-        '<div class="cp-field"><label>👗 Abrir directo una prenda (recomendado para historias y posts)</label><select id="lkProd" class="cp-sel">'+lkProdOpts()+'</select></div>'+
-        '<div class="cp-field"><label>…o abrir una categoría (opcional)</label><input id="lkCat" maxlength="60" placeholder="Ej: Vestidos / sets — déjalo vacío para la tienda completa"></div><button type="button" class="cp-btn full" data-a="lkcreate">Crear enlace</button>':"")+
+        '<div class="cp-field"><label>📂 ¿A qué categoría de tu tienda lleva?</label><select id="lkCat" class="cp-sel">'+lkCatOpts()+'</select></div>'+
+        '<div class="cp-field"><label>👗 …o directo a una prenda (opcional)</label><select id="lkProd" class="cp-sel">'+lkProdOpts()+'</select></div>'+
+        '<button type="button" class="cp-btn full" data-a="lkcreate">Crear enlace</button>':"")+
       '</div>'+
       (L.length?'<div class="cp-lklist">'+L.map(function(l){var conv=l.visits?Math.round((l.wa+l.dm)/l.visits*100):0;
         return '<div class="cp-card cp-lk'+(best&&best===l&&(l.wa+l.dm+l.bag)>0?" best":"")+'"><div class="cp-cardh"><div style="min-width:0"><b class="cp-lkn">'+(best===l&&(l.wa+l.dm+l.bag)>0?"🏆 ":"")+esc(l.name)+'</b><div class="cp-dim" style="font-size:12px">'+esc(l.place)+(l.prod?" · abre la prenda "+esc(l.prodName||l.prod.split("--")[0]):l.cat?" · abre en "+esc(l.cat):"")+'</div></div><button type="button" class="cp-x" data-lkdel="'+esc(l.code)+'" title="Quitar">✕</button></div>'+
