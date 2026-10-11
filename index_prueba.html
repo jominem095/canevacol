@@ -4799,5 +4799,58 @@ body.cv-fast .bw-logo-wrap{transform:scale(.82);transform-origin:center top;marg
 })();
 </script>
 
+<script id="cvdeep">
+// Deeper visit signals for the admin audit: time on each garment, photos swiped, zoom, copied text,
+// leaving the page and coming back, sections reached and garments removed from the bag.
+(function(){
+  if(typeof window.cvStatsPush!=='function')return;
+  function push(ev){try{window.cvStatsPush(ev);}catch(e){}}
+  // ---- time on each garment ----
+  var cur=null;
+  function flush(){
+    if(!cur)return;var sec=Math.round((Date.now()-cur.t0)/1000);
+    if(sec>=3)push({t:'dw',n:cur.n.slice(0,60),sec:Math.min(sec,3600),ph:cur.ph,z:cur.z?1:0,col:cur.col});
+    cur=null;
+  }
+  if(typeof openProductModal==='function'){var oOpen=openProductModal;openProductModal=function(idx){
+    flush();var r=oOpen.apply(this,arguments);var p=P[idx];if(p)cur={n:String(p.nombre||''),t0:Date.now(),ph:0,z:0,col:0,last:0};return r;};}
+  var modal=document.getElementById('pmodal');
+  if(modal&&window.MutationObserver)new MutationObserver(function(){if(!modal.classList.contains('open'))flush();}).observe(modal,{attributes:true,attributeFilter:['class']});
+  document.addEventListener('scroll',function(e){
+    var s=e.target;if(!cur||!s||s.id!=='pmSlides')return;
+    var k=Math.round(s.scrollLeft/Math.max(1,s.clientWidth));if(k!==cur.last){cur.last=k;cur.ph++;}
+  },true);
+  document.addEventListener('click',function(e){
+    var t=e.target;if(!cur||!t||!t.closest)return;
+    if(t.closest('.pm-nav'))cur.ph++;
+    if(t.closest('.pm-zoom-btn')||(t.closest('#pmMedia img')))cur.z=1;
+    if(t.closest('.pm-color-btn'))cur.col++;
+  },true);
+  // ---- copied text (copying the bank account is a strong buying signal) ----
+  document.addEventListener('copy',function(){
+    var s='';try{s=String(window.getSelection()||'').replace(/\s+/g,' ').trim();}catch(e){}
+    if(s)push({t:'cpy',l:s.slice(0,60)});
+  });
+  // ---- left the page (WhatsApp, Instagram, another tab) and came back ----
+  var hidAt=0;
+  document.addEventListener('visibilitychange',function(){
+    if(document.visibilityState==='hidden'){hidAt=Date.now();flushSoft();}
+    else if(hidAt){var sec=Math.round((Date.now()-hidAt)/1000);hidAt=0;if(sec>=5)push({t:'away',sec:Math.min(sec,86400)});}
+  });
+  function flushSoft(){if(!cur)return;var keep=cur;flush();cur={n:keep.n,t0:Date.now(),ph:0,z:0,col:0,last:keep.last};}
+  window.addEventListener('pagehide',flush);
+  // ---- sections she reached ----
+  var NAMES={inicio:'portada',lookbook:'la nueva colección',catalogo:'catálogo',agente:'Caneva AI'};
+  if(window.IntersectionObserver){
+    var seen={};var io=new IntersectionObserver(function(es){es.forEach(function(en){var id=en.target.id;if(en.isIntersecting&&!seen[id]){seen[id]=1;if(id!=='inicio')push({t:'sec',l:NAMES[id]||id});io.unobserve(en.target);}});},{threshold:0.25});
+    Object.keys(NAMES).forEach(function(id){var el=document.getElementById(id);if(el)io.observe(el);});
+  }
+  // ---- removed from the bag (hesitation) ----
+  function nameOf(key){var it=(window.CART||[]).find?CART.find(function(x){return x.key===key;}):null;return it?String(it.nombre||'')+(it.size?' talla '+it.size:''):'';}
+  if(typeof removeCartItem==='function'){var oRm=removeCartItem;removeCartItem=function(key){var n=nameOf(key);var r=oRm.apply(this,arguments);if(n)push({t:'rm',n:n.slice(0,70)});return r;};}
+  if(typeof changeCartQty==='function'){var oCh=changeCartQty;changeCartQty=function(key,delta){var it=CART.find(function(x){return x.key===key;});var n=it&&delta<0&&(Number(it.qty)||1)+delta<=0?nameOf(key):'';var r=oCh.apply(this,arguments);if(n)push({t:'rm',n:n.slice(0,70)});return r;};}
+})();
+</script>
+
 </body>
 </html>

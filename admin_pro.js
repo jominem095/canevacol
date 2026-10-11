@@ -353,7 +353,7 @@
       '<div class="cp-mcities">'+top.slice(0,8).map(function(c,i){return '<button type="button" data-vcity="'+esc(c)+'"><em>'+(i+1)+'</em>'+esc(c)+'<i>'+cities[c]+'</i></button>';}).join("")+'</div>';
     loadLeaflet().then(function(){
       if(V.lmap){try{V.lmap.remove();}catch(e){}V.lmap=null;}
-      box.innerHTML="";var map=L.map(box,{scrollWheelZoom:false,zoomControl:true,attributionControl:true,worldCopyJump:true});V.lmap=map;
+      box.innerHTML="";var map=tameMap(L.map(box,{scrollWheelZoom:false,zoomControl:true,attributionControl:true,worldCopyJump:true}),box);V.lmap=map;
       // Free OpenStreetMap tiles (no key), darkened with CSS to match the black admin
       L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,className:"cp-darktiles",attribution:'© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'}).addTo(map);
       var bounds=[],max=Math.max.apply(null,G.map(function(g){return g.items.length;}));
@@ -385,7 +385,7 @@
   }
   function vTitle(v){return v.instagram||(v.clienta?String(v.clienta).split(" · ")[0]:"")||"Visitante"+(v.ciudad?" de "+v.ciudad:"");}
   function vTime(v){var d=new Date(v.ts);return d.toLocaleDateString("es-CO",{day:"numeric",month:"short"})+" · "+d.toLocaleTimeString("es-CO",{hour:"numeric",minute:"2-digit"});}
-  function vBadges(v){var b=[];if(v.codigo_ref)b.push('<i class="ref">🔖 '+esc(v.codigo_ref)+'</i>');if(v.instagram)b.push('<i class="ig">💌 IG</i>');if(v.escribio_por_whatsapp)b.push('<i>💬 WhatsApp</i>');if(v.escribio_por_instagram)b.push('<i class="ig">💌 DM Instagram</i>');if(v.dejo_en_la_bolsa)b.push('<i>🛍 Bolsa</i>');if(v.ubicacion_exacta)b.push('<i>📍 Ubicación</i>');if(v.vino_de_anuncio)b.push('<i>📢 Anuncio</i>');if(v.clienta)b.push('<i>👑 Club</i>');return b.join("");}
+  function vBadges(v){var b=[];var it=String(v.intencion||"");if(/Alta/.test(it))b.push('<i class="hot">🔥 Lista para comprar</i>');else if(/Media/.test(it))b.push('<i class="warm">🟡 Interesada</i>');if(v.copio_cuenta)b.push('<i class="hot">💳 Copió la cuenta</i>');if(v.codigo_ref)b.push('<i class="ref">🔖 '+esc(v.codigo_ref)+'</i>');if(v.instagram)b.push('<i class="ig">💌 IG</i>');if(v.escribio_por_whatsapp)b.push('<i>💬 WhatsApp</i>');if(v.escribio_por_instagram)b.push('<i class="ig">💌 DM Instagram</i>');if(v.dejo_en_la_bolsa)b.push('<i>🛍 Bolsa</i>');if(v.ubicacion_exacta)b.push('<i>📍 Ubicación</i>');if(v.vino_de_anuncio)b.push('<i>📢 Anuncio</i>');if(v.clienta)b.push('<i>👑 Club</i>');return b.join("");}
   function visRender(){
     var el=document.getElementById("cpVis"),D=V.data;if(!el||!D)return;
     var c=D.counts||{},list=D.visits||[];
@@ -418,7 +418,7 @@
     whatsapp_clienta:"WhatsApp",talla_perfil:"Talla del perfil",llego_desde:"Llegó desde",vino_de_anuncio:"Vino de anuncio",campana:"Campaña",referencia:"Página de origen",visita_numero:"Visita número",primera_visita:"Primera visita",
     visita_anterior:"Visita anterior",pantalla:"Pantalla",ventana:"Ventana",densidad_pantalla:"Densidad de pantalla",pantalla_tactil:"Pantalla táctil",nucleos_cpu:"Núcleos del procesador",memoria_celular_gb:"Memoria (GB)",bateria:"Batería",
     idioma:"Idioma",zona_horaria:"Zona horaria",zona_horaria_red:"Zona horaria (red)",hora_en_su_celular:"Hora en su celular",conexion:"Conexión",ahorro_de_datos:"Ahorro de datos",modo_oscuro:"Modo oscuro",abrio_como_app:"Abrió como app",
-    no_rastrear:"No rastrear",escribio_por_whatsapp:"Escribió por WhatsApp",dejo_en_la_bolsa:"Dejó en la bolsa",idea_para_dm:"Idea para DM",pagina:"Página",pagina_de_entrada:"Página donde entró",barrio:"Barrio (GPS)",localidad:"Localidad",calle_aprox:"Calle aproximada",ciudad_gps:"Ciudad (GPS)",codigo_postal_gps:"Código postal (GPS)",direccion_escrita:"Escribió que se lo enviemos a",punto_escrito:"Punto del barrio escrito",lugar_encontrado:"Lugar encontrado en el mapa",barrio_gps_de:"(interno) GPS usado",carga_segundos:"La página tardó en cargar (s)",primer_toque_segundos:"Primer toque o scroll (s)",punto_escrito_de:"(interno) texto usado",version_app:"App y versión",idioma_app:"Idioma de la app",meta_campana_id:"Campaña de Meta (ID)",meta_anuncio_id:"Anuncio de Meta (ID)",meta_conjunto_id:"Conjunto de anuncios (ID)",medio:"Medio",fuente_utm:"Fuente (utm)",enlace:"Enlace de seguimiento",ubicacion_anuncio:"Ubicación del anuncio",inicio:"Entró",importado_de_logs:"Traída de los Logs",ip:"Dirección IP",ip_version:"Tipo de IP",tipo_de_red:"Tipo de red",origen:"Cómo llegó",anuncio:"Anuncio",campana_nombre:"Nombre de la campaña",escribio_por_instagram:"Abrió el DM de Instagram",meta_fbp:"ID de navegador Meta (fbp)",meta_fbc:"Clic de anuncio Meta (fbc)",tiktok_ttp:"ID de navegador TikTok (ttp)",tiktok_ttclid:"Clic de anuncio TikTok"};
+    no_rastrear:"No rastrear",escribio_por_whatsapp:"Escribió por WhatsApp",dejo_en_la_bolsa:"Dejó en la bolsa",idea_para_dm:"Idea para DM",pagina:"Página",pagina_de_entrada:"Página donde entró",barrio:"Barrio (GPS)",localidad:"Localidad",calle_aprox:"Calle aproximada",ciudad_gps:"Ciudad (GPS)",codigo_postal_gps:"Código postal (GPS)",direccion_escrita:"Escribió que se lo enviemos a",punto_escrito:"Punto del barrio escrito",lugar_encontrado:"Lugar encontrado en el mapa",barrio_gps_de:"(interno) GPS usado",carga_segundos:"La página tardó en cargar (s)",primer_toque_segundos:"Primer toque o scroll (s)",punto_escrito_de:"(interno) texto usado",version_app:"App y versión",idioma_app:"Idioma de la app",meta_campana_id:"Campaña de Meta (ID)",meta_anuncio_id:"Anuncio de Meta (ID)",meta_conjunto_id:"Conjunto de anuncios (ID)",medio:"Medio",fuente_utm:"Fuente (utm)",enlace:"Enlace de seguimiento",ubicacion_anuncio:"Ubicación del anuncio",inicio:"Entró",importado_de_logs:"Traída de los Logs",ip:"Dirección IP",ip_version:"Tipo de IP",tipo_de_red:"Tipo de red",origen:"Cómo llegó",anuncio:"Anuncio",campana_nombre:"Nombre de la campaña",escribio_por_instagram:"Abrió el DM de Instagram",meta_fbp:"ID de navegador Meta (fbp)",meta_fbc:"Clic de anuncio Meta (fbc)",tiktok_ttp:"ID de navegador TikTok (ttp)",tiktok_ttclid:"Clic de anuncio TikTok",intencion:"Intención de compra",senales_de_compra:"Señales de compra",prenda_que_mas_miro:"La prenda que más miró",ultima_prenda_que_vio:"Última prenda que vio",copio_cuenta:"Copió la cuenta para pagar"};
   function allData(v){
     var skip={vid:1,day:1,ts:1,firstTs:1,acciones:1,perfil:1,evento:1};
     var rows=Object.keys(v).filter(function(k){return !skip[k]&&v[k]!==""&&v[k]!==null&&v[k]!==undefined;}).map(function(k){
@@ -451,10 +451,21 @@
         (sib?'<div class="cp-eyeb" style="margin:14px 0 4px">Otros visitantes con la misma IP (misma casa, oficina o red)</div>'+sib:'');
     }).catch(function(e){var box=document.getElementById("cpAudit");if(box)box.innerHTML=/Worker|Ruta|404/.test(e.message||"")?'<p class="cp-hint">Pega el Worker v37 para ver la auditoría completa.</p>':'';});
   }
+  // Maps: follow container size changes, and on phones one finger scrolls the page (tap "Mover mapa" to drag it)
+  function tameMap(m,box){
+    try{if(window.ResizeObserver){var ro=new ResizeObserver(function(){if(!document.body.contains(box)){ro.disconnect();return;}m.invalidateSize();});ro.observe(box);}}catch(e){}
+    var touch=window.matchMedia&&matchMedia("(pointer:coarse)").matches;
+    if(!touch)return m;
+    m.dragging.disable();if(m.tap)m.tap.disable();
+    var b=document.createElement("button");b.type="button";b.className="cp-mapmove";b.textContent="🖐 Mover mapa";
+    b.addEventListener("click",function(e){e.stopPropagation();var on=!m.dragging.enabled();if(on)m.dragging.enable();else m.dragging.disable();b.classList.toggle("on",on);b.textContent=on?"✓ Listo":"🖐 Mover mapa";});
+    L.DomEvent.disableClickPropagation(b);box.appendChild(b);
+    return m;
+  }
   function pointMap(v){
     var g=vGeo(v),box=document.getElementById("cpPtMap");if(!g||!box)return;
     loadLeaflet().then(function(){
-      var m=L.map(box,{scrollWheelZoom:false,zoomControl:true,attributionControl:true});
+      var m=tameMap(L.map(box,{scrollWheelZoom:false,zoomControl:true,attributionControl:true}),box);
       L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,className:"cp-darktiles",attribution:'© OpenStreetMap'}).addTo(m);
       var z=v.ubicacion_exacta?17:g.barrio?15:12;m.setView([g.lat,g.lon],z);
       if(v.ubicacion_exacta&&v.precision_metros)L.circle([g.lat,g.lon],{radius:Number(v.precision_metros),color:"#d9c49b",weight:1,fillColor:"#d9c49b",fillOpacity:.15}).addTo(m);
@@ -473,6 +484,7 @@
     else if(v.coordenadas_aprox)btns.push('<a class="cp-btn ghost" href="https://maps.google.com/?q='+encodeURIComponent(v.coordenadas_aprox)+'" target="_blank" rel="noopener">🗺 Zona aproximada</a>');
     if(v.idea_para_dm)btns.push('<button type="button" class="cp-btn ghost" data-vcopy="'+i+'">Copiar idea</button>');
     var html='<div class="cp-shead"><div style="flex:1;min-width:0"><div class="cp-eyeb">'+esc(vTime(v))+(v.codigo_ref?' · 🔖 Ref '+esc(v.codigo_ref):"")+'</div><h3 class="cp-h3">'+esc(vTitle(v))+'</h3><div class="cp-vb">'+vBadges(v)+'</div></div><button type="button" class="cp-x" data-cpclose aria-label="Cerrar">✕</button></div>'+
+      (v.intencion?'<div class="cp-intent '+(/Alta/.test(v.intencion)?"alta":/Media/.test(v.intencion)?"media":"")+'"><b>Intención de compra: '+esc(v.intencion)+'</b>'+((v.senales_de_compra||[]).length?'<ul>'+v.senales_de_compra.map(function(x){return "<li>"+esc(x)+"</li>";}).join("")+'</ul>':"")+(v.prenda_que_mas_miro?'<div class="cp-dim" style="margin-top:6px">👗 La que más miró: <b style="font-size:13px;color:var(--w)">'+esc(v.prenda_que_mas_miro)+'</b></div>':"")+'</div>':"")+
       (v.idea_para_dm?'<div class="cp-idea">💡 '+esc(v.idea_para_dm)+'</div>':"")+
       (btns.length?'<div class="cp-vbtns">'+btns.join("")+'</div>':"")+
       (vGeo(v)?'<div id="cpPtMap" class="cp-ptmap"></div><div class="cp-dim" style="font-size:11.5px;margin-top:4px">'+(v.ubicacion_exacta?"📍 Punto GPS del celular"+(v.precision_metros?" · el círculo muestra el margen de ±"+v.precision_metros+" m":""):v.punto_escrito?"🏠 Barrio que ella escribió":"🌐 Zona aproximada por su internet (ciudad)")+'</div>':'')+
@@ -690,7 +702,9 @@
     var box=document.getElementById("ctlMap");if(!box)return;
     var seen={},pts=[];list.forEach(function(x){if(!x.coords||seen[x.vid])return;seen[x.vid]=1;var m=String(x.coords).split(",").map(Number);if(m.length===2&&isFinite(m[0])&&isFinite(m[1]))pts.push({lat:m[0],lon:m[1],x:x,live:Date.now()-x.ts<300000});});
     loadLeaflet().then(function(){
-      if(!C.lmap){box.innerHTML="";C.lmap=L.map(box,{scrollWheelZoom:false,zoomControl:false,attributionControl:true});
+      // The panel re-renders: a map still tied to an old element looks frozen, so rebuild it
+      if(C.lmap&&C.lmap.getContainer()!==box){try{C.lmap.remove();}catch(e){}C.lmap=null;C.first=true;}
+      if(!C.lmap){box.innerHTML="";C.lmap=tameMap(L.map(box,{scrollWheelZoom:false,zoomControl:false,attributionControl:true}),box);
         L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,className:"cp-darktiles",attribution:'© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'}).addTo(C.lmap);
         C.layer=L.layerGroup().addTo(C.lmap);C.lmap.setView([6.5,-74.5],5);}
       C.layer.clearLayers();var b=[];
@@ -914,6 +928,10 @@
   ".cp-kv a{color:#d9c49b}.cp-audh{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;width:100%;text-align:left;background:var(--k2);border:1px solid var(--b);border-radius:10px;padding:9px 11px;color:var(--w);cursor:pointer;font-family:inherit;margin-top:6px}.cp-audh span{font-size:12px;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
   ".cp-tl code{font-size:11px;color:#d9c49b;background:rgba(217,196,155,.1);border-radius:4px;padding:1px 4px;margin-right:4px}",
   ".cp-switch{display:flex;align-items:center;gap:12px;cursor:pointer;margin:6px 0}.cp-switch input{display:none}.cp-switch span{flex:none;width:46px;height:26px;border-radius:999px;background:#2a2a2a;position:relative;transition:background .25s}.cp-switch span::after{content:'';position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#f7f7f4;transition:transform .25s}.cp-switch input:checked+span{background:#5ef0a0}.cp-switch input:checked+span::after{transform:translateX(20px)}.cp-switch b{font-size:13.5px;font-weight:500}",
+  ".cp-vmap,.cp-ptmap{position:relative;z-index:0;isolation:isolate}",
+  ".cp-mapmove{position:absolute;right:10px;bottom:22px;z-index:1000;border:1px solid rgba(247,247,244,.25);background:rgba(5,5,5,.82);color:#f7f7f4;border-radius:999px;padding:7px 12px;font:600 12px Inter,sans-serif;cursor:pointer}.cp-mapmove.on{background:#f7f7f4;color:#0b0b0b}",
+  ".cp-intent{margin-top:12px;border:1px solid var(--b);border-radius:12px;padding:11px 13px;font-size:13px;line-height:1.45}.cp-intent b{font-size:14px}.cp-intent.alta{border-color:rgba(255,143,128,.55);background:linear-gradient(120deg,rgba(255,143,128,.12),transparent)}.cp-intent.media{border-color:rgba(244,196,106,.5)}.cp-intent ul{margin:6px 0 0;padding-left:18px}.cp-intent li{padding:1px 0}",
+  ".cp-vb i.hot{border-color:rgba(255,143,128,.6);color:#ffb4a8}.cp-vb i.warm{border-color:rgba(244,196,106,.55);color:#f4c46a}",
   ".cp-ptmap{height:220px;border-radius:12px;overflow:hidden;margin-top:12px;border:1px solid var(--b);background:#0d0d0d}.cp-ptmap .cp-darktiles{filter:invert(1) hue-rotate(180deg) brightness(.82) contrast(1.1) saturate(.25)}",
   ".cp-diag{display:grid;gap:10px;grid-template-columns:1fr}@media(min-width:900px){.cp-diag{grid-template-columns:1fr 1fr}}.cp-dg{border:1px solid var(--b);border-radius:14px;padding:12px 14px;background:var(--k2)}.cp-dg b{display:block;font-size:14px;line-height:1.35}.cp-dg p{margin:6px 0 0;font-size:13px;line-height:1.5;color:var(--dim)}.cp-dg.alta{border-color:rgba(255,143,128,.5);background:linear-gradient(160deg,rgba(255,143,128,.08),var(--k2))}.cp-dg.media{border-color:rgba(244,196,106,.45)}",
   ".cp-qt table{min-width:640px}.cp-good{color:#5ef0a0!important;font-weight:600}.cp-qt .cp-bad{color:#ff8f80!important;font-weight:600}",
