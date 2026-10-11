@@ -3700,6 +3700,14 @@ document.getElementById('csend').addEventListener('click',sendChat);
     var ids={t:'ids',fbp:ck('_fbp').slice(0,120),fbc:(ck('_fbc')||(fbclid?'fb.1.'+Date.now()+'.'+fbclid:'')).slice(0,300),ttp:ck('_ttp').slice(0,120),ttclid:ttclid.slice(0,200)};
     if(ids.fbp||ids.fbc||ids.ttp||ids.ttclid)push(ids);
   },3500);
+  // Page speed on her phone: time to load and time to her first touch/scroll
+  (function(){var t0=0,firstAt=0,sent=false;
+    function navStart(){try{var n=performance.getEntriesByType('navigation')[0];return n?n:null;}catch(e){return null;}}
+    function send(){if(sent)return;var n=navStart(),load=n&&n.loadEventEnd?n.loadEventEnd:(n&&n.domContentLoadedEventEnd)||performance.now();sent=true;push({t:'perf',load:Math.round(load),first:Math.round(firstAt)});}
+    ['pointerdown','scroll','touchstart'].forEach(function(ev){addEventListener(ev,function f(){if(!firstAt){firstAt=performance.now();}removeEventListener(ev,f);},{passive:true});});
+    if(document.readyState==='complete')setTimeout(send,1500);else addEventListener('load',function(){setTimeout(send,1500);});
+    setTimeout(send,12000);
+  })();
   function prod(i){var p=window.P&&P[i];return p?{id:p.id||'',n:p.nombre,pr:p.precio,c:p.categoria,v:typeof priceNum==='function'?priceNum(p.precio):0}:null;}
   function learn(p,size){if(p.c)prof.cats[p.c]=(prof.cats[p.c]||0)+1;if(size)prof.sizes[size]=(prof.sizes[size]||0)+1;if(p.v>0&&p.v<999999999){prof.pmin=prof.pmin?Math.min(prof.pmin,p.v):p.v;prof.pmax=Math.max(prof.pmax||0,p.v);}saveProf();}
   function wrapG(name,fn){var f=window[name];if(typeof f!=='function')return;window[name]=function(){var r=f.apply(this,arguments);try{fn.apply(this,arguments);}catch(e){}return r;};}
@@ -4596,8 +4604,9 @@ body.cv-fast .bw-logo-wrap{transform:scale(.82);transform-origin:center top;marg
   function verdict(s){
     var days=(document.getElementById('pmTrustDays')||{}).textContent||'1 día';
     if(inBaq(s))return '✨ A <b>'+esc(s.label||'tu ubicación')+'</b> te llega en <b>'+esc(days)+' hábil</b>. Pago contraentrega.';
-    if(!/,/.test(s.label||'')&&!s.lat)return '📦 Enviamos a <b>'+esc(s.label)+'</b>. En Barranquilla llega en <b>'+esc(days)+' hábil</b>; a otras ciudades te confirmamos tiempo y costo por WhatsApp.';
-    return '🚚 Enviamos a <b>'+esc(s.label||'tu ciudad')+'</b>. Te confirmamos tiempo y costo de envío por WhatsApp.';
+    var N=window.CV_SHIP||{},nat=N.days?'te llega en <b>'+esc(N.days)+' días hábiles</b>'+(N.cost?' · envío <b>'+esc(N.cost)+'</b>':''):'te confirmamos tiempo y costo de envío por WhatsApp';
+    if(!/,/.test(s.label||'')&&!s.lat)return '📦 Enviamos a <b>'+esc(s.label)+'</b>. En Barranquilla llega en <b>'+esc(days)+' hábil</b>; a otras ciudades '+nat+'.';
+    return '🚚 A <b>'+esc(s.label||'tu ciudad')+'</b> '+nat+'.';
   }
   function html(){
     var s=lg();
@@ -4629,6 +4638,36 @@ body.cv-fast .bw-logo-wrap{transform:scale(.82);transform-origin:center top;marg
   document.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.matches&&e.target.matches('[data-shipin]')){e.preventDefault();var ok=e.target.parentNode.querySelector('[data-shipok]');if(ok)ok.click();}});
   mount();setTimeout(mount,2000);
   var _oc=window.openCart;if(typeof _oc==='function')window.openCart=openCart=function(){var r=_oc.apply(this,arguments);try{mount();}catch(e){}return r;};
+})();
+</script>
+<style id="cvnat-css">
+/* ===== National: greets each visitor with her city and her delivery time ===== */
+.cv-nat{display:inline-block;line-height:1.6;max-width:92%;margin:.9rem auto 0;padding:.5rem .95rem;border:1px solid rgba(217,196,155,.4);border-radius:999px;background:rgba(217,196,155,.07);font:600 .6rem Inter,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#f1e6cf;animation:cvLiveIn .8s .2s cubic-bezier(.16,1,.3,1) both}
+.cv-nat b{color:#fff;font-weight:700}
+</style>
+<script id="cvnat-js">
+// Uses the visitor's city (from Cloudflare) to say "we ship to your city" with the delivery time set in the admin.
+(function(){
+  var API=(typeof API_BASE!=='undefined'&&API_BASE)||'https://caneva-ai.canevacol.workers.dev';
+  function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  var BAQ=/barranquilla|soledad|puerto colombia|malambo|galapa/i;
+  fetch(API+'/hola').then(function(r){return r.json();}).then(function(d){
+    if(!d||!d.ok)return;window.CV_SHIP=d.ship||{};window.CV_CITY=d.city||'';
+    if(d.country&&d.country!=='CO')return;
+    var local=BAQ.test(d.city||''),N=d.ship||{};
+    var days=(document.getElementById('pmTrustDays')||{}).textContent||'1 día';
+    var txt=local?'🚚 En <b>'+esc(d.city)+'</b> te llega en <b>'+esc(days)+' hábil</b>'
+      :'🚚 Enviamos a <b>'+esc(d.city||'todo Colombia')+'</b>'+(N.days?' · llega en <b>'+esc(N.days)+' días</b>':'')+(N.cost?' · envío '+esc(N.cost):'');
+    var tag=document.querySelector('#inicio .bw-tagline'),pill=document.createElement('div');pill.className='cv-nat';pill.innerHTML=txt;
+    if(tag&&tag.parentNode){var wrap=document.createElement('div');wrap.style.textAlign='center';wrap.appendChild(pill);tag.parentNode.insertBefore(wrap,tag.nextSibling);}
+    if(!local){
+      // product window: delivery box speaks to her city
+      var fix=function(){var a=document.getElementById('pmTrustDays'),b=document.getElementById('pmTrustDaysTxt');
+        if(a)a.textContent=N.days?N.days+' días':'Todo Colombia';if(b)b.textContent='Envío a '+(d.city||'tu ciudad');
+        var tr=document.querySelector('.pm-trust');if(tr&&tr.children[1])tr.children[1].innerHTML='<b>Todo Colombia</b><span>'+(N.cost?'Envío '+esc(N.cost):'Envío nacional')+'</span>';};
+      fix();var _o=window.openProductModal;if(typeof _o==='function')window.openProductModal=openProductModal=function(){var r=_o.apply(this,arguments);try{fix();}catch(e){}return r;};
+    }
+  }).catch(function(){});
 })();
 </script>
 </body>
