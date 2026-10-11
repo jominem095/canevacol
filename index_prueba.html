@@ -5127,6 +5127,40 @@ body.cv-has-pbar .ann-bar{display:none!important}
 .cv-bpay a,.cv-bpay button{display:block;width:100%;box-sizing:border-box;margin-top:.55rem;padding:.95rem 1rem;border-radius:999px;font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;font-weight:700;text-decoration:none;cursor:pointer;font-family:inherit}
 .cv-bpay .pri{background:#f7f7f4;color:#050505;border:0}
 .cv-bpay .sec{background:none;color:#faf9f6;border:1px solid rgba(250,249,246,.3)}
+.cv-bpay .cv-bbox{max-height:calc(100vh - 40px);max-height:calc(100dvh - 40px);overflow-y:auto;-webkit-overflow-scrolling:touch}
+.cv-rc{text-align:left}
+.cv-rc .cv-rc-ok{width:54px;height:54px;margin:0 auto;border-radius:50%;background:#f7f7f4;color:#050505;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700}
+.cv-rc h3{text-align:center;margin:.6rem 0 .2rem}
+.cv-rc .cv-rc-sub{text-align:center;margin:0 0 1.1rem}
+.cv-rc-card{background:#f7f7f4;color:#050505;border-radius:12px;padding:16px 16px 6px;position:relative}
+.cv-rc-hd{display:flex;justify-content:space-between;align-items:baseline;gap:8px;border-bottom:1px dashed rgba(5,5,5,.25);padding-bottom:10px}
+.cv-rc-hd b{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:1.25rem;letter-spacing:.35em}
+.cv-rc-hd span{font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;text-align:right}
+.cv-rc-meta{font-size:.7rem;color:#555;padding:8px 0 4px;line-height:1.5}
+.cv-rc-it{display:flex;gap:10px;align-items:center;padding:9px 0;border-top:1px solid rgba(5,5,5,.08)}
+.cv-rc-it:first-of-type{border-top:0}
+.cv-rc-it img,.cv-rc-it i{width:42px;height:52px;object-fit:cover;border-radius:6px;background:#e4e3df;flex:0 0 auto}
+.cv-rc-it div{flex:1;min-width:0;font-size:.8rem;line-height:1.35}
+.cv-rc-it div small{display:block;color:#666;font-size:.68rem}
+.cv-rc-it em{font-style:normal;font-size:.8rem;white-space:nowrap}
+.cv-rc-row{display:flex;justify-content:space-between;font-size:.75rem;padding:4px 0;color:#444}
+.cv-rc-tot{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid #050505;margin-top:6px;padding:10px 0;font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;font-weight:700}
+.cv-rc-tot b{font-family:'Cormorant Garamond',serif;font-size:1.6rem;letter-spacing:0;font-weight:500}
+.cv-rc-paid{position:absolute;top:52px;right:14px;transform:rotate(-8deg);border:2px solid #1d7a46;color:#1d7a46;border-radius:6px;padding:2px 8px;font-size:.6rem;letter-spacing:.2em;font-weight:800;text-transform:uppercase}
+.cv-rc-ship{margin-top:12px;border:1px solid rgba(250,249,246,.18);border-radius:12px;padding:13px 14px;font-size:.8rem;line-height:1.55;color:rgba(250,249,246,.8)}
+.cv-rc-ship strong{display:block;color:#faf9f6;font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;margin-bottom:4px}
+.cv-rc-ship b{color:#faf9f6}
+.cv-rc-mail{margin-top:12px;border:1px solid rgba(250,249,246,.18);border-radius:12px;padding:13px 14px}
+.cv-rc-mail strong{display:block;font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;margin-bottom:4px}
+.cv-rc-mail p{font-size:.76rem;margin:0 0 .6rem}
+.cv-rc-mail form{display:flex;gap:6px}
+.cv-rc-mail input{flex:1;min-width:0;background:#141210;border:1px solid rgba(250,249,246,.25);color:#faf9f6;border-radius:999px;padding:.75rem .95rem;font:inherit;font-size:16px}
+.cv-rc-mail input:focus{outline:none;border-color:#faf9f6}
+.cv-bpay .cv-rc-mail button{display:inline-block;width:auto;margin:0;padding:.75rem 1rem;background:#f7f7f4;color:#050505;border:0;flex:0 0 auto}
+.cv-bpay .cv-rc-mail button[disabled]{opacity:.55;cursor:wait}
+.cv-rc-mail small{display:block;font-size:.7rem;margin-top:.45rem;min-height:1em;color:rgba(250,249,246,.7)}
+.cv-rc-mail small.ok{color:#7fd6a2}.cv-rc-mail small.bad{color:#ff9b8a}
+.cv-bpay a.cv-rc-help{background:none;border:0;color:rgba(250,249,246,.55);text-transform:none;letter-spacing:.02em;font-weight:400;font-size:.72rem;text-align:center;padding:.6rem 0 0;text-decoration:underline}
 </style>
 <script id="cvbold">
 // Online payment with Bold: the Worker prices the bag from the catalog (with the active promo), signs it with the
@@ -5141,13 +5175,54 @@ body.cv-has-pbar .ann-bar{display:none!important}
   function enable(){
     var b=btn();if(!b)return;ON=true;b.hidden=false;b.classList.remove('cart-bold-off');b.classList.add('cv-bold-on');
     b.innerHTML='💳 Pagar en línea · Bold';
-    if(!document.getElementById('cvBoldNote')){var n=document.createElement('div');n.id='cvBoldNote';n.className='cv-bold-note';n.textContent='Tarjeta, PSE, Nequi o Bancolombia · pago seguro con Bold. El envío se coordina por WhatsApp.';b.parentNode.insertBefore(n,b.nextSibling.nextSibling||null);}
+    if(!document.getElementById('cvBoldNote')){var n=document.createElement('div');n.id='cvBoldNote';n.className='cv-bold-note';n.textContent='Tarjeta, PSE, Nequi o Bancolombia · pago seguro con Bold. Recibes tu recibo al instante y te lo enviamos a la dirección que nos des.';b.parentNode.insertBefore(n,b.nextSibling.nextSibling||null);}
   }
   fetch(API_BASE+'/pay/bold/config').then(function(r){return r.json();}).then(function(d){if(d&&d.enabled)enable();}).catch(function(){});
   function loadBold(){return new Promise(function(ok,ko){if(window.BoldCheckout)return ok();var s=document.createElement('script');s.src=BOLD_JS;s.onload=function(){window.BoldCheckout?ok():ko(new Error('Bold'));};s.onerror=function(){ko(new Error('No se pudo cargar Bold'));};document.head.appendChild(s);});}
   function overlay(html){var o=document.getElementById('cvBPay');if(!o){o=document.createElement('div');o.id='cvBPay';o.className='cv-bpay';document.body.appendChild(o);}o.innerHTML='<div class="cv-bbox">'+html+'</div>';return o;}
   function closeOverlay(){var o=document.getElementById('cvBPay');if(o)o.remove();}
   function waHref(txt){return 'https://wa.me/'+(typeof WA_PHONE!=='undefined'?WA_PHONE:'573057637089')+'?text='+encodeURIComponent(txt);}
+  // ---- receipt on screen after a successful payment: no need to write by WhatsApp, the delivery details are already in ----
+  function num(p){return Number(String(p||'').replace(/[^\d]/g,''))||0;}
+  function shipInfo(){return window.CV_SHIP?Promise.resolve(window.CV_SHIP):fetch(API_BASE+'/hola').then(function(r){return r.json();}).then(function(d){window.CV_SHIP=(d&&d.ship)||{};return window.CV_SHIP;}).catch(function(){return {};});}
+  function deliveryText(dv,N){
+    var city=dv.city||'',where=[dv.address,dv.barrio,city].filter(Boolean).map(esc).join(', ');
+    var local=/barranquilla|soledad|puerto colombia|malambo|galapa/i.test(city);
+    var d=(document.getElementById('pmTrustDays')||{}).textContent||'1 día';
+    var when=local?'en <b>'+esc(d)+' hábil</b>':(N&&N.days?'en <b>'+esc(N.days)+' días hábiles</b>':'');
+    return (where?'Lo enviamos a <b>'+where+'</b>. ':'')+(when?'Te llega '+when+'. ':'')+'Te avisamos por WhatsApp cuando tu pedido salga'+(local?'':', con la guía de envío')+'.';
+  }
+  function showReceipt(id,d){
+    var r=d.receipt||{},items=r.items||[],dv=r.delivery||{},short=id.toUpperCase().slice(0,6);
+    var buyer=null;try{buyer=window.cvBuyer&&cvBuyer();if(!buyer)buyer=JSON.parse(localStorage.getItem('caneva_buyer_v1')||'null');}catch(e){}
+    if(!dv.city&&buyer){dv={name:String(buyer.name||'').split(' ')[0],city:buyer.city,address:buyer.address,barrio:buyer.barrio};}
+    var total=Number(r.total||d.total)||0,sum=items.reduce(function(a,it){return a+num(it.precio)*(it.qty||1);},0),disc=sum>total&&total?sum-total:0;
+    var when=r.paidAt?new Date(r.paidAt).toLocaleString('es-CO',{dateStyle:'long',timeStyle:'short',timeZone:'America/Bogota'}):new Date().toLocaleDateString('es-CO',{dateStyle:'long'});
+    var mail=r.email||(buyer&&buyer.email)||'';
+    var meth={CARD:'Tarjeta',CREDIT_CARD:'Tarjeta',PSE:'PSE',NEQUI:'Nequi',BOTON_BANCOLOMBIA:'Bancolombia',DAVIPLATA:'Daviplata'}[String(d.method||'').toUpperCase()]||'';
+    overlay('<div class="cv-rc"><div class="cv-rc-ok">✓</div><h3>¡Pago exitoso!</h3><p class="cv-rc-sub">'+(dv.name?esc(dv.name)+', gracias':'Gracias')+' por tu compra 🖤</p>'+
+      '<div class="cv-rc-card"><div class="cv-rc-hd"><b>CANEVA</b><span>'+(r.ticket?'Recibo N° '+esc(r.ticket):'Pedido #'+esc(short))+'</span></div><span class="cv-rc-paid">Pagado</span>'+
+      '<div class="cv-rc-meta">'+esc(when)+'<br>Pedido #'+esc(short)+' · Bold'+(meth?' · '+esc(meth):'')+'</div>'+
+      items.map(function(it){return '<div class="cv-rc-it">'+(it.imagen?'<img src="'+esc(it.imagen)+'" alt="">':'<i></i>')+'<div>'+esc(it.nombre)+'<small>'+(it.size?'Talla '+esc(it.size)+' · ':'')+'Cant. '+(it.qty||1)+'</small></div><em>'+money(num(it.precio)*(it.qty||1))+'</em></div>';}).join('')+
+      (disc?'<div class="cv-rc-row"><span>Subtotal</span><span>'+money(sum)+'</span></div><div class="cv-rc-row"><span>Descuento</span><span>−'+money(disc)+'</span></div>':'')+
+      '<div class="cv-rc-tot"><span>Total pagado</span><b>'+money(total)+'</b></div></div>'+
+      '<div class="cv-rc-ship" id="cvRcShip"><strong>🚚 Entrega</strong>'+deliveryText(dv,window.CV_SHIP)+'</div>'+
+      '<div class="cv-rc-mail"><strong>✉ Tu recibo</strong><p>'+(r.emailSent&&mail?'Te lo enviamos a <b>'+esc(mail)+'</b>. ¿No te llegó o lo quieres en otro correo?':'Escribe tu correo y te enviamos el recibo.')+'</p>'+
+      '<form id="cvRcForm" novalidate><input type="email" name="email" inputmode="email" autocomplete="email" placeholder="tucorreo@gmail.com" value="'+esc(mail)+'"><button type="submit">Reenviar</button></form><small id="cvRcMsg"></small></div>'+
+      '<button class="pri" type="button" data-cvb="close">Seguir comprando</button>'+
+      '<a class="cv-rc-help" href="'+waHref('Hola Caneva ✨ Tengo una pregunta sobre mi pedido #'+short+(r.ticket?' (recibo '+r.ticket+')':'')+'.')+'" target="_blank" rel="noopener">¿Tienes alguna duda? Escríbenos</a></div>');
+    if(!window.CV_SHIP)shipInfo().then(function(N){var e=document.getElementById('cvRcShip');if(e)e.innerHTML='<strong>🚚 Entrega</strong>'+deliveryText(dv,N);});
+    var f=document.getElementById('cvRcForm');
+    if(f)f.addEventListener('submit',function(e){
+      e.preventDefault();var v=f.elements.email.value.trim(),m=document.getElementById('cvRcMsg'),b=f.querySelector('button');
+      if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)){m.className='bad';m.textContent='Revisa el correo';f.elements.email.focus();return;}
+      b.disabled=true;b.textContent='Enviando…';m.className='';m.textContent='';
+      fetch(API_BASE+'/pay/bold/receipt',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id,email:v})}).then(function(r){return r.json().then(function(x){if(!r.ok||!x.ok)throw new Error(x.error||'No se pudo enviar');return x;});})
+        .then(function(){m.className='ok';m.textContent='✓ Listo, lo enviamos a '+v+'. Revisa también spam.';push({t:'k',k:'recibo_reenviado'});})
+        .catch(function(err){m.className='bad';m.textContent=err.message||'No se pudo enviar. Intenta de nuevo.';})
+        .then(function(){b.disabled=false;b.textContent='Reenviar';});
+    });
+  }
   function pay(){
     if(busyNow)return;var cart=window.CART||[];if(!cart.length){if(typeof toastCart==='function')toastCart('Tu carrito está vacío');return;}
     busyNow=true;var b=btn();if(b){b.disabled=true;b.innerHTML='Preparando pago…';}
@@ -5183,7 +5258,7 @@ body.cv-has-pbar .ann-bar{display:none!important}
     if(pend&&pend.id&&Date.now()-pend.at<3*864e5){setTimeout(function(){fetch(API_BASE+'/pay/bold/status?id='+encodeURIComponent(pend.id)).then(function(r){return r.json();}).then(function(d){
       var st=(d&&d.status)||'';
       if(st==='APPROVED'){oid=pend.id;try{localStorage.removeItem('caneva_bold_pending');window.CART=[];if(typeof saveCart==='function')saveCart();}catch(e){}
-        overlay('<div class="cv-bico">🖤</div><h3>¡Tu pago se confirmó!</h3><p>Bold aprobó el pago de tu pedido <b>#'+esc(pend.id.toUpperCase().slice(0,6))+'</b>'+(d.total?' ('+money(d.total)+')':'')+'. Escríbenos para coordinar la entrega.</p><a class="pri" href="'+waHref('Hola Caneva ✨ Mi pago con Bold del pedido #'+pend.id.toUpperCase().slice(0,6)+' ya se aprobó. 🖼 '+(d.orderUrl||'')+'\n¿Coordinamos la entrega?')+'" target="_blank" rel="noopener">Coordinar entrega por WhatsApp</a><button class="sec" type="button" data-cvb="close">Seguir mirando</button>');}
+        showReceipt(pend.id,d);}
       else if(/REJECTED|FAILED|VOIDED/.test(st)){try{localStorage.removeItem('caneva_bold_pending');}catch(e){}}
     }).catch(function(){});},2500);}
     else if(pend)localStorage.removeItem('caneva_bold_pending');}catch(e){}}
@@ -5199,8 +5274,7 @@ body.cv-has-pbar .ann-bar{display:none!important}
           try{window.CART=[];if(typeof CART!=='undefined')CART.length=0;if(typeof saveCart==='function')saveCart();localStorage.removeItem('caneva_bold_pending');}catch(e){}
           push({t:'k',k:'pago_aprobado',l:oid});
           try{if(window.fbq)fbq('track','Purchase',{value:Number(d.total)||0,currency:'COP'});}catch(e){}
-          overlay('<div class="cv-bico">🖤</div><h3>¡Pago recibido!</h3><p>Tu pedido <b>#'+esc(oid.toUpperCase().slice(0,6))+'</b> quedó pagado'+(d.total?' ('+money(d.total)+')':'')+'. Escríbenos para coordinar la entrega.</p>'+
-            '<a class="pri" href="'+waHref('Hola Caneva ✨ Acabo de pagar con Bold mi pedido #'+oid.toUpperCase().slice(0,6)+'. 🖼 '+(d.orderUrl||'')+'\n¿Coordinamos la entrega?')+'" target="_blank" rel="noopener">Coordinar entrega por WhatsApp</a><button class="sec" type="button" data-cvb="close">Seguir mirando</button>');
+          showReceipt(oid,d);
         }else if(/REJECTED|FAILED|VOIDED/.test(st)){
           push({t:'k',k:'pago_rechazado',l:st});
           overlay('<div class="cv-bico">💳</div><h3>El pago no se completó</h3><p>Bold indica que la transacción fue rechazada. Tus prendas siguen en la bolsa: puedes intentarlo de nuevo o pedir por WhatsApp.</p><button class="pri" type="button" data-cvb="retry">Intentar de nuevo</button><a class="sec" href="'+waHref('Hola Caneva ✨ Intenté pagar con Bold y no pasó. ¿Me ayudas?')+'" target="_blank" rel="noopener">Pedir por WhatsApp</a>');
