@@ -5015,6 +5015,15 @@ body.cv-has-pbar .ann-bar{display:none!important}
   },true);
   // ---- back from Bold ----
   var sp=new URLSearchParams(location.search),oid=(sp.get('bold-order-id')||'').toLowerCase();
+  // A PSE payment left "pending": check it again silently on the next visit
+  if(!oid){try{var pend=JSON.parse(localStorage.getItem('caneva_bold_pending')||'null');
+    if(pend&&pend.id&&Date.now()-pend.at<3*864e5){setTimeout(function(){fetch(API_BASE+'/pay/bold/status?id='+encodeURIComponent(pend.id)).then(function(r){return r.json();}).then(function(d){
+      var st=(d&&d.status)||'';
+      if(st==='APPROVED'){oid=pend.id;try{localStorage.removeItem('caneva_bold_pending');window.CART=[];if(typeof saveCart==='function')saveCart();}catch(e){}
+        overlay('<div class="cv-bico">🖤</div><h3>¡Tu pago se confirmó!</h3><p>Bold aprobó el pago de tu pedido <b>#'+esc(pend.id.toUpperCase().slice(0,6))+'</b>'+(d.total?' ('+money(d.total)+')':'')+'. Escríbenos para coordinar la entrega.</p><a class="pri" href="'+waHref('Hola Caneva ✨ Mi pago con Bold del pedido #'+pend.id.toUpperCase().slice(0,6)+' ya se aprobó. 🖼 '+(d.orderUrl||'')+'\n¿Coordinamos la entrega?')+'" target="_blank" rel="noopener">Coordinar entrega por WhatsApp</a><button class="sec" type="button" data-cvb="close">Seguir mirando</button>');}
+      else if(/REJECTED|FAILED|VOIDED/.test(st)){try{localStorage.removeItem('caneva_bold_pending');}catch(e){}}
+    }).catch(function(){});},2500);}
+    else if(pend)localStorage.removeItem('caneva_bold_pending');}catch(e){}}
   if(oid){
     try{history.replaceState(null,'',location.pathname);}catch(e){}
     overlay('<div class="cv-bspin"></div><h3>Verificando tu pago…</h3><p>Un momento, estamos confirmando con Bold.</p>');
