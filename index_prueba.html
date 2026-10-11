@@ -3007,7 +3007,8 @@ document.getElementById('csend').addEventListener('click',sendChat);
     }
   }
   function price(p){var n=String((p&&p.precio)||'').replace(/[^\d]/g,'');return n?parseInt(n,10):0;}
-  function pid(p){return String((p&&p.nombre)||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-');}
+  // Same id as the Meta catalog feed (/feed/meta.csv uses the product id) so ads can match views and carts to catalog items
+  function pid(p){if(p&&p.id)return String(p.id);return String((p&&p.nombre)||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-');}
   // Sends one conversion event to every configured platform. kind: view | cart | contact | checkout
   function track(kind,p,extra){
     try{
