@@ -4953,6 +4953,162 @@ body.cv-has-pbar .ann-bar{display:none!important}
 })();
 </script>
 
+<style id="cvcheckout-css">
+.cv-qty{display:flex;align-items:center;gap:.9rem;margin:.9rem 0 .2rem}
+.cv-qty>span{font-size:.58rem;letter-spacing:.28em;text-transform:uppercase;color:var(--w)}
+.cv-qbox{display:inline-flex;align-items:center;border:1px solid rgba(250,249,246,.28);border-radius:999px;overflow:hidden}
+.cv-qbox button{width:40px;height:38px;background:none;border:0;color:var(--w);font-size:1.15rem;cursor:pointer;line-height:1}
+.cv-qbox button:disabled{opacity:.3;cursor:default}
+.cv-qbox b{min-width:30px;text-align:center;font-family:'Inter',sans-serif;font-size:.9rem;font-weight:600;color:var(--w)}
+.cv-sheet{position:fixed;inset:0;z-index:1900;display:flex;align-items:flex-end;justify-content:center;background:rgba(5,4,3,.62);backdrop-filter:blur(4px);animation:cvShIn .25s ease}
+@keyframes cvShIn{from{opacity:0}to{opacity:1}}
+.cv-sheet .cv-shb{width:min(520px,100%);max-height:92vh;overflow:auto;background:#0b0a09;color:#faf9f6;border:1px solid rgba(250,249,246,.16);border-radius:22px 22px 0 0;padding:20px 18px calc(18px + env(safe-area-inset-bottom));font-family:'Inter',sans-serif;animation:cvShUp .35s cubic-bezier(.16,1,.3,1)}
+@keyframes cvShUp{from{transform:translateY(40px)}to{transform:none}}
+@media(min-width:760px){.cv-sheet{align-items:center}.cv-sheet .cv-shb{border-radius:20px}}
+.cv-shh{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.cv-shh b{font-size:.68rem;letter-spacing:.24em;text-transform:uppercase;color:#5ef0a0}
+.cv-shh button{background:none;border:0;color:#faf9f6;font-size:22px;cursor:pointer;line-height:1}
+.cv-added{display:flex;gap:14px;align-items:center}
+.cv-added img{width:74px;height:92px;object-fit:cover;border-radius:10px;background:#1a1a1a;flex:none}
+.cv-added h4{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:1.45rem;margin:0 0 3px;line-height:1.1}
+.cv-added small{display:block;color:rgba(250,249,246,.6);font-size:.72rem;letter-spacing:.04em;margin-bottom:8px}
+.cv-bagline{display:flex;justify-content:space-between;margin:16px 0 4px;padding-top:12px;border-top:1px solid rgba(250,249,246,.12);font-size:.8rem;color:rgba(250,249,246,.75)}
+.cv-bagline b{color:#faf9f6}
+.cv-sheet .cv-go,.cv-sheet .cv-stay{display:block;width:100%;margin-top:10px;padding:1rem;border-radius:999px;font-family:'Inter',sans-serif;font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;font-weight:700;cursor:pointer}
+.cv-sheet .cv-go{background:#f7f7f4;color:#050505;border:0}
+.cv-sheet .cv-stay{background:none;color:#faf9f6;border:1px solid rgba(250,249,246,.3)}
+.cv-form h3{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:1.9rem;margin:0 0 4px}
+.cv-form p.cv-sub{margin:0 0 14px;font-size:.78rem;color:rgba(250,249,246,.62);line-height:1.5}
+.cv-f{display:block;margin-bottom:10px}
+.cv-f span{display:block;font-size:.56rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(250,249,246,.6);margin-bottom:5px}
+.cv-f input,.cv-f textarea{width:100%;box-sizing:border-box;background:#141210;border:1px solid rgba(250,249,246,.18);border-radius:12px;color:#faf9f6;padding:.85rem .9rem;font:inherit;font-size:16px;outline:none}
+.cv-f input:focus,.cv-f textarea:focus{border-color:rgba(250,249,246,.55)}
+.cv-f.bad input{border-color:#ff8f80}
+.cv-f em{display:none;font-style:normal;font-size:.68rem;color:#ff8f80;margin-top:4px}
+.cv-f.bad em{display:block}
+.cv-row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:420px){.cv-row2{grid-template-columns:1fr}}
+.cv-keep{display:flex;gap:8px;align-items:center;font-size:.74rem;color:rgba(250,249,246,.7);margin:6px 0 2px}
+.cv-keep input{width:18px;height:18px}
+.cv-priv{font-size:.64rem;color:rgba(250,249,246,.45);margin-top:10px;line-height:1.45}
+.cv-priv a{color:rgba(250,249,246,.7)}
+</style>
+<script id="cvcheckout">
+// Faster buying: quantity in the product, "added to your bag" sheet (go to bag / keep shopping)
+// and delivery details (name, ID, phone, e-mail, address, city) before WhatsApp or Bold.
+(function(){
+  if(typeof addToCartByIndex!=='function')return;
+  var BKEY='caneva_buyer_v1',fromModal=false,wantQty=1;
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function money(n){return '$'+Math.round(Number(n)||0).toLocaleString('es-CO');}
+  function push(ev){try{if(window.cvStatsPush)cvStatsPush(ev);}catch(e){}}
+  function units(){return (window.CART||[]).reduce(function(s,it){return s+(Number(it.qty)||1);},0);}
+  function sheet(html,cls){closeSheet();var s=document.createElement('div');s.id='cvSheet';s.className='cv-sheet';s.innerHTML='<div class="cv-shb '+(cls||'')+'">'+html+'</div>';document.body.appendChild(s);
+    s.addEventListener('click',function(e){if(e.target===s)closeSheet();});return s;}
+  function closeSheet(){var s=document.getElementById('cvSheet');if(s)s.remove();}
+  // ---- quantity selector in the product ----
+  function qtyRow(){
+    var r=document.getElementById('cvQty');
+    if(!r){var actions=document.querySelector('#pmodal .pm-actions');if(!actions)return;
+      r=document.createElement('div');r.id='cvQty';r.className='cv-qty';
+      r.innerHTML='<span>Cantidad</span><div class="cv-qbox"><button type="button" data-cq="-1" aria-label="Menos">−</button><b id="cvQtyN">1</b><button type="button" data-cq="1" aria-label="Más">+</button></div>';
+      actions.parentNode.insertBefore(r,actions);
+      r.addEventListener('click',function(e){var b=e.target.closest('[data-cq]');if(!b)return;wantQty=Math.max(1,Math.min(10,wantQty+Number(b.dataset.cq)));paintQty();});}
+    wantQty=1;paintQty();
+  }
+  function paintQty(){var n=document.getElementById('cvQtyN');if(n)n.textContent=wantQty;var m=document.querySelector('#cvQty [data-cq="-1"]');if(m)m.disabled=wantQty<=1;}
+  if(typeof openProductModal==='function'){var oOpen=openProductModal;openProductModal=function(){var r=oOpen.apply(this,arguments);try{qtyRow();}catch(e){}return r;};}
+  // ---- after "Agregar al carrito" in the product: add the chosen quantity and show the sheet ----
+  document.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('#pmAddCart'))fromModal=true;},true);
+  var oAdd=addToCartByIndex;
+  addToCartByIndex=function(idx,open,size){
+    var modal=fromModal;fromModal=false;
+    var before=units();
+    var r=oAdd.apply(this,arguments);
+    if(!modal)return r;
+    try{
+      var p=P[idx];if(!p||units()<=before)return r;
+      var key=typeof productKey==='function'?productKey(p,size||''):'';
+      for(var k=1;k<wantQty;k++){var n0=units();if(typeof changeCartQty==='function')changeCartQty(key,1);if(units()===n0)break;}
+      wantQty=1;paintQty();
+      addedSheet(key,p);
+    }catch(e){}
+    return r;
+  };
+  function addedSheet(key,p){
+    var it=(window.CART||[]).find(function(x){return x.key===key;});if(!it)return;
+    var meta=[it.size?'Talla '+it.size:'',it.color?'Color '+it.color:''].filter(Boolean).join(' · ');
+    var s=sheet('<div class="cv-shh"><b>✓ Agregado a tu bolsa</b><button type="button" data-sh="x" aria-label="Cerrar">×</button></div>'+
+      '<div class="cv-added">'+(it.imagen?'<img src="'+esc(it.imagen)+'" alt="">':'')+'<div><h4>'+esc(it.nombre)+'</h4><small>'+esc(meta||it.precio)+(meta?' · '+esc(it.precio):'')+'</small>'+
+      '<div class="cv-qbox"><button type="button" data-sq="-1" aria-label="Menos">−</button><b id="cvShQ">'+it.qty+'</b><button type="button" data-sq="1" aria-label="Más">+</button></div></div></div>'+
+      '<div class="cv-bagline"><span>Tu bolsa: <b id="cvShU">'+units()+'</b> prenda(s)</span><b id="cvShT">'+money(typeof cartTotal==='function'?cartTotal():0)+'</b></div>'+
+      '<button type="button" class="cv-go" data-sh="bag">🛍 Ir a la bolsa y pedir</button><button type="button" class="cv-stay" data-sh="stay">Seguir comprando</button>');
+    push({t:'k',k:'agregado_hoja'});
+    s.addEventListener('click',function(e){
+      var q=e.target.closest('[data-sq]');
+      if(q){var d=Number(q.dataset.sq);if(d<0&&it.qty<=1){closeSheet();if(typeof removeCartItem==='function')removeCartItem(key);return;}if(typeof changeCartQty==='function')changeCartQty(key,d);
+        var cur=(window.CART||[]).find(function(x){return x.key===key;});document.getElementById('cvShQ').textContent=cur?cur.qty:0;document.getElementById('cvShU').textContent=units();document.getElementById('cvShT').textContent=money(cartTotal());it=cur||it;return;}
+      var b=e.target.closest('[data-sh]');if(!b)return;
+      var a=b.dataset.sh;closeSheet();
+      if(a==='bag'){if(typeof closeProductModal==='function')closeProductModal();if(typeof openCart==='function')openCart();push({t:'k',k:'ir_a_bolsa'});}
+      if(a==='stay'){if(typeof closeProductModal==='function')closeProductModal();push({t:'k',k:'seguir_comprando'});}
+    });
+  }
+  // ---- delivery details ----
+  function loadBuyer(){try{return JSON.parse(localStorage.getItem(BKEY)||'{}')||{};}catch(e){return {};}}
+  function shipCity(){try{var s=JSON.parse(localStorage.getItem('caneva_ship')||'null');return s&&s.label?String(s.label).split(',').pop().trim():'';}catch(e){return '';}}
+  window.cvBuyer=function(){var b=loadBuyer();return b&&b.name?b:null;};
+  var FIELDS=[['name','Nombre y apellido','text','name'],['doc','Cédula','tel','off'],['phone','Celular (WhatsApp)','tel','tel'],['email','Correo','email','email'],['city','Ciudad / municipio','text','address-level2'],['address','Dirección','text','street-address'],['barrio','Barrio (opcional)','text','off'],['notes','Indicaciones (opcional)','text','off']];
+  function valid(k,v){v=String(v||'').trim();
+    if(k==='name')return v.length>=4&&/\s/.test(v);
+    if(k==='doc')return /^\d{5,12}$/.test(v.replace(/[.\s-]/g,''));
+    if(k==='phone')return /^\d{10}$/.test(v.replace(/[^\d]/g,'').replace(/^57(?=\d{10}$)/,''));
+    if(k==='email')return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v);
+    if(k==='city')return v.length>=3;
+    if(k==='address')return v.length>=5;
+    return true;}
+  var MSG={name:'Escribe nombre y apellido',doc:'Solo números, sin puntos',phone:'Celular de 10 dígitos',email:'Revisa el correo',city:'¿En qué ciudad?',address:'Escribe la dirección'};
+  var pendingTarget=null,PASS=false;
+  function openForm(target){
+    var b=loadBuyer();if(!b.city)b.city=shipCity();
+    var f=function(x){return '<label class="cv-f" data-fk="'+x[0]+'"><span>'+x[1]+'</span><input name="'+x[0]+'" type="'+x[2]+'" autocomplete="'+x[3]+'" value="'+esc(b[x[0]]||'')+'"'+(x[0]==='doc'||x[0]==='phone'?' inputmode="numeric"':'')+'><em>'+(MSG[x[0]]||'')+'</em></label>';};
+    var bold=target==='cartBold';
+    var s=sheet('<div class="cv-shh"><b>📦 Datos de entrega</b><button type="button" data-sh="x" aria-label="Cerrar">×</button></div><form class="cv-form" novalidate><h3>¿A quién se lo enviamos?</h3><p class="cv-sub">Con estos datos armamos tu envío'+(bold?' y tu recibo de pago':'')+'. Solo los ve Caneva.</p>'+
+      f(FIELDS[0])+'<div class="cv-row2">'+f(FIELDS[1])+f(FIELDS[2])+'</div>'+f(FIELDS[3])+'<div class="cv-row2">'+f(FIELDS[4])+f(FIELDS[6])+'</div>'+f(FIELDS[5])+f(FIELDS[7])+
+      '<label class="cv-keep"><input type="checkbox" name="keep" checked> Recordar mis datos en este celular</label>'+
+      '<button type="submit" class="cv-go">'+(bold?'💳 Continuar al pago':'Enviar pedido por WhatsApp')+'</button><button type="button" class="cv-stay" data-sh="x">Volver a la bolsa</button>'+
+      '<div class="cv-priv">Usamos tus datos solo para tu pedido y envío. <a href="privacidad.html" target="_blank" rel="noopener">Privacidad</a></div></form>','cv-formbox');
+    push({t:'k',k:'checkout_form',l:bold?'bold':'whatsapp'});
+    var form=s.querySelector('form');
+    s.addEventListener('click',function(e){if(e.target.closest('[data-sh="x"]'))closeSheet();});
+    form.addEventListener('input',function(e){var l=e.target.closest('.cv-f');if(l&&l.classList.contains('bad')&&valid(l.dataset.fk,e.target.value))l.classList.remove('bad');});
+    form.addEventListener('submit',function(e){
+      e.preventDefault();var data={},first=null;
+      FIELDS.forEach(function(x){var el=form.elements[x[0]];var v=String(el.value||'').trim();
+        if(x[0]==='doc')v=v.replace(/[.\s-]/g,'');if(x[0]==='phone'){v=v.replace(/[^\d]/g,'');if(/^57\d{10}$/.test(v))v=v.slice(2);}
+        data[x[0]]=v;var ok=valid(x[0],v);el.closest('.cv-f').classList.toggle('bad',!ok);if(!ok&&!first)first=el;});
+      if(first){first.focus();return;}
+      try{if(form.elements.keep.checked)localStorage.setItem(BKEY,JSON.stringify(data));else localStorage.removeItem(BKEY);}catch(x){}
+      CURRENT=data;closeSheet();push({t:'k',k:'checkout_datos_ok'});
+      var btn=document.getElementById(target);if(btn){PASS=true;try{btn.click();}finally{PASS=false;}}
+    });
+    setTimeout(function(){var i=form.querySelector('input[value=""]');if(i&&window.innerWidth>760)i.focus();},350);
+  }
+  var CURRENT=null;
+  window.cvBuyer=function(){return CURRENT||null;};
+  // Registered before the Bold script: asks for the details first, then lets the click go on
+  document.addEventListener('click',function(e){
+    var t=e.target&&e.target.closest&&e.target.closest('#cartWhats,#cartBold');if(!t||PASS)return;
+    if(!(window.CART||[]).length)return;
+    e.preventDefault();e.stopImmediatePropagation();openForm(t.id);
+  },true);
+  // ---- send the details with the order ----
+  function block(b){return '📦 Datos de entrega:\n'+['Nombre: '+b.name,'Cédula: '+b.doc,'Celular: '+b.phone,'Correo: '+b.email,'Dirección: '+b.address+(b.barrio?', '+b.barrio:'')+', '+b.city,b.notes?'Indicaciones: '+b.notes:''].filter(Boolean).join('\n');}
+  if(typeof cartWhatsText==='function'){var oTxt=cartWhatsText;cartWhatsText=function(){var t=oTxt.apply(this,arguments);try{if(!CURRENT)return t;var k=t.lastIndexOf('\n¿Me confirmas');var add='\n'+block(CURRENT)+'\n';return k>=0?t.slice(0,k)+add+t.slice(k):t+add;}catch(e){}return t;};}
+  if(typeof postOrder==='function'){postOrder=function(id,items){try{fetch(API_BASE+'/order',{method:'POST',headers:{'Content-Type':'text/plain;charset=UTF-8'},body:JSON.stringify({id:id,items:items,token:(window.clubToken&&clubToken())||undefined,email:(CURRENT&&CURRENT.email)||(window.clubGuestEmail&&clubGuestEmail())||undefined,buyer:CURRENT||undefined}),keepalive:true}).catch(function(){});}catch(e){}};}
+})();
+</script>
+
 <style id="cvbold-css">
 #cartBold.cv-bold-on{display:flex!important;align-items:center;justify-content:center;gap:.5rem;width:100%;background:#f7f7f4;color:#050505;border:0;padding:1rem 1.2rem;font-family:'Inter',sans-serif;font-size:.66rem;letter-spacing:.2em;text-transform:uppercase;font-weight:700;cursor:pointer;border-radius:999px;margin-bottom:.55rem;opacity:1}
 #cartBold.cv-bold-on[disabled]{opacity:.6;cursor:wait}
@@ -4993,14 +5149,18 @@ body.cv-has-pbar .ann-bar{display:none!important}
     if(busyNow)return;var cart=window.CART||[];if(!cart.length){if(typeof toastCart==='function')toastCart('Tu carrito está vacío');return;}
     busyNow=true;var b=btn();if(b){b.disabled=true;b.innerHTML='Preparando pago…';}
     var body={items:cart.map(function(it){return {pid:it.pid||'',nombre:it.nombre,categoria:it.categoria,qty:it.qty,size:it.size||'',color:it.color||''};})};
-    try{if(window.clubToken)body.token=clubToken();if(window.clubGuestEmail)body.email=clubGuestEmail();}catch(e){}
+    var buyer=window.cvBuyer?cvBuyer():null;if(buyer){body.buyer=buyer;body.email=buyer.email;}
+    try{if(window.clubToken)body.token=clubToken();if(!body.email&&window.clubGuestEmail)body.email=clubGuestEmail();}catch(e){}
     fetch(API_BASE+'/pay/bold',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){return r.json().then(function(d){if(!r.ok||!d.ok)throw new Error(d.error||'No se pudo iniciar el pago');return d;});})
       .then(function(d){
         try{localStorage.setItem('caneva_bold_pending',JSON.stringify({id:d.orderId,amount:d.amount,at:Date.now()}));}catch(e){}
         push({t:'k',k:'pago_bold',l:money(d.amount)});
         return loadBold().then(function(){
-          var c=new BoldCheckout({orderId:d.orderId,currency:'COP',amount:String(d.amount),apiKey:d.apiKey,integritySignature:d.signature,description:d.description,
-            redirectionUrl:'https://canevacol.com'+(/^\/[a-z0-9_\-]+\.html$/i.test(location.pathname)?location.pathname:'/')+'?pago=bold',originUrl:location.href.split('#')[0]});
+          var opts={orderId:d.orderId,currency:'COP',amount:String(d.amount),apiKey:d.apiKey,integritySignature:d.signature,description:d.description,
+            redirectionUrl:'https://canevacol.com'+(/^\/[a-z0-9_\-]+\.html$/i.test(location.pathname)?location.pathname:'/')+'?pago=bold',originUrl:location.href.split('#')[0]};
+          if(buyer){opts.customerData=JSON.stringify({email:buyer.email,fullName:buyer.name,phone:buyer.phone,dialCode:'+57',documentNumber:buyer.doc,documentType:'CC'});
+            opts.billingAddress=JSON.stringify({address:(buyer.address+(buyer.barrio?', '+buyer.barrio:'')).slice(0,100),city:buyer.city,country:'CO'});}
+          var c=new BoldCheckout(opts);
           c.open();
         });
       })

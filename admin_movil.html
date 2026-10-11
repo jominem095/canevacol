@@ -1051,7 +1051,11 @@ function orderCard(o){
     ?`<div class="oact"><button class="pay" data-pay="${o.id}" data-has-user="${u?1:0}" data-mail="${esc(o.receiptEmail||"")}">Marcar pagado ✓</button><button class="cancel" data-cancel="${o.id}">Cancelar</button></div>`
     :`<div class="oact"><a href="${API_BASE}/o/${o.id}" target="_blank" rel="noopener">Ver pedido</a>${o.status==="pagado"?`<button class="pay" data-resend="${o.id}" data-mail="${esc(o.receiptEmail||(u&&u.email)||"")}">${o.emailSentAt?"Reenviar recibo":"Enviar recibo ✉"}</button>`:""}</div>`;
   const paid=o.status==="pagado"?`<div class="ocli">🧾 Recibo <b>${esc(o.ticket)}</b>${o.points?(u?` · +${o.points} pts`:` · ${o.points} pts guardados`):""} · ${o.emailSentAt?"correo enviado ✓":(o.receiptEmail?"correo no enviado":"sin correo")}</div>`:"";
-  return `<div class="ocard"><div class="ohead"><span>Ref. <b>${esc(ref)}</b></span><span>${esc(when(o.createdAt))}</span></div><div class="ocli">${cli}</div>${paid}${items}<div class="otot"><span>Total</span><span>${money(o.total)}</span></div>${acts}</div>`;
+  // Delivery details typed at checkout (name, ID, phone, e-mail, address)
+  const dv=o.delivery||null, dph=dv&&dv.phone?String(dv.phone).replace(/[^\d]/g,""):"";
+  const dlv=dv&&(dv.name||dv.address)?`<div class="ocli" style="line-height:1.55">📦 <b>${esc(dv.name||"")}</b>${dv.doc?` · CC ${esc(dv.doc)}`:""}${dph?` · <a href="https://wa.me/${dph.length===10?"57"+dph:dph}" target="_blank" rel="noopener">${esc(dv.phone)}</a>`:""}${dv.email?` · ${esc(dv.email)}`:""}<br>📍 ${esc([dv.address,dv.barrio,dv.city].filter(Boolean).join(", "))}${dv.notes?`<br>📝 ${esc(dv.notes)}`:""}</div>`:"";
+  const via=dv&&dv.pay==="bold"?`<div class="ocli">💳 ${o.status==="pagado"?"Pagado en línea con Bold":"Pago con Bold en proceso (se confirma solo)"}</div>`:"";
+  return `<div class="ocard"><div class="ohead"><span>Ref. <b>${esc(ref)}</b></span><span>${esc(when(o.createdAt))}</span></div><div class="ocli">${cli}</div>${dlv}${via}${paid}${items}<div class="otot"><span>Total</span><span>${money(o.total)}</span></div>${acts}</div>`;
 }
 async function payOrder(id,hasUser,mail){
   let email="";
