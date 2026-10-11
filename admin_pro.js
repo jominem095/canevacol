@@ -569,13 +569,68 @@
     return api("/admin/dashboard?days="+C.days).then(function(d){C.data=d;if(silent&&document.getElementById("ctlLive"))ctlFill();else ctlRender();})
       .catch(function(e){if(silent)return;var m=e.message||"";if(/Worker|Ruta|404/.test(m))m="Para ver el Centro de control, pega el Worker v33 en Cloudflare.";C.el.innerHTML=empty(esc(m));});
   }
+  // ---------- 🔥 Promo relámpago (store top bar with countdown, bag progress, WhatsApp line). Needs Worker v50 ----------
+  var PM={cfg:null};
+  function pmHead(p){
+    if(p.text)return p.text;
+    if(p.kind==="envio")return p.min>1?"Lleva "+p.min+" prendas y el envío es GRATIS":"Envío GRATIS en tu pedido";
+    if(p.kind==="pct")return p.min>1?p.pct+"% OFF llevando "+p.min+" prendas":p.pct+"% OFF en toda la tienda";
+    return "La 2ª prenda con "+p.pct+"% OFF";
+  }
+  function pmLocal(iso){if(!iso)return "";var d=new Date(iso),p=function(x){return (x<10?"0":"")+x;};return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+"T"+p(d.getHours())+":"+p(d.getMinutes());}
+  function pmLoad(){
+    var el=document.getElementById("ctlPromo");if(!el)return;
+    fetch(OPT.api+"/config?ts="+Date.now(),{cache:"no-store"}).then(function(r){return r.json();}).then(function(d){PM.cfg=(d&&d.config)||{};pmRender();}).catch(function(){el.innerHTML="";});
+  }
+  function pmForm(){
+    var v=function(id){var e=document.getElementById(id);return e?e.value:"";};
+    var until=v("pmUntil");
+    return {enabled:!!(document.getElementById("pmOn")||{}).checked,kind:v("pmKind")||"envio",min:parseInt(v("pmMin"),10)||1,pct:parseInt(v("pmPct"),10)||10,code:v("pmCode").trim().toUpperCase().replace(/[^A-Z0-9-]/g,""),until:until?new Date(until).toISOString():"",text:v("pmText").trim()};
+  }
+  function pmPreview(){
+    var f=pmForm(),b=document.getElementById("pmPrev");if(!b)return;
+    document.getElementById("pmMinW").style.display=f.kind==="segunda"?"none":"";
+    document.getElementById("pmPctW").style.display=f.kind==="envio"?"none":"";
+    var ph=document.getElementById("pmText");if(ph)ph.placeholder=pmHead(Object.assign({},f,{text:""}));
+    b.innerHTML='<span class="cp-pmdot"></span>🔥 '+esc(pmHead(f))+(f.code?" · código "+esc(f.code):"")+(f.until?' <em>'+esc(pmLeft(f.until))+'</em>':"");
+  }
+  function pmLeft(iso){var ms=Date.parse(iso)-Date.now();if(!(ms>0))return "terminada";var d=Math.floor(ms/864e5),h=Math.floor(ms%864e5/36e5),m=Math.floor(ms%36e5/6e4);return (d?d+"d ":"")+h+"h "+m+"m";}
+  function pmRender(){
+    var el=document.getElementById("ctlPromo");if(!el||!PM.cfg)return;
+    var p=Object.assign({enabled:false,kind:"envio",min:2,pct:10,code:"",until:"",text:""},PM.cfg.promo||{});
+    var live=p.enabled&&(!p.until||Date.parse(p.until)>Date.now()),ended=p.enabled&&p.until&&Date.parse(p.until)<=Date.now();
+    el.innerHTML='<div class="cp-card cp-pm'+(live?" on":"")+'"><div class="cp-cardh"><div><b style="font-size:15px">🔥 Promo relámpago</b><div class="cp-dim" style="font-size:12.5px;margin-top:3px">Una barra con cuenta regresiva arriba de la tienda, un aviso en cada prenda y en la bolsa "te falta 1 prenda para…". La promo sale también en el WhatsApp del pedido y Caneva AI la menciona.</div></div>'+
+      '<span class="cp-pmst '+(live?"on":ended?"end":"")+'">'+(live?"● Activa"+(p.until?" · termina en "+pmLeft(p.until):""):ended?"Terminó":"Apagada")+'</span></div>'+
+      '<label class="cp-pmsw"><input type="checkbox" id="pmOn"'+(p.enabled?" checked":"")+'> <span>Promo activada en la tienda</span></label>'+
+      '<div class="cp-2"><div class="cp-field"><label>Tipo de promo</label><select id="pmKind" class="cp-sel">'+[["envio","🚚 Envío gratis llevando X prendas"],["pct","💸 % de descuento llevando X prendas"],["segunda","👯 La 2ª prenda con % de descuento"]].map(function(o){return '<option value="'+o[0]+'"'+(p.kind===o[0]?" selected":"")+'>'+o[1]+'</option>';}).join("")+'</select></div>'+
+        '<div class="cp-2"><div class="cp-field" id="pmMinW"><label>Prendas mínimas</label><input id="pmMin" type="number" min="1" max="10" value="'+p.min+'"></div><div class="cp-field" id="pmPctW"><label>% de descuento</label><input id="pmPct" type="number" min="1" max="90" value="'+p.pct+'"></div></div></div>'+
+      '<div class="cp-2"><div class="cp-field"><label>Termina (vacío = sin fecha)</label><input id="pmUntil" type="datetime-local" value="'+pmLocal(p.until)+'"><div class="cp-pmq"><button type="button" data-pmq="hoy">Hoy 11:59 pm</button><button type="button" data-pmq="48">En 48 h</button><button type="button" data-pmq="dom">Este domingo</button><button type="button" data-pmq="no">Sin fecha</button></div></div>'+
+        '<div class="cp-field"><label>Código (opcional)</label><input id="pmCode" maxlength="20" placeholder="AMORE" value="'+esc(p.code)+'"></div></div>'+
+      '<div class="cp-field"><label>Texto de la barra (opcional, si no se arma solo)</label><input id="pmText" maxlength="90" value="'+esc(p.text)+'"></div>'+
+      '<div class="cp-dim" style="font-size:11.5px;margin:10px 0 4px">Así se verá arriba de la tienda:</div><div class="cp-pmprev" id="pmPrev"></div>'+
+      '<button type="button" class="cp-btn full" id="pmSave" style="margin-top:12px">Guardar promo</button></div>';
+    pmPreview();
+    el.oninput=el.onchange=function(e){if(e.target.closest("input,select"))pmPreview();};
+    el.onclick=function(e){
+      var q=e.target.closest("[data-pmq]");
+      if(q){var d=new Date(),k=q.dataset.pmq;if(k==="hoy")d.setHours(23,59,0,0);else if(k==="48")d=new Date(Date.now()+48*36e5);else if(k==="dom"){d.setDate(d.getDate()+((7-d.getDay())%7));d.setHours(23,59,0,0);}
+        document.getElementById("pmUntil").value=k==="no"?"":pmLocal(d.toISOString());return pmPreview();}
+      if(e.target.closest("#pmSave")){
+        var f=pmForm();if(f.enabled&&f.until&&Date.parse(f.until)<=Date.now()){toast("La fecha de fin ya pasó",true);return;}
+        busy(true,"Guardando promo…");
+        api("/admin/config",{method:"POST",body:Object.assign({},PM.cfg,{promo:f})}).then(function(d){busy(false);PM.cfg=d.config||Object.assign({},PM.cfg,{promo:f});
+          if(!PM.cfg.promo||PM.cfg.promo.kind===undefined){toast("Falta pegar el Worker v50 para guardar la promo",true);return;}
+          toast(f.enabled?"🔥 Promo activa en la tienda":"Promo apagada");pmRender();}).catch(function(x){busy(false);toast(x.message,true);});
+      }
+    };
+  }
   function ctlRender(){
     if(C.lmap){try{C.lmap.remove();}catch(e){}C.lmap=null;C.layer=null;}
     C.el.innerHTML='<div class="cp-head"><div><div class="cp-eyeb"><span class="cp-livedot"></span> En vivo · se actualiza solo</div><h2 class="cp-h">Centro de control</h2></div>'+
       '<div class="cp-seg">'+[[1,"Hoy"],[7,"7 días"],[30,"30 días"]].map(function(x){return '<button type="button" data-cdays="'+x[0]+'" class="'+(x[0]===C.days?"on":"")+'">'+x[1]+'</button>';}).join("")+'</div></div>'+
       '<div class="cp-ctl-top"><div class="cp-card cp-livecard" id="ctlLive"></div><div class="cp-card cp-mapcard"><div id="ctlMap" class="cp-vmap cp-ctlmap"></div></div></div>'+
-      '<div id="ctlNums"></div><div id="ctlDiag"></div><div id="ctlQual"></div><div id="ctlIg"></div><div id="ctlLinks"></div><div id="ctlTasks"></div><div id="ctlOrig"></div><div id="ctlSet"></div>';
-    ctlFill();
+      '<div id="ctlPromo"></div><div id="ctlNums"></div><div id="ctlDiag"></div><div id="ctlQual"></div><div id="ctlIg"></div><div id="ctlLinks"></div><div id="ctlTasks"></div><div id="ctlOrig"></div><div id="ctlSet"></div>';
+    ctlFill();pmLoad();
     if(!C.timer)C.timer=setInterval(function(){if(C.el&&C.el._cpKind==="control"&&C.el.offsetParent&&document.visibilityState==="visible")ctlLoad(true);},30000);
   }
   function ctlFill(){
@@ -1034,6 +1089,12 @@
   ".cp-vb i.hot{border-color:rgba(255,143,128,.6);color:#ffb4a8}.cp-vb i.warm{border-color:rgba(244,196,106,.55);color:#f4c46a}",
   "@media(max-width:600px){.cp-lkurl{flex-wrap:wrap}.cp-lkurl code{flex:1 1 100%;white-space:normal;word-break:break-all;padding-bottom:2px}}",
   ".cp-lkpre{display:flex;align-items:center;border:1px solid var(--b);border-radius:12px;overflow:hidden;background:var(--k)}.cp-lkpre span{padding:0 4px 0 12px;color:var(--dim);font-size:13.5px;white-space:nowrap}.cp-lkpre input{flex:1;min-width:0;border:0!important;background:none!important;padding:11px 12px 11px 0!important;font-size:14px;color:var(--w);outline:none}",
+  ".cp-pm{margin-bottom:14px}.cp-pm.on{border-color:rgba(255,143,128,.55);background:linear-gradient(120deg,rgba(255,143,128,.09),transparent)}",
+  ".cp-pmst{font-size:12px;font-weight:600;border:1px solid var(--b);border-radius:999px;padding:5px 10px;white-space:nowrap;color:var(--dim)}.cp-pmst.on{color:#ff8f80;border-color:rgba(255,143,128,.6)}.cp-pmst.end{color:#f4c46a}",
+  ".cp-pmsw{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;margin:6px 0 4px;cursor:pointer}.cp-pmsw input{width:20px;height:20px}",
+  ".cp-pmq{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.cp-pmq button{background:none;border:1px solid var(--b);color:var(--w);border-radius:999px;padding:5px 10px;font:inherit;font-size:11.5px;cursor:pointer}",
+  ".cp-pmprev{display:flex;align-items:center;justify-content:center;gap:8px;min-height:36px;background:#f7f7f4;color:#050505;border-radius:8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;padding:6px 12px;text-align:center}.cp-pmprev em{font-style:normal;background:#050505;color:#f7f7f4;border-radius:3px;padding:3px 6px}",
+  ".cp-pmdot{width:7px;height:7px;border-radius:50%;background:#e0302a;flex:none}",
   ".cp-lkok{border-color:rgba(94,240,160,.45);background:linear-gradient(120deg,rgba(94,240,160,.08),transparent);margin-bottom:12px}",
   ".cp-lked{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}.cp-lked .cp-sel{flex:1 1 180px;min-width:0}",
   ".cp-seg button[data-lktdest]{padding:9px 13px}",
