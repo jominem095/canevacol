@@ -4853,5 +4853,105 @@ body.cv-fast .bw-logo-wrap{transform:scale(.82);transform-origin:center top;marg
 })();
 </script>
 
+<style id="cvpromo-css">
+.cv-pbar{position:fixed;top:0;left:0;right:0;z-index:960;height:36px;display:flex;align-items:center;justify-content:center;gap:.7rem;background:#f7f7f4;color:#050505;font-family:'Inter',sans-serif;font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;font-weight:700;cursor:pointer;padding:0 2.4rem;white-space:nowrap;overflow:hidden}
+.cv-pbar .cv-pdot{width:7px;height:7px;border-radius:50%;background:#e0302a;box-shadow:0 0 0 0 rgba(224,48,42,.6);animation:cvPulse 1.6s infinite;flex:none}
+@keyframes cvPulse{0%{box-shadow:0 0 0 0 rgba(224,48,42,.55)}70%{box-shadow:0 0 0 9px rgba(224,48,42,0)}100%{box-shadow:0 0 0 0 rgba(224,48,42,0)}}
+.cv-pbar .cv-ptxt{overflow:hidden;text-overflow:ellipsis}
+.cv-pbar .cv-pclock{font-variant-numeric:tabular-nums;background:#050505;color:#f7f7f4;padding:.28rem .5rem;border-radius:3px;letter-spacing:.08em;flex:none}
+.cv-pbar .cv-px{position:absolute;right:.5rem;top:50%;transform:translateY(-50%);background:none;border:0;font-size:18px;line-height:1;cursor:pointer;color:inherit;padding:.3rem}
+body.cv-has-pbar nav{top:36px!important}
+body.cv-has-pbar .ann-bar{display:none!important}
+@media(max-width:720px){.cv-pbar{font-size:.5rem;letter-spacing:.08em;gap:.45rem;padding:0 2rem 0 .7rem;justify-content:flex-start}}
+.cv-ppill{display:inline-flex;align-items:center;gap:.4rem;margin:.55rem 0 .1rem;padding:.38rem .7rem;border:1px solid rgba(250,249,246,.28);border-radius:999px;font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--w)}
+.cv-ppill b{color:#fff;font-weight:700}
+.cv-pbag{margin:0 0 .9rem;padding:.85rem .95rem;border:1px solid rgba(250,249,246,.22);border-radius:10px;background:linear-gradient(120deg,rgba(250,249,246,.07),rgba(250,249,246,.015));font-family:'Inter',sans-serif}
+.cv-pbag.won{border-color:rgba(94,240,160,.55);background:linear-gradient(120deg,rgba(94,240,160,.12),rgba(94,240,160,.02))}
+.cv-pbag p{margin:0 0 .55rem;font-size:.74rem;line-height:1.45;color:var(--w)}
+.cv-pbag p b{font-weight:700}
+.cv-pbag .cv-ptrack{height:6px;border-radius:99px;background:rgba(250,249,246,.12);overflow:hidden}
+.cv-pbag .cv-ptrack i{display:block;height:100%;background:#f7f7f4;border-radius:99px;transition:width .5s cubic-bezier(.16,1,.3,1)}
+.cv-pbag.won .cv-ptrack i{background:#5ef0a0}
+.cv-pbag small{display:block;margin-top:.45rem;font-size:.6rem;color:var(--dim);letter-spacing:.06em}
+.cv-pfoot{display:flex;justify-content:space-between;font-family:'Inter',sans-serif;font-size:.72rem;margin:.2rem 0;color:#5ef0a0}
+.cv-pfoot.tot{color:var(--w);font-weight:700;font-size:.8rem}
+</style>
+<script id="cvpromo">
+// Flash promo set in the admin (Control → 🔥 Promo relámpago): top bar with countdown, pill in the product,
+// progress in the bag ("te falta 1 prenda…"), savings in the bag total and the promo line in the WhatsApp order.
+(function(){
+  var PR=null,timer=null;
+  function money(n){return '$'+Math.round(Number(n)||0).toLocaleString('es-CO');}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function active(){return PR&&PR.enabled&&(!PR.until||Date.parse(PR.until)>Date.now());}
+  function plural(n){return n+' prenda'+(n>1?'s':'');}
+  function headline(){
+    if(PR.text)return PR.text;
+    if(PR.kind==='envio')return PR.min>1?'Lleva '+plural(PR.min)+' y el envío es GRATIS':'Envío GRATIS en tu pedido';
+    if(PR.kind==='pct')return PR.min>1?PR.pct+'% OFF llevando '+plural(PR.min):PR.pct+'% OFF en toda la tienda';
+    return 'La 2ª prenda con '+PR.pct+'% OFF';
+  }
+  function units(){var n=0;(window.CART||[]).forEach(function(it){n+=Number(it.qty)||1;});return n;}
+  function need(){return PR.kind==='segunda'?2:PR.min;}
+  // Discount in pesos for the current bag (shipping promo has no peso amount: Caneva confirms the shipping)
+  function savings(){
+    if(!active()||PR.kind==='envio')return 0;
+    var prices=[];(window.CART||[]).forEach(function(it){for(var k=0;k<(Number(it.qty)||1);k++)prices.push(Number(it.price)||0);});
+    if(prices.length<need())return 0;
+    if(PR.kind==='pct')return prices.reduce(function(a,b){return a+b;},0)*PR.pct/100;
+    prices.sort(function(a,b){return b-a;});var s=0;for(var i=1;i<prices.length;i+=2)s+=prices[i]*PR.pct/100;return s;
+  }
+  function clock(){
+    if(!PR.until)return '';var ms=Date.parse(PR.until)-Date.now();if(ms<=0)return '00:00:00';
+    var d=Math.floor(ms/864e5),h=Math.floor(ms%864e5/36e5),m=Math.floor(ms%36e5/6e4),s=Math.floor(ms%6e4/1e3),p=function(x){return (x<10?'0':'')+x;};
+    return (d?d+'d ':'')+p(h)+':'+p(m)+':'+p(s);
+  }
+  function bar(){
+    var b=document.getElementById('cvPBar');
+    var closed=false;try{closed=sessionStorage.getItem('cv_pbar_x')===headline();}catch(e){}
+    if(!active()||closed){if(b)b.remove();document.body.classList.remove('cv-has-pbar');return;}
+    if(!b){b=document.createElement('div');b.id='cvPBar';b.className='cv-pbar';b.setAttribute('role','button');document.body.appendChild(b);
+      b.addEventListener('click',function(e){if(e.target.closest('.cv-px')){try{sessionStorage.setItem('cv_pbar_x',headline());}catch(x){}b.remove();document.body.classList.remove('cv-has-pbar');return;}
+        var c=document.getElementById('catalogo');if(c)c.scrollIntoView({behavior:'smooth'});if(window.cvStatsPush)try{cvStatsPush({t:'k',k:'promo_barra'});}catch(x){}});}
+    b.innerHTML='<span class="cv-pdot"></span><span class="cv-ptxt">🔥 '+esc(headline())+(PR.code?' · código '+esc(PR.code):'')+'</span>'+(PR.until?'<span class="cv-pclock" id="cvPClock">'+clock()+'</span>':'')+'<button class="cv-px" type="button" aria-label="Cerrar">×</button>';
+    document.body.classList.add('cv-has-pbar');
+  }
+  function tick(){var c=document.getElementById('cvPClock');if(c)c.textContent=clock();if(PR&&PR.until&&Date.parse(PR.until)<=Date.now()){clearInterval(timer);timer=null;refresh();}}
+  function pill(){
+    var old=document.getElementById('cvPPill');if(old)old.remove();
+    if(!active())return;var price=document.getElementById('pmPrice');if(!price)return;
+    var d=document.createElement('div');d.id='cvPPill';d.className='cv-ppill';d.innerHTML='🔥 <b>'+esc(headline())+'</b>'+(PR.until?' · <span>termina en '+clock().replace(/:\d\d$/,'')+'</span>':'');
+    price.parentNode.insertBefore(d,price.nextSibling);
+  }
+  function bag(){
+    var items=document.getElementById('cartItems');if(!items)return;
+    var old=document.getElementById('cvPBag');if(old)old.remove();var oldF=document.getElementById('cvPFoot');if(oldF)oldF.remove();
+    if(!active()||!(window.CART||[]).length)return;
+    var n=units(),goal=need(),won=n>=goal,left=goal-n;
+    var msg=won?(PR.kind==='envio'?'🎉 <b>¡Ganaste envío GRATIS!</b>':PR.kind==='pct'?'🎉 <b>¡Ganaste '+PR.pct+'% OFF!</b> Ahorras '+money(savings()):'🎉 <b>¡Tu 2ª prenda tiene '+PR.pct+'% OFF!</b> Ahorras '+money(savings())):
+      ('Te falta <b>'+plural(left)+'</b> para '+(PR.kind==='envio'?'<b>envío GRATIS</b> 🚚':PR.kind==='pct'?'<b>'+PR.pct+'% OFF</b>':'que la 2ª tenga <b>'+PR.pct+'% OFF</b>'));
+    var box=document.createElement('div');box.id='cvPBag';box.className='cv-pbag'+(won?' won':'');
+    box.innerHTML='<p>'+msg+'</p><div class="cv-ptrack"><i style="width:'+Math.min(100,Math.round(n/goal*100))+'%"></i></div>'+(PR.until?'<small>⏳ La promo termina en '+clock()+(PR.code?' · código '+esc(PR.code):'')+'</small>':(PR.code?'<small>Código '+esc(PR.code)+'</small>':''));
+    items.insertBefore(box,items.firstChild);
+    var sv=savings(),row=document.querySelector('#cartDrawer .cart-row');
+    if(sv>0&&row&&typeof cartTotal==='function'){var f=document.createElement('div');f.id='cvPFoot';f.innerHTML='<div class="cv-pfoot"><span>Descuento promo</span><span>−'+money(sv)+'</span></div><div class="cv-pfoot tot"><span>Total con promo</span><span>'+money(cartTotal()-sv)+'</span></div>';row.parentNode.insertBefore(f,row.nextSibling);}
+    if(won&&!bag.sent){bag.sent=1;if(window.cvStatsPush)try{cvStatsPush({t:'k',k:'promo_ganada',l:headline().slice(0,40)});}catch(x){}}
+  }
+  function refresh(){bar();pill();bag();if(active()&&PR.until&&!timer)timer=setInterval(tick,1000);}
+  function setCfg(cfg){PR=cfg&&cfg.promo?cfg.promo:null;refresh();}
+  // ---- hooks ----
+  if(typeof window.applySiteConfig==='function'){var oApply=window.applySiteConfig;window.applySiteConfig=function(cfg){var r=oApply.apply(this,arguments);try{setCfg(cfg);}catch(e){}return r;};}
+  if(window.SITE_CONFIG)setCfg(window.SITE_CONFIG);
+  if(typeof renderCart==='function'){var oCart=renderCart;renderCart=function(){var r=oCart.apply(this,arguments);try{bag();}catch(e){}return r;};}
+  if(typeof openProductModal==='function'){var oOpen=openProductModal;openProductModal=function(){var r=oOpen.apply(this,arguments);try{pill();}catch(e){}return r;};}
+  if(typeof cartWhatsText==='function'){var oTxt=cartWhatsText;cartWhatsText=function(){var t=oTxt.apply(this,arguments);try{
+    if(!active()||!(window.CART||[]).length)return t;
+    var won=units()>=need(),sv=savings();
+    var line=won?('🎁 Promo: '+headline()+(PR.code?' · código '+PR.code:'')+(sv>0?'\nDescuento: −'+money(sv)+' · Total con promo: '+money(cartTotal()-sv):'')):('🎁 Vi la promo: '+headline()+(PR.code?' · código '+PR.code:''));
+    var k=t.lastIndexOf('\n¿Me confirmas');return k>=0?t.slice(0,k)+'\n'+line+t.slice(k):t+'\n'+line;
+  }catch(e){}return t;};}
+})();
+</script>
+
 </body>
 </html>
