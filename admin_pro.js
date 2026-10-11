@@ -1,6 +1,6 @@
 /* CANEVA Admin PRO — Inventario + Reportes.
    Shared by admin_movil.html (phone) and admin.html (computer).
-   Usage: CanevaPro.mount(element, "inventario" | "reportes" | "control", { api, token: () => "...", onChange: () => {} })
+   Usage: CanevaPro.mount(element, "inventario" | "reportes" | "control" | "enlaces", { api, token: () => "...", onChange: () => {} })
    Needs Worker v23 (routes /admin/inventory*, /admin/reports); the "Visitantes" card needs Worker v30 (/admin/visits). */
 (function(){
   "use strict";
@@ -684,6 +684,7 @@
     if(K2.prods)return;K2.prods=[];
     fetch(OPT.api+"/catalog?ts="+Date.now(),{cache:"no-store"}).then(function(r){return r.json();}).then(function(d){
       K2.prods=(d.products||[]).filter(function(p){return !/domicil|domicl|mayorista|others/i.test(p.categoria||"")&&!/^0+$|^agotad|^ocult/i.test(String(p.stock||"").trim());}).sort(function(a,b){return String(a.nombre).localeCompare(String(b.nombre));});
+      if(LKT.el&&document.body.contains(LKT.el)&&K2.data)lktRender();
       var sel=document.getElementById("lkProd");if(sel)sel.innerHTML=lkProdOpts();var sc=document.getElementById("lkCat");if(sc){var v=sc.value;sc.innerHTML=lkCatOpts();sc.value=v;}
     }).catch(function(){});
   }
@@ -701,7 +702,7 @@
     var cats=(window.P||[]).map?[]:[];
     el.innerHTML='<div class="cp-sect" style="margin-top:22px">🔗 Enlaces de seguimiento · saber qué historia, reel o anuncio te trae clientas</div>'+
       '<div class="cp-card"><div class="cp-cardh"><div><b style="font-size:14.5px">Crea un enlace para cada cosa que publiques</b><div class="cp-dim" style="font-size:12.5px;margin-top:3px">Ej: "Historia vestido rojo", "Bio", "Reel jeans". Pega ese enlace en la historia o en la bio y aquí verás cuántas personas trajo y qué hicieron.</div></div>'+
-      '<button type="button" class="cp-btn'+(K2.form?" ghost":"")+'" data-a="lkform">'+(K2.form?"Cerrar":"+ Nuevo enlace")+'</button></div>'+
+      '<button type="button" class="cp-btn" data-goto="enlaces">+ Nuevo enlace</button></div>'+
       (K2.form?'<div class="cp-2"><div class="cp-field"><label>Nombre</label><input id="lkName" maxlength="80" placeholder="Historia vestido rojo"></div><div class="cp-field"><label>¿Dónde lo vas a poner?</label><select id="lkPlace" class="cp-sel">'+(D.places||[]).map(function(p){return '<option>'+esc(p)+'</option>';}).join("")+'</select></div></div>'+
         '<div class="cp-field"><label>📂 ¿A qué categoría de tu tienda lleva?</label><select id="lkCat" class="cp-sel">'+lkCatOpts()+'</select></div>'+
         '<div class="cp-field"><label>👗 …o directo a una prenda (opcional)</label><select id="lkProd" class="cp-sel">'+lkProdOpts()+'</select></div>'+
@@ -714,6 +715,80 @@
           (l.cities&&l.cities.length?'<div class="cp-dim" style="font-size:12px;margin-top:6px">📍 '+esc(l.cities.join(" · "))+'</div>':'')+'</div>';}).join("")+'</div>':'')+
       '<div class="cp-card" style="margin-top:12px"><div class="cp-cardh"><div><b style="font-size:14px">📢 Para tus anuncios de Meta</b><div class="cp-dim" style="font-size:12.5px;margin-top:3px">En el Administrador de anuncios, al crear el anuncio, abajo en <b>Parámetros de URL</b> pega esto. Así sabrás qué campaña, qué anuncio y si fue en historias, reels o feed.</div></div></div>'+
       '<div class="cp-lkurl"><code>'+esc(META_PARAMS)+'</code><button type="button" class="cp-mini pri" data-lkcopy="'+esc(META_PARAMS)+'">Copiar</button></div></div>';
+  }
+  // ---------- 🔗 Enlaces tab: build tracking links that open a category or a garment ----------
+  var LKT={el:null,dest:"cat",created:null,edit:null,q:""};
+  var LK_HELP={
+    "Historia de Instagram":"En Instagram: ✈️ en la publicación → Agregar a tu historia → sticker \"Enlace\" → pega el enlace → texto \"Pídelo aquí 💗\".",
+    "Bio de Instagram":"En Instagram: Editar perfil → Enlaces → Agregar enlace externo → pega el enlace → título \"Compra aquí 🛍\".",
+    "Publicación":"En una publicación el enlace no se puede tocar: escribe \"link en la bio\" y compártela en historia con el sticker de enlace.",
+    "Reel":"En el reel escribe \"link en la bio\"; o compártelo en tu historia con el sticker \"Enlace\".",
+    "TikTok":"En TikTok: Editar perfil → Sitio web → pega el enlace (o déjalo en el comentario fijado).",
+    "Facebook":"Pégalo en la publicación de Facebook: allá sí se puede tocar.",
+    "Estado de WhatsApp":"En WhatsApp: Estados → escribe un texto y pega el enlace.",
+    "Mensaje de WhatsApp":"Pégalo en el chat o en tus listas de difusión.",
+    "Influencer":"Envíaselo a la influencer para que lo ponga en su historia con el sticker \"Enlace\"."
+  };
+
+  function lktLoad(){
+    if(!K2.prods)lkProducts();
+    LKT.el.innerHTML=empty("Cargando enlaces…");
+    return api("/admin/links?days=30").then(function(d){K2.data=d;lktRender();}).catch(function(e){LKT.el.innerHTML=empty(/Worker|Ruta|404/.test(e.message||"")?"Pega el Worker v47 en Cloudflare.":esc(e.message));});
+  }
+  function lktCatName(v){return v==="Nuevo"?"✨ Lo nuevo":v;}
+  function lktDestLabel(l){return l.prod?"👗 "+(l.prodName||l.prod.split("--")[0]):l.cat?"📂 "+lktCatName(l.cat):"🏠 Portada";}
+  function lktProdOpts(sel){var q=norm(LKT.q);return '<option value="">Elige la prenda…</option>'+(K2.prods||[]).filter(function(p){return !q||norm(p.nombre+" "+p.categoria).indexOf(q)>=0;}).map(function(p){var s=prodSlug(p);return '<option value="'+esc(s)+'"'+(s===sel?" selected":"")+'>'+esc(p.nombre+" · "+p.precio)+'</option>';}).join("");}
+  function lktCatOpts(sel){var cnt={};(K2.prods||[]).forEach(function(p){if(p.categoria)cnt[p.categoria]=(cnt[p.categoria]||0)+1;});
+    return '<option value="Nuevo"'+(sel==="Nuevo"?" selected":"")+'>✨ Lo nuevo</option>'+Object.keys(cnt).sort(function(a,b){return cnt[b]-cnt[a];}).map(function(c){return '<option value="'+esc(c)+'"'+(c===sel?" selected":"")+'>'+esc(c)+' ('+cnt[c]+(cnt[c]===1?" prenda":" prendas")+')</option>';}).join("");}
+  function lktForm(){
+    var v=function(id){var e=document.getElementById(id);return e?e.value:"";};
+    var dest=LKT.dest,cat=dest==="cat"?v("lktCat"):"",prod=dest==="prod"?v("lktProd"):"";
+    return {name:v("lktName").trim(),place:v("lktPlace"),cat:cat,prod:prod};
+  }
+  function lktPreview(){var f=lktForm(),b=document.getElementById("lktPrev");if(!b)return;
+    b.textContent=lkUrl({code:"XXXX",cat:f.cat,prod:f.prod}).replace("https://","");
+    var ok=document.getElementById("lktGo");if(ok)ok.disabled=!f.name||(LKT.dest==="cat"&&!f.cat)||(LKT.dest==="prod"&&!f.prod);}
+  function lktRender(){
+    var el=LKT.el,D=K2.data;if(!el||!D)return;
+    var L=D.links||[],best=L.slice().sort(function(a,b){return (b.wa+b.dm+b.bag)-(a.wa+a.dm+a.bag)||b.visits-a.visits;})[0];
+    var C=LKT.created;
+    el.innerHTML='<div class="cp-head"><div><div class="cp-eyeb">Instagram · TikTok · WhatsApp</div><h2 class="cp-h">🔗 Enlaces</h2><p class="cp-dim" style="max-width:640px;font-size:13.5px;margin:6px 0 0">Crea un enlace para cada historia, post o bio. Lleva a la clienta directo a una categoría o a una prenda de tu tienda, y aquí ves cuántas entraron, miraron, agregaron a la bolsa y escribieron.</p></div></div>'+
+      (C?'<div class="cp-card cp-lkok"><b>✅ Enlace "'+esc(C.name)+'" creado y copiado</b><div class="cp-lkurl"><code>'+esc(lkUrl(C).replace("https://",""))+'</code><button type="button" class="cp-mini pri" data-lkcopy="'+esc(lkUrl(C))+'">Copiar</button><a class="cp-mini" href="'+esc(lkUrl(C))+'" target="_blank" rel="noopener">Probar ↗</a></div>'+
+        (LK_HELP[C.place]?'<div class="cp-dim" style="font-size:13px;margin-top:8px">👉 '+esc(LK_HELP[C.place])+'</div>':'')+'</div>':'')+
+      '<div class="cp-card"><div class="cp-eyeb" style="margin-bottom:10px">Nuevo enlace</div>'+
+        '<div class="cp-2"><div class="cp-field"><label>1. Nombre (para reconocerlo)</label><input id="lktName" maxlength="80" placeholder="Ej: Historia Body Amore"></div>'+
+        '<div class="cp-field"><label>2. ¿Dónde lo vas a poner?</label><select id="lktPlace" class="cp-sel">'+(D.places||[]).map(function(p){return '<option>'+esc(p)+'</option>';}).join("")+'</select></div></div>'+
+        '<div class="cp-field"><label>3. ¿A dónde lleva a la clienta?</label><div class="cp-seg">'+[["cat","📂 Una categoría"],["prod","👗 Una prenda"],["home","🏠 La portada"]].map(function(x){return '<button type="button" data-lktdest="'+x[0]+'" class="'+(LKT.dest===x[0]?"on":"")+'">'+x[1]+'</button>';}).join("")+'</div></div>'+
+        (LKT.dest==="cat"?'<div class="cp-field"><label>Categoría</label><select id="lktCat" class="cp-sel">'+lktCatOpts("")+'</select></div>':'')+
+        (LKT.dest==="prod"?'<div class="cp-field"><label>Prenda</label><input id="lktQ" placeholder="Buscar prenda…" value="'+esc(LKT.q)+'" style="margin-bottom:6px"><select id="lktProd" class="cp-sel">'+lktProdOpts("")+'</select></div>':'')+
+        '<div class="cp-lkurl"><code id="lktPrev"></code><span class="cp-dim" style="font-size:11.5px">vista previa</span></div>'+
+        '<button type="button" class="cp-btn full" id="lktGo" data-lktcreate>Crear y copiar enlace</button></div>'+
+      '<div class="cp-sect" style="margin-top:22px">Tus enlaces · últimos 30 días</div>'+
+      (L.length?'<div class="cp-lklist">'+L.map(function(l){var conv=l.visits?Math.round((l.wa+l.dm)/l.visits*100):0,isBest=best===l&&(l.wa+l.dm+l.bag)>0,ed=LKT.edit===l.code;
+        return '<div class="cp-card cp-lk'+(isBest?" best":"")+'"><div class="cp-cardh"><div style="min-width:0"><b class="cp-lkn">'+(isBest?"🏆 ":"")+esc(l.name)+'</b><div class="cp-dim" style="font-size:12px">'+esc(l.place)+' · lleva a '+esc(lktDestLabel(l))+'</div></div><button type="button" class="cp-x" data-lkdel="'+esc(l.code)+'" title="Quitar">✕</button></div>'+
+          '<div class="cp-lkurl"><code>'+esc(lkUrl(l).replace("https://",""))+'</code><button type="button" class="cp-mini pri" data-lkcopy="'+esc(lkUrl(l))+'">Copiar</button><a class="cp-mini" href="'+esc(lkUrl(l))+'" target="_blank" rel="noopener">Probar ↗</a><button type="button" class="cp-mini" data-lktedit="'+esc(l.code)+'">'+(ed?"Cerrar":"Cambiar destino")+'</button></div>'+
+          (ed?'<div class="cp-lked"><select id="lktEdCat" class="cp-sel"><option value="">🏠 Portada</option>'+lktCatOpts(l.prod?"":l.cat)+'</select><span class="cp-dim" style="font-size:12px">o prenda:</span><select id="lktEdProd" class="cp-sel">'+lktProdOpts(l.prod).replace("Elige la prenda…","— ninguna —")+'</select><button type="button" class="cp-mini pri" data-lktsave="'+esc(l.code)+'">Guardar</button></div><div class="cp-dim" style="font-size:11.5px;margin-top:4px">El enlace sigue siendo el mismo código: si ya lo pegaste en una historia, copia el nuevo y reemplázalo.</div>':'')+
+          '<div class="cp-lks"><div><b>'+num(l.visits)+'</b><span>visitas</span></div><div><b>'+num(l.people)+'</b><span>personas</span></div><div><b>'+num(l.viewed)+'</b><span>vieron prendas</span></div><div><b>'+num(l.bag)+'</b><span>a la bolsa</span></div><div><b>'+num(l.wa+l.dm)+'</b><span>escribieron</span></div><div><b>'+conv+'%</b><span>conversión</span></div></div>'+
+          (l.cities&&l.cities.length?'<div class="cp-dim" style="font-size:12px;margin-top:6px">📍 '+esc(l.cities.join(" · "))+'</div>':'')+'</div>';}).join("")+'</div>':empty("Todavía no tienes enlaces. Crea el primero arriba."))+
+      '<div class="cp-card" style="margin-top:14px"><b style="font-size:14px">📢 Para tus anuncios de Meta</b><div class="cp-dim" style="font-size:12.5px;margin:3px 0 0">En el Administrador de anuncios, en <b>Parámetros de URL</b>, pega esto:</div><div class="cp-lkurl"><code>'+esc(META_PARAMS)+'</code><button type="button" class="cp-mini pri" data-lkcopy="'+esc(META_PARAMS)+'">Copiar</button></div></div>';
+    lktPreview();
+  }
+  function lktClick(e){
+    var b;
+    if((b=e.target.closest("[data-lkcopy]")))return copy(b.dataset.lkcopy);
+    if((b=e.target.closest("[data-lktdest]"))){LKT.dest=b.dataset.lktdest;var nm=document.getElementById("lktName"),pl=document.getElementById("lktPlace"),keep=[nm&&nm.value,pl&&pl.value];lktRender();if(keep[0])document.getElementById("lktName").value=keep[0];if(keep[1])document.getElementById("lktPlace").value=keep[1];return lktPreview();}
+    if((b=e.target.closest("[data-lktedit]"))){LKT.edit=LKT.edit===b.dataset.lktedit?null:b.dataset.lktedit;return lktRender();}
+    if((b=e.target.closest("[data-lkdel]"))){if(!confirm("¿Quitar este enlace? Las visitas que trajo se conservan."))return;return api("/admin/links",{method:"POST",body:{remove:b.dataset.lkdel}}).then(lktLoad).catch(function(x){toast(x.message,true);});}
+    if((b=e.target.closest("[data-lktsave]"))){var ps=document.getElementById("lktEdProd"),prod=ps.value,cat=prod?"":document.getElementById("lktEdCat").value,pname=prod?ps.options[ps.selectedIndex].text.split(" · ")[0]:"",code=b.dataset.lktsave;
+      return api("/admin/links",{method:"POST",body:{update:code,cat:cat,prod:prod,prodName:pname}}).then(function(){LKT.edit=null;copy(lkUrl({code:code,cat:cat,prod:prod}));toast("Destino cambiado y enlace copiado ✓");return lktLoad();}).catch(function(x){toast(x.message,true);});}
+    if((b=e.target.closest("[data-lktcreate]"))){var f=lktForm();if(!f.name){toast("Ponle un nombre",true);return;}
+      var pse=document.getElementById("lktProd"),pn=f.prod&&pse?pse.options[pse.selectedIndex].text.split(" · ")[0]:"";
+      busy(true,"Creando enlace…");return api("/admin/links",{method:"POST",body:{name:f.name,place:f.place,cat:f.cat,prod:f.prod,prodName:pn}}).then(function(d){busy(false);LKT.created={code:d.code,name:f.name,place:f.place,cat:f.cat,prod:f.prod};copy(lkUrl(LKT.created));window.scrollTo(0,0);return lktLoad();}).catch(function(x){busy(false);toast(x.message,true);});}
+  }
+  function lktInput(e){
+    // Search box: only on typing (its "change" fires on blur and would reset the chosen garment)
+    if(e.target.id==="lktQ"){if(e.type!=="input")return;LKT.q=e.target.value;var s=document.getElementById("lktProd");if(s){var keep=s.value;s.innerHTML=lktProdOpts(keep);if(s.options.length===2)s.selectedIndex=1;}return lktPreview();}
+    if(/^lkt(Name|Place|Cat|Prod)$/.test(e.target.id))lktPreview();
   }
   function ctlMap(list){
     var box=document.getElementById("ctlMap");if(!box)return;
@@ -769,13 +844,15 @@
     Object.keys(opts||{}).forEach(function(k){OPT[k]=opts[k];});
     ensureChrome();if(!bound.has(document.body)){bindSheet();bound.add(document.body);}
     if(!bound.has(el)){bound.add(el);el.classList.add("cp");
-      el.addEventListener("click",function(e){if(el._cpKind==="inventario")invClick(e);else if(el._cpKind==="control")ctlClick(e);else repClick(e);});
+      el.addEventListener("click",function(e){if(el._cpKind==="inventario")invClick(e);else if(el._cpKind==="control")ctlClick(e);else if(el._cpKind==="enlaces")lktClick(e);else repClick(e);});
+      el.addEventListener("input",function(e){if(el._cpKind==="enlaces")lktInput(e);});el.addEventListener("change",function(e){if(el._cpKind==="enlaces")lktInput(e);});
       el.addEventListener("input",function(e){if(e.target.matches("[data-iq]")){I.q=e.target.value;invList();}if(e.target.matches("[data-rq]")){R.q=e.target.value;repTable();}if(e.target.matches("[data-vq]")){V.q=e.target.value;clearTimeout(V.t);V.t=setTimeout(function(){V.n=20;visLoad().then(function(){var i=document.querySelector("[data-vq]");if(i){i.focus();var L=i.value.length;try{i.setSelectionRange(L,L);}catch(x){}}});},450);}});
       el.addEventListener("pointermove",repHover);el.addEventListener("pointerdown",repHover);el.addEventListener("pointerleave",function(){var t=document.getElementById("cpTip");if(t)t.className="cp-tip cp-hide";});
     }
     el._cpKind=kind;
     if(kind==="inventario"){I.el=el;return invLoad();}
     if(kind==="control"){C.el=el;C.first=true;return ctlLoad();}
+    if(kind==="enlaces"){LKT.el=el;return lktLoad();}
     R.el=el;return repLoad();
   }
   window.CanevaPro={mount:mount,openItem:function(pid){if(I.data)invOpen(pid);},reloadInventory:function(){return I.el?invLoad():null;},inventoryData:function(){return I.data;}};
@@ -950,6 +1027,10 @@
   ".cp-mapmove{position:absolute;right:10px;bottom:22px;z-index:1000;border:1px solid rgba(247,247,244,.25);background:rgba(5,5,5,.82);color:#f7f7f4;border-radius:999px;padding:7px 12px;font:600 12px Inter,sans-serif;cursor:pointer}.cp-mapmove.on{background:#f7f7f4;color:#0b0b0b}",
   ".cp-intent{margin-top:12px;border:1px solid var(--b);border-radius:12px;padding:11px 13px;font-size:13px;line-height:1.45}.cp-intent b{font-size:14px}.cp-intent.alta{border-color:rgba(255,143,128,.55);background:linear-gradient(120deg,rgba(255,143,128,.12),transparent)}.cp-intent.media{border-color:rgba(244,196,106,.5)}.cp-intent ul{margin:6px 0 0;padding-left:18px}.cp-intent li{padding:1px 0}",
   ".cp-vb i.hot{border-color:rgba(255,143,128,.6);color:#ffb4a8}.cp-vb i.warm{border-color:rgba(244,196,106,.55);color:#f4c46a}",
+  "@media(max-width:600px){.cp-lkurl{flex-wrap:wrap}.cp-lkurl code{flex:1 1 100%;white-space:normal;word-break:break-all;padding-bottom:2px}}",
+  ".cp-lkok{border-color:rgba(94,240,160,.45);background:linear-gradient(120deg,rgba(94,240,160,.08),transparent);margin-bottom:12px}",
+  ".cp-lked{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}.cp-lked .cp-sel{flex:1 1 180px;min-width:0}",
+  ".cp-seg button[data-lktdest]{padding:9px 13px}",
   ".cp-ptmap{height:220px;border-radius:12px;overflow:hidden;margin-top:12px;border:1px solid var(--b);background:#0d0d0d}.cp-ptmap .cp-darktiles{filter:invert(1) hue-rotate(180deg) brightness(.82) contrast(1.1) saturate(.25)}",
   ".cp-diag{display:grid;gap:10px;grid-template-columns:1fr}@media(min-width:900px){.cp-diag{grid-template-columns:1fr 1fr}}.cp-dg{border:1px solid var(--b);border-radius:14px;padding:12px 14px;background:var(--k2)}.cp-dg b{display:block;font-size:14px;line-height:1.35}.cp-dg p{margin:6px 0 0;font-size:13px;line-height:1.5;color:var(--dim)}.cp-dg.alta{border-color:rgba(255,143,128,.5);background:linear-gradient(160deg,rgba(255,143,128,.08),var(--k2))}.cp-dg.media{border-color:rgba(244,196,106,.45)}",
   ".cp-qt table{min-width:640px}.cp-good{color:#5ef0a0!important;font-weight:600}.cp-qt .cp-bad{color:#ff8f80!important;font-weight:600}",
