@@ -677,7 +677,9 @@
   // ---------- Tracked links: one link per story / reel / bio / ad to know exactly what brings people ----------
   var K2={data:null,form:false};
   var META_PARAMS="utm_source=meta&utm_medium=paid&utm_campaign={{campaign.name}}&utm_content={{ad.name}}&utm_term={{placement}}";
-  function lkUrl(l){return "https://canevacol.com/?ref="+l.code+(l.prod?"&p="+encodeURIComponent(l.prod):l.cat?"&cat="+encodeURIComponent(l.cat):"");}
+  // Short link: canevacol.com/CODE (404.html asks the Worker where it goes). Needs Worker v48.
+  function lkUrl(l){return "https://canevacol.com/"+l.code;}
+  function lkSlug(v){return String(v||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"").slice(0,20);}
   // Same slug the store uses for ?p= (name--category--price)
   function prodSlug(p){var f=function(v){return String(v||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");};return [f(p.nombre),f(p.categoria),String(p.precio||"").replace(/[^\d]/g,"")].filter(Boolean).join("--");}
   function lkProducts(){
@@ -743,11 +745,12 @@
   function lktForm(){
     var v=function(id){var e=document.getElementById(id);return e?e.value:"";};
     var dest=LKT.dest,cat=dest==="cat"?v("lktCat"):"",prod=dest==="prod"?v("lktProd"):"";
-    return {name:v("lktName").trim(),place:v("lktPlace"),cat:cat,prod:prod};
+    return {name:v("lktName").trim(),place:v("lktPlace"),cat:cat,prod:prod,code:lkSlug(v("lktCode"))};
   }
   function lktPreview(){var f=lktForm(),b=document.getElementById("lktPrev");if(!b)return;
-    b.textContent=lkUrl({code:"XXXX",cat:f.cat,prod:f.prod}).replace("https://","");
-    var ok=document.getElementById("lktGo");if(ok)ok.disabled=!f.name||(LKT.dest==="cat"&&!f.cat)||(LKT.dest==="prod"&&!f.prod);}
+    var badCode=f.code&&f.code.length<3;
+    b.textContent=lkUrl({code:f.code||"xxxx"}).replace("https://","")+(f.code?"":"  (código automático)");
+    var ok=document.getElementById("lktGo");if(ok)ok.disabled=!f.name||badCode||(LKT.dest==="cat"&&!f.cat)||(LKT.dest==="prod"&&!f.prod);}
   function lktRender(){
     var el=LKT.el,D=K2.data;if(!el||!D)return;
     var L=D.links||[],best=L.slice().sort(function(a,b){return (b.wa+b.dm+b.bag)-(a.wa+a.dm+a.bag)||b.visits-a.visits;})[0];
@@ -761,6 +764,7 @@
         '<div class="cp-field"><label>3. ¿A dónde lleva a la clienta?</label><div class="cp-seg">'+[["cat","📂 Una categoría"],["prod","👗 Una prenda"],["home","🏠 La portada"]].map(function(x){return '<button type="button" data-lktdest="'+x[0]+'" class="'+(LKT.dest===x[0]?"on":"")+'">'+x[1]+'</button>';}).join("")+'</div></div>'+
         (LKT.dest==="cat"?'<div class="cp-field"><label>Categoría</label><select id="lktCat" class="cp-sel">'+lktCatOpts("")+'</select></div>':'')+
         (LKT.dest==="prod"?'<div class="cp-field"><label>Prenda</label><input id="lktQ" placeholder="Buscar prenda…" value="'+esc(LKT.q)+'" style="margin-bottom:6px"><select id="lktProd" class="cp-sel">'+lktProdOpts("")+'</select></div>':'')+
+        '<div class="cp-field"><label>4. Nombre corto del enlace (opcional)</label><div class="cp-lkpre"><span>canevacol.com/</span><input id="lktCode" maxlength="20" placeholder="amore" autocapitalize="off" autocomplete="off" spellcheck="false"></div><div class="cp-dim" style="font-size:11.5px;margin-top:4px">Solo letras, números o guiones. Así queda un enlace bonito y fácil de recordar.</div></div>'+
         '<div class="cp-lkurl"><code id="lktPrev"></code><span class="cp-dim" style="font-size:11.5px">vista previa</span></div>'+
         '<button type="button" class="cp-btn full" id="lktGo" data-lktcreate>Crear y copiar enlace</button></div>'+
       '<div class="cp-sect" style="margin-top:22px">Tus enlaces · últimos 30 días</div>'+
@@ -783,12 +787,13 @@
       return api("/admin/links",{method:"POST",body:{update:code,cat:cat,prod:prod,prodName:pname}}).then(function(){LKT.edit=null;copy(lkUrl({code:code,cat:cat,prod:prod}));toast("Destino cambiado y enlace copiado ✓");return lktLoad();}).catch(function(x){toast(x.message,true);});}
     if((b=e.target.closest("[data-lktcreate]"))){var f=lktForm();if(!f.name){toast("Ponle un nombre",true);return;}
       var pse=document.getElementById("lktProd"),pn=f.prod&&pse?pse.options[pse.selectedIndex].text.split(" · ")[0]:"";
-      busy(true,"Creando enlace…");return api("/admin/links",{method:"POST",body:{name:f.name,place:f.place,cat:f.cat,prod:f.prod,prodName:pn}}).then(function(d){busy(false);LKT.created={code:d.code,name:f.name,place:f.place,cat:f.cat,prod:f.prod};copy(lkUrl(LKT.created));window.scrollTo(0,0);return lktLoad();}).catch(function(x){busy(false);toast(x.message,true);});}
+      busy(true,"Creando enlace…");return api("/admin/links",{method:"POST",body:{name:f.name,place:f.place,cat:f.cat,prod:f.prod,prodName:pn,code:f.code}}).then(function(d){busy(false);LKT.created={code:d.code,name:f.name,place:f.place,cat:f.cat,prod:f.prod};copy(lkUrl(LKT.created));window.scrollTo(0,0);return lktLoad();}).catch(function(x){busy(false);toast(x.message,true);});}
   }
   function lktInput(e){
     // Search box: only on typing (its "change" fires on blur and would reset the chosen garment)
     if(e.target.id==="lktQ"){if(e.type!=="input")return;LKT.q=e.target.value;var s=document.getElementById("lktProd");if(s){var keep=s.value;s.innerHTML=lktProdOpts(keep);if(s.options.length===2)s.selectedIndex=1;}return lktPreview();}
-    if(/^lkt(Name|Place|Cat|Prod)$/.test(e.target.id))lktPreview();
+    if(e.target.id==="lktCode"&&e.type==="input"){var c=lkSlug(e.target.value);if(c!==e.target.value)e.target.value=c;}
+    if(/^lkt(Name|Place|Cat|Prod|Code)$/.test(e.target.id))lktPreview();
   }
   function ctlMap(list){
     var box=document.getElementById("ctlMap");if(!box)return;
@@ -1028,6 +1033,7 @@
   ".cp-intent{margin-top:12px;border:1px solid var(--b);border-radius:12px;padding:11px 13px;font-size:13px;line-height:1.45}.cp-intent b{font-size:14px}.cp-intent.alta{border-color:rgba(255,143,128,.55);background:linear-gradient(120deg,rgba(255,143,128,.12),transparent)}.cp-intent.media{border-color:rgba(244,196,106,.5)}.cp-intent ul{margin:6px 0 0;padding-left:18px}.cp-intent li{padding:1px 0}",
   ".cp-vb i.hot{border-color:rgba(255,143,128,.6);color:#ffb4a8}.cp-vb i.warm{border-color:rgba(244,196,106,.55);color:#f4c46a}",
   "@media(max-width:600px){.cp-lkurl{flex-wrap:wrap}.cp-lkurl code{flex:1 1 100%;white-space:normal;word-break:break-all;padding-bottom:2px}}",
+  ".cp-lkpre{display:flex;align-items:center;border:1px solid var(--b);border-radius:12px;overflow:hidden;background:var(--k)}.cp-lkpre span{padding:0 4px 0 12px;color:var(--dim);font-size:13.5px;white-space:nowrap}.cp-lkpre input{flex:1;min-width:0;border:0!important;background:none!important;padding:11px 12px 11px 0!important;font-size:14px;color:var(--w);outline:none}",
   ".cp-lkok{border-color:rgba(94,240,160,.45);background:linear-gradient(120deg,rgba(94,240,160,.08),transparent);margin-bottom:12px}",
   ".cp-lked{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}.cp-lked .cp-sel{flex:1 1 180px;min-width:0}",
   ".cp-seg button[data-lktdest]{padding:9px 13px}",

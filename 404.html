@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CANEVA</title>
+<meta name="robots" content="noindex">
+<style>
+html,body{margin:0;height:100%;background:#050403;color:#faf9f6;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}
+.w{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center}
+.l{font-size:22px;letter-spacing:.55em;font-weight:300;padding-left:.55em}
+.s{width:28px;height:28px;border:2px solid rgba(250,249,246,.18);border-top-color:#faf9f6;border-radius:50%;animation:r 1s linear infinite}
+@keyframes r{to{transform:rotate(360deg)}}
+p{margin:0;font-size:13px;color:rgba(250,249,246,.55);letter-spacing:.08em}
+a{color:#faf9f6}
+.hide{display:none}
+</style>
+</head>
+<body>
+<div class="w"><div class="l">CΛNEVΛ</div><div class="s" id="sp"></div><p id="msg">Abriendo la tienda…</p><p id="nf" class="hide">Esta página no existe. <a href="/">Ir a la tienda</a></p></div>
+<script>
+// Short tracking links: canevacol.com/amore -> asks the Worker where "amore" goes (category or garment)
+// and opens the store there, keeping the tracking code and any ad parameters.
+(function(){
+  var API="https://caneva-ai.canevacol.workers.dev";
+  var code=decodeURIComponent(location.pathname.replace(/^\/+|\/+$/g,"")).toLowerCase();
+  var extra=location.search.replace(/^\?/,"");
+  function go(q){location.replace("/?"+q+(extra?"&"+extra:"")+location.hash);}
+  if(!/^[a-z0-9-]{3,20}$/.test(code)){document.getElementById("sp").className="hide";document.getElementById("msg").className="hide";document.getElementById("nf").className="";return;}
+  var done=false,t=setTimeout(function(){if(!done){done=true;go("ref="+encodeURIComponent(code));}},3500);
+  fetch(API+"/l/"+encodeURIComponent(code)).then(function(r){return r.json();}).then(function(d){
+    if(done)return;done=true;clearTimeout(t);
+    var q="ref="+encodeURIComponent(code);
+    if(d&&d.prod)q+="&p="+encodeURIComponent(d.prod);else if(d&&d.cat)q+="&cat="+encodeURIComponent(d.cat);
+    go(q);
+  }).catch(function(){if(!done){done=true;clearTimeout(t);go("ref="+encodeURIComponent(code));}});
+})();
+</script>
+</body>
+</html>
