@@ -4983,7 +4983,14 @@ body.cv-has-pbar .ann-bar{display:none!important}
 .cv-f span{display:block;font-size:.56rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(250,249,246,.6);margin-bottom:5px}
 .cv-f input,.cv-f textarea{width:100%;box-sizing:border-box;background:#141210;border:1px solid rgba(250,249,246,.18);border-radius:12px;color:#faf9f6;padding:.85rem .9rem;font:inherit;font-size:16px;outline:none}
 .cv-f input:focus,.cv-f textarea:focus{border-color:rgba(250,249,246,.55)}
-.cv-f.bad input{border-color:#ff8f80}
+.cv-f.bad input,.cv-f.bad select{border-color:#ff8f80}
+.cv-f select{width:100%;box-sizing:border-box;background:#141210 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23faf9f6' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right .9rem center;border:1px solid rgba(250,249,246,.18);border-radius:12px;color:#faf9f6;padding:.85rem 2.2rem .85rem .9rem;font:inherit;font-size:16px;outline:none;-webkit-appearance:none;appearance:none}
+.cv-f select:focus{border-color:rgba(250,249,246,.55)}
+.cv-f select:disabled{opacity:.5}
+.cv-f select option{background:#141210;color:#faf9f6}
+.cv-made{border:1px solid rgba(201,169,110,.55);background:rgba(201,169,110,.08);border-radius:12px;padding:10px 12px;font-size:.74rem;line-height:1.5;color:rgba(250,249,246,.82);margin:0 0 12px;text-align:left}
+.cv-made b{color:#f1e0b8}
+#cartDrawer .cv-made{margin:.2rem 0 .6rem}
 .cv-f em{display:none;font-style:normal;font-size:.68rem;color:#ff8f80;margin-top:4px}
 .cv-f.bad em{display:block}
 .cv-row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -4999,6 +5006,43 @@ body.cv-has-pbar .ann-bar{display:none!important}
 (function(){
   if(typeof addToCartByIndex!=='function')return;
   var BKEY='caneva_buyer_v1',fromModal=false,wantQty=1;
+  // Departments and municipalities of Colombia (DANE)
+  var CO={"Amazonas":"Leticia|Puerto Nariño","Antioquia":"Abejorral|Abriaquí|Alejandría|Amagá|Amalfi|Andes|Angelópolis|Angostura|Anorí|Anzá|Apartadó|Arboletes|Argelia|Armenia|Barbosa|Bello|Belmira|Betania|Betulia|Briceño|Buriticá|Cáceres|Caicedo|Caldas|Campamento|Cañasgordas|Caracolí|Caramanta|Carepa|Carolina del Príncipe|Caucasia|Chigorodó|Cisneros|Ciudad Bolívar|Cocorná|Concepción|Concordia|Copacabana|Dabeiba|Donmatías|Ebéjico|El Bagre|El Carmen de Viboral|El Peñol|El Retiro|El Santuario|Entrerríos|Envigado|Fredonia|Frontino|Giraldo|Girardota|Gómez Plata|Granada|Guadalupe|Guarne|Guatapé|Heliconia|Hispania|Itagüí|Ituango|Jardín|Jericó|La Ceja|La Estrella|La Pintada|La Unión|Liborina|Maceo|Marinilla|Medellín|Montebello|Murindó|Mutatá|Nariño|Nechí|Necoclí|Olaya|Peque|Pueblorrico|Puerto Berrío|Puerto Nare|Puerto Triunfo|Remedios|Rionegro|Sabanalarga|Sabaneta|Salgar|San Andrés de Cuerquia|San Carlos|San Francisco|San Jerónimo|San José de la Montaña|San Juan de Urabá|San Luis|San Pedro de los Milagros|San Pedro de Urabá|San Rafael|San Roque|San Vicente|Santa Bárbara|Santa Fe de Antioquia|Santa Rosa de Osos|Santo Domingo|Segovia|Sonsón|Sopetrán|Támesis|Tarazá|Tarso|Titiribí|Toledo|Turbo|Uramita|Urrao|Valdivia|Valparaíso|Vegachí|Venecia|Vigía del Fuerte|Yalí|Yarumal|Yolombó|Yondó|Zaragoza","Arauca":"Arauca|Arauquita|Cravo Norte|Fortul|Puerto Rondón|Saravena|Tame","Atlántico":"Baranoa|Barranquilla|Campo de la Cruz|Candelaria|Galapa|Juan de Acosta|Luruaco|Malambo|Manatí|Palmar de Varela|Piojó|Polonuevo|Ponedera|Puerto Colombia|Repelón|Sabanagrande|Sabanalarga|Santa Lucía|Santo Tomás|Soledad|Suán|Tubará|Usiacurí","Bogotá D.C.":"Bogotá D.C.","Bolívar":"Achí|Altos del Rosario|Arenal|Arjona|Arroyohondo|Barranco de Loba|Brazuelo de Papayal|Calamar|Cantagallo|Cartagena de Indias|Cicuco|Clemencia|Córdoba|El Carmen de Bolívar|El Guamo|El Peñón|Hatillo de Loba|Magangué|Mahates|Margarita|María la Baja|Mompós|Montecristo|Morales|Norosí|Pinillos|Regidor|Río Viejo|San Cristóbal|San Estanislao|San Fernando|San Jacinto|San Jacinto del Cauca|San Juan Nepomuceno|San Martín de Loba|San Pablo|Santa Catalina|Santa Rosa|Santa Rosa del Sur|Simití|Soplaviento|Talaigua Nuevo|Tiquisio|Turbaco|Turbaná|Villanueva|Zambrano","Boyacá":"Almeida|Aquitania|Arcabuco|Belén|Berbeo|Betéitiva|Boavita|Boyacá|Briceño|Buenavista|Busbanzá|Caldas|Campohermoso|Cerinza|Chinavita|Chiquinquirá|Chíquiza|Chiscas|Chita|Chitaraque|Chivatá|Chivor|Ciénega|Cómbita|Coper|Corrales|Covarachía|Cubará|Cucaita|Cuítiva|Duitama|El Cocuy|El Espino|Firavitoba|Floresta|Gachantivá|Gámeza|Garagoa|Guacamayas|Guateque|Guayatá|Güicán|Iza|Jenesano|Jericó|La Capilla|La Uvita|La Victoria|Labranzagrande|Macanal|Maripí|Miraflores|Mongua|Monguí|Moniquirá|Motavita|Muzo|Nobsa|Nuevo Colón|Oicatá|Otanche|Pachavita|Páez|Paipa|Pajarito|Panqueba|Pauna|Paya|Paz del Río|Pesca|Pisba|Puerto Boyacá|Quípama|Ramiriquí|Ráquira|Rondón|Saboyá|Sáchica|Samacá|San Eduardo|San José de Pare|San Luis de Gaceno|San Mateo|San Miguel de Sema|San Pablo de Borbur|Santa María|Santa Rosa de Viterbo|Santa Sofía|Santana|Sativanorte|Sativasur|Siachoque|Soatá|Socha|Socotá|Sogamoso|Somondoco|Sora|Soracá|Sotaquirá|Susacón|Sutamarchán|Sutatenza|Tasco|Tenza|Tibaná|Tibasosa|Tinjacá|Tipacoque|Toca|Togüí|Tópaga|Tota|Tunja|Tununguá|Turmequé|Tuta|Tutazá|Úmbita|Ventaquemada|Villa de Leyva|Viracachá|Zetaquira","Caldas":"Aguadas|Anserma|Aranzazu|Belalcázar|Chinchiná|Filadelfia|La Dorada|La Merced|Manizales|Manzanares|Marmato|Marquetalia|Marulanda|Neira|Norcasia|Pácora|Palestina|Pensilvania|Riosucio|Risaralda|Salamina|Samaná|San José|Supía|Victoria|Villamaría|Viterbo","Caquetá":"Albania|Belén de los Andaquíes|Cartagena del Chairá|Curillo|El Doncello|El Paujil|Florencia|La Montañita|Milán|Morelia|Puerto Rico|San José del Fragua|San Vicente del Caguán|Solano|Solita|Valparaíso","Casanare":"Aguazul|Chámeza|Hato Corozal|La Salina|Maní|Monterrey|Nunchía|Orocué|Paz de Ariporo|Pore|Recetor|Sabanalarga|Sácama|San Luis de Palenque|Támara|Tauramena|Trinidad|Villanueva|Yopal","Cauca":"Almaguer|Argelia|Balboa|Bolívar|Buenos Aires|Cajibío|Caldono|Caloto|Corinto|El Tambo|Florencia|Guachené|Guapí|Inzá|Jambaló|La Sierra|La Vega|López de Micay|Mercaderes|Miranda|Morales|Padilla|Páez|Patía|Piamonte|Piendamó|Popayán|Puerto Tejada|Puracé|Rosas|San Sebastián|Santa Rosa|Santander de Quilichao|Silvia|Sotará|Suárez|Sucre|Timbío|Timbiquí|Toribío|Totoró|Villa Rica","Cesar":"Aguachica|Agustín Codazzi|Astrea|Becerril|Bosconia|Chimichagua|Chiriguaná|Curumaní|El Copey|El Paso|Gamarra|González|La Gloria (Cesar)|La Jagua de Ibirico|La Paz|Manaure Balcón del Cesar|Pailitas|Pelaya|Pueblo Bello|Río de Oro|San Alberto|San Diego|San Martín|Tamalameque|Valledupar","Chocó":"Acandí|Alto Baudó|Bagadó|Bahía Solano|Bajo Baudó|Bojayá|Cantón de San Pablo|Cértegui|Condoto|El Atrato|El Carmen de Atrato|El Carmen del Darién|Istmina|Juradó|Litoral de San Juan|Lloró|Medio Atrato|Medio Baudó|Medio San Juan|Nóvita|Nuquí|Quibdó|Río Iró|Río Quito|Riosucio|San José del Palmar|Sipí|Tadó|Unguía|Unión Panamericana","Córdoba":"Ayapel|Buenavista|Canalete|Cereté|Chimá|Chinú|Ciénaga de Oro|Cotorra|La Apartada|Lorica|Los Córdobas|Momil|Moñitos|Montelíbano|Montería|Planeta Rica|Pueblo Nuevo|Puerto Escondido|Puerto Libertador|Purísima|Sahagún|San Andrés de Sotavento|San Antero|San Bernardo del Viento|San Carlos|San José de Uré|San Pelayo|Tierralta|Tuchín|Valencia","Cundinamarca":"Agua de Dios|Albán|Anapoima|Anolaima|Apulo|Arbeláez|Beltrán|Bituima|Bojacá|Cabrera|Cachipay|Cajicá|Caparrapí|Cáqueza|Carmen de Carupa|Chaguaní|Chía|Chipaque|Choachí|Chocontá|Cogua|Cota|Cucunubá|El Colegio|El Peñón|El Rosal|Facatativá|Fómeque|Fosca|Funza|Fúquene|Fusagasugá|Gachalá|Gachancipá|Gachetá|Gama|Girardot|Granada|Guachetá|Guaduas|Guasca|Guataquí|Guatavita|Guayabal de Síquima|Guayabetal|Gutiérrez|Jerusalén|Junín|La Calera|La Mesa|La Palma|La Peña|La Vega|Lenguazaque|Machetá|Madrid|Manta|Medina|Mosquera|Nariño|Nemocón|Nilo|Nimaima|Nocaima|Pacho|Paime|Pandi|Paratebueno|Pasca|Puerto Salgar|Pulí|Quebradanegra|Quetame|Quipile|Ricaurte|San Antonio del Tequendama|San Bernardo|San Cayetano|San Francisco|San Juan de Rioseco|Sasaima|Sesquilé|Sibaté|Silvania|Simijaca|Soacha|Sopó|Subachoque|Suesca|Supatá|Susa|Sutatausa|Tabio|Tausa|Tena|Tenjo|Tibacuy|Tibirita|Tocaima|Tocancipá|Topaipí|Ubalá|Ubaque|Ubaté|Une|Útica|Venecia|Vergara|Vianí|Villagómez|Villapinzón|Villeta|Viotá|Yacopí|Zipacón|Zipaquirá","Guainía":"Inírida","Guaviare":"Calamar|El Retorno|Miraflores|San José del Guaviare","Huila":"Acevedo|Agrado|Aipe|Algeciras|Altamira|Baraya|Campoalegre|Colombia|El Pital|Elías|Garzón|Gigante|Guadalupe|Hobo|Íquira|Isnos|La Argentina|La Plata|Nátaga|Neiva|Oporapa|Paicol|Palermo|Palestina|Pitalito|Rivera|Saladoblanco|San Agustín|Santa María|Suaza|Tarqui|Tello|Teruel|Tesalia|Timaná|Villavieja|Yaguará","La Guajira":"Albania|Barrancas|Dibulla|Distracción|El Molino|Fonseca|Hatonuevo|La Jagua del Pilar|Maicao|Manaure|Riohacha|San Juan del Cesar|Uribia|Urumita|Villanueva","Magdalena":"Algarrobo|Aracataca|Ariguaní|Cerro de San Antonio|Chibolo|Chibolo|Ciénaga|Concordia|El Banco|El Piñón|El Retén|Fundación|Guamal|Nueva Granada|Pedraza|Pijiño del Carmen|Pivijay|Plato|Pueblo Viejo|Remolino|Sabanas de San Ángel|Salamina|San Sebastián de Buenavista|San Zenón|Santa Ana|Santa Bárbara de Pinto|Santa Marta|Sitionuevo|Tenerife|Zapayán|Zona Bananera","Meta":"Acacías|Barranca de Upía|Cabuyaro|Castilla la Nueva|Cubarral|Cumaral|El Calvario|El Castillo|El Dorado|Fuente de Oro|Granada|Guamal|La Macarena|La Uribe|Lejanías|Mapiripán|Mesetas|Puerto Concordia|Puerto Gaitán|Puerto Lleras|Puerto López|Puerto Rico|Restrepo|San Carlos de Guaroa|San Juan de Arama|San Juanito|San Martín|Villavicencio|Vista Hermosa","Nariño":"Aldana|Ancuyá|Arboleda|Barbacoas|Belén|Buesaco|Chachagüí|Colón|Consacá|Contadero|Córdoba|Cuaspud|Cumbal|Cumbitara|El Charco|El Peñol|El Rosario|El Tablón|El Tambo|Francisco Pizarro|Funes|Guachucal|Guaitarilla|Gualmatán|Iles|Imués|Ipiales|La Cruz|La Florida|La Llanada|La Tola|La Unión|Leiva|Linares|Los Andes|Magüí Payán|Mallama|Mosquera|Nariño|Olaya Herrera|Ospina|Pasto|Policarpa|Potosí|Providencia|Puerres|Pupiales|Ricaurte|Roberto Payán|Samaniego|San Bernardo|San José de Albán|San Lorenzo|San Pablo|San Pedro de Cartago|Sandoná|Santa Bárbara|Santacruz|Sapuyes|Taminango|Tangua|Tumaco|Túquerres|Yacuanquer","Norte de Santander":"Ábrego|Arboledas|Bochalema|Bucarasica|Cáchira|Cácota|Chinácota|Chitagá|Convención|Cúcuta|Cucutilla|Duranía|El Carmen|El Tarra|El Zulia|Gramalote|Hacarí|Herrán|La Esperanza|La Playa de Belén|Labateca|Los Patios|Lourdes|Mutiscua|Ocaña|Pamplona|Pamplonita|Puerto Santander|Ragonvalia|Salazar de Las Palmas|San Calixto|San Cayetano|Santiago|Santo Domingo de Silos|Sardinata|Teorama|Tibú|Toledo|Villa Caro|Villa del Rosario","Putumayo":"Colón|Mocoa|Orito|Puerto Asís|Puerto Caicedo|Puerto Guzmán|Puerto Leguízamo|San Francisco|San Miguel|Santiago|Sibundoy|Valle del Guamuez|Villagarzón","Quindío":"Armenia|Buenavista|Calarcá|Circasia|Córdoba|Filandia|Génova|La Tebaida|Montenegro|Pijao|Quimbaya|Salento","Risaralda":"Apía|Balboa|Belén de Umbría|Dosquebradas|Guática|La Celia|La Virginia|Marsella|Mistrató|Pereira|Pueblo Rico|Quinchía|Santa Rosa de Cabal|Santuario","San Andrés y Providencia":"Providencia y Santa Catalina Islas|San Andrés","Santander":"Aguada|Albania|Aratoca|Barbosa|Barichara|Barrancabermeja|Betulia|Bolívar|Bucaramanga|Cabrera|California|Capitanejo|Carcasí|Cepitá|Cerrito|Charalá|Charta|Chima|Chipatá|Cimitarra|Concepción|Confines|Contratación|Coromoro|Curití|El Carmen de Chucurí|El Guacamayo|El Peñón|El Playón|El Socorro|Encino|Enciso|Florián|Floridablanca|Galán|Gámbita|Girón|Guaca|Guadalupe|Guapotá|Guavatá|Güepsa|Hato|Jesús María|Jordán|La Belleza|La Paz|Landázuri|Lebrija|Los Santos|Macaravita|Málaga|Matanza|Mogotes|Molagavita|Ocamonte|Oiba|Onzaga|Palmar|Palmas del Socorro|Páramo|Piedecuesta|Pinchote|Puente Nacional|Puerto Parra|Puerto Wilches|Rionegro|Sabana de Torres|San Andrés|San Benito|San Gil|San Joaquín|San José de Miranda|San Miguel|San Vicente de Chucurí|Santa Bárbara|Santa Helena del Opón|Simacota|Suaita|Sucre|Suratá|Tona|Valle de San José|Vélez|Vetas|Villanueva|Zapatoca","Sucre":"Buenavista|Caimito|Chalán|Colosó|Corozal|Coveñas|El Roble|Galeras|Guaranda|La Unión|Los Palmitos|Majagual|Morroa|Ovejas|Sampués|San Antonio de Palmito|San Benito Abad|San Juan de Betulia|San Marcos|San Onofre|San Pedro|Sincé|Sincelejo|Sucre|Tolú|Tolú Viejo","Tolima":"Alpujarra|Alvarado|Ambalema|Anzoátegui|Armero|Ataco|Cajamarca|Carmen de Apicalá|Casabianca|Chaparral|Coello|Coyaima|Cunday|Dolores|El Espinal|Falán|Flandes|Fresno|Guamo|Herveo|Honda|Ibagué|Icononzo|Lérida|Líbano|Mariquita|Melgar|Murillo|Natagaima|Ortega|Palocabildo|Piedras|Planadas|Prado|Purificación|Rioblanco|Roncesvalles|Rovira|Saldaña|San Antonio|San Luis|Santa Isabel|Suárez|Valle de San Juan|Venadillo|Villahermosa|Villarrica","Valle del Cauca":"Alcalá|Andalucía|Ansermanuevo|Argelia|Bolívar|Buenaventura|Buga|Bugalagrande|Caicedonia|Cali|Calima|Candelaria|Cartago|Dagua|El Águila|El Cairo|El Cerrito|El Dovio|Florida|Ginebra|Guacarí|Jamundí|La Cumbre|La Unión|La Victoria|Obando|Palmira|Pradera|Restrepo|Riofrío|Roldanillo|San Pedro|Sevilla|Toro|Trujillo|Tuluá|Ulloa|Versalles|Vijes|Yotoco|Yumbo|Zarzal","Vaupés":"Carurú|Mitú|Taraira","Vichada":"Cumaribo|La Primavera|Puerto Carreño|Santa Rosalía"};
+  function nk(t){return String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();}
+  // "Barranquilla, Atlántico" or just "Barranquilla" -> {city, dept}
+  function splitCity(v){
+    v=String(v||'').trim();if(!v)return {city:'',dept:''};
+    var parts=v.split(',').map(function(x){return x.trim();}),last=parts.length>1?parts[parts.length-1]:'',d='';
+    for(var k in CO){if(nk(k)===nk(last))d=k;}
+    var c=parts.length>1&&d?parts.slice(0,-1).join(', '):v,cn=nk(c==='Bogotá'?'Bogotá D.C.':c),found='',fd='';
+    var look=d?[d]:['Atlántico'].concat(Object.keys(CO));
+    for(var i=0;i<look.length&&!found;i++){var list=CO[look[i]].split('|');for(var j=0;j<list.length;j++){if(nk(list[j])===cn){found=list[j];fd=look[i];break;}}}
+    return found?{city:found,dept:fd}:{city:'',dept:d};
+  }
+  function cityOpts(dept,sel){if(!CO[dept])return '<option value="">Primero el departamento</option>';var l=CO[dept].split('|');return (l.length>1?'<option value="">Elige…</option>':'')+l.map(function(c){return '<option'+(c===sel?' selected':'')+'>'+esc(c)+'</option>';}).join('');}
+  // Garments made to order: categories with their own delivery days in the admin (more than 1 day)
+  window.cvMade=function(items){
+    var m=(window.SITE_CONFIG&&SITE_CONFIG.delivery)||{},days=0,names=[];
+    (items||[]).forEach(function(it){
+      var base=String(it.nombre||'').split(' · ')[0],cat=it.categoria;
+      if(!cat&&typeof catalogProducts==='function'){var p=catalogProducts().find(function(x){return x.nombre===base;});cat=p&&p.categoria;}
+      var d=0;for(var c in m){if(nk(c)===nk(cat)&&Number(m[c])>1)d=Number(m[c]);}
+      if(!d&&/atelier|bajo pedido|encargo/i.test(cat||''))d=10;
+      if(d>1){days=Math.max(days,d);if(names.indexOf(base)<0)names.push(base);}
+    });
+    return days?{days:days,names:names}:null;
+  };
+  window.cvMadeHtml=function(mi){if(!mi)return '';var n=mi.names.length,list=mi.names.slice(0,3).map(esc).join(', ')+(n>3?' y '+(n-3)+' más':'');
+    return '<div class="cv-made">⏳ <b>'+(n>1?'Prendas bajo pedido':'Prenda bajo pedido')+'</b><br>'+list+(n>1?' se confeccionan':' se confecciona')+' especialmente para ti, por eso el tiempo de entrega es de <b>'+mi.days+' días hábiles</b>.</div>';};
+  function paintCartMade(){
+    var a=document.querySelector('#cartDrawer .cart-actions');if(!a)return;
+    var box=document.getElementById('cvMadeCart'),h=cvMadeHtml(cvMade(window.CART||[]));
+    if(!h){if(box)box.remove();return;}
+    if(!box){box=document.createElement('div');box.id='cvMadeCart';var ship=document.getElementById('cvShipCart');a.parentNode.insertBefore(box,ship||a);}
+    box.innerHTML=h;
+  }
+  if(typeof renderCart==='function'){var oRc=renderCart;window.renderCart=renderCart=function(){var r=oRc.apply(this,arguments);try{paintCartMade();}catch(e){}return r;};}
+  setTimeout(function(){try{paintCartMade();}catch(e){}},2500);
   function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
   function money(n){return '$'+Math.round(Number(n)||0).toLocaleString('es-CO');}
   function push(ev){try{if(window.cvStatsPush)cvStatsPush(ev);}catch(e){}}
@@ -5058,32 +5102,36 @@ body.cv-has-pbar .ann-bar{display:none!important}
   function loadBuyer(){try{return JSON.parse(localStorage.getItem(BKEY)||'{}')||{};}catch(e){return {};}}
   function shipCity(){try{var s=JSON.parse(localStorage.getItem('caneva_ship')||'null');return s&&s.label?String(s.label).split(',').pop().trim():'';}catch(e){return '';}}
   window.cvBuyer=function(){var b=loadBuyer();return b&&b.name?b:null;};
-  var FIELDS=[['name','Nombre y apellido','text','name'],['doc','Cédula','tel','off'],['phone','Celular (WhatsApp)','tel','tel'],['email','Correo','email','email'],['city','Ciudad / municipio','text','address-level2'],['address','Dirección','text','street-address'],['barrio','Barrio (opcional)','text','off'],['notes','Indicaciones (opcional)','text','off']];
+  var FIELDS=[['name','Nombre y apellido','text','name'],['doc','Cédula','tel','off'],['phone','Celular (WhatsApp)','tel','tel'],['email','Correo','email','email'],['dept','Departamento','select','address-level1'],['city','Ciudad / municipio','select','address-level2'],['address','Dirección','text','street-address'],['barrio','Barrio (opcional)','text','off'],['notes','Indicaciones (opcional)','text','off']];
   function valid(k,v){v=String(v||'').trim();
     if(k==='name')return v.length>=4&&/\s/.test(v);
     if(k==='doc')return /^\d{5,12}$/.test(v.replace(/[.\s-]/g,''));
     if(k==='phone')return /^\d{10}$/.test(v.replace(/[^\d]/g,'').replace(/^57(?=\d{10}$)/,''));
     if(k==='email')return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v);
+    if(k==='dept')return !!CO[v];
     if(k==='city')return v.length>=3;
     if(k==='address')return v.length>=5;
     return true;}
-  var MSG={name:'Escribe nombre y apellido',doc:'Solo números, sin puntos',phone:'Celular de 10 dígitos',email:'Revisa el correo',city:'¿En qué ciudad?',address:'Escribe la dirección'};
+  var MSG={dept:'Elige el departamento',name:'Escribe nombre y apellido',doc:'Solo números, sin puntos',phone:'Celular de 10 dígitos',email:'Revisa el correo',city:'¿En qué ciudad?',address:'Escribe la dirección'};
   var pendingTarget=null,PASS=false;
   function openForm(target){
     var b=loadBuyer(),cu=null;try{cu=window.clubUser?clubUser():null;}catch(e){}
     // Club member: her profile fills what this phone does not remember (her last address is kept in the Club)
     if(cu){var dv=cu.delivery||{};['name','doc','phone','city','address','barrio','notes'].forEach(function(k){if(!b[k]&&dv[k])b[k]=dv[k];});if(!b.name&&cu.name)b.name=cu.name;if(!b.email&&cu.email)b.email=cu.email;if(!b.phone&&cu.phone)b.phone=String(cu.phone).replace(/[^\d]/g,'').replace(/^57(?=\d{10}$)/,'');}
-    if(!b.city)b.city=shipCity();
-    var f=function(x){return '<label class="cv-f" data-fk="'+x[0]+'"><span>'+x[1]+'</span><input name="'+x[0]+'" type="'+x[2]+'" autocomplete="'+x[3]+'" value="'+esc(b[x[0]]||'')+'"'+(x[0]==='doc'||x[0]==='phone'?' inputmode="numeric"':'')+'><em>'+(MSG[x[0]]||'')+'</em></label>';};
+    var sc=splitCity(b.city);if(!sc.city){var s2=splitCity(shipCity());if(!s2.city)s2=splitCity(window.CV_CITY||'');if(s2.city)sc=s2;}
+    b.dept=sc.dept||'Atlántico';b.city=sc.city;
+    var f=function(x){if(x[2]==='select')return '<label class="cv-f" data-fk="'+x[0]+'"><span>'+x[1]+'</span><select name="'+x[0]+'" autocomplete="'+x[3]+'">'+(x[0]==='dept'?'<option value="">Elige…</option>'+Object.keys(CO).map(function(k){return '<option'+(k===b.dept?' selected':'')+'>'+esc(k)+'</option>';}).join(''):cityOpts(b.dept,b.city))+'</select><em>'+(MSG[x[0]]||'')+'</em></label>';return '<label class="cv-f" data-fk="'+x[0]+'"><span>'+x[1]+'</span><input name="'+x[0]+'" type="'+x[2]+'" autocomplete="'+x[3]+'" value="'+esc(b[x[0]]||'')+'"'+(x[0]==='doc'||x[0]==='phone'?' inputmode="numeric"':'')+'><em>'+(MSG[x[0]]||'')+'</em></label>';};
     var bold=target==='cartBold';
     var s=sheet('<div class="cv-shh"><b>📦 Datos de entrega</b><button type="button" data-sh="x" aria-label="Cerrar">×</button></div><form class="cv-form" novalidate><h3>¿A quién se lo enviamos?</h3><p class="cv-sub">'+(cu?'👑 Hola '+esc(cu.firstName||String(cu.name||'').split(' ')[0]||'')+', usamos los datos de tu Club Caneva: revísalos y listo. Esta compra suma puntos.':'Con estos datos armamos tu envío'+(bold?' y tu recibo de pago':'')+'. Solo los ve Caneva.')+'</p>'+
-      f(FIELDS[0])+'<div class="cv-row2">'+f(FIELDS[1])+f(FIELDS[2])+'</div>'+f(FIELDS[3])+'<div class="cv-row2">'+f(FIELDS[4])+f(FIELDS[6])+'</div>'+f(FIELDS[5])+f(FIELDS[7])+
+      cvMadeHtml(cvMade(window.CART||[]))+
+      f(FIELDS[0])+'<div class="cv-row2">'+f(FIELDS[1])+f(FIELDS[2])+'</div>'+f(FIELDS[3])+'<div class="cv-row2">'+f(FIELDS[4])+f(FIELDS[5])+'</div>'+f(FIELDS[6])+f(FIELDS[7])+f(FIELDS[8])+
       '<label class="cv-keep"><input type="checkbox" name="keep" checked> Recordar mis datos en este celular</label>'+
       '<button type="submit" class="cv-go">'+(bold?'💳 Continuar al pago':'Enviar pedido por WhatsApp')+'</button><button type="button" class="cv-stay" data-sh="x">Volver a la bolsa</button>'+
       '<div class="cv-priv">Usamos tus datos solo para tu pedido y envío. <a href="privacidad.html" target="_blank" rel="noopener">Privacidad</a></div></form>','cv-formbox');
     push({t:'k',k:'checkout_form',l:bold?'bold':'whatsapp'});
     var form=s.querySelector('form');
     s.addEventListener('click',function(e){if(e.target.closest('[data-sh="x"]'))closeSheet();});
+    form.elements.dept.addEventListener('change',function(){form.elements.city.innerHTML=cityOpts(this.value,'');form.elements.city.disabled=!CO[this.value];});
     form.addEventListener('input',function(e){var l=e.target.closest('.cv-f');if(l&&l.classList.contains('bad')&&valid(l.dataset.fk,e.target.value))l.classList.remove('bad');});
     form.addEventListener('submit',function(e){
       e.preventDefault();var data={},first=null;
@@ -5091,6 +5139,7 @@ body.cv-has-pbar .ann-bar{display:none!important}
         if(x[0]==='doc')v=v.replace(/[.\s-]/g,'');if(x[0]==='phone'){v=v.replace(/[^\d]/g,'');if(/^57\d{10}$/.test(v))v=v.slice(2);}
         data[x[0]]=v;var ok=valid(x[0],v);el.closest('.cv-f').classList.toggle('bad',!ok);if(!ok&&!first)first=el;});
       if(first){first.focus();return;}
+      data.city=data.city+', '+data.dept;delete data.dept;
       try{if(form.elements.keep.checked)localStorage.setItem(BKEY,JSON.stringify(data));else localStorage.removeItem(BKEY);}catch(x){}
       CURRENT=data;closeSheet();push({t:'k',k:'checkout_datos_ok'});
       var btn=document.getElementById(target);if(btn){PASS=true;try{btn.click();}finally{PASS=false;}}
@@ -5185,7 +5234,13 @@ body.cv-has-pbar .ann-bar{display:none!important}
   // ---- receipt on screen after a successful payment: no need to write by WhatsApp, the delivery details are already in ----
   function num(p){return Number(String(p||'').replace(/[^\d]/g,''))||0;}
   function shipInfo(){return window.CV_SHIP?Promise.resolve(window.CV_SHIP):fetch(API_BASE+'/hola').then(function(r){return r.json();}).then(function(d){window.CV_SHIP=(d&&d.ship)||{};return window.CV_SHIP;}).catch(function(){return {};});}
-  function deliveryText(dv,N){
+  function deliveryText(dv,N,items){
+    var mi=window.cvMade?cvMade(items||[]):null;
+    if(mi){var c=dv.city||'',where2=[dv.address,dv.barrio,c].filter(Boolean).map(esc).join(', '),loc=/barranquilla|soledad|puerto colombia|malambo|galapa/i.test(c);
+      return (where2?'Lo enviamos a <b>'+where2+'</b>. ':'')+cvMadeHtml(mi).replace('class="cv-made"','class="cv-made" style="margin:8px 0"')+(loc?'':(N&&N.days?'Al estar lista, el envío a tu ciudad tarda <b>'+esc(N.days)+' días hábiles</b>. ':''))+'Te avisamos por WhatsApp cuando tu pedido salga'+(loc?'':', con la guía de envío')+'.';}
+    return deliveryText0(dv,N);
+  }
+  function deliveryText0(dv,N){
     var city=dv.city||'',where=[dv.address,dv.barrio,city].filter(Boolean).map(esc).join(', ');
     var local=/barranquilla|soledad|puerto colombia|malambo|galapa/i.test(city);
     var d=(document.getElementById('pmTrustDays')||{}).textContent||'1 día';
@@ -5206,12 +5261,14 @@ body.cv-has-pbar .ann-bar{display:none!important}
       items.map(function(it){return '<div class="cv-rc-it">'+(it.imagen?'<img src="'+esc(it.imagen)+'" alt="">':'<i></i>')+'<div>'+esc(it.nombre)+'<small>'+(it.size?'Talla '+esc(it.size)+' · ':'')+'Cant. '+(it.qty||1)+'</small></div><em>'+money(num(it.precio)*(it.qty||1))+'</em></div>';}).join('')+
       (disc?'<div class="cv-rc-row"><span>Subtotal</span><span>'+money(sum)+'</span></div><div class="cv-rc-row"><span>Descuento</span><span>−'+money(disc)+'</span></div>':'')+
       '<div class="cv-rc-tot"><span>Total pagado</span><b>'+money(total)+'</b></div></div>'+
-      '<div class="cv-rc-ship" id="cvRcShip"><strong>🚚 Entrega</strong>'+deliveryText(dv,window.CV_SHIP)+'</div>'+
+      '<div class="cv-rc-ship" id="cvRcShip"><strong>🚚 Entrega</strong>'+deliveryText(dv,window.CV_SHIP,items)+'</div>'+
       '<div class="cv-rc-mail"><strong>✉ Tu recibo</strong><p>'+(r.emailSent&&mail?'Te lo enviamos a <b>'+esc(mail)+'</b>. ¿No te llegó o lo quieres en otro correo?':'Escribe tu correo y te enviamos el recibo.')+'</p>'+
       '<form id="cvRcForm" novalidate><input type="email" name="email" inputmode="email" autocomplete="email" placeholder="tucorreo@gmail.com" value="'+esc(mail)+'"><button type="submit">Reenviar</button></form><small id="cvRcMsg"></small></div>'+
       '<button class="pri" type="button" data-cvb="close">Seguir comprando</button>'+
       '<a class="cv-rc-help" href="'+waHref('Hola Caneva ✨ Tengo una pregunta sobre mi pedido #'+short+(r.ticket?' (recibo '+r.ticket+')':'')+'.')+'" target="_blank" rel="noopener">¿Tienes alguna duda? Escríbenos</a></div>');
-    if(!window.CV_SHIP)shipInfo().then(function(N){var e=document.getElementById('cvRcShip');if(e)e.innerHTML='<strong>🚚 Entrega</strong>'+deliveryText(dv,N);});
+    var reShip=function(){var e=document.getElementById('cvRcShip');if(e)e.innerHTML='<strong>🚚 Entrega</strong>'+deliveryText(dv,window.CV_SHIP,items);};
+    if(!window.CV_SHIP)shipInfo().then(reShip);
+    if(!window.SITE_CONFIG)setTimeout(reShip,2500);
     var f=document.getElementById('cvRcForm');
     if(f)f.addEventListener('submit',function(e){
       e.preventDefault();var v=f.elements.email.value.trim(),m=document.getElementById('cvRcMsg'),b=f.querySelector('button');
@@ -5237,7 +5294,7 @@ body.cv-has-pbar .ann-bar{display:none!important}
           var opts={orderId:d.orderId,currency:'COP',amount:String(d.amount),apiKey:d.apiKey,integritySignature:d.signature,description:d.description,
             redirectionUrl:'https://canevacol.com'+(/^\/[a-z0-9_\-]+\.html$/i.test(location.pathname)?location.pathname:'/')+'?pago=bold',originUrl:location.href.split('#')[0]};
           if(buyer){opts.customerData=JSON.stringify({email:buyer.email,fullName:buyer.name,phone:buyer.phone,dialCode:'+57',documentNumber:buyer.doc,documentType:'CC'});
-            opts.billingAddress=JSON.stringify({address:(buyer.address+(buyer.barrio?', '+buyer.barrio:'')).slice(0,100),city:buyer.city,country:'CO'});}
+            opts.billingAddress=JSON.stringify({address:(buyer.address+(buyer.barrio?', '+buyer.barrio:'')).slice(0,100),city:String(buyer.city||'').split(',')[0],country:'CO'});}
           var c=new BoldCheckout(opts);
           c.open();
         });
