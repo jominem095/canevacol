@@ -5000,7 +5000,7 @@ body.cv-has-pbar .ann-bar{display:none!important}
         push({t:'k',k:'pago_bold',l:money(d.amount)});
         return loadBold().then(function(){
           var c=new BoldCheckout({orderId:d.orderId,currency:'COP',amount:String(d.amount),apiKey:d.apiKey,integritySignature:d.signature,description:d.description,
-            redirectionUrl:'https://canevacol.com/?pago=bold',originUrl:location.href.split('#')[0]});
+            redirectionUrl:'https://canevacol.com'+(/^\/[a-z0-9_\-]+\.html$/i.test(location.pathname)?location.pathname:'/')+'?pago=bold',originUrl:location.href.split('#')[0]});
           c.open();
         });
       })
