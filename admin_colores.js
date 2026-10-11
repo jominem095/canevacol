@@ -51,19 +51,23 @@
     });return out;
   }
   // Product model in this tab: color per photo + extra colors without photo
+  // Each photo can show several colors (e.g. the same body in pink, cream and nude in one picture)
   function modelFromSaved(p){
-    var imgs=images(p),cs=parseColors(p.colores,imgs),photo=imgs.map(function(u){var c=cs.find(function(x){return x.u===u;});return c?c.n:"";});
+    var imgs=images(p),cs=parseColors(p.colores,imgs);
+    var photo=imgs.map(function(u){return cs.filter(function(x){return x.u===u;}).map(function(x){return x.n;});});
     return {photo:photo,extra:cs.filter(function(c){return !c.u||imgs.indexOf(c.u)<0;}).map(function(c){return c.n;})};
   }
-  function modelFromScan(p){var imgs=images(p);return {photo:imgs.map(function(u){var r=S.scan[u];return r&&r.n?r.n:"";}),extra:[]};}
+  function modelFromScan(p){var imgs=images(p);return {photo:imgs.map(function(u){var r=S.scan[u];return r&&r.n?[r.n]:[];}),extra:[]};}
   function model(i){return S.edit[i]||modelFromSaved(S.list[i]);}
+  function copyModel(m){return {photo:m.photo.map(function(a){return a.slice();}),extra:m.extra.slice()};}
+  function allNames(m){var out=[];m.photo.forEach(function(a){out=out.concat(a);});return out.concat(m.extra);}
   function serialize(p,m){
     var imgs=images(p),seen={},parts=[];
-    m.photo.forEach(function(n,k){if(!n||seen[flat(n)])return;seen[flat(n)]=1;parts.push(n+"="+imgs[k]);});
+    m.photo.forEach(function(a,k){a.forEach(function(n){if(!n||seen[flat(n)])return;seen[flat(n)]=1;parts.push(n+"="+imgs[k]);});});
     m.extra.forEach(function(n){if(!n||seen[flat(n)])return;seen[flat(n)]=1;parts.push(n);});
     return parts.join(", ");
   }
-  function names(i){var p=S.list[i],m=model(i),seen={},out=[];m.photo.concat(m.extra).forEach(function(n){if(n&&!seen[flat(n)]){seen[flat(n)]=1;out.push(n);}});return out;}
+  function names(i){var m=model(i),seen={},out=[];allNames(m).forEach(function(n){if(n&&!seen[flat(n)]){seen[flat(n)]=1;out.push(n);}});return out;}
   function dirty(i){return !!S.edit[i]&&serialize(S.list[i],S.edit[i])!==String(S.list[i].colores||"");}
   function dirtyList(){return Object.keys(S.edit).filter(dirty);}
 
@@ -162,7 +166,7 @@
     });
   }
   // Products without saved colors take the scan result as an unsaved suggestion
-  function applySuggestions(){var n=0;S.list.forEach(function(p,i){if(String(p.colores||"").trim()||S.edit[i])return;var m=modelFromScan(p);if(m.photo.some(Boolean)){S.edit[i]=m;n++;}});return n;}
+  function applySuggestions(){var n=0;S.list.forEach(function(p,i){if(String(p.colores||"").trim()||S.edit[i])return;var m=modelFromScan(p);if(m.photo.some(function(a){return a.length;})){S.edit[i]=m;n++;}});return n;}
   function progress(){var b=document.getElementById("ccProg");if(b){b.querySelector("i").style.width=Math.round(S.done/Math.max(1,S.total)*100)+"%";b.querySelector("span").textContent="Analizando fotos "+S.done+" / "+S.total+"…";}}
 
   // ---------- data ----------
@@ -191,13 +195,16 @@
     var cnt={};S.list.forEach(function(p,i){names(i).forEach(function(n){cnt[n]=(cnt[n]||0)+1;});});
     return Object.keys(cnt).map(function(n){return [n,cnt[n]];}).sort(function(a,b){return b[1]-a[1]||a[0].localeCompare(b[0]);});
   }
-  function opts(sel){return '<option value="">— sin color —</option>'+PALETTE.map(function(c){return '<option'+(flat(c[0])===flat(sel)?" selected":"")+'>'+esc(c[0])+'</option>';}).join("")+(sel&&!HEX[sel.toLowerCase()]?'<option selected>'+esc(sel)+'</option>':"")+'<option value="__otro">Otro…</option>';}
+  function addOpts(label){return '<option value="">'+label+'</option>'+PALETTE.map(function(c){return '<option>'+esc(c[0])+'</option>';}).join("")+'<option value="__otro">Otro…</option>';}
+  function opts(sel){return '<option value="">— sin color —</option>'+PALETTE.map(function(c){return '<option'+(flat(c[0])===flat(sel)?" selected":"")+'>'+esc(c[0])+'</option>';}).join("")+(sel&&!HEX[String(sel).toLowerCase()]?'<option selected>'+esc(sel)+'</option>':"")+'<option value="__otro">Otro…</option>';}
   function card(i){
     var p=S.list[i],m=model(i),imgs=images(p),ns=names(i),d=dirty(i);
-    var photos=imgs.length?imgs.map(function(u,k){var r=S.scan[u]||{},cur=m.photo[k]||"";
-      var hint=r.n&&flat(r.n)!==flat(cur)?'<em class="cc-hint" data-c="use" data-i="'+i+'" data-k="'+k+'" data-n="'+esc(r.n)+'">detecté: <i style="'+swatch(r.n)+'"></i>'+esc(r.n)+' · usar</em>':(r.err?'<em class="cc-hint bad">no se pudo leer</em>':(r.alt?'<em class="cc-hint dim">también tiene: '+esc(r.alt)+'</em>':""));
-      return '<div class="cc-ph"><div class="cc-img"><img src="'+esc(u)+'" loading="lazy" alt=""><b style="'+swatch(cur)+'"></b></div>'+
-        '<select data-ph="'+i+'" data-k="'+k+'">'+opts(cur)+'</select>'+hint+'</div>';}).join(""):'<div class="cc-dim">Sin fotos</div>';
+    var photos=imgs.length?imgs.map(function(u,k){var r=S.scan[u]||{},cur=m.photo[k]||[];
+      var has=function(n){return cur.some(function(x){return flat(x)===flat(n);});};
+      var hint=r.n&&!has(r.n)?'<em class="cc-hint" data-c="use" data-i="'+i+'" data-k="'+k+'" data-n="'+esc(r.n)+'">detecté: <i style="'+swatch(r.n)+'"></i>'+esc(r.n)+' · agregar</em>':(r.err?'<em class="cc-hint bad">no se pudo leer</em>':(r.alt&&!has(r.alt)?'<em class="cc-hint" data-c="use" data-i="'+i+'" data-k="'+k+'" data-n="'+esc(r.alt)+'">también tiene: <i style="'+swatch(r.alt)+'"></i>'+esc(r.alt)+' · agregar</em>':""));
+      return '<div class="cc-ph"><div class="cc-img"><img src="'+esc(u)+'" loading="lazy" alt=""><span class="cc-dots">'+cur.map(function(n){return '<b style="'+swatch(n)+'"></b>';}).join("")+'</span></div>'+
+        '<div class="cc-pcs">'+cur.map(function(n,j){return '<span class="cc-chip"><i style="'+swatch(n)+'"></i>'+esc(n)+'<button type="button" data-c="rmp" data-i="'+i+'" data-k="'+k+'" data-j="'+j+'" aria-label="Quitar">×</button></span>';}).join("")+'</div>'+
+        '<select data-padd="'+i+'" data-k="'+k+'">'+addOpts(cur.length?"+ otro color":"+ agregar color")+'</select>'+hint+'</div>';}).join(""):'<div class="cc-dim">Sin fotos</div>';
     var extra=m.extra.map(function(n,k){return '<span class="cc-chip"><i style="'+swatch(n)+'"></i>'+esc(n)+'<button type="button" data-c="rmx" data-i="'+i+'" data-k="'+k+'" aria-label="Quitar">×</button></span>';}).join("");
     return '<div class="cc-card'+(d?" dirty":"")+'" data-card="'+i+'">'+
       '<div class="cc-ch"><div><b>'+esc(p.nombre)+'</b><span>'+esc(p.categoria)+' · '+esc(p.precio)+'</span></div>'+
@@ -216,7 +223,7 @@
       if(S.flt==="varios")return ns.length>=2;
       if(S.flt==="sin")return !ns.length;
       if(S.flt==="cambios")return dirty(i);
-      if(S.flt==="revisar")return images(p).some(function(u,k){var r=S.scan[u];return r&&r.n&&flat(r.n)!==flat(model(i).photo[k]||"");});
+      if(S.flt==="revisar")return images(p).some(function(u,k){var r=S.scan[u];return r&&r.n&&!(model(i).photo[k]||[]).some(function(x){return flat(x)===flat(r.n);});});
       return true;
     });
   }
@@ -226,7 +233,7 @@
     var withC=S.list.filter(function(p,i){return names(i).length;}).length;
     S.el.innerHTML=
       '<div class="cc-head"><div><div class="cc-eyeb">Catálogo · '+S.list.length+' prendas</div><h2 class="cc-h">🎨 Colores de las prendas</h2>'+
-        '<p class="cc-lead">Analicé cada foto para detectar el color de la prenda. Revisa, corrige si algo está mal y toca <b>Guardar colores</b>. En la tienda, cuando una prenda tenga 2 colores o más, la clienta elige el tono y la foto cambia a la de ese color.</p></div>'+
+        '<p class="cc-lead">Analicé cada foto para detectar el color de la prenda. Revisa, corrige si algo está mal y toca <b>Guardar colores</b>. Si en una foto salen varios colores, agrégalos todos en esa foto. En la tienda, cuando una prenda tenga 2 colores o más, la clienta elige el tono y la foto cambia a la de ese color.</p></div>'+
         '<div class="cc-acts"><button type="button" class="cc-btn ghost" data-c="rescan"'+(S.busy?" disabled":"")+'>↻ Volver a analizar todo</button><button type="button" class="cc-btn" data-c="save"'+(dl?"":" disabled")+'>Guardar colores'+(dl?" ("+dl+")":"")+'</button></div></div>'+
       (S.busy?'<div class="cc-prog" id="ccProg"><i style="width:'+Math.round(S.done/Math.max(1,S.total)*100)+'%"></i><span>Analizando fotos '+S.done+' / '+S.total+'…</span></div>':"")+
       '<div class="cc-gama"><div class="cc-eyeb">Gama de colores de la tienda · '+g.length+' tonos · '+withC+' de '+S.list.length+' prendas con color</div><div class="cc-sw">'+
@@ -237,7 +244,13 @@
         (S.col?'<button type="button" class="cc-btn ghost sm" data-col="">Quitar filtro: '+esc(S.col)+' ×</button>':"")+'</div>'+
       '<div class="cc-grid">'+(vis.length?vis.map(card).join(""):'<div class="cc-empty">Nada por aquí.</div>')+'</div>';
   }
-  function setPhoto(i,k,n){var m=model(i);m={photo:m.photo.slice(),extra:m.extra.slice()};m.photo[k]=n;S.edit[i]=m;}
+  // Adds a color to one photo; a color already used elsewhere in the garment moves here
+  function addPhoto(i,k,n){
+    var m=copyModel(model(i)),f=flat(n);
+    if((m.photo[k]||[]).some(function(x){return flat(x)===f;}))return toast(n+" ya está en esta foto");
+    m.photo=m.photo.map(function(a){return a.filter(function(x){return flat(x)!==f;});});m.extra=m.extra.filter(function(x){return flat(x)!==f;});
+    (m.photo[k]=m.photo[k]||[]).push(n);S.edit[i]=m;
+  }
   function askOther(){var n=(prompt("Nombre del color (ej: Verde esmeralda):")||"").trim().replace(/[=,;]/g," ").slice(0,30);return n;}
   function bind(el){
     el.addEventListener("click",function(e){
@@ -248,13 +261,16 @@
       if(c==="reload")return load();
       if(c==="save")return save();
       if(c==="rescan")return runScan(true);
-      if(c==="use"){setPhoto(i,+t.dataset.k,t.dataset.n);return render();}
-      if(c==="rmx"){var m=model(i);m={photo:m.photo.slice(),extra:m.extra.slice()};m.extra.splice(+t.dataset.k,1);S.edit[i]=m;return render();}
+      if(c==="use"){addPhoto(i,+t.dataset.k,t.dataset.n);return render();}
+      if(c==="rmp"){var mp=copyModel(model(i));mp.photo[+t.dataset.k].splice(+t.dataset.j,1);S.edit[i]=mp;return render();}
+      if(c==="rmx"){var m=copyModel(model(i));m.extra.splice(+t.dataset.k,1);S.edit[i]=m;return render();}
     });
     el.addEventListener("change",function(e){
       var s=e.target;
-      if(s.hasAttribute("data-ph")){var n=s.value;if(n==="__otro"){n=askOther();if(!n)return render();}setPhoto(+s.dataset.ph,+s.dataset.k,n);return render();}
-      if(s.hasAttribute("data-addx")){var i=+s.dataset.addx,v=s.value==="__otro"?askOther():s.value;if(!v)return;var m=model(i);m={photo:m.photo.slice(),extra:m.extra.slice()};if(!m.photo.concat(m.extra).some(function(x){return flat(x)===flat(v);}))m.extra.push(v);S.edit[i]=m;return render();}
+      if(s.hasAttribute("data-padd")){var n=s.value;if(n==="__otro")n=askOther();if(!n)return render();addPhoto(+s.dataset.padd,+s.dataset.k,n);return render();}
+      if(s.hasAttribute("data-addx")){var i=+s.dataset.addx,v=s.value==="__otro"?askOther():s.value;if(!v)return render();var m=copyModel(model(i));
+        if(allNames(m).some(function(x){return flat(x)===flat(v);})){toast(v+" ya está en esta prenda (quítalo de la foto si lo quieres sin foto)");return render();}
+        m.extra.push(v);S.edit[i]=m;return render();}
     });
     el.addEventListener("input",function(e){if(e.target.hasAttribute("data-q")){S.q=e.target.value;clearTimeout(S.qt);S.qt=setTimeout(function(){render();var q=S.el.querySelector("[data-q]");if(q){q.focus();var L=q.value.length;try{q.setSelectionRange(L,L);}catch(x){}}},300);}});
   }
@@ -292,7 +308,8 @@
   ".cc-new{font-style:normal;font-size:10.5px;color:#d9c49b;border:1px solid rgba(217,196,155,.5);border-radius:999px;padding:2px 7px;margin-left:4px}",
   ".cc-phs{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px}",
   ".cc-ph{flex:0 0 120px;display:flex;flex-direction:column;gap:6px}.cc-img{position:relative;width:120px;height:150px;border-radius:10px;overflow:hidden;background:#1a1a1a}.cc-img img{width:100%;height:100%;object-fit:cover;display:block}",
-  ".cc-img b{position:absolute;right:6px;bottom:6px;width:24px;height:24px;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.5)}",
+  ".cc-dots{position:absolute;right:6px;bottom:6px;display:flex;gap:3px}.cc-dots b{width:20px;height:20px;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.5)}",
+  ".cc-pcs{display:flex;flex-wrap:wrap;gap:4px}.cc-pcs .cc-chip{font-size:11.5px}",
   ".cc-ph select,.cc-x select{width:100%;background:var(--k,#0b0b0b);color:inherit;border:1px solid var(--b,rgba(255,255,255,.14));border-radius:8px;padding:6px;font:inherit;font-size:12px}.cc-x select{width:auto}",
   ".cc-hint{font-style:normal;font-size:11px;color:#d9c49b;cursor:pointer;display:flex;align-items:center;gap:4px;line-height:1.25}.cc-hint i{width:12px;height:12px}.cc-hint.bad{color:#ff8f80;cursor:default}.cc-hint.dim{color:var(--dim,#9a9a96);cursor:default}",
   ".cc-x{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px;padding-top:10px;border-top:1px dashed var(--b,rgba(255,255,255,.14));font-size:12px}",
