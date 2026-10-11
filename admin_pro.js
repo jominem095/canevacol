@@ -451,6 +451,18 @@
         (sib?'<div class="cp-eyeb" style="margin:14px 0 4px">Otros visitantes con la misma IP (misma casa, oficina o red)</div>'+sib:'');
     }).catch(function(e){var box=document.getElementById("cpAudit");if(box)box.innerHTML=/Worker|Ruta|404/.test(e.message||"")?'<p class="cp-hint">Pega el Worker v37 para ver la auditoría completa.</p>':'';});
   }
+  function pointMap(v){
+    var g=vGeo(v),box=document.getElementById("cpPtMap");if(!g||!box)return;
+    loadLeaflet().then(function(){
+      var m=L.map(box,{scrollWheelZoom:false,zoomControl:true,attributionControl:true});
+      L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,className:"cp-darktiles",attribution:'© OpenStreetMap'}).addTo(m);
+      var z=v.ubicacion_exacta?17:g.barrio?15:12;m.setView([g.lat,g.lon],z);
+      if(v.ubicacion_exacta&&v.precision_metros)L.circle([g.lat,g.lon],{radius:Number(v.precision_metros),color:"#d9c49b",weight:1,fillColor:"#d9c49b",fillOpacity:.15}).addTo(m);
+      if(!v.ubicacion_exacta&&!g.barrio)L.circle([g.lat,g.lon],{radius:4000,color:"#888",weight:1,dashArray:"4 4",fillOpacity:.05}).addTo(m);
+      L.marker([g.lat,g.lon],{icon:L.divIcon({className:"cp-pinw",html:'<div class="cp-pin'+(g.exact?" ex":"")+'" style="width:18px;height:18px"><span></span></div>',iconSize:[18,18],iconAnchor:[9,9]})}).addTo(m);
+      setTimeout(function(){m.invalidateSize();},120);
+    }).catch(function(){});
+  }
   function visOpen(i){
     var v=(V.data.visits||[])[i];if(!v)return;
     var p=v.perfil||{},igh=v.instagram?String(v.instagram).replace(/^@/,""):"",wn=waNum(v.whatsapp_clienta);
@@ -463,6 +475,7 @@
     var html='<div class="cp-shead"><div style="flex:1;min-width:0"><div class="cp-eyeb">'+esc(vTime(v))+(v.codigo_ref?' · 🔖 Ref '+esc(v.codigo_ref):"")+'</div><h3 class="cp-h3">'+esc(vTitle(v))+'</h3><div class="cp-vb">'+vBadges(v)+'</div></div><button type="button" class="cp-x" data-cpclose aria-label="Cerrar">✕</button></div>'+
       (v.idea_para_dm?'<div class="cp-idea">💡 '+esc(v.idea_para_dm)+'</div>':"")+
       (btns.length?'<div class="cp-vbtns">'+btns.join("")+'</div>':"")+
+      (vGeo(v)?'<div id="cpPtMap" class="cp-ptmap"></div><div class="cp-dim" style="font-size:11.5px;margin-top:4px">'+(v.ubicacion_exacta?"📍 Punto GPS del celular"+(v.precision_metros?" · el círculo muestra el margen de ±"+v.precision_metros+" m":""):v.punto_escrito?"🏠 Barrio que ella escribió":"🌐 Zona aproximada por su internet (ciudad)")+'</div>':'')+
       '<div id="cpAudit" class="cp-audit"><div class="cp-dim" style="font-size:12.5px">🕵️ Cargando auditoría completa…</div></div>'+
       (!igh&&!wn?'<p class="cp-hint" style="margin-top:10px">No dejó Instagram ni WhatsApp. Si te escribe, busca su código 🔖 '+esc(v.codigo_ref||"")+' en el mensaje.</p>':"")+
       sect("Quién",kv("Instagram",v.instagram)+kv("Club Caneva",v.clienta)+kv("WhatsApp",v.whatsapp_clienta)+kv("Talla del perfil",v.talla_perfil))+
@@ -476,6 +489,7 @@
     openSheet(html,{click:function(e){var b=e.target.closest("[data-vcopy]");if(b){try{navigator.clipboard.writeText(v.idea_para_dm);toast("Idea copiada ✓");}catch(x){}}
       var dd=e.target.closest("[data-auday]");if(dd){var tl=dd.parentNode.querySelector(".cp-tl");if(tl)tl.hidden=!tl.hidden;}}});
     auditLoad(v);
+    pointMap(v);
   }
   function repTop(field,unit){
     var top=R.data.products.filter(function(p){return p[field]>0;}).sort(function(a,b){return b[field]-a[field];}).slice(0,5);
@@ -548,7 +562,7 @@
     C.el.innerHTML='<div class="cp-head"><div><div class="cp-eyeb"><span class="cp-livedot"></span> En vivo · se actualiza solo</div><h2 class="cp-h">Centro de control</h2></div>'+
       '<div class="cp-seg">'+[[1,"Hoy"],[7,"7 días"],[30,"30 días"]].map(function(x){return '<button type="button" data-cdays="'+x[0]+'" class="'+(x[0]===C.days?"on":"")+'">'+x[1]+'</button>';}).join("")+'</div></div>'+
       '<div class="cp-ctl-top"><div class="cp-card cp-livecard" id="ctlLive"></div><div class="cp-card cp-mapcard"><div id="ctlMap" class="cp-vmap cp-ctlmap"></div></div></div>'+
-      '<div id="ctlNums"></div><div id="ctlIg"></div><div id="ctlLinks"></div><div id="ctlTasks"></div><div id="ctlOrig"></div><div id="ctlSet"></div>';
+      '<div id="ctlNums"></div><div id="ctlDiag"></div><div id="ctlQual"></div><div id="ctlIg"></div><div id="ctlLinks"></div><div id="ctlTasks"></div><div id="ctlOrig"></div><div id="ctlSet"></div>';
     ctlFill();
     if(!C.timer)C.timer=setInterval(function(){if(C.el&&C.el._cpKind==="control"&&C.el.offsetParent&&document.visibilityState==="visible")ctlLoad(true);},30000);
   }
@@ -573,6 +587,21 @@
       '<div class="cp-kpi"><span>Prendas vistas</span><b>'+num(T.views)+'</b><small>'+dl(T.views,Y.views)+'</small></div></div>'+
       '<div class="cp-card cp-goal"><div class="cp-cardh"><div><span class="cp-eyeb">Meta del mes</span><div class="cp-goalnum">'+money(M.revenue)+(M.goal?' <span class="cp-dim">de '+money(M.goal)+'</span>':'')+'</div></div><button type="button" class="cp-btn ghost" data-a="cset">'+(M.goal?"Cambiar meta":"Poner meta")+'</button></div>'+
       (M.goal?'<div class="cp-goalbar"><i style="width:'+gpct+'%"></i><em style="left:'+Math.min(100,Math.round(M.dayOfMonth/M.daysInMonth*100))+'%" title="Hoy"></em></div><div class="cp-dim" style="font-size:12.5px;margin-top:8px">'+gpct+'% logrado · '+num(M.orders)+' pedidos · a este ritmo cierras el mes en <b style="color:var(--w)">'+money(proj)+'</b>'+(proj>=M.goal?' ✨ ¡vas a cumplir!':' · te faltan '+money(Math.max(0,M.goal-M.revenue)))+'</div>':'<div class="cp-dim" style="font-size:13px">Pon una meta de ventas para ver cuánto llevas y si vas a cumplir.</div>')+'</div>';
+    // automatic diagnosis + traffic quality + ad spend
+    var DG=D.diagnosis||[],Q=D.quality||[],SP=D.spend||{total:0,list:[]};
+    document.getElementById("ctlDiag").innerHTML='<div class="cp-sect" style="margin-top:22px">🧠 Diagnóstico automático · qué cambiar para vender más</div>'+
+      (DG.length?'<div class="cp-diag">'+DG.map(function(t){return '<div class="cp-dg '+esc(t.level)+'"><b>'+(t.level==="alta"?"🔴 ":t.level==="media"?"🟠 ":"💡 ")+esc(t.title)+'</b><p>'+esc(t.text)+'</p></div>';}).join("")+'</div>':empty("Todavía no hay suficientes visitas para un diagnóstico."));
+    var tot=Q.reduce(function(a,x){return a+x.visits;},0),wrote=Q.reduce(function(a,x){return a+Math.round(x.wrote*x.visits/100);},0);
+    function cell(v,good,bad,inv){var c=inv?(v>=bad?"cp-bad":v<=good?"cp-good":""):(v>=good?"cp-good":v<=bad?"cp-bad":"");return '<td class="r '+c+'">'+v+'%</td>';}
+    document.getElementById("ctlQual").innerHTML='<div class="cp-sect" style="margin-top:22px">🎯 Calidad del tráfico por fuente · '+(C.days===1?"hoy":C.days+" días")+'</div>'+
+      (Q.length?'<div class="cp-card"><div class="cp-tbl cp-qt"><table><thead><tr><th>Fuente</th><th class="r">Visitas</th><th class="r" title="Se fueron en menos de 10 s sin ver nada">Rebote</th><th class="r">Tiempo prom.</th><th class="r">Bajaron</th><th class="r">Vieron prendas</th><th class="r">A la bolsa</th><th class="r">Escribieron</th></tr></thead><tbody>'+
+        Q.map(function(x){return '<tr><td><b>'+esc(x.source)+'</b></td><td class="r" data-l="Visitas">'+num(x.visits)+'</td>'+cell(x.bounce,30,60,true).replace('<td','<td data-l="Rebote"')+'<td class="r" data-l="Tiempo">'+(x.avgSec?(x.avgSec>=60?Math.floor(x.avgSec/60)+" min ":"")+(x.avgSec%60)+" s":"—")+'</td>'+cell(x.scrolled,50,15).replace('<td','<td data-l="Bajaron"')+cell(x.viewed,40,10).replace('<td','<td data-l="Vieron"')+cell(x.bag,10,0).replace('<td','<td data-l="Bolsa"')+cell(x.wrote,5,0).replace('<td','<td data-l="Escribieron"')+'</tr>';}).join("")+'</tbody></table></div>'+
+        '<p class="cp-hint">Rebote = se fue en menos de 10 s sin bajar ni ver prendas. Verde = bueno, rojo = para mejorar.</p></div>':empty("Sin visitas en este período."))+
+      '<div class="cp-card" style="margin-top:12px"><div class="cp-cardh"><div><span class="cp-eyeb">💸 Inversión en anuncios</span><div class="cp-goalnum">'+money(SP.total)+' <span class="cp-dim" style="font-size:13px">en '+(C.days===1?"hoy":C.days+" días")+'</span></div></div></div>'+
+        (SP.total?'<div class="cp-lks"><div><b>'+(tot?money(Math.round(SP.total/tot)):"—")+'</b><span>por visita</span></div><div><b>'+(wrote?money(Math.round(SP.total/wrote)):"—")+'</b><span>por clienta que escribió</span></div><div><b>'+(D.numbers.month.orders?money(Math.round(SP.total/D.numbers.month.orders)):"—")+'</b><span>por pedido (mes)</span></div></div>':'')+
+        '<div class="cp-2" style="margin-top:8px"><div class="cp-field"><label>¿Cuánto gastaste?</label><input id="spAmt" inputmode="numeric" placeholder="Ej: 20000"></div><div class="cp-field"><label>Día</label><input id="spDay" type="date" value="'+esc(D.today)+'"></div></div>'+
+        '<div class="cp-field"><label>Nota (opcional)</label><input id="spNote" maxlength="60" placeholder="Anuncio vestidos"></div><button type="button" class="cp-btn full" data-a="spadd">Agregar gasto</button>'+
+        ((SP.list||[]).length?'<div style="margin-top:10px">'+SP.list.slice(0,8).map(function(x){return '<div class="cp-tr"><div><b>'+money(x.amount)+'</b><small>'+esc(x.day)+(x.note?" · "+esc(x.note):"")+'</small></div><button type="button" class="cp-mini" data-spdel="'+esc(x.id)+'">Quitar</button></div>';}).join("")+'</div>':'')+'</div>';
     // tasks
     var K=D.tasks,items=[];
     function box(icon,title,list,render,extra){if(!list.length)return "";return '<div class="cp-card cp-task"><div class="cp-cardh"><span class="cp-taskt">'+icon+' '+title+' <i>'+list.length+'</i></span>'+(extra||"")+'</div>'+list.slice(0,8).map(render).join("")+(list.length>8?'<div class="cp-dim" style="font-size:12px;margin-top:6px">y '+(list.length-8)+' más…</div>':'')+'</div>';}
@@ -667,6 +696,9 @@
     var b;
     if((b=e.target.closest("[data-cdays]"))){C.days=Number(b.dataset.cdays);return ctlLoad(true);}
     if((b=e.target.closest("[data-lkcopy]")))return copy(b.dataset.lkcopy);
+    if((b=e.target.closest("[data-a]"))&&b.dataset.a==="spadd"){var amt=String(document.getElementById("spAmt").value||"").replace(/\D/g,"");if(!amt){toast("Escribe cuánto gastaste",true);return;}
+      return api("/admin/spend",{method:"POST",body:{amount:amt,day:document.getElementById("spDay").value,note:document.getElementById("spNote").value}}).then(function(){toast("Gasto agregado ✓");return ctlLoad(true);}).catch(function(x){toast(x.message,true);});}
+    if((b=e.target.closest("[data-spdel]"))){return api("/admin/spend",{method:"POST",body:{remove:b.dataset.spdel}}).then(function(){return ctlLoad(true);}).catch(function(x){toast(x.message,true);});}
     if((b=e.target.closest("[data-adel]"))){return api("/admin/devices",{method:"POST",body:{remove:b.dataset.adel}}).then(function(){toast("Quitado ✓");return ctlLoad(true);}).catch(function(x){toast(x.message,true);});}
     if((b=e.target.closest("[data-atoff]"))){var on=b.checked;return api("/admin/devices",{method:"POST",body:{vid:myVid(),name:myName(),off:on}}).then(function(){toast(on?"Listo: tus visitas ya no se cuentan":"Se vuelven a contar todas las visitas");return ctlLoad(true);}).catch(function(x){b.checked=!on;toast(x.message,true);});}
     if((b=e.target.closest("[data-lkdel]"))){if(!confirm("¿Quitar este enlace? Las visitas que trajo se conservan."))return;return api("/admin/links",{method:"POST",body:{remove:b.dataset.lkdel}}).then(lkLoad).catch(function(x){toast(x.message,true);});}
@@ -875,6 +907,9 @@
   ".cp-kv a{color:#d9c49b}.cp-audh{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;width:100%;text-align:left;background:var(--k2);border:1px solid var(--b);border-radius:10px;padding:9px 11px;color:var(--w);cursor:pointer;font-family:inherit;margin-top:6px}.cp-audh span{font-size:12px;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
   ".cp-tl code{font-size:11px;color:#d9c49b;background:rgba(217,196,155,.1);border-radius:4px;padding:1px 4px;margin-right:4px}",
   ".cp-switch{display:flex;align-items:center;gap:12px;cursor:pointer;margin:6px 0}.cp-switch input{display:none}.cp-switch span{flex:none;width:46px;height:26px;border-radius:999px;background:#2a2a2a;position:relative;transition:background .25s}.cp-switch span::after{content:'';position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#f7f7f4;transition:transform .25s}.cp-switch input:checked+span{background:#5ef0a0}.cp-switch input:checked+span::after{transform:translateX(20px)}.cp-switch b{font-size:13.5px;font-weight:500}",
+  ".cp-ptmap{height:220px;border-radius:12px;overflow:hidden;margin-top:12px;border:1px solid var(--b);background:#0d0d0d}.cp-ptmap .cp-darktiles{filter:invert(1) hue-rotate(180deg) brightness(.82) contrast(1.1) saturate(.25)}",
+  ".cp-diag{display:grid;gap:10px;grid-template-columns:1fr}@media(min-width:900px){.cp-diag{grid-template-columns:1fr 1fr}}.cp-dg{border:1px solid var(--b);border-radius:14px;padding:12px 14px;background:var(--k2)}.cp-dg b{display:block;font-size:14px;line-height:1.35}.cp-dg p{margin:6px 0 0;font-size:13px;line-height:1.5;color:var(--dim)}.cp-dg.alta{border-color:rgba(255,143,128,.5);background:linear-gradient(160deg,rgba(255,143,128,.08),var(--k2))}.cp-dg.media{border-color:rgba(244,196,106,.45)}",
+  ".cp-qt table{min-width:640px}.cp-good{color:#5ef0a0!important;font-weight:600}.cp-qt .cp-bad{color:#ff8f80!important;font-weight:600}",
   ".cp-idea{margin-top:14px;border:1px solid rgba(217,196,155,.5);background:linear-gradient(120deg,rgba(217,196,155,.14),rgba(247,247,244,.02));border-radius:12px;padding:12px 14px;font-size:14px;line-height:1.45;color:#f1e6cf}",
   ".cp-vbtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.cp-vbtns .cp-btn{text-decoration:none;display:inline-block}",
   ".cp-kv{display:grid;grid-template-columns:150px 1fr;gap:10px;padding:7px 0;border-top:1px solid var(--b);font-size:13px}.cp-kv span{color:var(--dim)}.cp-kv b{font-weight:500;word-break:break-word}",
