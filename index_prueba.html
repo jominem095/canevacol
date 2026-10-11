@@ -2116,7 +2116,8 @@ function normalizeProductForSite(p){
     url:String(p.url||p.urlProducto||'').trim(),
     tela:String(p.tela||'').trim(),
     id:String(p.id||'').trim(),
-    inv:(p.inv&&typeof p.inv==='object')?p.inv:null
+    inv:(p.inv&&typeof p.inv==='object')?p.inv:null,
+    colores:String(p.colores||'').trim()
   };
 }
 function renderFilters(){
@@ -4670,5 +4671,133 @@ body.cv-fast .bw-logo-wrap{transform:scale(.82);transform-origin:center top;marg
   }).catch(function(){});
 })();
 </script>
+<style id="cvcolor-css">
+.pm-color-wrap{display:none;margin:1.1rem 0 .2rem}
+.pm-color-wrap.show{display:block}
+.pm-color-head{display:flex;justify-content:space-between;align-items:baseline;gap:.6rem;margin-bottom:.65rem}
+.pm-color-title{font-size:.58rem;letter-spacing:.28em;text-transform:uppercase;color:var(--w)}
+.pm-color-title b{font-weight:500;color:var(--g);letter-spacing:.12em;margin-left:.35rem}
+.pm-color-help{font-size:.5rem;letter-spacing:.2em;text-transform:uppercase;color:var(--dim)}
+.pm-color-options{display:flex;flex-wrap:wrap;gap:.6rem}
+.pm-color-btn{position:relative;width:38px;height:38px;border-radius:50%;border:1px solid rgba(250,249,246,.28);padding:0;cursor:pointer;background:none;transition:transform .25s cubic-bezier(.16,1,.3,1),box-shadow .25s}
+.pm-color-btn i{position:absolute;inset:4px;border-radius:50%;border:1px solid rgba(255,255,255,.18)}
+.pm-color-btn:hover{transform:scale(1.08)}
+.pm-color-btn.on{box-shadow:0 0 0 2px #050403,0 0 0 3px var(--g);transform:scale(1.06)}
+.pm-color-btn .cv-cam{position:absolute;right:-3px;bottom:-3px;width:14px;height:14px;border-radius:50%;background:#050403;border:1px solid var(--bdr);display:grid;place-items:center;font-size:7px;line-height:1}
+.pm-color-note{font-size:.62rem;color:var(--dim);margin-top:.55rem;letter-spacing:.04em;min-height:1em}
+.pm-color-wrap.need .pm-color-options{animation:cvColNeed .5s 2}
+@keyframes cvColNeed{0%,100%{transform:none}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.pm-color-wrap.need .pm-color-help{color:#ff9b8a}
+#pmMedia img.cv-col-fade{transition:opacity .2s}
+.cv-dots{display:flex;align-items:center;gap:3px;margin-top:.35rem}
+.cv-dots i{width:9px;height:9px;border-radius:50%;border:1px solid rgba(250,249,246,.35);display:inline-block}
+.cv-dots span{font-size:.48rem;letter-spacing:.12em;color:var(--dim);margin-left:3px;text-transform:uppercase}
+</style>
+<script id="cvcolor">
+// Color options per garment (admin "Colores" tab, product field "colores": "Negro=photoUrl, Beige, ...").
+// With 2+ colors the shopper must pick one; picking a color with its own photo switches the photo.
+(function(){
+  if(typeof renderSizeSelector!=='function'||typeof productKey!=='function')return;
+  var HEX={'negro':'#141414','gris oscuro':'#4a4a4c','gris':'#8f8f91','gris claro':'#c4c4c4','blanco':'#f6f6f3','hueso':'#ece3d2','beige':'#d8c3a0','nude':'#ddb39b','camel':'#b98a55','café':'#6b4a32','chocolate':'#3d2a1f',
+    'azul jean claro':'#94b2cf','azul jean':'#56739a','azul jean oscuro':'#2f405c','azul marino':'#1d2846','azul rey':'#2a4bb0','celeste':'#a8cfe9','verde menta':'#a7dcc3','verde':'#2f8a57','verde oliva':'#6c6b3b','verde militar':'#4a5226',
+    'amarillo':'#f1d13b','mostaza':'#c9a12a','naranja':'#ee7d2b','coral':'#f07f6f','terracota':'#b4573b','rojo':'#c3202b','vinotinto':'#6a1727','rosado':'#f2b4c6','rosa palo':'#e5c4c2','fucsia':'#d4277b','lila':'#c2a6d8','morado':'#5d3a86',
+    'estampado':'linear-gradient(135deg,#d8c3a0 0 33%,#141414 33% 66%,#c3202b 66%)'};
+  function flat(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
+  function bg(n){var h=HEX[String(n||'').toLowerCase()]||HEX[flat(n).replace('cafe','café')];return 'background:'+(h||'linear-gradient(135deg,#8a8a8a,#2a2a2a)');}
+  function imgsOf(p){return typeof productImages==='function'?productImages(p):[p.imagen];}
+  function colorsOf(p){
+    var imgs=imgsOf(p),out=[];
+    String((p&&p.colores)||'').split(/\s*(?:,|;|\n)\s*/).forEach(function(part){
+      if(!part)return;var i=part.indexOf('='),n=(i<0?part:part.slice(0,i)).trim(),u=i<0?'':part.slice(i+1).trim();
+      if(!n||n.length>40)return;
+      if(u&&u.indexOf('http')!==0){var f=flat(u);u=imgs.find(function(x){return flat(decodeURIComponent(x.split('?')[0])).slice(-f.length)===f;})||'';}
+      if(!out.some(function(o){return flat(o.n)===flat(n);}))out.push({n:n,u:u});
+    });
+    return out;
+  }
+  window.cvColorsOf=colorsOf;
+  var cur='',curU='',curIdx=-1;
+  function curP(){return (typeof currentProductIndex!=='undefined'&&currentProductIndex>=0)?P[currentProductIndex]:null;}
+  function colorFor(p){return p&&p===curP()&&curIdx===currentProductIndex?cur:'';}
+  function wrapEl(){
+    var w=document.getElementById('pmColorWrap');if(w)return w;
+    var size=document.getElementById('pmSizeWrap');if(!size)return null;
+    w=document.createElement('div');w.className='pm-color-wrap';w.id='pmColorWrap';w.setAttribute('aria-live','polite');
+    w.innerHTML='<div class="pm-color-head"><div class="pm-color-title">Color<b id="pmColorName"></b></div><div class="pm-color-help" id="pmColorHelp"></div></div><div class="pm-color-options" id="pmColorOptions" role="radiogroup" aria-label="Color"></div><div class="pm-color-note" id="pmColorNote"></div>';
+    size.parentNode.insertBefore(w,size);return w;
+  }
+  function setName(){var e=document.getElementById('pmColorName');if(e)e.textContent=cur?cur:'';}
+  function showPhoto(u){
+    if(!u)return;var media=document.getElementById('pmMedia');if(!media)return;
+    var slides=document.getElementById('pmSlides'),p=curP(),k=p?imgsOf(p).indexOf(u):-1;
+    if(slides&&k>=0){slides.dataset.cvAuto='1';slides.scrollTo({left:k*slides.clientWidth,behavior:'smooth'});setTimeout(function(){slides.dataset.cvAuto='';},700);return;}
+    var im=media.querySelector('img');if(!im||im.getAttribute('src')===u)return;
+    im.classList.add('cv-col-fade');im.style.opacity='0';
+    setTimeout(function(){im.onload=function(){im.style.opacity='1';};im.src=u;setTimeout(function(){im.style.opacity='1';},600);},200);
+  }
+  function refreshLinks(){var p=curP();var a=document.getElementById('pmWhats');if(p&&a&&typeof waLinkFor==='function')a.href=waLinkFor(p);}
+  function pick(n,fromSwipe){
+    var p=curP();if(!p)return;var c=colorsOf(p).find(function(x){return x.n===n;});if(!c)return;
+    cur=c.n;curU=c.u;curIdx=currentProductIndex;setName();
+    var w=wrapEl();if(w)w.classList.remove('need');
+    document.querySelectorAll('#pmColorOptions .pm-color-btn').forEach(function(b){var on=b.dataset.color===cur;b.classList.toggle('on',on);b.setAttribute('aria-checked',on?'true':'false');});
+    var note=document.getElementById('pmColorNote');if(note)note.textContent=c.u?'':'Foto de referencia en otro tono. Te enviamos foto real por WhatsApp.';
+    if(!fromSwipe)showPhoto(c.u);
+    refreshLinks();
+    if(typeof updateProductCartState==='function')updateProductCartState(currentProductIndex);
+    if(!fromSwipe&&window.cvStatsPush)try{cvStatsPush({t:'k',k:'color',l:cur.slice(0,40)});}catch(e){}
+  }
+  function renderColors(p){
+    cur='';curU='';curIdx=currentProductIndex;
+    var w=wrapEl();if(!w)return;
+    var cs=colorsOf(p),opts=document.getElementById('pmColorOptions'),help=document.getElementById('pmColorHelp'),note=document.getElementById('pmColorNote');
+    w.classList.remove('need');
+    if(!cs.length){w.classList.remove('show');opts.innerHTML='';setName();return;}
+    w.classList.add('show');
+    opts.innerHTML=cs.map(function(c){return '<button class="pm-color-btn" type="button" role="radio" aria-checked="false" data-color="'+escAttr(c.n)+'" title="'+escAttr(c.n)+'" aria-label="'+escAttr(c.n)+'"><i style="'+bg(c.n)+'"></i>'+(c.u&&cs.length>1?'<span class="cv-cam" aria-hidden="true">📷</span>':'')+'</button>';}).join('');
+    opts.querySelectorAll('.pm-color-btn').forEach(function(b){b.addEventListener('click',function(){pick(b.dataset.color);});});
+    if(cs.length===1){help.textContent='';note.textContent='';cur=cs[0].n;curU=cs[0].u;opts.firstChild.classList.add('on');setName();return;}
+    help.textContent='Elige tu tono';note.textContent=cs.length+' colores disponibles'+(cs.some(function(c){return c.u;})?' · toca un color para verlo':'');setName();
+    // Swiping to a photo that belongs to a color selects that color
+    var slides=document.getElementById('pmSlides');
+    if(slides&&!slides.dataset.cvBound){slides.dataset.cvBound='1';var t;slides.addEventListener('scroll',function(){if(slides.dataset.cvAuto)return;clearTimeout(t);t=setTimeout(function(){var q=curP();if(!q)return;var k=Math.round(slides.scrollLeft/Math.max(1,slides.clientWidth)),u=imgsOf(q)[k],c=colorsOf(q).find(function(x){return x.u&&x.u===u;});if(c&&c.n!==cur)pick(c.n,true);},160);},{passive:true});}
+  }
+  function needColor(p){
+    if(!p||p!==curP())return true;
+    if(colorsOf(p).length<2||cur)return true;
+    var w=wrapEl();if(w){w.classList.add('need');w.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(function(){w.classList.remove('need');},1500);}
+    if(typeof toastCart==='function')toastCart('Elige un color');
+    return false;
+  }
+  // ---- hooks into the store (global functions) ----
+  var oRSS=renderSizeSelector;renderSizeSelector=function(p){var r=oRSS.apply(this,arguments);try{renderColors(p);}catch(e){}return r;};
+  var oKey=productKey;productKey=function(p,size){var k=oKey(p,size),c=colorFor(p);return c?k+'|color='+c:k;};
+  if(typeof requireSizeIfNeeded==='function'){var oReq=requireSizeIfNeeded;requireSizeIfNeeded=function(p){if(!needColor(p))return false;return oReq.apply(this,arguments);};}
+  if(typeof addToCartByIndex==='function'){var oAdd=addToCartByIndex;addToCartByIndex=function(idx,open,size){
+    var p=P[idx],c=colorFor(p),u=curU,key=c?productKey(p,size||''):'',before=0;
+    if(c){var it0=CART.find(function(x){return x.key===key;});before=it0?it0.qty:0;}
+    var r=oAdd.apply(this,arguments);
+    if(c){var it=CART.find(function(x){return x.key===key;});if(it&&(!it.color||it.qty!==before)){it.color=c;if(u)it.imagen=u;saveCart();}}
+    return r;};}
+  if(typeof waLinkFor==='function'){var oWa=waLinkFor;waLinkFor=function(p){var c=colorFor(p);if(c)p=Object.assign({},p,{nombre:p.nombre+' · Color: '+c,imagen:curU||p.imagen});return oWa.call(this,p);};}
+  // Cart WhatsApp text and the order page carry the color in the garment name
+  if(typeof cartWhatsText==='function'){var oTxt=cartWhatsText;cartWhatsText=function(){
+    var keep=CART.map(function(it){return it.nombre;});
+    CART.forEach(function(it){if(it.color)it.nombre=it.nombre+' · Color: '+it.color;});
+    try{return oTxt.apply(this,arguments);}finally{CART.forEach(function(it,i){it.nombre=keep[i];});}};}
+  if(typeof orderItem==='function'){var oItem=orderItem;orderItem=function(p,qty,size){var r=oItem.apply(this,arguments);if(p&&p.color&&r&&r.nombre.indexOf(' · Color: ')<0)r.nombre+=' · Color: '+p.color;return r;};}
+  if(typeof renderCart==='function'){var oCart=renderCart;renderCart=function(){var r=oCart.apply(this,arguments);try{
+    document.querySelectorAll('#cartItems .cart-item').forEach(function(row){var it=CART.find(function(x){return x.key===row.dataset.key;});if(!it||!it.color)return;var nm=row.querySelector('.cart-cat')||row.querySelector('.cart-name');if(nm&&!row.querySelector('.cv-cart-color')){var d=document.createElement('div');d.className='cart-size cv-cart-color';d.innerHTML='<strong>Color:</strong> <i style="display:inline-block;width:9px;height:9px;border-radius:50%;vertical-align:-1px;margin-right:3px;'+bg(it.color)+'"></i>'+escHtml(it.color);nm.parentNode.insertBefore(d,nm.nextSibling);}});
+  }catch(e){}return r;};}
+  // Grid cards: small color dots for garments with 2+ colors (observer survives any re-render)
+  function decorateGrid(){
+    document.querySelectorAll('#pgrid .pc').forEach(function(c){if(c.querySelector('.cv-dots'))return;var p=P[parseInt(c.dataset.pid,10)];var cs=p?colorsOf(p):[];if(cs.length<2)return;var info=c.querySelector('.pinfo');if(!info)return;var d=document.createElement('div');d.className='cv-dots';d.innerHTML=cs.slice(0,6).map(function(x){return '<i style="'+bg(x.n)+'" title="'+escAttr(x.n)+'"></i>';}).join('')+'<span>'+cs.length+' colores</span>';info.appendChild(d);});
+  }
+  var grid=document.getElementById('pgrid');
+  if(grid&&window.MutationObserver){new MutationObserver(function(){try{decorateGrid();}catch(e){}}).observe(grid,{childList:true});}
+  try{decorateGrid();}catch(e){}
+})();
+</script>
+
 </body>
 </html>
