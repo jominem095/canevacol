@@ -4953,5 +4953,92 @@ body.cv-has-pbar .ann-bar{display:none!important}
 })();
 </script>
 
+<style id="cvbold-css">
+#cartBold.cv-bold-on{display:flex!important;align-items:center;justify-content:center;gap:.5rem;width:100%;background:#f7f7f4;color:#050505;border:0;padding:1rem 1.2rem;font-family:'Inter',sans-serif;font-size:.66rem;letter-spacing:.2em;text-transform:uppercase;font-weight:700;cursor:pointer;border-radius:999px;margin-bottom:.55rem;opacity:1}
+#cartBold.cv-bold-on[disabled]{opacity:.6;cursor:wait}
+#cartBold.cv-bold-on ~ .cart-wa{background:transparent!important;color:var(--w)!important;border:1px solid rgba(250,249,246,.35)!important}
+.cv-bold-note{font-family:'Inter',sans-serif;font-size:.6rem;color:var(--dim);text-align:center;margin:-.2rem 0 .6rem;letter-spacing:.04em}
+.cv-bpay{position:fixed;inset:0;z-index:2000;background:rgba(5,4,3,.92);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px}
+.cv-bpay .cv-bbox{width:min(420px,100%);background:#0b0a09;border:1px solid rgba(250,249,246,.18);border-radius:18px;padding:28px 22px;text-align:center;color:#faf9f6;font-family:'Inter',sans-serif}
+.cv-bpay h3{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:2rem;margin:.4rem 0 .5rem}
+.cv-bpay p{font-size:.85rem;line-height:1.55;color:rgba(250,249,246,.72);margin:0 0 1rem}
+.cv-bpay .cv-bico{font-size:2.6rem}
+.cv-bpay .cv-bspin{width:38px;height:38px;margin:0 auto;border:3px solid rgba(250,249,246,.15);border-top-color:#faf9f6;border-radius:50%;animation:cvbs 1s linear infinite}
+@keyframes cvbs{to{transform:rotate(360deg)}}
+.cv-bpay a,.cv-bpay button{display:block;width:100%;box-sizing:border-box;margin-top:.55rem;padding:.95rem 1rem;border-radius:999px;font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;font-weight:700;text-decoration:none;cursor:pointer;font-family:inherit}
+.cv-bpay .pri{background:#f7f7f4;color:#050505;border:0}
+.cv-bpay .sec{background:none;color:#faf9f6;border:1px solid rgba(250,249,246,.3)}
+</style>
+<script id="cvbold">
+// Online payment with Bold: the Worker prices the bag from the catalog (with the active promo), signs it with the
+// secret key and returns the order; the Bold checkout opens; on return we ask the Worker for the real status.
+(function(){
+  if(typeof API_BASE==='undefined')return;
+  var BOLD_JS='https://checkout.bold.co/library/boldPaymentButton.js',ON=false,busyNow=false;
+  function push(ev){try{if(window.cvStatsPush)cvStatsPush(ev);}catch(e){}}
+  function money(n){return '$'+Math.round(Number(n)||0).toLocaleString('es-CO');}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function btn(){return document.getElementById('cartBold');}
+  function enable(){
+    var b=btn();if(!b)return;ON=true;b.hidden=false;b.classList.remove('cart-bold-off');b.classList.add('cv-bold-on');
+    b.innerHTML='💳 Pagar en línea · Bold';
+    if(!document.getElementById('cvBoldNote')){var n=document.createElement('div');n.id='cvBoldNote';n.className='cv-bold-note';n.textContent='Tarjeta, PSE, Nequi o Bancolombia · pago seguro con Bold. El envío se coordina por WhatsApp.';b.parentNode.insertBefore(n,b.nextSibling.nextSibling||null);}
+  }
+  fetch(API_BASE+'/pay/bold/config').then(function(r){return r.json();}).then(function(d){if(d&&d.enabled)enable();}).catch(function(){});
+  function loadBold(){return new Promise(function(ok,ko){if(window.BoldCheckout)return ok();var s=document.createElement('script');s.src=BOLD_JS;s.onload=function(){window.BoldCheckout?ok():ko(new Error('Bold'));};s.onerror=function(){ko(new Error('No se pudo cargar Bold'));};document.head.appendChild(s);});}
+  function overlay(html){var o=document.getElementById('cvBPay');if(!o){o=document.createElement('div');o.id='cvBPay';o.className='cv-bpay';document.body.appendChild(o);}o.innerHTML='<div class="cv-bbox">'+html+'</div>';return o;}
+  function closeOverlay(){var o=document.getElementById('cvBPay');if(o)o.remove();}
+  function waHref(txt){return 'https://wa.me/'+(typeof WA_PHONE!=='undefined'?WA_PHONE:'573057637089')+'?text='+encodeURIComponent(txt);}
+  function pay(){
+    if(busyNow)return;var cart=window.CART||[];if(!cart.length){if(typeof toastCart==='function')toastCart('Tu carrito está vacío');return;}
+    busyNow=true;var b=btn();if(b){b.disabled=true;b.innerHTML='Preparando pago…';}
+    var body={items:cart.map(function(it){return {pid:it.pid||'',nombre:it.nombre,categoria:it.categoria,qty:it.qty,size:it.size||'',color:it.color||''};})};
+    try{if(window.clubToken)body.token=clubToken();if(window.clubGuestEmail)body.email=clubGuestEmail();}catch(e){}
+    fetch(API_BASE+'/pay/bold',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){return r.json().then(function(d){if(!r.ok||!d.ok)throw new Error(d.error||'No se pudo iniciar el pago');return d;});})
+      .then(function(d){
+        try{localStorage.setItem('caneva_bold_pending',JSON.stringify({id:d.orderId,amount:d.amount,at:Date.now()}));}catch(e){}
+        push({t:'k',k:'pago_bold',l:money(d.amount)});
+        return loadBold().then(function(){
+          var c=new BoldCheckout({orderId:d.orderId,currency:'COP',amount:String(d.amount),apiKey:d.apiKey,integritySignature:d.signature,description:d.description,
+            redirectionUrl:'https://canevacol.com/?pago=bold',originUrl:location.href.split('#')[0]});
+          c.open();
+        });
+      })
+      .catch(function(e){overlay('<div class="cv-bico">⚠️</div><h3>No pudimos abrir el pago</h3><p>'+esc(e.message)+'</p><button class="pri" type="button" data-cvb="close">Volver a la bolsa</button><a class="sec" href="'+waHref('Hola Caneva ✨ Quiero pagar mi pedido y no me abrió Bold.')+'" target="_blank" rel="noopener">Pedir por WhatsApp</a>');})
+      .then(function(){busyNow=false;var b2=btn();if(b2){b2.disabled=false;b2.innerHTML='💳 Pagar en línea · Bold';}});
+  }
+  // Capture phase: runs before the old "Bold fuera de servicio" handler
+  document.addEventListener('click',function(e){
+    var t=e.target;if(!t||!t.closest)return;
+    if(t.closest('#cartBold')&&ON){e.preventDefault();e.stopImmediatePropagation();pay();return;}
+    var c=t.closest('[data-cvb]');if(c){var a=c.getAttribute('data-cvb');if(a==='close')closeOverlay();if(a==='retry'){closeOverlay();if(typeof openCart==='function')openCart();pay();}}
+  },true);
+  // ---- back from Bold ----
+  var sp=new URLSearchParams(location.search),oid=(sp.get('bold-order-id')||'').toLowerCase();
+  if(oid){
+    try{history.replaceState(null,'',location.pathname);}catch(e){}
+    overlay('<div class="cv-bspin"></div><h3>Verificando tu pago…</h3><p>Un momento, estamos confirmando con Bold.</p>');
+    var tries=0;
+    (function check(){
+      tries++;
+      fetch(API_BASE+'/pay/bold/status?id='+encodeURIComponent(oid)).then(function(r){return r.json();}).then(function(d){
+        var st=(d&&d.status)||'UNKNOWN';
+        if(st==='APPROVED'){
+          try{window.CART=[];if(typeof CART!=='undefined')CART.length=0;if(typeof saveCart==='function')saveCart();localStorage.removeItem('caneva_bold_pending');}catch(e){}
+          push({t:'k',k:'pago_aprobado',l:oid});
+          try{if(window.fbq)fbq('track','Purchase',{value:Number(d.total)||0,currency:'COP'});}catch(e){}
+          overlay('<div class="cv-bico">🖤</div><h3>¡Pago recibido!</h3><p>Tu pedido <b>#'+esc(oid.toUpperCase().slice(0,6))+'</b> quedó pagado'+(d.total?' ('+money(d.total)+')':'')+'. Escríbenos para coordinar la entrega.</p>'+
+            '<a class="pri" href="'+waHref('Hola Caneva ✨ Acabo de pagar con Bold mi pedido #'+oid.toUpperCase().slice(0,6)+'. 🖼 '+(d.orderUrl||'')+'\n¿Coordinamos la entrega?')+'" target="_blank" rel="noopener">Coordinar entrega por WhatsApp</a><button class="sec" type="button" data-cvb="close">Seguir mirando</button>');
+        }else if(/REJECTED|FAILED|VOIDED/.test(st)){
+          push({t:'k',k:'pago_rechazado',l:st});
+          overlay('<div class="cv-bico">💳</div><h3>El pago no se completó</h3><p>Bold indica que la transacción fue rechazada. Tus prendas siguen en la bolsa: puedes intentarlo de nuevo o pedir por WhatsApp.</p><button class="pri" type="button" data-cvb="retry">Intentar de nuevo</button><a class="sec" href="'+waHref('Hola Caneva ✨ Intenté pagar con Bold y no pasó. ¿Me ayudas?')+'" target="_blank" rel="noopener">Pedir por WhatsApp</a>');
+        }else if(tries<8){setTimeout(check,tries<3?3000:6000);}
+        else overlay('<div class="cv-bico">⏳</div><h3>Pago en proceso</h3><p>Bold aún está confirmando tu pago (pasa con PSE). Te avisamos por WhatsApp apenas se apruebe.</p><a class="pri" href="'+waHref('Hola Caneva ✨ Pagué con Bold mi pedido #'+oid.toUpperCase().slice(0,6)+' y está en proceso.')+'" target="_blank" rel="noopener">Avisar a Caneva</a><button class="sec" type="button" data-cvb="close">Seguir mirando</button>');
+      }).catch(function(){if(tries<8)setTimeout(check,5000);});
+    })();
+  }
+})();
+</script>
+
 </body>
 </html>
