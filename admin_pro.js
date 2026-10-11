@@ -677,7 +677,17 @@
   // ---------- Tracked links: one link per story / reel / bio / ad to know exactly what brings people ----------
   var K2={data:null,form:false};
   var META_PARAMS="utm_source=meta&utm_medium=paid&utm_campaign={{campaign.name}}&utm_content={{ad.name}}&utm_term={{placement}}";
-  function lkUrl(l){return "https://canevacol.com/?ref="+l.code+(l.cat?"&cat="+encodeURIComponent(l.cat):"");}
+  function lkUrl(l){return "https://canevacol.com/?ref="+l.code+(l.prod?"&p="+encodeURIComponent(l.prod):l.cat?"&cat="+encodeURIComponent(l.cat):"");}
+  // Same slug the store uses for ?p= (name--category--price)
+  function prodSlug(p){var f=function(v){return String(v||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");};return [f(p.nombre),f(p.categoria),String(p.precio||"").replace(/[^\d]/g,"")].filter(Boolean).join("--");}
+  function lkProducts(){
+    if(K2.prods)return;K2.prods=[];
+    fetch(OPT.api+"/catalog?ts="+Date.now(),{cache:"no-store"}).then(function(r){return r.json();}).then(function(d){
+      K2.prods=(d.products||[]).filter(function(p){return !/domicil|domicl|mayorista|others/i.test(p.categoria||"")&&!/^0+$|^agotad|^ocult/i.test(String(p.stock||"").trim());}).sort(function(a,b){return String(a.nombre).localeCompare(String(b.nombre));});
+      var sel=document.getElementById("lkProd");if(sel)sel.innerHTML=lkProdOpts();
+    }).catch(function(){});
+  }
+  function lkProdOpts(){return '<option value="">— Ninguna: abrir la tienda o la categoría —</option>'+(K2.prods||[]).map(function(p){return '<option value="'+esc(prodSlug(p))+'">'+esc(p.nombre+" · "+p.precio+" · "+p.categoria)+'</option>';}).join("");}
   function lkLoad(){return api("/admin/links?days=30").then(function(d){K2.data=d;lkRender();}).catch(function(e){var el=document.getElementById("ctlLinks");if(el&&/Worker|Ruta|404/.test(e.message||""))el.innerHTML='<div class="cp-sect" style="margin-top:22px">🔗 Enlaces de seguimiento</div>'+empty("Pega el Worker v36 para crear enlaces de seguimiento.");});}
   function copy(t){try{navigator.clipboard.writeText(t);toast("Copiado ✓");}catch(e){prompt("Copia el enlace:",t);}}
   function lkRender(){
@@ -688,10 +698,11 @@
       '<div class="cp-card"><div class="cp-cardh"><div><b style="font-size:14.5px">Crea un enlace para cada cosa que publiques</b><div class="cp-dim" style="font-size:12.5px;margin-top:3px">Ej: "Historia vestido rojo", "Bio", "Reel jeans". Pega ese enlace en la historia o en la bio y aquí verás cuántas personas trajo y qué hicieron.</div></div>'+
       '<button type="button" class="cp-btn'+(K2.form?" ghost":"")+'" data-a="lkform">'+(K2.form?"Cerrar":"+ Nuevo enlace")+'</button></div>'+
       (K2.form?'<div class="cp-2"><div class="cp-field"><label>Nombre</label><input id="lkName" maxlength="80" placeholder="Historia vestido rojo"></div><div class="cp-field"><label>¿Dónde lo vas a poner?</label><select id="lkPlace" class="cp-sel">'+(D.places||[]).map(function(p){return '<option>'+esc(p)+'</option>';}).join("")+'</select></div></div>'+
-        '<div class="cp-field"><label>Abrir directo en una categoría (opcional)</label><input id="lkCat" maxlength="60" placeholder="Ej: Vestidos / sets — déjalo vacío para la tienda completa"></div><button type="button" class="cp-btn full" data-a="lkcreate">Crear enlace</button>':"")+
+        '<div class="cp-field"><label>👗 Abrir directo una prenda (recomendado para historias y posts)</label><select id="lkProd" class="cp-sel">'+lkProdOpts()+'</select></div>'+
+        '<div class="cp-field"><label>…o abrir una categoría (opcional)</label><input id="lkCat" maxlength="60" placeholder="Ej: Vestidos / sets — déjalo vacío para la tienda completa"></div><button type="button" class="cp-btn full" data-a="lkcreate">Crear enlace</button>':"")+
       '</div>'+
       (L.length?'<div class="cp-lklist">'+L.map(function(l){var conv=l.visits?Math.round((l.wa+l.dm)/l.visits*100):0;
-        return '<div class="cp-card cp-lk'+(best&&best===l&&(l.wa+l.dm+l.bag)>0?" best":"")+'"><div class="cp-cardh"><div style="min-width:0"><b class="cp-lkn">'+(best===l&&(l.wa+l.dm+l.bag)>0?"🏆 ":"")+esc(l.name)+'</b><div class="cp-dim" style="font-size:12px">'+esc(l.place)+(l.cat?" · abre en "+esc(l.cat):"")+'</div></div><button type="button" class="cp-x" data-lkdel="'+esc(l.code)+'" title="Quitar">✕</button></div>'+
+        return '<div class="cp-card cp-lk'+(best&&best===l&&(l.wa+l.dm+l.bag)>0?" best":"")+'"><div class="cp-cardh"><div style="min-width:0"><b class="cp-lkn">'+(best===l&&(l.wa+l.dm+l.bag)>0?"🏆 ":"")+esc(l.name)+'</b><div class="cp-dim" style="font-size:12px">'+esc(l.place)+(l.prod?" · abre la prenda "+esc(l.prodName||l.prod.split("--")[0]):l.cat?" · abre en "+esc(l.cat):"")+'</div></div><button type="button" class="cp-x" data-lkdel="'+esc(l.code)+'" title="Quitar">✕</button></div>'+
           '<div class="cp-lkurl"><code>'+esc(lkUrl(l).replace("https://",""))+'</code><button type="button" class="cp-mini pri" data-lkcopy="'+esc(lkUrl(l))+'">Copiar</button></div>'+
           '<div class="cp-lks"><div><b>'+num(l.visits)+'</b><span>visitas</span></div><div><b>'+num(l.people)+'</b><span>personas</span></div><div><b>'+num(l.viewed)+'</b><span>vieron prendas</span></div><div><b>'+num(l.bag)+'</b><span>a la bolsa</span></div><div><b>'+num(l.wa+l.dm)+'</b><span>escribieron</span></div><div><b>'+conv+'%</b><span>conversión</span></div></div>'+
           (l.cities&&l.cities.length?'<div class="cp-dim" style="font-size:12px;margin-top:6px">📍 '+esc(l.cities.join(" · "))+'</div>':'')+'</div>';}).join("")+'</div>':'')+
@@ -723,9 +734,10 @@
     if((b=e.target.closest("[data-adel]"))){return api("/admin/devices",{method:"POST",body:{remove:b.dataset.adel}}).then(function(){toast("Quitado ✓");return ctlLoad(true);}).catch(function(x){toast(x.message,true);});}
     if((b=e.target.closest("[data-atoff]"))){var on=b.checked;return api("/admin/devices",{method:"POST",body:{vid:myVid(),name:myName(),off:on}}).then(function(){toast(on?"Listo: tus visitas ya no se cuentan":"Se vuelven a contar todas las visitas");return ctlLoad(true);}).catch(function(x){b.checked=!on;toast(x.message,true);});}
     if((b=e.target.closest("[data-lkdel]"))){if(!confirm("¿Quitar este enlace? Las visitas que trajo se conservan."))return;return api("/admin/links",{method:"POST",body:{remove:b.dataset.lkdel}}).then(lkLoad).catch(function(x){toast(x.message,true);});}
-    if((b=e.target.closest("[data-a]"))&&b.dataset.a==="lkform"){K2.form=!K2.form;return lkRender();}
+    if((b=e.target.closest("[data-a]"))&&b.dataset.a==="lkform"){K2.form=!K2.form;if(K2.form)lkProducts();return lkRender();}
     if((b=e.target.closest("[data-a]"))&&b.dataset.a==="lkcreate"){var nm=document.getElementById("lkName").value.trim();if(!nm){toast("Ponle un nombre",true);return;}
-      busy(true,"Creando enlace…");return api("/admin/links",{method:"POST",body:{name:nm,place:document.getElementById("lkPlace").value,cat:document.getElementById("lkCat").value.trim()}}).then(function(d){busy(false);K2.form=false;var cat=document.getElementById("lkCat");copy("https://canevacol.com/?ref="+d.code+(cat&&cat.value.trim()?"&cat="+encodeURIComponent(cat.value.trim()):""));return lkLoad();}).catch(function(x){busy(false);toast(x.message,true);});}
+      var ps=document.getElementById("lkProd"),prod=ps?ps.value:"",pname=prod&&ps.selectedIndex>0?ps.options[ps.selectedIndex].text.split(" · ")[0]:"",catv=document.getElementById("lkCat").value.trim();
+      busy(true,"Creando enlace…");return api("/admin/links",{method:"POST",body:{name:nm,place:document.getElementById("lkPlace").value,cat:catv,prod:prod,prodName:pname}}).then(function(d){busy(false);K2.form=false;copy(lkUrl({code:d.code,prod:prod,cat:prod?"":catv}));toast("Enlace creado y copiado ✓ Pégalo en el sticker de enlace");return lkLoad();}).catch(function(x){busy(false);toast(x.message,true);});}
     if((b=e.target.closest("[data-igopen]"))&&!e.target.closest("a")){var id=b.dataset.igopen;G.open[id]=!G.open[id];return igRender();}
     if((b=e.target.closest("[data-igvisit]"))){var t=document.querySelector('[data-tab="reportes"]');if(t){V.q=b.dataset.igvisit;t.click();}return;}
     if((b=e.target.closest("[data-igsend]"))){var sid=b.dataset.igsend,inp=document.querySelector('[data-igtext="'+sid+'"]'),txt=inp&&inp.value.trim();if(!txt)return;

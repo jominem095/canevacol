@@ -2470,8 +2470,8 @@ async function shareStory(p){
 document.addEventListener('click',function(e){var m=document.getElementById('pmShareMenu');if(!m||m.hidden)return;if(e.target.closest('#pmShareMenu')||e.target.closest('#pmShare'))return;m.hidden=true;});
 // Opening a shared link (?p=slug) shows that garment
 var SHARED_DONE=false;
-function openSharedProduct(){if(SHARED_DONE)return;var m=location.search.match(/[?&]p=([^&#]+)/);if(!m){SHARED_DONE=true;return;}var slug=decodeURIComponent(m[1]).toLowerCase();var i=P.findIndex(function(p){return productSlug(p)===slug;});if(i<0)return;SHARED_DONE=true;setTimeout(function(){openProductModal(i);},300);}
-setTimeout(function(){openSharedProduct();SHARED_DONE=true;},4000);
+function openSharedProduct(loose){if(SHARED_DONE)return;var m=location.search.match(/[?&]p=([^&#]+)/);if(!m){SHARED_DONE=true;return;}var slug=decodeURIComponent(m[1]).toLowerCase();var i=P.findIndex(function(p){return productSlug(p)===slug;});if(i<0&&loose){var nm=slug.split('--')[0];i=P.findIndex(function(p){return productSlug(p).split('--')[0]===nm;});}if(i<0)return;SHARED_DONE=true;setTimeout(function(){openProductModal(i);},300);}
+setTimeout(function(){openSharedProduct(true);SHARED_DONE=true;},4000);
 function closeProductModal(){
   var modal=document.getElementById('pmodal');
   modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.classList.remove('product-open');
