@@ -2243,7 +2243,7 @@ async function loadRemoteCatalog(){
     var data=await res.json();
     var list=Array.isArray(data.products)?data.products:[];
     if(list.length){
-      P=list.map(normalizeProductForSite).filter(function(p){return !isHiddenProduct(p);});
+      P=list.map(normalizeProductForSite).filter(function(p){return !isHiddenProduct(p);});window.CV_LIVE=1;
       renderFilters();
       render();
       setProductCount();
@@ -4528,6 +4528,7 @@ body.cv-fast .bw-logo-wrap{transform:scale(.82);transform-origin:center top;marg
   body.cv-reel-on .bw-hero{height:auto!important;min-height:0!important;padding-top:4.6rem!important}
   .cv-reel{display:block;position:relative;width:100%;height:min(70svh,600px);min-height:430px;margin:0 0 1rem;border-radius:20px;overflow:hidden;background:#0b0a09;isolation:isolate;touch-action:pan-y;user-select:none;-webkit-user-select:none;box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 0 1px rgba(247,247,244,.08)}
 }
+.cv-reel:empty{background:linear-gradient(100deg,#111 30%,#1f1d1a 50%,#111 70%) #111;background-size:200% 100%;animation:cvShim 1.3s linear infinite}
 .cv-rs{position:absolute;inset:0;opacity:0;clip-path:inset(0 0 0 100%);transition:clip-path .95s cubic-bezier(.77,0,.18,1),opacity .2s}
 .cv-rs.on{opacity:1;clip-path:inset(0 0 0 0);z-index:2}
 .cv-rs.out{opacity:1;clip-path:inset(0 0 0 0);z-index:1}
@@ -4561,57 +4562,86 @@ body.cv-fast .bw-logo-wrap{transform:scale(.82);transform-origin:center top;marg
 @media(prefers-reduced-motion:reduce){.cv-rs.on img{animation:none;transform:scale(1.04)}.cv-rs{transition:opacity .4s;clip-path:none}}
 </style>
 <script id="cvreel-js">
-// CANEVA Pasarela: on phones, the first screen is a runway of real garments (like Instagram stories):
-// big photo with slow zoom, name and price; tap right/left to move, hold to pause, "Ver prenda" opens it.
+// CANEVA Pasarela: on phones, the first screen is a runway of the current garments, one per category (like Instagram stories).
+// It waits for the live catalog (a few seconds at most) so photos and "Ver prenda" always match what is on sale today.
 (function(){
   if(!window.P||!window.matchMedia||!matchMedia('(max-width:820px)').matches)return;
   var inner=document.querySelector('#inicio .bw-inner');if(!inner)return;
   function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
   function push(ev){try{if(window.cvStatsPush)cvStatsPush(ev);}catch(e){}}
-  var list=(typeof catalogProducts==='function'?catalogProducts():P).filter(function(p){return p.imagen&&p.imagen.indexOf('http')===0;}).slice(0,6);
-  if(list.length<3)return;
-  var DUR=4200,cur=-1,timer=null,paused=false,seen=0;
+  function catKey(c){return String(c||'').trim().toLowerCase();}
+  // newest garment of each category (the catalog lists the newest first), categories in order of their newest garment
+  function pickList(){
+    var all=(typeof catalogProducts==='function'?catalogProducts():P).filter(function(p){return p&&p.imagen&&String(p.imagen).indexOf('http')===0;});
+    var seen={},out=[];
+    all.forEach(function(p){var k=catKey(p.categoria);if(!seen[k]&&out.length<7){seen[k]=1;out.push(p);}});
+    // few categories: fill with the next newest garments
+    for(var i=0;i<all.length&&out.length<6;i++){if(out.indexOf(all[i])<0)out.push(all[i]);}
+    return out;
+  }
+  var DUR=4200,cur=-1,timer=null,paused=false,held=false,list=[],slides=[],bars=[],builtFrom=null;
   var r=document.createElement('div');r.className='cv-reel';r.id='cvReel';r.style.setProperty('--dur',DUR+'ms');
-  r.innerHTML='<div class="cv-rbars">'+list.map(function(){return '<i><b></b></i>';}).join('')+'</div>'+
-    '<div class="cv-rtop"><span class="wm">CΛNEVΛ</span><span class="tg">Nuevo</span></div>'+
-    list.map(function(p,i){return '<div class="cv-rs"><img alt="'+esc(p.nombre)+'" decoding="async"'+(i===0?' fetchpriority="high" src="'+esc(cvImg(p.imagen,900))+'"':' data-src="'+esc(cvImg(p.imagen,900))+'"')+'></div>';}).join('')+
-    '<div class="cv-rinfo"><small></small><h2><span></span></h2><div class="pr"><b></b><button type="button" data-rgo>Ver prenda →</button></div></div><div class="cv-rhint">Toca →</div>';
   inner.insertBefore(r,inner.firstChild);document.body.classList.add('cv-reel-on');
-  var slides=r.querySelectorAll('.cv-rs'),bars=r.querySelectorAll('.cv-rbars i'),sm=r.querySelector('.cv-rinfo small'),h2=r.querySelector('.cv-rinfo h2 span'),pr=r.querySelector('.cv-rinfo .pr b');
+  var sm,h2,pr,tag;
+  function build(){
+    var l=pickList();if(l.length<2){if(!list.length){r.remove();document.body.classList.remove('cv-reel-on');}return;}
+    list=l;builtFrom=P;cur=-1;clearTimeout(timer);
+    r.innerHTML='<div class="cv-rbars">'+list.map(function(){return '<i><b></b></i>';}).join('')+'</div>'+
+      '<div class="cv-rtop"><span class="wm">CΛNEVΛ</span><span class="tg"></span></div>'+
+      list.map(function(p,i){return '<div class="cv-rs"><img alt="'+esc(p.nombre)+'" decoding="async"'+(i===0?' fetchpriority="high" src="'+esc(cvImg(p.imagen,900))+'"':' data-src="'+esc(cvImg(p.imagen,900))+'"')+'></div>';}).join('')+
+      '<div class="cv-rinfo"><small></small><h2><span></span></h2><div class="pr"><b></b><button type="button" data-rgo>Ver prenda →</button></div></div><div class="cv-rhint">Toca →</div>';
+    slides=r.querySelectorAll('.cv-rs');bars=r.querySelectorAll('.cv-rbars i');
+    sm=r.querySelector('.cv-rinfo small');h2=r.querySelector('.cv-rinfo h2 span');pr=r.querySelector('.cv-rinfo .pr b');tag=r.querySelector('.cv-rtop .tg');
+    show(0);
+  }
   function load(i){var im=slides[i]&&slides[i].querySelector('img');if(im&&im.dataset.src){im.src=im.dataset.src;im.removeAttribute('data-src');}}
   function show(i){
-    i=(i+list.length)%list.length;if(i===cur)return;
-    var prev=cur;cur=i;seen++;
+    if(!list.length)return;i=(i+list.length)%list.length;if(i===cur)return;
+    var prev=cur;cur=i;
     slides.forEach(function(s,k){s.classList.remove('out');if(k===prev)s.classList.add('out');s.classList.toggle('on',k===i);});
     setTimeout(function(){if(slides[prev])slides[prev].classList.remove('out');},1000);
     bars.forEach(function(b,k){b.classList.toggle('done',k<i);b.classList.remove('run');});void r.offsetWidth;bars[i].classList.add('run');
     var p=list[i];r.classList.remove('go');void r.offsetWidth;
     sm.textContent=String(p.categoria||'').replace(' / ',' · ');h2.textContent=p.nombre;pr.textContent=p.precio||'';
+    tag.textContent=(window.cvIsNew&&cvIsNew(p))?'Nuevo':'Colección';
     requestAnimationFrame(function(){r.classList.add('go');});
     load(i+1);load(i+2);
     clearTimeout(timer);if(!paused)timer=setTimeout(function(){show(cur+1);},DUR);
   }
   function pause(on){paused=on;r.classList.toggle('pause',on);clearTimeout(timer);
-    if(!on){var b=bars[cur]&&bars[cur].querySelector('b'),left=DUR;try{var w=b.getBoundingClientRect().width/b.parentNode.getBoundingClientRect().width;left=Math.max(300,DUR*(1-w));}catch(e){}timer=setTimeout(function(){show(cur+1);},left);}}
-  function openCur(){var p=list[cur];var idx=P.findIndex(function(x){return x.nombre===p.nombre&&x.categoria===p.categoria;});if(idx<0)idx=P.indexOf(p);if(idx>=0){push({t:'k',k:'pasarela_ver',l:p.nombre});openProductModal(idx);}}
+    if(!on&&list.length){var b=bars[cur]&&bars[cur].querySelector('b'),left=DUR;try{left=Math.max(300,DUR*(1-b.getBoundingClientRect().width/b.parentNode.getBoundingClientRect().width));}catch(e){}timer=setTimeout(function(){show(cur+1);},left);}}
+  function openCur(){
+    var p=list[cur];if(!p)return;
+    var idx=P.indexOf(p);
+    if(idx<0)idx=P.findIndex(function(x){return x.nombre===p.nombre&&catKey(x.categoria)===catKey(p.categoria);});
+    if(idx<0)idx=P.findIndex(function(x){return x.nombre===p.nombre;});
+    if(idx<0){var c=document.getElementById('catalogo');if(c)c.scrollIntoView({behavior:'smooth'});return;}
+    pause(true);push({t:'k',k:'pasarela_ver',l:p.nombre});openProductModal(idx);
+  }
   // taps, hold to pause, swipe
-  var x0=0,y0=0,t0=0,hold=null,held=false;
-  r.addEventListener('pointerdown',function(e){if(e.target.closest('[data-rgo]'))return;x0=e.clientX;y0=e.clientY;t0=Date.now();held=false;hold=setTimeout(function(){held=true;pause(true);},260);});
+  var x0=0,y0=0,hold=null;
+  r.addEventListener('pointerdown',function(e){if(e.target.closest('[data-rgo]'))return;x0=e.clientX;y0=e.clientY;held=false;hold=setTimeout(function(){held=true;pause(true);},260);});
   r.addEventListener('pointerup',function(e){
     if(e.target.closest('[data-rgo]')){openCur();return;}
-    clearTimeout(hold);if(held){pause(false);return;}
+    clearTimeout(hold);if(held){held=false;pause(false);return;}
     var dx=e.clientX-x0,dy=e.clientY-y0;if(Math.abs(dy)>30&&Math.abs(dy)>Math.abs(dx))return;
     if(Math.abs(dx)>40){show(dx<0?cur+1:cur-1);return;}
     var rect=r.getBoundingClientRect();
-    if(e.clientY>rect.bottom-140){openCur();return;}
-    try{if(navigator.vibrate)navigator.vibrate(8);}catch(x){}show(e.clientX<rect.left+rect.width*0.3?cur-1:cur+1);push({t:'k',k:'pasarela_toque'});
+    if(e.clientY>rect.bottom-150){openCur();return;}
+    try{if(navigator.vibrate)navigator.vibrate(8);}catch(x){}
+    show(e.clientX<rect.left+rect.width*0.3?cur-1:cur+1);push({t:'k',k:'pasarela_toque'});
   });
-  r.addEventListener('pointercancel',function(){clearTimeout(hold);if(held)pause(false);});
+  r.addEventListener('pointercancel',function(){clearTimeout(hold);if(held){held=false;pause(false);}});
   r.addEventListener('contextmenu',function(e){e.preventDefault();});
-  // only plays while it is on screen and the page is visible
-  if(window.IntersectionObserver){new IntersectionObserver(function(es){var v=es[0].isIntersecting;if(!v&&!paused)pause(true);else if(v&&paused&&!held)pause(false);},{threshold:.35}).observe(r);}
-  document.addEventListener('visibilitychange',function(){if(document.hidden)pause(true);else pause(false);});
-  show(0);
+  // plays only on screen, with the page visible and no garment open
+  var onScreen=true;
+  function sync(){var m=document.getElementById('pmodal'),busy=m&&m.classList.contains('open');var want=!onScreen||document.hidden||busy||held;if(want!==paused)pause(want);}
+  if(window.IntersectionObserver)new IntersectionObserver(function(es){onScreen=es[0].isIntersecting;sync();},{threshold:.35}).observe(r);
+  document.addEventListener('visibilitychange',sync);setInterval(sync,700);
+  // wait for the live catalog (max 2.5 s), then rebuild whenever the catalog changes
+  var first=P,t0=Date.now();
+  (function wait(){if(window.CV_LIVE||P!==first||Date.now()-t0>2500){build();return;}setTimeout(wait,120);})();
+  setInterval(function(){if(builtFrom&&P!==builtFrom)build();},1500);
 })();
 </script>
 <style id="cvpulse-css">
