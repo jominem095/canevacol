@@ -4683,6 +4683,244 @@ body.cv-fast .bw-logo-wrap{transform:scale(.82);transform-origin:center top;marg
   setInterval(function(){if(builtFrom&&P!==builtFrom)build();},1500);
 })();
 </script>
+<style id="cvmatch-css">
+/* ===== CANEVA Match de estilo + Mis favoritas ===== */
+.cv-mt{position:relative;display:flex;align-items:center;gap:14px;width:100%;box-sizing:border-box;margin:0 0 .9rem;padding:14px 14px 14px 12px;border-radius:18px;border:1px solid rgba(241,224,184,.35);background:linear-gradient(120deg,rgba(241,224,184,.12),rgba(255,255,255,.03) 60%);color:#faf9f6;cursor:pointer;text-align:left;font-family:'Inter',sans-serif;overflow:hidden}
+.cv-mt::after{content:'';position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.12) 50%,transparent 70%);background-size:250% 100%;animation:cvMtSheen 3.2s ease-in-out infinite;pointer-events:none}
+@keyframes cvMtSheen{0%{background-position:120% 0}60%,100%{background-position:-60% 0}}
+.cv-mt .fan{position:relative;width:74px;height:66px;flex:0 0 auto}
+.cv-mt .fan img{position:absolute;top:4px;width:44px;height:58px;object-fit:cover;border-radius:7px;border:1.5px solid #faf9f6;box-shadow:0 6px 16px rgba(0,0,0,.5)}
+.cv-mt .fan img:nth-child(1){left:0;transform:rotate(-12deg)}.cv-mt .fan img:nth-child(2){left:15px;transform:rotate(-1deg);z-index:2}.cv-mt .fan img:nth-child(3){left:30px;transform:rotate(11deg);z-index:3}
+.cv-mt .tx{flex:1;min-width:0}
+.cv-mt small{display:block;font-size:.52rem;letter-spacing:.22em;text-transform:uppercase;color:#f1e0b8;font-weight:700}
+.cv-mt b{display:block;font-family:'Cormorant Garamond',serif;font-weight:400;font-size:1.45rem;line-height:1.05;margin:.15rem 0 .2rem}
+.cv-mt .tx span{font-size:.7rem;color:rgba(250,249,246,.7)}
+.cv-mt .go{flex:0 0 auto;width:40px;height:40px;border-radius:50%;background:#f7f7f4;color:#050505;display:grid;place-items:center;font-size:1.05rem;animation:cvMtPulse 1.8s ease-in-out infinite}
+@keyframes cvMtPulse{0%,100%{box-shadow:0 0 0 0 rgba(247,247,244,.45)}50%{box-shadow:0 0 0 9px rgba(247,247,244,0)}}
+.cv-mx{position:fixed;inset:0;z-index:1700;background:radial-gradient(circle at 50% 0%,#1d1915,#050505 70%);color:#faf9f6;font-family:'Inter',sans-serif;display:flex;flex-direction:column;padding:calc(12px + env(safe-area-inset-top)) 16px calc(14px + env(safe-area-inset-bottom));opacity:0;transform:translateY(20px);transition:opacity .35s,transform .45s cubic-bezier(.16,1,.3,1);overscroll-behavior:contain}
+.cv-mx.on{opacity:1;transform:none}
+.cv-mx-h{display:flex;align-items:center;justify-content:space-between;gap:10px;max-width:460px;width:100%;margin:0 auto}
+.cv-mx-h b{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:1.35rem;letter-spacing:.02em}
+.cv-mx-h small{display:block;font-size:.55rem;letter-spacing:.2em;text-transform:uppercase;color:#f1e0b8}
+.cv-mx-h button{background:none;border:1px solid rgba(250,249,246,.25);color:#faf9f6;width:38px;height:38px;border-radius:50%;font-size:1.2rem;cursor:pointer}
+.cv-mx-bar{max-width:460px;width:100%;margin:10px auto 0;height:3px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden}
+.cv-mx-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#d9c49b,#f6e7c8);transition:width .4s}
+.cv-mx-deck{position:relative;flex:1;min-height:0;max-width:420px;width:100%;margin:14px auto 12px}
+.cv-mc{position:absolute;inset:0;border-radius:22px;overflow:hidden;background:#141210;box-shadow:0 26px 60px rgba(0,0,0,.6);touch-action:none;user-select:none;-webkit-user-select:none;will-change:transform;transition:transform .35s cubic-bezier(.2,.8,.2,1),opacity .35s}
+.cv-mc img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none}
+.cv-mc::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 50%,rgba(0,0,0,.85));pointer-events:none}
+.cv-mc .in{position:absolute;left:18px;right:18px;bottom:16px;z-index:2}
+.cv-mc .in small{font-size:.52rem;letter-spacing:.22em;text-transform:uppercase;color:#f1e0b8;font-weight:700}
+.cv-mc .in h4{margin:.2rem 0 .25rem;font-family:'Cormorant Garamond',serif;font-weight:300;font-size:2.1rem;line-height:1}
+.cv-mc .in p{margin:0;font-size:.82rem;color:rgba(255,255,255,.85)}
+.cv-mc .st{position:absolute;top:22px;z-index:3;padding:.4rem .8rem;border:3px solid;border-radius:10px;font:800 1.05rem Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;opacity:0}
+.cv-mc .st.y{left:18px;color:#7dffb0;border-color:#7dffb0;transform:rotate(-14deg)}
+.cv-mc .st.n{right:18px;color:#ff8f80;border-color:#ff8f80;transform:rotate(14deg)}
+.cv-mc.b1{transform:scale(.95) translateY(14px);opacity:.85}.cv-mc.b2{transform:scale(.9) translateY(28px);opacity:.6}
+.cv-mx-act{display:flex;justify-content:center;align-items:center;gap:22px;margin:0 auto}
+.cv-mx-act button{border:0;cursor:pointer;border-radius:50%;display:grid;place-items:center;transition:transform .15s;font-family:inherit}
+.cv-mx-act button:active{transform:scale(.9)}
+.cv-mx-act .no{width:60px;height:60px;background:#1a1816;color:#ff8f80;font-size:1.5rem;border:1px solid rgba(255,143,128,.4)}
+.cv-mx-act .see{width:46px;height:46px;background:#1a1816;color:#faf9f6;font-size:.9rem;border:1px solid rgba(250,249,246,.25)}
+.cv-mx-act .yes{width:70px;height:70px;background:linear-gradient(135deg,#f6e7c8,#d9c49b);color:#050505;font-size:1.7rem;box-shadow:0 10px 30px rgba(217,196,155,.35)}
+.cv-mx-tip{text-align:center;font-size:.66rem;color:rgba(250,249,246,.5);margin-top:8px;letter-spacing:.04em}
+.cv-mr{max-width:460px;width:100%;margin:10px auto 0;flex:1;min-height:0;overflow-y:auto;text-align:center;animation:cvMrIn .7s cubic-bezier(.16,1,.3,1)}
+@keyframes cvMrIn{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:none}}
+.cv-mr small{font-size:.55rem;letter-spacing:.24em;text-transform:uppercase;color:#f1e0b8}
+.cv-mr h2{margin:.3rem 0 .4rem;font-family:'Cormorant Garamond',serif;font-weight:300;font-size:2.6rem;line-height:1.05;color:#fff}
+.cv-mr p{margin:0 auto 1rem;max-width:340px;font-size:.84rem;line-height:1.5;color:rgba(250,249,246,.75)}
+.cv-mr .g{display:grid;grid-template-columns:1fr 1fr;gap:8px;text-align:left}
+.cv-mr .g button{position:relative;border:0;padding:0;border-radius:14px;overflow:hidden;aspect-ratio:3/4;background:#151311;color:#fff;cursor:pointer;font-family:inherit}
+.cv-mr .g img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cv-mr .g span{position:absolute;left:0;right:0;bottom:0;padding:22px 9px 8px;background:linear-gradient(transparent,rgba(0,0,0,.88));font-size:.66rem}
+.cv-mr .g span b{display:block;font-size:.8rem;font-weight:600}
+.cv-mr .g em{position:absolute;top:8px;left:8px;font-style:normal;font-size:.5rem;letter-spacing:.14em;text-transform:uppercase;background:#f7f7f4;color:#050505;padding:.25rem .4rem;border-radius:3px;font-weight:700}
+.cv-mr .bt{display:grid;gap:8px;margin:14px 0 4px}
+.cv-mr .bt button{border:0;border-radius:999px;padding:.95rem;font:700 .62rem Inter,sans-serif;letter-spacing:.18em;text-transform:uppercase;cursor:pointer}
+.cv-mr .bt .p{background:#f7f7f4;color:#050505}.cv-mr .bt .s{background:none;color:#faf9f6;border:1px solid rgba(250,249,246,.3)}
+.cv-fav{position:absolute;top:8px;right:8px;z-index:5;width:34px;height:34px;border-radius:50%;border:0;background:rgba(5,4,3,.55);backdrop-filter:blur(6px);color:#fff;font-size:1rem;display:grid;place-items:center;cursor:pointer;transition:transform .2s}
+.cv-fav.on{color:#ff6b8a;background:rgba(255,255,255,.92)}
+.cv-fav.pop{animation:cvFavPop .45s cubic-bezier(.2,1.6,.4,1)}
+@keyframes cvFavPop{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
+.pm-fav{position:absolute;right:7.6rem;top:1rem;z-index:4;width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:rgba(5,4,3,.66);color:#fff;font-size:1.05rem;display:grid;place-items:center;cursor:pointer;backdrop-filter:blur(12px)}
+.pm-fav.on{color:#ff6b8a;background:rgba(255,255,255,.92)}
+@media(max-width:820px){.pm-fav{right:6.6rem!important;top:.85rem!important}}
+.cv-fchip{position:fixed;right:14px;top:calc(76px + env(safe-area-inset-top));z-index:950;display:none;align-items:center;gap:6px;background:rgba(10,9,8,.92);border:1px solid rgba(255,107,138,.45);color:#faf9f6;border-radius:999px;padding:.5rem .8rem;font:600 .7rem Inter,sans-serif;cursor:pointer;box-shadow:0 10px 26px rgba(0,0,0,.45)}
+.cv-fchip.on{display:flex}.cv-fchip i{font-style:normal;color:#ff6b8a}
+.cv-fl{max-width:460px;width:100%;margin:12px auto 0;flex:1;overflow-y:auto}
+.cv-fl .it{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.cv-fl .it img{width:56px;height:72px;object-fit:cover;border-radius:9px}
+.cv-fl .it div{flex:1;min-width:0;font-size:.8rem}.cv-fl .it div b{display:block;font-weight:600;margin-bottom:2px}
+.cv-fl button{border:0;cursor:pointer;font-family:inherit}
+.cv-fl .v{background:#f7f7f4;color:#050505;border-radius:999px;padding:.55rem .85rem;font:700 .58rem Inter,sans-serif;letter-spacing:.14em;text-transform:uppercase}
+.cv-fl .x{background:none;color:rgba(255,255,255,.5);font-size:1.1rem;padding:0 4px}
+.cv-fl .empty{text-align:center;color:rgba(255,255,255,.6);font-size:.85rem;padding:40px 0;line-height:1.6}
+@media(prefers-reduced-motion:reduce){.cv-mt::after,.cv-mt .go{animation:none}}
+</style>
+<script id="cvmatch-js">
+// CANEVA Match de estilo: swipe garments (love / nope), get "Tu estilo CANEVA" with her picks, saved in "Mis favoritas" (heart on every garment).
+// Also opens with canevacol.com/?match=1 (for stories and ads). Favorites live only on this phone (localStorage).
+(function(){
+  if(!window.P||typeof openProductModal!=='function')return;
+  function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function push(ev){try{if(window.cvStatsPush)cvStatsPush(ev);}catch(e){}}
+  function img(u,w){return window.cvImg?cvImg(u,w):u;}
+  function ck(c){return String(c||'').trim().toLowerCase();}
+  function key(p){return p.nombre+'|'+p.categoria;}
+  function pool(){return (typeof catalogProducts==='function'?catalogProducts():P).filter(function(p){return p&&p.imagen&&String(p.imagen).indexOf('http')===0;});}
+  function idxOf(k){return P.findIndex(function(p){return key(p)===k;});}
+  function buzz(n){try{if(navigator.vibrate)navigator.vibrate(n||10);}catch(e){}}
+  // ---------- favorites ----------
+  var FK='cv_favs_v1';
+  function favs(){try{return JSON.parse(localStorage.getItem(FK)||'[]')||[];}catch(e){return [];}}
+  function favN(){return favs().filter(function(k){return idxOf(k)>=0;}).length;}
+  function setFavs(a){try{localStorage.setItem(FK,JSON.stringify(a.slice(0,60)));}catch(e){}paintAll();}
+  function isFav(p){return favs().indexOf(key(p))>=0;}
+  function toggleFav(p,force){var a=favs(),k=key(p),i=a.indexOf(k),on=force===undefined?i<0:force;if(on&&i<0)a.unshift(k);if(!on&&i>=0)a.splice(i,1);setFavs(a);if(on){push({t:'k',k:'favorita',l:p.nombre});buzz(12);}return on;}
+  window.cvFavs=favs;
+  function paintCards(){document.querySelectorAll('#pgrid .pc').forEach(function(c){var p=P[parseInt(c.dataset.pid,10)];if(!p)return;var im=c.querySelector('.pimg');if(!im)return;var b=im.querySelector('.cv-fav');
+    if(!b){b=document.createElement('button');b.type='button';b.className='cv-fav';b.setAttribute('aria-label','Guardar en favoritas');
+      b.addEventListener('click',function(e){e.stopPropagation();e.preventDefault();var q=P[parseInt(c.dataset.pid,10)];if(!q)return;var on=toggleFav(q);b.classList.remove('pop');void b.offsetWidth;b.classList.add('pop');if(on&&window.toastCart)toastCart('Guardada en tus favoritas 💖');});im.appendChild(b);}
+    var on=isFav(p);b.classList.toggle('on',on);b.textContent=on?'♥':'♡';});}
+  function paintModal(){var sh=document.querySelector('#pmodal .pm-shell');if(!sh)return;var b=document.getElementById('pmFav');
+    if(!b){b=document.createElement('button');b.type='button';b.id='pmFav';b.className='pm-fav';b.setAttribute('aria-label','Guardar en favoritas');sh.appendChild(b);
+      b.addEventListener('click',function(){var p=P[window.currentProductIndex];if(!p)return;var on=toggleFav(p);if(window.toastCart)toastCart(on?'Guardada en tus favoritas 💖':'Quitada de favoritas');});}
+    var p=P[window.currentProductIndex],on=!!(p&&isFav(p));b.classList.toggle('on',on);b.textContent=on?'♥':'♡';}
+  var chip=document.createElement('button');chip.type='button';chip.className='cv-fchip';chip.id='cvFavChip';chip.setAttribute('aria-label','Mis favoritas');document.body.appendChild(chip);
+  chip.addEventListener('click',function(){openFavs();push({t:'k',k:'favoritas_abrir'});});
+  function paintChip(){var n=favN();chip.innerHTML='<i>♥</i> Mis favoritas · '+n;chip.classList.toggle('on',n>0);}
+  function paintAll(){try{paintCards();paintModal();paintChip();}catch(e){}}
+  if(typeof render==='function'){var oR=render;window.render=render=function(){var r=oR.apply(this,arguments);try{paintCards();}catch(e){}return r;};}
+  var oOpen=openProductModal;window.openProductModal=openProductModal=function(){var r=oOpen.apply(this,arguments);try{paintModal();}catch(e){}return r;};
+  // ---------- overlay shell ----------
+  var ov=null,keyFn=null;
+  function shell(title,sub){
+    close(true);ov=document.createElement('div');ov.className='cv-mx';ov.setAttribute('role','dialog');ov.setAttribute('aria-label',title);
+    ov.innerHTML='<div class="cv-mx-h"><div><small>'+esc(sub)+'</small><b>'+esc(title)+'</b></div><button type="button" data-mx="x" aria-label="Cerrar">×</button></div>';
+    document.body.appendChild(ov);document.documentElement.style.overflow='hidden';var o=ov;requestAnimationFrame(function(){o.classList.add('on');});
+    ov.addEventListener('click',function(e){if(e.target.closest('[data-mx="x"]'))close();});
+    return ov;
+  }
+  function close(now){if(keyFn){document.removeEventListener('keydown',keyFn);keyFn=null;}if(!ov)return;var o=ov;ov=null;document.documentElement.style.overflow='';if(now){o.remove();return;}o.classList.remove('on');setTimeout(function(){o.remove();},350);}
+  function openProduct(k){var i=idxOf(k);if(i<0)return;close(true);openProductModal(i);}
+  // ---------- style profiles ----------
+  var STY=[
+    {re:/jean|pant|denim|cargo/,n:'Denim Lover 👖',d:'Tu base es un buen jean: cómodo, con actitud y que combina con todo. Juega con tops y bodys para pasar del día a la noche.'},
+    {re:/vestido|set|enterizo/,n:'Glam Costeña ✨',d:'Te encanta verte arreglada sin esfuerzo: sets y vestidos que hablan por ti. Lista para la cena, el matrimonio o el viernes.'},
+    {re:/camisa|crop|top|body|blusa/,n:'Casual Chic 🤍',d:'Básicos con un detalle que marca la diferencia. Tu fórmula: un top que se roba las miradas y un jean o short que no falla.'},
+    {re:/short|falda|bermuda/,n:'Fresca y Caribe 🌴',d:'Calor, brisa y estilo. Shorts, faldas y bermudas que se ven bien y se sienten mejor.'},
+    {re:/deport|sport|lycra|licra/,n:'Sport Luxe 🏃‍♀️',d:'Te mueves con estilo: conjuntos deportivos que también son outfit para el café de después.'}];
+  function profile(liked){
+    if(!liked.length)return {n:'Exigente 😏',d:'Nada te convenció todavía… ¡nos gusta el reto! Desliza otra ronda con prendas distintas.'};
+    var sc=STY.map(function(){return 0;});liked.forEach(function(p){var c=ck(p.categoria)+' '+ck(p.nombre);for(var i=0;i<STY.length;i++){if(STY[i].re.test(c)){sc[i]++;break;}}});
+    var best=0;sc.forEach(function(v,i){if(v>sc[best])best=i;});
+    if(!sc[best])return {n:'Ecléctica CANEVA 🖤',d:'Te gusta probar de todo y lo llevas con seguridad. Tu clóset no tiene reglas.'};
+    if(sc.filter(function(v){return v===sc[best];}).length>1)return {n:'Ecléctica CANEVA 🖤',d:'Te gusta mezclar estilos y lo haces con seguridad: hoy denim, mañana glam. Tu clóset no tiene reglas.',s:STY[best]};
+    return {n:STY[best].n,d:STY[best].d,s:STY[best]};
+  }
+  var judged={};
+  function deck(n){
+    var all=pool().filter(function(p){return !judged[key(p)];}),by={},order=[];
+    all.forEach(function(p){var c=ck(p.categoria);if(!by[c]){by[c]=[];order.push(c);}by[c].push(p);});
+    var out=[];for(var r=0;out.length<n&&r<40;r++){order.forEach(function(c){if(out.length<n&&by[c][r])out.push(by[c][r]);});}
+    return out;
+  }
+  // ---------- the match ----------
+  function openMatch(src){
+    var cards=deck(8);if(cards.length<3){judged={};cards=deck(8);}if(cards.length<3)return;
+    var o=shell('Match de estilo','Desliza · descubre tu estilo');push({t:'k',k:'match_inicio',l:src||''});
+    o.insertAdjacentHTML('beforeend','<div class="cv-mx-bar"><i></i></div><div class="cv-mx-deck"></div><div class="cv-mx-act"><button type="button" class="no" data-mv="n" aria-label="No es lo mío">✕</button><button type="button" class="see" data-mv="v" aria-label="Ver prenda">👁</button><button type="button" class="yes" data-mv="y" aria-label="Me encanta">♥</button></div><div class="cv-mx-tip">Desliza → si te encanta · ← si no es lo tuyo · toca la foto para verla</div>');
+    var dk=o.querySelector('.cv-mx-deck'),bar=o.querySelector('.cv-mx-bar i'),pos=0,liked=[],busy=false;
+    cards.forEach(function(p){var c=document.createElement('div');c.className='cv-mc';c.dataset.k=key(p);
+      c.innerHTML='<img src="'+esc(img(p.imagen,700))+'" alt="'+esc(p.nombre)+'" draggable="false"><span class="st y">Me encanta</span><span class="st n">Nop</span><div class="in"><small>'+esc(String(p.categoria||'').replace(' / ',' · '))+'</small><h4>'+esc(p.nombre)+'</h4><p>'+esc(p.precio||'')+(p.tallas?' · Tallas '+esc(String(p.tallas).replace(/-/g,' · ')):'')+'</p></div>';
+      dk.appendChild(c);});
+    var els=[].slice.call(dk.children);
+    function stack(){els.forEach(function(c,i){if(i<pos)return;c.classList.remove('b1','b2');var d=i-pos;if(d===1)c.classList.add('b1');if(d===2)c.classList.add('b2');c.style.display=d>2?'none':'';c.style.zIndex=10-d;});bar.style.width=Math.round(pos/els.length*100)+'%';}
+    stack();
+    function decide(yes){
+      var c=els[pos];if(!c||busy)return;busy=true;var p=cards[pos];judged[key(p)]=1;
+      c.style.transition='transform .45s cubic-bezier(.2,.8,.2,1),opacity .45s';c.style.transform='translate('+(yes?1:-1)*innerWidth+'px,-30px) rotate('+(yes?22:-22)+'deg)';c.style.opacity='0';
+      if(yes){liked.push(p);toggleFav(p,true);}else buzz(6);
+      push({t:'k',k:yes?'match_like':'match_nope',l:p.nombre});
+      pos++;stack();setTimeout(function(){busy=false;c.style.display='none';},380);
+      if(pos>=els.length)setTimeout(function(){result(liked);},420);
+    }
+    var sx=0,sy=0,dx=0,drag=false;
+    dk.addEventListener('pointerdown',function(e){var c=els[pos];if(!c||!c.contains(e.target)||busy)return;drag=true;sx=e.clientX;sy=e.clientY;dx=0;c.style.transition='none';try{c.setPointerCapture(e.pointerId);}catch(x){}});
+    dk.addEventListener('pointermove',function(e){if(!drag)return;var c=els[pos];dx=e.clientX-sx;var dy=e.clientY-sy;c.style.transform='translate('+dx+'px,'+dy*0.3+'px) rotate('+dx/18+'deg)';
+      c.querySelector('.st.y').style.opacity=Math.max(0,Math.min(1,dx/90));c.querySelector('.st.n').style.opacity=Math.max(0,Math.min(1,-dx/90));});
+    function end(){if(!drag)return;drag=false;var c=els[pos];if(!c)return;
+      if(Math.abs(dx)>90){decide(dx>0);return;}
+      c.style.transition='transform .35s cubic-bezier(.2,1.4,.4,1)';c.style.transform='';c.querySelector('.st.y').style.opacity=0;c.querySelector('.st.n').style.opacity=0;
+      if(Math.abs(dx)<6){push({t:'k',k:'match_ver'});openProduct(c.dataset.k);}}
+    dk.addEventListener('pointerup',end);dk.addEventListener('pointercancel',end);
+    o.addEventListener('click',function(e){var b=e.target.closest('[data-mv]');if(!b)return;var v=b.dataset.mv;
+      if(v==='v'){var c=els[pos];if(c){push({t:'k',k:'match_ver'});openProduct(c.dataset.k);}return;}
+      var c2=els[pos];if(c2){c2.querySelector(v==='y'?'.st.y':'.st.n').style.opacity=1;}setTimeout(function(){decide(v==='y');},120);});
+    keyFn=function(e){if(e.key==='ArrowRight')decide(true);if(e.key==='ArrowLeft')decide(false);if(e.key==='Escape')close();};
+    document.addEventListener('keydown',keyFn);
+    function result(likedList){
+      if(!ov)return;
+      var pr=profile(likedList);push({t:'k',k:'match_fin',l:pr.n});
+      var likedKeys=likedList.map(key);
+      var rec=pr.s?pool().filter(function(p){return likedKeys.indexOf(key(p))<0&&!judged[key(p)]&&pr.s.re.test(ck(p.categoria)+' '+ck(p.nombre));}).slice(0,2):[];
+      var show=likedList.slice(0,4).map(function(p){return {p:p,t:'Te encantó'};}).concat(rec.map(function(p){return {p:p,t:'Para ti'};})).slice(0,6);
+      bar.style.width='100%';
+      ['.cv-mx-deck','.cv-mx-act','.cv-mx-tip'].forEach(function(s){var x=o.querySelector(s);if(x)x.remove();});
+      if(keyFn){document.removeEventListener('keydown',keyFn);keyFn=function(e){if(e.key==='Escape')close();};document.addEventListener('keydown',keyFn);}
+      var r=document.createElement('div');r.className='cv-mr';
+      r.innerHTML='<small>Tu estilo CANEVA es</small><h2>'+esc(pr.n)+'</h2><p>'+esc(pr.d)+'</p>'+
+        (show.length?'<div class="g">'+show.map(function(x){return '<button type="button" data-mk="'+esc(key(x.p))+'"><img src="'+esc(img(x.p.imagen,420))+'" alt=""><em>'+x.t+'</em><span><b>'+esc(x.p.nombre)+'</b>'+esc(x.p.precio||'')+'</span></button>';}).join('')+'</div>':'')+
+        '<div class="bt">'+(likedList.length?'<button type="button" class="p" data-mr="favs">♥ Ver mis favoritas ('+favN()+')</button>':'')+
+        '<button type="button" class="'+(likedList.length?'s':'p')+'" data-mr="again">Otra ronda ✨</button>'+
+        (navigator.share?'<button type="button" class="s" data-mr="share">Compartir mi estilo</button>':'')+
+        '<button type="button" class="s" data-mr="all">Ver toda la colección</button></div>';
+      o.appendChild(r);buzz([10,40,10]);
+      r.addEventListener('click',function(e){var g=e.target.closest('[data-mk]');if(g){push({t:'k',k:'match_resultado_prenda'});openProduct(g.dataset.mk);return;}
+        var b=e.target.closest('[data-mr]');if(!b)return;var a=b.dataset.mr;
+        if(a==='favs')openFavs();
+        if(a==='again')openMatch('otra_ronda');
+        if(a==='all'){close();var c=document.getElementById('catalogo');if(c)c.scrollIntoView({behavior:'smooth'});}
+        if(a==='share'){push({t:'k',k:'match_compartir',l:pr.n});navigator.share({title:'Mi estilo CANEVA',text:'Mi estilo CANEVA es '+pr.n+' ¿Cuál es el tuyo?',url:'https://canevacol.com/?match=1'}).catch(function(){});}
+      });
+    }
+  }
+  window.cvMatchOpen=openMatch;
+  // ---------- favorites list ----------
+  function openFavs(){
+    var o=shell('Mis favoritas','Guardadas en este celular');
+    var list=document.createElement('div');list.className='cv-fl';o.appendChild(list);
+    function draw(){var ks=favs().filter(function(k){return idxOf(k)>=0;});
+      list.innerHTML=ks.length?ks.map(function(k){var p=P[idxOf(k)];return '<div class="it"><img src="'+esc(img(p.imagen,200))+'" alt=""><div><b>'+esc(p.nombre)+'</b>'+esc(p.precio||'')+'</div><button type="button" class="v" data-fv="'+esc(k)+'">Ver</button><button type="button" class="x" data-fx="'+esc(k)+'" aria-label="Quitar">×</button></div>';}).join(''):
+        '<div class="empty">Todavía no tienes favoritas.<br>Toca ♡ en cualquier prenda o juega el Match de estilo.<br><br><button type="button" class="v" data-fm>Jugar Match de estilo</button></div>';}
+    draw();
+    list.addEventListener('click',function(e){var v=e.target.closest('[data-fv]');if(v){openProduct(v.dataset.fv);return;}
+      var x=e.target.closest('[data-fx]');if(x){var a=favs(),i=a.indexOf(x.dataset.fx);if(i>=0)a.splice(i,1);setFavs(a);draw();return;}
+      if(e.target.closest('[data-fm]'))openMatch('favoritas_vacias');});
+  }
+  window.cvFavsOpen=openFavs;
+  // ---------- entry points ----------
+  function teaser(){
+    if(document.getElementById('cvMatchT'))return;
+    var ps=pool().slice(0,12),pick=[ps[1],ps[4],ps[7]].filter(Boolean);if(pick.length<3)return;
+    var t=document.createElement('button');t.type='button';t.id='cvMatchT';t.className='cv-mt';
+    t.innerHTML='<span class="fan">'+pick.map(function(p){return '<img src="'+esc(img(p.imagen,160))+'" alt="">';}).join('')+'</span><span class="tx"><small>Juego · 30 segundos</small><b>¿Cuál es tu estilo?</b><span>Desliza 💖 o ✖️ y descubre tus prendas</span></span><span class="go">→</span>';
+    t.addEventListener('click',function(){openMatch('portada');});
+    var reel=document.getElementById('cvReel');
+    if(reel&&reel.parentNode)reel.parentNode.insertBefore(t,reel.nextSibling);
+    else{var cat=document.getElementById('catalogo'),sb=cat&&cat.querySelector('.sbar');if(cat)cat.insertBefore(t,sb||cat.firstChild);}
+  }
+  // the Pasarela's last card also invites to play
+  new MutationObserver(function(){var e=document.querySelector('.cv-rend.on .row');if(e&&!e.querySelector('[data-rmatch]')){var b=document.createElement('button');b.type='button';b.className='again';b.setAttribute('data-rmatch','');b.textContent='✨ Mi estilo';b.style.padding='0 .9rem';
+    b.addEventListener('click',function(ev){ev.stopPropagation();openMatch('pasarela');});e.insertBefore(b,e.lastChild);}}).observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
+  function boot(){teaser();paintAll();}
+  var first=P,t0=Date.now();
+  (function wait(){if(window.CV_LIVE||P!==first||Date.now()-t0>2600){boot();return;}setTimeout(wait,150);})();
+  setTimeout(function(){var n=favN(),s=null;try{s=sessionStorage.getItem('cv_fav_hi');sessionStorage.setItem('cv_fav_hi','1');}catch(e){}
+    if(n&&!s&&window.toastCart)toastCart('💖 Tus '+n+' favoritas te esperan · toca "Mis favoritas"');},4500);
+  if(/[?&]match=1/.test(location.search))setTimeout(function(){openMatch('enlace');},1200);
+})();
+</script>
 <style id="cvpulse-css">
 /* ===== Live store pulse: real visitors now, most viewed today, real recent add-to-bag ===== */
 .cv-live{display:inline-flex;align-items:center;gap:.5rem;margin:0 auto .9rem;padding:.42rem .85rem;border:1px solid rgba(94,240,160,.35);border-radius:999px;background:rgba(94,240,160,.06);font:600 .56rem Inter,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#d9f7e6;animation:cvLiveIn .8s cubic-bezier(.16,1,.3,1) both}
