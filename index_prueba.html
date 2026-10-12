@@ -4604,7 +4604,7 @@ body.cv-fast .bw-logo-wrap{transform:scale(.82);transform-origin:center top;marg
     if(Math.abs(dx)>40){show(dx<0?cur+1:cur-1);return;}
     var rect=r.getBoundingClientRect();
     if(e.clientY>rect.bottom-140){openCur();return;}
-    show(e.clientX<rect.left+rect.width*0.3?cur-1:cur+1);push({t:'k',k:'pasarela_toque'});
+    try{if(navigator.vibrate)navigator.vibrate(8);}catch(x){}show(e.clientX<rect.left+rect.width*0.3?cur-1:cur+1);push({t:'k',k:'pasarela_toque'});
   });
   r.addEventListener('pointercancel',function(){clearTimeout(hold);if(held)pause(false);});
   r.addEventListener('contextmenu',function(e){e.preventDefault();});
