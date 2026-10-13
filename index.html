@@ -5859,5 +5859,70 @@ body.cv-has-pbar .ann-bar{display:none!important}
   }
 })();
 </script>
+<style id="cvbuybar-css">
+/* Mobile product sheet: the 5 action buttons used to stick over the name, price and size picker.
+   Now they flow normally and a slim bar with price + main button stays at the bottom. */
+@media (max-width:640px){
+  #pmodal .pm-actions{position:static!important;background:none!important;padding:.2rem 0 .2rem!important}
+  #cvBuyBar{position:sticky;bottom:calc(-1 * (var(--mobile-dock-h,78px) + 1.1rem));z-index:6;display:flex;align-items:center;gap:.7rem;
+    margin:0 -1rem;padding:.7rem 1rem calc(.7rem + env(safe-area-inset-bottom,0px));
+    background:rgba(7,6,4,.97);border-top:1px solid rgba(201,169,110,.3);box-shadow:0 -14px 34px rgba(0,0,0,.55);
+    transition:transform .25s ease,opacity .25s ease}
+  #cvBuyBar.off{transform:translateY(110%);opacity:0;pointer-events:none}
+  #cvBuyBar .bb-p{display:flex;flex-direction:column;min-width:0;line-height:1.1}
+  #cvBuyBar .bb-p b{font-family:'Cormorant Garamond',Georgia,serif;font-size:1.35rem;font-weight:500;color:#f4ead7;white-space:nowrap}
+  #cvBuyBar .bb-p small{font-size:.62rem;color:rgba(244,234,215,.62);letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #cvBuyBar button{flex:1;min-height:48px;border:0;border-radius:999px;background:linear-gradient(135deg,#e6cf9f,#c9a96e);color:#070604;
+    font:600 .7rem/1 'Montserrat',system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
+  #cvBuyBar button.size{background:#f4ead7}
+  #pmSizeWrap.need{outline:2px solid #e6cf9f;outline-offset:3px;border-radius:14px}
+}
+@media (min-width:641px){#cvBuyBar{display:none!important}}
+/* The Club welcome card waits while a product is open, so it never covers the product sheet */
+body.product-open .cv-wel{display:none!important}
+</style>
+<script id="cvbuybar-js">
+(function(){
+  if(typeof openProductModal!=='function')return;
+  var bar,btn,pr,sm,io,actions,content;
+  function el(id){return document.getElementById(id);}
+  function idx(){return typeof currentProductIndex==='number'?currentProductIndex:-1;}
+  function prod(){var i=idx();return (window.P&&i>=0)?P[i]:null;}
+  function needsSize(p){try{return typeof productSizes==='function'&&productSizes(p).length>0&&!(typeof getSelectedSize==='function'&&getSelectedSize());}catch(e){return false;}}
+  function build(){
+    content=document.querySelector('#pmodal .pm-content');actions=document.querySelector('#pmodal .pm-actions');
+    if(!content||!actions)return false;
+    if(!bar){
+      bar=document.createElement('div');bar.id='cvBuyBar';
+      bar.innerHTML='<div class="bb-p"><b></b><small></small></div><button type="button"></button>';
+      btn=bar.querySelector('button');pr=bar.querySelector('b');sm=bar.querySelector('small');
+      btn.addEventListener('click',function(){
+        var p=prod();if(!p)return;
+        if(needsSize(p)){var w=el('pmSizeWrap');if(w){w.classList.add('need');w.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(function(){w.classList.remove('need');},1600);}
+          push('buybar_talla');return;}
+        push('buybar_agregar');var a=el('pmAddCart');if(a)a.click();setTimeout(paint,250);
+      });
+      if('IntersectionObserver' in window){io=new IntersectionObserver(function(es){es.forEach(function(e){bar.classList.toggle('off',e.isIntersecting);});},{root:content,threshold:.35});}
+    }
+    if(bar.parentNode!==content)content.appendChild(bar);
+    if(io){io.disconnect();var a=el('pmAddCart');if(a)io.observe(a);}
+    return true;
+  }
+  function push(k){try{if(window.cvStatsPush)cvStatsPush({t:'k',k:k});}catch(e){}}
+  function paint(){
+    if(!bar)return;var p=prod();if(!p){bar.style.display='none';return;}
+    bar.style.display='';
+    var sizes=[];try{sizes=productSizes(p)||[];}catch(e){}
+    var s=typeof getSelectedSize==='function'?getSelectedSize():'';
+    pr.textContent=p.precio||'';
+    sm.textContent=s?('Talla '+s):(sizes.length>1?'Tallas '+sizes.join(' · '):(sizes[0]?'Talla '+sizes[0]:'Envío a toda Colombia'));
+    var need=needsSize(p);btn.classList.toggle('size',need);
+    btn.textContent=need?'Elegir talla':'Agregar a la bolsa';
+  }
+  var o=openProductModal;
+  openProductModal=window.openProductModal=function(){var r=o.apply(this,arguments);try{if(window.matchMedia('(max-width:640px)').matches&&build()){bar.classList.remove('off');paint();}}catch(e){}return r;};
+  document.addEventListener('click',function(e){if(bar&&e.target.closest&&e.target.closest('#pmSizeOptions'))setTimeout(paint,30);},true);
+})();
+</script>
 </body>
 </html>
