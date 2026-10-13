@@ -69,7 +69,7 @@
 
   function sellHtml(){
     return '<div class="vt-kpis" id="vtKpis"></div>'+
-      '<div class="vt-card"><h3>Registrar una venta</h3>'+
+      '<div class="vt-card" id="vtForm">'+(S.editing?'<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;padding:.6rem .8rem;border:1px solid #e6cf9f;border-radius:12px;background:rgba(230,207,159,.08)"><b>✏️ Editando la venta '+esc(S.editing.ticket)+'</b><button type="button" class="vt-btn ghost sm" data-cancel-edit="1">Cancelar edición</button></div>':'<h3>Registrar una venta</h3>')+
         '<label>Categoría</label><div class="vt-chips" id="vtCats"></div>'+
         '<input id="vtQ" placeholder="Buscar dentro de la categoría: vestido, jean, body…" autocomplete="off">'+
         '<div class="vt-prods" id="vtProds"></div>'+
@@ -82,7 +82,7 @@
           '<div><label>Descuento ($)</label><input id="vtDisc" inputmode="numeric" placeholder="0"></div>'+
         '</div>'+
         '<div class="vt-pay" style="margin-top:12px"><button type="button" data-full="1" class="'+(S.payFull?"on":"")+'">✓ Pagó todo</button><button type="button" data-full="0" class="'+(S.payFull?"":"on")+'">Dejó un abono (queda debiendo)</button></div>'+
-        '<div id="vtAbonoBox" '+(S.payFull?'hidden':'')+' style="margin-top:10px"><div class="vt-grid"><div><label>¿Cuánto abonó hoy?</label><input id="vtAbono" inputmode="numeric" placeholder="$0"></div></div><div class="vt-owe" id="vtOwe"></div></div>'+
+        '<div id="vtAbonoBox" '+(S.payFull?'hidden':'')+' style="margin-top:10px"><div class="vt-grid"><div><label>'+(S.editing?'Total abonado hasta hoy':'¿Cuánto abonó hoy?')+'</label><input id="vtAbono" inputmode="numeric" placeholder="$0"></div></div><div class="vt-owe" id="vtOwe"></div></div>'+
         '<h4>Clienta</h4><div class="vt-grid">'+
           '<div><label>Nombre</label><input id="vtName" placeholder="Nombre y apellido"></div>'+
           '<div><label>Celular</label><input id="vtPhone" inputmode="tel" placeholder="300 000 0000"></div>'+
@@ -93,7 +93,7 @@
           '<div><label>Nota</label><input id="vtNote" placeholder="Ej: cambio de talla, vendió Ana"></div>'+
         '</div>'+
         '<label class="vt-chk"><input type="checkbox" id="vtStock" checked> Descontar del inventario</label>'+
-        '<div class="vt-total"><div><div class="dim">Total de la venta</div><b id="vtTotal">$0</b></div><button type="button" class="vt-btn" id="vtSave">Guardar venta</button></div>'+
+        '<div class="vt-total"><div><div class="dim">Total de la venta</div><b id="vtTotal">$0</b></div><button type="button" class="vt-btn" id="vtSave">'+(S.editing?'Guardar cambios':'Guardar venta')+'</button></div>'+
       '</div>'+
       '<div class="vt-card"><h3>Ventas registradas</h3><div id="vtList"><div class="vt-empty">Cargando…</div></div></div>';
   }
@@ -160,7 +160,7 @@
       '<span class="tag">'+esc(v.channelLabel||"")+'</span><span class="tag">'+esc(v.payLabel||"")+'</span>'+
       (live&&v.balance>0?'<span class="tag owe">Debe '+money(v.balance)+'</span>':'')+(live&&v.payments&&v.payments.length>1&&!v.balance?'<span class="tag ok">Pagada con abonos</span>':'')+
       (v.doc?'<span class="tag">'+esc(v.docLabel||"Doc")+' '+esc(v.doc)+'</span>':'')+(v.points?'<span class="tag">+'+v.points+' pts Club</span>':'')+(v.note?'<span class="tag">'+esc(v.note)+'</span>':'')+(live?'':'<span class="tag">Anulada</span>')+'</div>'+
-      '<div class="r"><b>'+money(v.total)+'</b>'+(live?shareBtns(v.id)+' <button type="button" class="vt-mail" data-mail="'+esc(v.id)+'" data-to="'+esc(v.email||"")+'">📧 Correo</button><br><button type="button" class="vt-void" data-void="'+esc(v.id)+'">Anular</button>':'')+'</div></div>';
+      '<div class="r"><b>'+money(v.total)+'</b>'+(live?'<button type="button" class="vt-mail" data-edit="'+esc(v.id)+'">✏️ Editar</button> '+shareBtns(v.id)+' <button type="button" class="vt-mail" data-mail="'+esc(v.id)+'" data-to="'+esc(v.email||"")+'">📧 Correo</button><br><button type="button" class="vt-void" data-void="'+esc(v.id)+'">Anular</button>':'')+'</div></div>';
   }
 
   // ---------------- cuentas por cobrar ----------------
@@ -187,9 +187,10 @@
   function waNum(p){var d=String(p||"").replace(/[^\d]/g,"");if(d.length===10&&d[0]==="3")d="57"+d;return d.length>=11?d:"";}
   function receiptText(v){
     var L=["🖤 *CΛNEVΛ* · Recibo "+v.ticket,when(v.paidAt)+(v.channelLabel?" · "+v.channelLabel:""),""];
-    (v.items||[]).forEach(function(x){L.push("• "+x.nombre+(x.size?" ("+x.size+")":"")+((x.qty||1)>1?" ×"+x.qty:"")+" — "+(x.precio||""));});
+    var sub=0;
+    (v.items||[]).forEach(function(x){var q=x.qty||1,u=num(x.precio);sub+=u*q;L.push("• "+x.nombre+(x.size?" ("+x.size+")":"")+" — "+(q>1?q+" × "+money(u)+" = "+money(u*q):money(u)));});
     L.push("");
-    if(v.discount)L.push("Descuento: -"+money(v.discount));
+    if(v.discount){L.push("Subtotal: "+money(sub));L.push("Descuento: -"+money(v.discount));}
     L.push("*Total: "+money(v.total)+"*");
     var pays=(v.payments||[]);
     if(pays.length>1||v.balance>0){pays.forEach(function(p){L.push("Abono "+when(p.at,false)+": "+money(p.amount)+(p.pay?" ("+(PAY[p.pay]||p.pay)+")":""));});}
@@ -203,16 +204,18 @@
     window.open(url,"_blank","noopener");
   }
   function receiptImage(v){
-    var W=1080,items=v.items||[],H=760+items.length*78+((v.payments||[]).length>1||v.balance>0?(v.payments||[]).length*52:0);
+    var W=1080,items=v.items||[],H=820+items.reduce(function(s,it){return s+((it.qty||1)>1?96:78);},0)+((v.payments||[]).length>1||v.balance>0?(v.payments||[]).length*52:0);
     var c=document.createElement("canvas");c.width=W;c.height=H;var x=c.getContext("2d");
     x.fillStyle="#070604";x.fillRect(0,0,W,H);x.strokeStyle="rgba(201,169,110,.55)";x.lineWidth=3;x.strokeRect(36,36,W-72,H-72);
     x.textAlign="center";x.fillStyle="#e6cf9f";x.font="500 76px Georgia,serif";x.fillText("CΛNEVΛ",W/2,170);
     x.fillStyle="rgba(247,247,244,.7)";x.font="28px Arial,sans-serif";x.fillText("RECIBO "+v.ticket+"  ·  "+when(v.paidAt),W/2,228);
     var y=320;x.textAlign="left";
-    items.forEach(function(it){x.fillStyle="#f7f7f4";x.font="34px Arial,sans-serif";var t=it.nombre+(it.size?" ("+it.size+")":"")+((it.qty||1)>1?" ×"+it.qty:"");if(t.length>34)t=t.slice(0,33)+"…";x.fillText(t,90,y);x.textAlign="right";x.fillText(it.precio||"",W-90,y);x.textAlign="left";y+=78;});
+    var sub=0;
+    items.forEach(function(it){var q=it.qty||1,u=num(it.precio);sub+=u*q;x.fillStyle="#f7f7f4";x.font="34px Arial,sans-serif";var t=it.nombre+(it.size?" ("+it.size+")":"");if(t.length>30)t=t.slice(0,29)+"…";x.fillText(t,90,y);x.textAlign="right";x.fillText(money(u*q),W-90,y);x.textAlign="left";
+      if(q>1){x.fillStyle="rgba(247,247,244,.55)";x.font="26px Arial,sans-serif";x.fillText(q+" × "+money(u),90,y+34);}y+=q>1?96:78;});
     x.strokeStyle="rgba(247,247,244,.2)";x.lineWidth=2;x.beginPath();x.moveTo(90,y-30);x.lineTo(W-90,y-30);x.stroke();y+=30;
     function row(a,b,big,col){x.fillStyle=col||"#f7f7f4";x.font=(big?"bold 46px":"32px")+" Arial,sans-serif";x.textAlign="left";x.fillText(a,90,y);x.textAlign="right";x.fillText(b,W-90,y);y+=big?70:52;}
-    if(v.discount)row("Descuento","-"+money(v.discount));
+    if(v.discount){row("Subtotal",money(sub),false,"rgba(247,247,244,.75)");row("Descuento","-"+money(v.discount),false,"rgba(247,247,244,.75)");}
     row("Total",money(v.total),true);
     var pays=v.payments||[];
     if(pays.length>1||v.balance>0)pays.forEach(function(p){row("Abono "+when(p.at,false),money(p.amount),false,"rgba(247,247,244,.75)");});
@@ -228,6 +231,20 @@
       if(navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({files:[file],text:"Recibo CANEVA "+v.ticket}).catch(function(){});}
       else{var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=file.name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},800);toast("Imagen del recibo descargada: adjúntala en WhatsApp");}
     });
+  }
+  function startEdit(id){
+    var v=findSale(id);if(!v)return;
+    S.editing={id:v.id,ticket:v.ticket,v:v};S.view="vender";
+    S.lines=(v.items||[]).map(function(x){var p=S.cat.find(function(c){return c.id&&c.id===x.pid;})||S.cat.find(function(c){return c.nombre===x.nombre;});var sizes=p?sizesOf(p):[];
+      if(x.size&&sizes.indexOf(String(x.size).toUpperCase())<0&&sizes.length)sizes=sizes.concat([String(x.size).toUpperCase()]);
+      return {pid:x.pid||(p&&p.id)||"",nombre:x.nombre,categoria:x.categoria||(p&&p.categoria)||"",precio:num(x.precio),qty:x.qty||1,size:x.size?String(x.size).toUpperCase():(sizes[0]||""),sizes:sizes,img:x.imagen||(p&&p.imagen)||"",free:!p};});
+    S.payFull=!(v.balance>0);
+    render();
+    var g=function(sel,val){var e=S.el.querySelector(sel);if(e&&val!=null)e.value=val;};
+    g("#vtCh",v.channel);g("#vtPay",v.pay);g("#vtDate",String(new Date(Date.parse(v.paidAt)-5*3600000).toISOString()).slice(0,10));g("#vtDisc",v.discount?money(v.discount):"");
+    g("#vtName",v.name);g("#vtPhone",v.phone);g("#vtDocT",v.docType);g("#vtDoc",v.doc);g("#vtAddr",v.address);g("#vtMail",v.email);g("#vtNote",v.note);
+    if(!S.payFull)g("#vtAbono",money(v.paid));
+    total();var f=S.el.querySelector("#vtForm");if(f)f.scrollIntoView({behavior:"smooth",block:"start"});
   }
   function findSale(id){var all=[].concat((S.data&&S.data.list)||[],(S.recv&&S.recv.list)||[],S.last?[S.last]:[]);return all.find(function(x){return x.id===id;});}
   function shareBtns(id){return '<button type="button" class="vt-mail" data-wa="'+esc(id)+'">💬 WhatsApp</button> <button type="button" class="vt-mail" data-img="'+esc(id)+'">🖼️ Imagen</button>';}
@@ -260,11 +277,21 @@
     if(!lines.length)return toast("Agrega al menos una prenda",true);
     if(lines.some(function(l){return !(l.precio>0);})&&!confirm("Hay prendas con precio $0. ¿Guardar así?"))return;
     var g=function(id){return (S.el.querySelector(id)||{}).value||"";},T=totals();
+    if(T.disc&&T.disc>=T.sub*0.5&&!confirm("El descuento es de "+money(T.disc)+" sobre "+money(T.sub)+" (queda en "+money(T.total)+"). ¿Es correcto?"))return;
     if(!S.payFull&&T.owe>0&&!g("#vtName").trim()&&!g("#vtPhone").trim())return toast("Para dejar saldo pendiente escribe el nombre o el celular de la clienta",true);
     var body={items:lines.map(function(l){return {pid:l.pid,nombre:l.nombre,categoria:l.categoria,precio:l.precio,qty:l.qty,size:l.size==="Única"?"":l.size,imagen:l.img};}),
       channel:g("#vtCh"),pay:g("#vtPay"),date:g("#vtDate"),discount:T.disc,paidNow:S.payFull?null:T.paid,
       name:g("#vtName"),phone:g("#vtPhone"),docType:g("#vtDocT"),doc:g("#vtDoc"),address:g("#vtAddr"),email:g("#vtMail").trim(),note:g("#vtNote"),noStock:!S.el.querySelector("#vtStock").checked};
     S.busy=true;var b=S.el.querySelector("#vtSave");b.disabled=true;b.textContent="Guardando…";
+    if(S.editing){
+      body.payFull=S.payFull;body.paidTotal=S.payFull?null:T.paid;
+      return api("/admin/sales/manual/"+S.editing.id+"/edit",{method:"POST",body:body}).then(function(d){
+        S.busy=false;S.editing=null;S.lines=[];S.payFull=true;
+        toast("✓ Venta "+d.ticket+" actualizada · "+money(d.total)+(d.balance>0?" · debe "+money(d.balance):""));
+        var w=(d.inventory&&d.inventory.warnings)||[];if(w.length)setTimeout(function(){alert("Cambios guardados. Revisa el inventario:\n\n"+w.join("\n"));},400);
+        render();load();loadRecv();
+      }).catch(function(e){S.busy=false;b.disabled=false;b.textContent="Guardar cambios";toast(e.message,true);});
+    }
     api("/admin/sales/manual",{method:"POST",body:body}).then(function(d){
       S.busy=false;S.lines=[];S.payFull=true;
       S.last={id:d.id,ticket:d.ticket,total:d.total,paidAt:new Date().toISOString(),items:body.items.map(function(x){return {nombre:x.nombre,size:x.size,qty:x.qty,precio:money(x.precio)};}),
@@ -308,6 +335,8 @@
       if(t.closest("#vtSave"))return save();
       if((b=t.closest("[data-abonar]"))){var box=b.closest(".vt-abono");return abonar(b.dataset.abonar,num(box.querySelector("[data-amt]").value),box.querySelector("[data-pay]").value);}
       if((b=t.closest("[data-saldar]"))){var row2=b.closest(".r"),sel=row2.querySelector("[data-pay]");if(!confirm("¿Registrar que pagó el saldo completo de "+money(+b.dataset.bal)+"?"))return;return abonar(b.dataset.saldar,+b.dataset.bal,sel?sel.value:"efectivo");}
+      if((b=t.closest("[data-edit]")))return startEdit(b.dataset.edit);
+      if(t.closest("[data-cancel-edit]")){S.editing=null;S.lines=[];S.payFull=true;return render();}
       if((b=t.closest("[data-wa]"))){var v1=findSale(b.dataset.wa);if(v1)shareWa(v1);return;}
       if((b=t.closest("[data-img]"))){var v2=findSale(b.dataset.img);if(v2)shareImage(v2);return;}
       if((b=t.closest("[data-mail]"))){
