@@ -16,6 +16,23 @@
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@200;300;400;500;600&family=Montserrat:wght@200;300;400&display=swap">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@200;300;400;500;600&family=Montserrat:wght@200;300;400&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@200;300;400;500;600&family=Montserrat:wght@200;300;400&display=swap" rel="stylesheet"></noscript>
+<script id="cviab-head">
+/* Instagram / Facebook / TikTok in-app browsers (Android WebView) flicker with blur behind moving photos
+   and with the Pasarela wipe effect. There the store switches to a lighter, steady render. ?iab=1 forces it, ?iab=0 turns it off. */
+(function(){try{var q=location.search;if(/[?&]iab=0/.test(q))return;
+if(/[?&]iab=1/.test(q)||/Instagram|FBAN|FBAV|FB_IAB|TikTok|musical_ly|BytedanceWebview/i.test(navigator.userAgent)){document.documentElement.classList.add('cv-iab');
+/* no gold sparkle bursts there either (extra moving layer over the photos) */
+Object.defineProperty(window,'cvBurst',{configurable:true,get:function(){return function(){};},set:function(){}});}}catch(e){}})();
+</script>
+<style id="cviab-css">
+html.cv-iab *,html.cv-iab *::before,html.cv-iab *::after{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+html.cv-iab .cv-rs{clip-path:none!important;transition:opacity .45s ease!important;will-change:auto!important}
+html.cv-iab .cv-rs img,html.cv-iab .cv-rs.on img{animation:none!important;transform:none!important;filter:none!important}
+html.cv-iab .cv-rtap{background:rgba(5,5,5,.8)!important;animation:none!important}
+html.cv-iab .cv-rend{background:rgba(8,7,6,.97)!important}
+html.cv-iab .cv-reel:empty{animation:none!important}
+html.cv-iab .mobile-shop-dock{background:rgba(5,4,3,.97)!important}
+</style>
 <script id="cvspeed-head">
 // CANEVA Rápida: product photos are served light (WebP, the size each place needs) through the free wsrv.nl image CDN.
 // If a light photo ever fails, the original photo loads instead (and after 3 failures the store stops using the CDN for the visit).
