@@ -246,6 +246,7 @@ main{padding:14px 16px 120px}
       <button type="button" data-tab="pedidos">Pedidos<b id="pendCount"></b></button>
       <button type="button" data-tab="apartados">Apartados<b id="apCount"></b></button>
       <button type="button" data-tab="regalos">Regalos<b id="gfCount"></b></button>
+      <button type="button" data-tab="ventas">💵 Ventas</button>
       <button type="button" data-tab="inventario">Inventario<b id="invCount"></b></button>
       <button type="button" data-tab="reportes">Reportes</button>
       <button type="button" data-tab="club">Club</button>
@@ -277,6 +278,7 @@ main{padding:14px 16px 120px}
     <div id="ctlView" class="hidden"><div id="ctlBody"></div></div>
     <div id="colView" class="hidden"><div id="colBody"></div></div>
     <div id="lnkView" class="hidden"><div id="lnkBody"></div></div>
+    <div id="venView" class="hidden"><div id="venBody"></div></div>
     <div id="prodView">
     <button id="portadaInfo" class="promo" type="button"></button>
     <div class="hrow" style="margin:0 0 10px">
@@ -446,6 +448,7 @@ main{padding:14px 16px 120px}
 
 <script src="admin_pro.js?v=52"></script>
 <script src="admin_colores.js?v=2"></script>
+<script src="admin_ventas.js?v=1"></script>
 <script>
 // Mobile admin for Caneva: edits the live catalog (Worker /catalog) and republishes via /admin/catalog.
 // Uses the same Worker endpoints and product shape as admin.html, so no Worker changes are needed.
@@ -1015,10 +1018,11 @@ function showTab(t){
   $("newBtn").classList.toggle("hidden",t!=="productos");
   $("ordersView").classList.toggle("hidden",t!=="pedidos"); $("clubView").classList.toggle("hidden",t!=="club");
   $("apView").classList.toggle("hidden",t!=="apartados"); $("gfView").classList.toggle("hidden",t!=="regalos"); if(t==="regalos") loadGifts();
-  $("invView").classList.toggle("hidden",t!=="inventario"); $("repView").classList.toggle("hidden",t!=="reportes"); $("ctlView").classList.toggle("hidden",t!=="control"); $("colView").classList.toggle("hidden",t!=="colores"); $("lnkView").classList.toggle("hidden",t!=="enlaces");
+  $("invView").classList.toggle("hidden",t!=="inventario"); $("repView").classList.toggle("hidden",t!=="reportes"); $("ctlView").classList.toggle("hidden",t!=="control"); $("colView").classList.toggle("hidden",t!=="colores"); $("lnkView").classList.toggle("hidden",t!=="enlaces"); $("venView").classList.toggle("hidden",t!=="ventas");
   if(t==="control") CanevaPro.mount($("ctlBody"),"control",proOpts());
   if(t==="colores") CanevaColores.mount($("colBody"),{api:API_BASE,token:token});
   if(t==="enlaces") CanevaPro.mount($("lnkBody"),"enlaces",proOpts());
+  if(t==="ventas") CanevaVentas.mount($("venBody"),{api:API_BASE,token:token});
   if(t==="inventario") CanevaPro.mount($("invBody"),"inventario",proOpts());
   if(t==="reportes") CanevaPro.mount($("repBody"),"reportes",proOpts());
   requestAnimationFrame(()=>document.documentElement.style.setProperty("--hdr",document.querySelector("#listView header").offsetHeight+"px"));
