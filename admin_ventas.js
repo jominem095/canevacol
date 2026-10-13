@@ -160,7 +160,7 @@
       '<span class="tag">'+esc(v.channelLabel||"")+'</span><span class="tag">'+esc(v.payLabel||"")+'</span>'+
       (live&&v.balance>0?'<span class="tag owe">Debe '+money(v.balance)+'</span>':'')+(live&&v.payments&&v.payments.length>1&&!v.balance?'<span class="tag ok">Pagada con abonos</span>':'')+
       (v.doc?'<span class="tag">'+esc(v.docLabel||"Doc")+' '+esc(v.doc)+'</span>':'')+(v.points?'<span class="tag">+'+v.points+' pts Club</span>':'')+(v.note?'<span class="tag">'+esc(v.note)+'</span>':'')+(live?'':'<span class="tag">Anulada</span>')+'</div>'+
-      '<div class="r"><b>'+money(v.total)+'</b>'+(live?'<button type="button" class="vt-mail" data-mail="'+esc(v.id)+'" data-to="'+esc(v.email||"")+'">📧 Recibo</button><br><button type="button" class="vt-void" data-void="'+esc(v.id)+'">Anular</button>':'')+'</div></div>';
+      '<div class="r"><b>'+money(v.total)+'</b>'+(live?shareBtns(v.id)+' <button type="button" class="vt-mail" data-mail="'+esc(v.id)+'" data-to="'+esc(v.email||"")+'">📧 Correo</button><br><button type="button" class="vt-void" data-void="'+esc(v.id)+'">Anular</button>':'')+'</div></div>';
   }
 
   // ---------------- cuentas por cobrar ----------------
@@ -179,9 +179,58 @@
         '<div class="vt-hist">Total '+money(v.total)+' · abonado '+money(v.paid)+(hist?' ('+hist+')':'')+'</div></div>'+
         '<div class="r"><b style="color:#ffb4a8">Debe '+money(v.balance)+'</b>'+
           '<div class="vt-abono" data-id="'+esc(v.id)+'"><input inputmode="numeric" placeholder="Abono $" data-amt><select data-pay>'+opts(PAY,"efectivo")+'</select><button type="button" class="vt-btn sm" data-abonar="'+esc(v.id)+'">Registrar abono</button></div>'+
-          '<div class="vt-abono"><button type="button" class="vt-btn ghost sm" data-saldar="'+esc(v.id)+'" data-bal="'+v.balance+'">Pagó todo ('+money(v.balance)+')</button>'+(wa?'<a class="vt-btn ghost sm" style="text-decoration:none" target="_blank" rel="noopener" href="'+wa+'">💬 Recordar</a>':'')+'</div></div></div>';
+          '<div class="vt-abono"><button type="button" class="vt-btn ghost sm" data-saldar="'+esc(v.id)+'" data-bal="'+v.balance+'">Pagó todo ('+money(v.balance)+')</button>'+(wa?'<a class="vt-btn ghost sm" style="text-decoration:none" target="_blank" rel="noopener" href="'+wa+'">💬 Recordar</a>':'')+'</div><div class="vt-abono">'+shareBtns(v.id)+'</div></div></div>';
     }).join(""):'<div class="vt-empty">Nadie debe nada 🎉</div>';
   }
+
+  // ---------------- receipt to WhatsApp (text) and as an image to share ----------------
+  function waNum(p){var d=String(p||"").replace(/[^\d]/g,"");if(d.length===10&&d[0]==="3")d="57"+d;return d.length>=11?d:"";}
+  function receiptText(v){
+    var L=["🖤 *CΛNEVΛ* · Recibo "+v.ticket,when(v.paidAt)+(v.channelLabel?" · "+v.channelLabel:""),""];
+    (v.items||[]).forEach(function(x){L.push("• "+x.nombre+(x.size?" ("+x.size+")":"")+((x.qty||1)>1?" ×"+x.qty:"")+" — "+(x.precio||""));});
+    L.push("");
+    if(v.discount)L.push("Descuento: -"+money(v.discount));
+    L.push("*Total: "+money(v.total)+"*");
+    var pays=(v.payments||[]);
+    if(pays.length>1||v.balance>0){pays.forEach(function(p){L.push("Abono "+when(p.at,false)+": "+money(p.amount)+(p.pay?" ("+(PAY[p.pay]||p.pay)+")":""));});}
+    else if(v.payLabel)L.push("Pago: "+v.payLabel);
+    L.push(v.balance>0?"*Saldo pendiente: "+money(v.balance)+"*":"✅ Pagado");
+    L.push("","Gracias por tu compra"+(v.name?", "+String(v.name).split(" ")[0]:"")+" 🖤","canevacol.com · IG @caneva.col");
+    return L.join("\n");
+  }
+  function shareWa(v){
+    var n=waNum(v.phone),url="https://wa.me/"+(n||"")+"?text="+encodeURIComponent(receiptText(v));
+    window.open(url,"_blank","noopener");
+  }
+  function receiptImage(v){
+    var W=1080,items=v.items||[],H=760+items.length*78+((v.payments||[]).length>1||v.balance>0?(v.payments||[]).length*52:0);
+    var c=document.createElement("canvas");c.width=W;c.height=H;var x=c.getContext("2d");
+    x.fillStyle="#070604";x.fillRect(0,0,W,H);x.strokeStyle="rgba(201,169,110,.55)";x.lineWidth=3;x.strokeRect(36,36,W-72,H-72);
+    x.textAlign="center";x.fillStyle="#e6cf9f";x.font="500 76px Georgia,serif";x.fillText("CΛNEVΛ",W/2,170);
+    x.fillStyle="rgba(247,247,244,.7)";x.font="28px Arial,sans-serif";x.fillText("RECIBO "+v.ticket+"  ·  "+when(v.paidAt),W/2,228);
+    var y=320;x.textAlign="left";
+    items.forEach(function(it){x.fillStyle="#f7f7f4";x.font="34px Arial,sans-serif";var t=it.nombre+(it.size?" ("+it.size+")":"")+((it.qty||1)>1?" ×"+it.qty:"");if(t.length>34)t=t.slice(0,33)+"…";x.fillText(t,90,y);x.textAlign="right";x.fillText(it.precio||"",W-90,y);x.textAlign="left";y+=78;});
+    x.strokeStyle="rgba(247,247,244,.2)";x.lineWidth=2;x.beginPath();x.moveTo(90,y-30);x.lineTo(W-90,y-30);x.stroke();y+=30;
+    function row(a,b,big,col){x.fillStyle=col||"#f7f7f4";x.font=(big?"bold 46px":"32px")+" Arial,sans-serif";x.textAlign="left";x.fillText(a,90,y);x.textAlign="right";x.fillText(b,W-90,y);y+=big?70:52;}
+    if(v.discount)row("Descuento","-"+money(v.discount));
+    row("Total",money(v.total),true);
+    var pays=v.payments||[];
+    if(pays.length>1||v.balance>0)pays.forEach(function(p){row("Abono "+when(p.at,false),money(p.amount),false,"rgba(247,247,244,.75)");});
+    if(v.balance>0)row("Saldo pendiente",money(v.balance),true,"#ffb4a8");else row("Estado","Pagado ✓",false,"#9de08f");
+    x.textAlign="center";x.fillStyle="rgba(247,247,244,.75)";x.font="30px Arial,sans-serif";
+    x.fillText("Gracias por tu compra"+(v.name?", "+String(v.name).split(" ")[0]:"")+" 🖤",W/2,H-150);
+    x.fillStyle="#e6cf9f";x.fillText("canevacol.com  ·  @caneva.col",W/2,H-100);
+    return new Promise(function(res){c.toBlob(function(b){res(b);},"image/png");});
+  }
+  function shareImage(v){
+    receiptImage(v).then(function(blob){
+      var file=new File([blob],"recibo-caneva-"+String(v.ticket).replace(/[^\w]/g,"")+".png",{type:"image/png"});
+      if(navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({files:[file],text:"Recibo CANEVA "+v.ticket}).catch(function(){});}
+      else{var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=file.name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},800);toast("Imagen del recibo descargada: adjúntala en WhatsApp");}
+    });
+  }
+  function findSale(id){var all=[].concat((S.data&&S.data.list)||[],(S.recv&&S.recv.list)||[],S.last?[S.last]:[]);return all.find(function(x){return x.id===id;});}
+  function shareBtns(id){return '<button type="button" class="vt-mail" data-wa="'+esc(id)+'">💬 WhatsApp</button> <button type="button" class="vt-mail" data-img="'+esc(id)+'">🖼️ Imagen</button>';}
 
   // ---------------- data ----------------
   function load(){
@@ -218,11 +267,17 @@
     S.busy=true;var b=S.el.querySelector("#vtSave");b.disabled=true;b.textContent="Guardando…";
     api("/admin/sales/manual",{method:"POST",body:body}).then(function(d){
       S.busy=false;S.lines=[];S.payFull=true;
+      S.last={id:d.id,ticket:d.ticket,total:d.total,paidAt:new Date().toISOString(),items:body.items.map(function(x){return {nombre:x.nombre,size:x.size,qty:x.qty,precio:money(x.precio)};}),
+        discount:body.discount,balance:d.balance||0,payments:(d.paid?[{at:new Date().toISOString(),amount:d.paid,pay:body.pay}]:[]),payLabel:PAY[body.pay]||"",channelLabel:CH[body.channel]||"",name:body.name,phone:body.phone};
       var w=(d.inventory&&d.inventory.warnings)||[],em=d.email||{},mailBad=body.email&&!em.sent&&!em.skipped;
       toast("✓ Venta "+d.ticket+" guardada · "+money(d.total)+(d.balance>0?" · debe "+money(d.balance):"")+(em.sent?" · 📧 recibo enviado":"")+(mailBad?" · ⚠ recibo sin enviar":""),mailBad);
       if(mailBad)setTimeout(function(){alert("La venta quedó guardada, pero el recibo no se pudo enviar: "+(em.error||"revisa el correo")+"\nPuedes reenviarlo desde la lista con 📧 Recibo.");},500);
       if(w.length)setTimeout(function(){alert("Venta guardada. Revisa el inventario:\n\n"+w.join("\n"));},mailBad?900:400);
       render();load();loadRecv();
+      var card=S.el.querySelector(".vt-card");if(card){var sp=document.createElement("div");sp.className="vt-card";sp.style.borderColor="#9de08f";
+        sp.innerHTML='<h3>✓ Venta '+esc(d.ticket)+' guardada · '+money(d.total)+(d.balance>0?' · debe '+money(d.balance):'')+'</h3><div class="dim" style="margin-bottom:10px">Envíale el recibo a la clienta:</div><div class="vt-abono" style="justify-content:flex-start">'+
+          '<button type="button" class="vt-btn sm" data-wa="'+esc(d.id)+'">💬 Enviar por WhatsApp</button><button type="button" class="vt-btn ghost sm" data-img="'+esc(d.id)+'">🖼️ Compartir imagen</button></div>';
+        card.parentNode.insertBefore(sp,card);}
     }).catch(function(e){S.busy=false;b.disabled=false;b.textContent="Guardar venta";toast(e.message,true);});
   }
 
@@ -253,6 +308,8 @@
       if(t.closest("#vtSave"))return save();
       if((b=t.closest("[data-abonar]"))){var box=b.closest(".vt-abono");return abonar(b.dataset.abonar,num(box.querySelector("[data-amt]").value),box.querySelector("[data-pay]").value);}
       if((b=t.closest("[data-saldar]"))){var row2=b.closest(".r"),sel=row2.querySelector("[data-pay]");if(!confirm("¿Registrar que pagó el saldo completo de "+money(+b.dataset.bal)+"?"))return;return abonar(b.dataset.saldar,+b.dataset.bal,sel?sel.value:"efectivo");}
+      if((b=t.closest("[data-wa]"))){var v1=findSale(b.dataset.wa);if(v1)shareWa(v1);return;}
+      if((b=t.closest("[data-img]"))){var v2=findSale(b.dataset.img);if(v2)shareImage(v2);return;}
       if((b=t.closest("[data-mail]"))){
         var to=(prompt("¿A qué correo enviamos el recibo?",b.dataset.to||"")||"").trim();if(!to)return;
         if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to))return toast("Ese correo no es válido",true);
