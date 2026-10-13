@@ -50,6 +50,14 @@ main{padding:14px 16px 120px}
 .tabs b:empty{display:none}
 .seg{display:flex;gap:6px;margin:0 0 12px}.seg button{flex:1;background:none;border:1px solid var(--b);border-radius:999px;padding:7px;font-size:12px}.seg button.on{background:var(--w);color:var(--k)}
 .ocard{border:1px solid var(--b);border-radius:14px;background:var(--k2);padding:12px;margin-bottom:12px}
+.oseg{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 0 10px;padding-bottom:2px}.oseg::-webkit-scrollbar{display:none}.oseg button{flex:none;background:none;border:1px solid var(--b);border-radius:999px;padding:8px 12px;font-size:12px;white-space:nowrap}.oseg button.on{background:var(--w);color:var(--k);border-color:var(--w);font-weight:600}.oseg i{font-style:normal;opacity:.65;margin-left:4px}
+.ohint{font-size:12.5px;color:var(--dim);line-height:1.5;margin:0 0 12px}.ohint b{color:var(--w)}
+.okpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:0 0 12px}.okpi{border:1px solid var(--b);border-radius:12px;padding:10px;background:var(--k2)}.okpi span{display:block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}.okpi b{font-size:17px}.okpi.g b{color:var(--ok)}
+.obadge{display:inline-block;font-size:11px;border-radius:999px;padding:2px 9px;margin:6px 6px 0 0;border:1px solid var(--b)}.obadge.pas{border-color:#e6cf9f;color:#e6cf9f}.obadge.ok{border-color:var(--ok);color:var(--ok)}.obadge.bad{border-color:var(--bad);color:var(--bad)}
+.ocost{margin-top:8px;padding:8px 10px;border:1px dashed rgba(230,207,159,.4);border-radius:10px;background:rgba(230,207,159,.05);font-size:12.5px;color:#e6cf9f;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.ocost b{color:var(--w)}.ocost .g{color:var(--ok)}.ocost .g.neg{color:var(--bad)}.ocost button{margin-left:auto;background:none;border:1px solid rgba(230,207,159,.5);color:#e6cf9f;border-radius:999px;padding:5px 10px;font-size:12px}
+.paysheet{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.72);display:flex;align-items:flex-end;justify-content:center}.paysheet .bx{width:min(520px,100%);background:var(--k2);border:1px solid var(--b);border-radius:20px 20px 0 0;padding:18px 16px 24px}.paysheet h3{margin:0 0 4px;font-size:17px}.paysheet p{margin:0 0 12px;font-size:13px;color:var(--dim)}
+.paysheet .opts{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.paysheet .opts button{background:none;border:1px solid var(--b);border-radius:12px;padding:12px;font-size:14px;color:var(--w)}.paysheet .opts button.on{background:var(--w);color:var(--k);font-weight:600}
+.paysheet input{width:100%;margin-top:12px;background:var(--k);border:1px solid var(--b);border-radius:12px;padding:12px;color:var(--w);font-size:15px;outline:none}.paysheet .row{display:flex;gap:8px;margin-top:14px}.paysheet .row button{flex:1;border-radius:12px;padding:13px;font-weight:600;font-size:14px}
 .ohead{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--dim)}
 .ohead b{color:var(--w);font-size:14px}
 .ocli{margin:8px 0;font-size:13px;line-height:1.5}
@@ -258,7 +266,9 @@ main{padding:14px 16px 120px}
   </header>
   <main>
     <div id="ordersView" class="hidden">
-      <div class="seg" id="ordSeg"><button type="button" data-st="pendiente" class="on">Pendientes</button><button type="button" data-st="pagado">Pagados</button><button type="button" data-st="cancelado">Cancelados</button></div>
+      <div class="oseg" id="ordSeg"></div>
+      <div id="ordHint" class="ohint"></div>
+      <div id="ordKpis"></div>
       <div id="ordersList"></div>
     </div>
     <div id="apView" class="hidden">
@@ -448,7 +458,7 @@ main{padding:14px 16px 120px}
 
 <script src="admin_pro.js?v=52"></script>
 <script src="admin_colores.js?v=2"></script>
-<script src="admin_ventas.js?v=6"></script>
+<script src="admin_ventas.js?v=7"></script>
 <script>
 // Mobile admin for Caneva: edits the live catalog (Worker /catalog) and republishes via /admin/catalog.
 // Uses the same Worker endpoints and product shape as admin.html, so no Worker changes are needed.
@@ -993,7 +1003,7 @@ async function saveSettings(){
 
 // ---------- Tabs: Productos | Pedidos | Club ----------
 const DEFAULT_REWARDS=[{name:"$10.000 de descuento",points:300,desc:"En tu próxima compra"},{name:"$25.000 de descuento",points:600,desc:"En tu próxima compra"},{name:"Prenda sorpresa",points:1000,desc:"Elegida por nuestra stylist"}];
-let currentTab="productos", ordStatus="pendiente";
+let currentTab="productos", ordStatus="por_cobrar", ORD=[];
 function adminFetch(path,opts={}){
   return api(API_BASE+path,{method:opts.method||"GET",headers:{"x-admin-token":token(),"Content-Type":"application/json"},body:opts.body?JSON.stringify(opts.body):undefined})
     .then(async res=>{let d={};try{d=await res.json();}catch(e){}
@@ -1033,17 +1043,62 @@ const money=n=>"$"+Number(n||0).toLocaleString("es-CO");
 const when=iso=>iso?new Date(iso).toLocaleString("es-CO",{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"}):"";
 function clubOff(msg){ return `<div class="empty">${esc(msg)}<br><br>Para activarlo: crea la base de datos <b>D1</b> en Cloudflare y conéctala al Worker como <b>CANEVA_DB</b> (ver guía).</div>`; }
 async function refreshPendingCount(){
-  try{ const d=await adminFetch("/admin/orders?status=pendiente"); $("pendCount").textContent=d.orders.length||""; }catch(e){ $("pendCount").textContent=""; }
+  try{ const d=await adminFetch("/admin/orders?status=todos"); const l=d.orders.map(withBucket); $("pendCount").textContent=l.filter(o=>o.bucket==="por_cobrar"||o.bucket==="pagando").length||""; }catch(e){ $("pendCount").textContent=""; }
   try{ const d=await adminFetch("/admin/gifts?status=solicitada"); $("gfCount").textContent=(d.counts&&d.counts.solicitada)||""; }catch(e){ $("gfCount").textContent=""; }
   try{ const d=await adminFetch("/admin/layaways?status=solicitado"); const c=d.counts||{}; $("apCount").textContent=(c.solicitado||0)+(c.activo||0)||""; }catch(e){ $("apCount").textContent=""; }
+}
+// ---------- Pedidos clasificados (Worker v61). With an older Worker the buckets are worked out here. ----------
+const OB={
+  por_cobrar:{t:"💬 Por cobrar",h:"Pidieron por <b>WhatsApp</b> en las últimas 48 h y todavía no pagan. Escríbeles y, cuando paguen, toca <b>Marcar pagado</b> y elige cómo pagaron."},
+  pagando:{t:"⏳ Pagando en línea",h:"Abrieron el pago con <b>Bold</b> hace menos de 2 h. Se confirma solo cuando el banco aprueba (PSE puede tardar)."},
+  abandonado:{t:"🛒 Abandonados",h:"Pedidos de WhatsApp sin pagar después de <b>48 h</b> y pagos en línea que no terminaron. Escríbeles una vez más o archívalos para que no se mezclen con las ventas."},
+  pasarela:{t:"✅ Pagados · Pasarela",h:"Pagados en línea con <b>Bold</b> (tarjeta, PSE, Nequi dentro de Bold)."},
+  otro_medio:{t:"✅ Pagados · Otro medio",h:"Pagados por fuera de la página: <b>Nequi, transferencia, efectivo, datáfono, link de Bold o contraentrega</b>. Se registra al marcar pagado."},
+  cancelado:{t:"Archivados",h:"Pedidos cancelados o archivados. No cuentan en ventas."}
+};
+const VIA={nequi:"Nequi",transferencia:"Transferencia",daviplata:"Daviplata",efectivo:"Efectivo",datafono:"Datáfono",bold_link:"Link de Bold",contraentrega:"Contraentrega",otro:"Otro",bold:"Bold (pasarela)"};
+function withBucket(o){
+  if(o.bucket) return o;
+  const dv=o.delivery||{}, age=Date.now()-(Date.parse(o.createdAt)||Date.now());
+  let b;
+  if(dv.manual) b="manual";
+  else if(o.status==="cancelado") b="cancelado";
+  else if(o.status==="pagado") b=(dv.paidVia||(dv.pay==="bold"?"bold":""))==="bold"?"pasarela":"otro_medio";
+  else if(dv.pay==="bold") b=/REJECTED|FAILED|VOIDED|SIN_PAGO/.test(dv.boldStatus||"")||age>2*3600000?"abandonado":"pagando";
+  else b=age>=48*3600000?"abandonado":"por_cobrar";
+  return {...o,bucket:b,paidVia:o.paidVia||(o.status==="pagado"?(dv.paidVia||(dv.pay==="bold"?"bold":"")):""),paidViaLabel:o.paidViaLabel||""};
 }
 async function loadOrders(){
   $("ordersList").innerHTML=`<div class="empty">Cargando…</div>`;
   try{
-    const d=await adminFetch("/admin/orders?status="+ordStatus);
-    if(ordStatus==="pendiente") $("pendCount").textContent=d.orders.length||"";
-    $("ordersList").innerHTML=d.orders.length?d.orders.map(orderCard).join(""):`<div class="empty">No hay pedidos ${ordStatus==="pendiente"?"pendientes":ordStatus==="pagado"?"pagados":"cancelados"}.</div>`;
+    let list=(await adminFetch("/admin/orders?status=todos")).orders;
+    if(list.length&&!list[0].bucket){ // Worker before v61 ignores "todos": ask each status
+      const r=await Promise.all(["pendiente","pagado","cancelado"].map(st=>adminFetch("/admin/orders?status="+st).then(d=>d.orders)));
+      list=[].concat(...r);
+    }
+    ORD=list.map(withBucket).filter(o=>o.bucket!=="manual");
+    paintOrders();
   }catch(e){ $("ordersList").innerHTML=/D1|activado/.test(e.message)?clubOff(e.message):`<div class="empty">${esc(e.message)}</div>`; }
+}
+function paintOrders(){
+  const n=k=>ORD.filter(o=>o.bucket===k).length;
+  $("pendCount").textContent=(n("por_cobrar")+n("pagando"))||"";
+  $("ordSeg").innerHTML=Object.keys(OB).map(k=>`<button type="button" data-st="${k}" class="${k===ordStatus?"on":""}">${OB[k].t}<i>${n(k)}</i></button>`).join("");
+  $("ordHint").innerHTML=OB[ordStatus].h;
+  const l=ORD.filter(o=>o.bucket===ordStatus);
+  const sum=x=>x.reduce((s,o)=>s+(o.total||0),0);
+  let k="";
+  if(ordStatus==="pasarela"||ordStatus==="otro_medio"){
+    const m30=l.filter(o=>Date.now()-Date.parse(o.paidAt||o.createdAt)<30*864e5), wc=m30.filter(o=>o.cost);
+    const prof=wc.reduce((s,o)=>s+o.cost.profit,0), miss=wc.filter(o=>o.cost.missing).length;
+    k=`<div class="okpis"><div class="okpi"><span>Vendido 30 días</span><b>${money(sum(m30))}</b></div><div class="okpi"><span>Pedidos</span><b>${m30.length}</b></div>${wc.length?`<div class="okpi g"><span>🔒 Ganancia</span><b>${money(prof)}</b></div>`:""}${miss?`<div class="okpi"><span>Sin costo</span><b style="color:var(--bad)">${miss}</b></div>`:""}</div>`;
+  } else if(ordStatus==="abandonado"&&l.length){
+    k=`<div class="okpis"><div class="okpi"><span>Se quedaron en</span><b>${money(sum(l))}</b></div><div class="okpi"><span>Pedidos</span><b>${l.length}</b></div></div><button type="button" class="secondary" data-archive-all="1" style="width:100%;margin:0 0 12px;border:1px solid var(--b);background:none;color:var(--w);border-radius:12px;padding:11px;font-size:13px">Archivar los ${l.length} abandonados</button>`;
+  } else if((ordStatus==="por_cobrar"||ordStatus==="pagando")&&l.length){
+    k=`<div class="okpis"><div class="okpi"><span>Por cobrar</span><b>${money(sum(l))}</b></div><div class="okpi"><span>Pedidos</span><b>${l.length}</b></div></div>`;
+  }
+  $("ordKpis").innerHTML=k;
+  $("ordersList").innerHTML=l.length?l.map(orderCard).join(""):`<div class="empty">No hay pedidos aquí ✨</div>`;
 }
 function orderCard(o){
   const u=o.user;
@@ -1051,26 +1106,56 @@ function orderCard(o){
   const cli=u?`👤 <b>${esc(u.name)}</b> · ${esc(u.email)}${u.phone?` · <a href="https://wa.me/${phone.length===10?"57"+phone:phone}" target="_blank" rel="noopener">${esc(u.phone)}</a>`:""}<span class="tag">${u.points} pts</span>`:(o.receiptEmail?`✉ <b>${esc(o.receiptEmail)}</b> <span style="color:var(--dim)">· sin cuenta (sus puntos quedan guardados)</span>`:`<span style="color:var(--dim)">Sin cuenta del Club</span>`);
   const items=o.items.map(it=>`<div class="oitem">${it.imagen?`<img src="${esc(it.imagen)}" alt="" loading="lazy">`:"<img alt=''>"}<span>${esc(it.nombre)}${it.size?` · Talla ${esc(it.size)}`:""}</span><b>×${it.qty}</b></div>`).join("");
   const ref=o.id.toUpperCase();
+  const dv0=o.delivery||{}, wph=String(dv0.phone||(u&&u.phone)||"").replace(/[^\d]/g,""), wnum=wph.length===10?"57"+wph:wph;
+  const wtxt=o.bucket==="abandonado"?`Hola ${(dv0.name||(u&&u.name)||"").split(" ")[0]} ✨ te escribimos de CΛNEVΛ. Vimos tu pedido de ${o.items.map(i=>i.nombre).slice(0,2).join(" y ")} y todavía te lo tenemos guardado 💛 ¿Te ayudamos a terminar la compra?`:`Hola ${(dv0.name||(u&&u.name)||"").split(" ")[0]} ✨ te escribimos de CΛNEVΛ por tu pedido (${money(o.total)}). ¿Te enviamos los datos para pagar? 💛`;
   const acts=o.status==="pendiente"
-    ?`<div class="oact"><button class="pay" data-pay="${o.id}" data-has-user="${u?1:0}" data-mail="${esc(o.receiptEmail||"")}">Marcar pagado ✓</button><button class="cancel" data-cancel="${o.id}">Cancelar</button></div>`
+    ?`<div class="oact">${wnum?`<a class="ext" href="https://wa.me/${wnum}?text=${encodeURIComponent(wtxt)}" target="_blank" rel="noopener">💬 Escribirle</a>`:""}<button class="pay" data-pay="${o.id}" data-has-user="${u?1:0}" data-mail="${esc(o.receiptEmail||dv0.email||"")}">Marcar pagado ✓</button><button class="cancel" data-cancel="${o.id}">${o.bucket==="abandonado"?"Archivar":"Cancelar"}</button></div>`
     :`<div class="oact"><a href="${API_BASE}/o/${o.id}" target="_blank" rel="noopener">Ver pedido</a>${o.status==="pagado"?`<button class="pay" data-resend="${o.id}" data-mail="${esc(o.receiptEmail||(u&&u.email)||"")}">${o.emailSentAt?"Reenviar recibo":"Enviar recibo ✉"}</button>`:""}</div>`;
   const paid=o.status==="pagado"?`<div class="ocli">🧾 Recibo <b>${esc(o.ticket)}</b>${o.points?(u?` · +${o.points} pts`:` · ${o.points} pts guardados`):""} · ${o.emailSentAt?"correo enviado ✓":(o.receiptEmail?"correo no enviado":"sin correo")}</div>`:"";
   // Delivery details typed at checkout (name, ID, phone, e-mail, address)
   const dv=o.delivery||null, dph=dv&&dv.phone?String(dv.phone).replace(/[^\d]/g,""):"";
   const dlv=dv&&(dv.name||dv.address)?`<div class="ocli" style="line-height:1.55">📦 <b>${esc(dv.name||"")}</b>${dv.doc?` · CC ${esc(dv.doc)}`:""}${dph?` · <a href="https://wa.me/${dph.length===10?"57"+dph:dph}" target="_blank" rel="noopener">${esc(dv.phone)}</a>`:""}${dv.email?` · ${esc(dv.email)}`:""}<br>📍 ${esc([dv.address,dv.barrio,dv.city].filter(Boolean).join(", "))}${dv.notes?`<br>📝 ${esc(dv.notes)}`:""}</div>`:"";
-  const via=dv&&dv.pay==="bold"?`<div class="ocli">💳 ${o.status==="pagado"?"Pagado en línea con Bold":"Pago con Bold en proceso (se confirma solo)"}</div>`:"";
-  return `<div class="ocard"><div class="ohead"><span>Ref. <b>${esc(ref)}</b></span><span>${esc(when(o.createdAt))}</span></div><div class="ocli">${cli}</div>${dlv}${via}${paid}${items}<div class="otot"><span>Total</span><span>${money(o.total)}</span></div>${acts}</div>`;
+  const age=Math.floor((Date.now()-Date.parse(o.createdAt))/36e5);
+  const via=o.bucket==="pasarela"?`<span class="obadge pas">💳 Pagado en línea con Bold</span>`
+    :o.bucket==="otro_medio"?`<span class="obadge ok">✅ Pagó por ${esc(o.paidViaLabel||VIA[o.paidVia]||"otro medio")}</span>`
+    :o.bucket==="pagando"?`<span class="obadge pas">⏳ Pago con Bold en proceso (se confirma solo)</span>`
+    :o.bucket==="abandonado"?`<span class="obadge bad">🛒 ${dv&&dv.pay==="bold"?"No terminó el pago en línea":"Sin pagar hace "+(age>=48?Math.floor(age/24)+" días":age+" h")}</span>`
+    :o.bucket==="por_cobrar"?`<span class="obadge">💬 Pidió por WhatsApp hace ${age<1?"menos de 1 h":age+" h"}</span>`:"";
+  const C=o.cost;
+  const cst=o.status==="pagado"&&C?`<div class="ocost">🔒 Costo <b>${money(C.cost)}</b> · <span class="g${C.profit<0?" neg":""}">ganancia ${money(C.profit)}${C.margin!=null?" ("+C.margin+"%)":""}</span>${C.missing?` · <span style="color:var(--bad)">⚠ ${C.missing} sin costo</span>`:""}<button type="button" data-cost="${o.id}">${C.missing?"Poner costo":"Editar"}</button></div>`
+    :o.status==="pagado"?`<div class="ocost">🔒 Costo y ganancia: pega la Worker v61 para verlos</div>`:"";
+  return `<div class="ocard"><div class="ohead"><span>Ref. <b>${esc(ref)}</b></span><span>${esc(when(o.createdAt))}</span></div><div>${via}</div><div class="ocli">${cli}</div>${dlv}${paid}${items}<div class="otot"><span>Total</span><span>${money(o.total)}</span></div>${cst}${acts}</div>`;
+}
+// Asks how she paid (and the e-mail for the receipt when she has no Club account)
+function paySheet(hasUser,mail){
+  return new Promise(res=>{
+    const m=document.createElement("div"); m.className="paysheet";
+    const keys=["nequi","transferencia","daviplata","efectivo","datafono","bold_link","contraentrega","otro"];
+    let via="";
+    m.innerHTML=`<div class="bx"><h3>¿Cómo pagó?</h3><p>Así el pedido queda en <b>Pagados · Otro medio</b> y sabes por dónde entró la plata. Se genera el recibo, se suman los puntos y se descuenta del inventario.</p>
+      <div class="opts">${keys.map(k=>`<button type="button" data-v="${k}">${VIA[k]}</button>`).join("")}</div>
+      ${hasUser?"":`<input type="email" inputmode="email" placeholder="Correo para el recibo (opcional)" value="${esc(mail||"")}">`}
+      <div class="row"><button type="button" class="secondary" data-x style="background:none;color:var(--w);border:1px solid var(--b)">Cancelar</button><button type="button" data-ok disabled>Confirmar pago ✓</button></div></div>`;
+    document.body.appendChild(m);
+    m.onclick=e=>{
+      const b=e.target.closest("[data-v]");
+      if(b){ via=b.dataset.v; m.querySelectorAll("[data-v]").forEach(x=>x.classList.toggle("on",x===b)); m.querySelector("[data-ok]").disabled=false; return; }
+      if(e.target===m||e.target.closest("[data-x]")){ m.remove(); return res(null); }
+      if(e.target.closest("[data-ok]")){
+        const inp=m.querySelector("input"), email=inp?inp.value.trim():"";
+        if(email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ toast("Ese correo no es válido.",{err:true}); return; }
+        m.remove(); res({via,email});
+      }
+    };
+  });
 }
 async function payOrder(id,hasUser,mail){
-  let email="";
-  if(!hasUser){
-    const v=prompt("Esta clienta no tiene cuenta. ¿A qué correo enviamos el recibo? Sus puntos quedan guardados para ese correo. (déjalo vacío para no enviar)",mail||"");
-    if(v===null) return; email=v.trim();
-    if(email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return toast("Ese correo no es válido.",{err:true});
-  }else if(!confirm("¿Confirmas que este pedido está pagado? Se genera el recibo, se suman los puntos y se envía el correo.")) return;
+  const ans=await paySheet(hasUser,mail);
+  if(!ans) return;
+  const email=ans.email;
   busy(true,"Generando recibo…");
   try{
-    const d=await adminFetch(`/admin/orders/${id}/pay`,{method:"POST",body:{email}});
+    const d=await adminFetch(`/admin/orders/${id}/pay`,{method:"POST",body:{email,via:ans.via}});
     busy(false);
     const mail=d.email&&d.email.sent?"correo enviado ✓":(d.email&&d.email.error?"correo NO enviado: "+d.email.error:(email||hasUser?"correo no configurado":"sin correo"));
     const iw=(d.inventory&&d.inventory.warnings)||[];
@@ -1189,8 +1274,16 @@ async function apCancel(id){
   try{ await adminFetch(`/admin/layaways/${id}/cancel`,{method:"POST",body:{}}); toast("Apartado cancelado"); loadLayaways(); }
   catch(e){ toast("Error: "+e.message,{err:true,ms:8000}); }
 }
+async function archiveAll(){
+  const l=ORD.filter(o=>o.bucket==="abandonado"&&o.status==="pendiente");
+  if(!l.length||!confirm(`¿Archivar los ${l.length} pedidos abandonados? Pasan a "Archivados" y dejan de salir como pendientes.`)) return;
+  busy(true,"Archivando…"); let ok=0;
+  for(const o of l){ try{ await adminFetch(`/admin/orders/${o.id}/cancel`,{method:"POST",body:{}}); ok++; }catch(e){} }
+  busy(false); toast(`${ok} pedidos archivados`); loadOrders();
+}
 async function cancelOrder(id){
-  if(!confirm("¿Cancelar este pedido?")) return;
+  const o=ORD.find(x=>x.id===id);
+  if(!confirm(o&&o.bucket==="abandonado"?"¿Archivar este pedido abandonado? Deja de salir como pendiente.":"¿Cancelar este pedido?")) return;
   try{ await adminFetch(`/admin/orders/${id}/cancel`,{method:"POST",body:{}}); toast("Pedido cancelado"); loadOrders(); }
   catch(e){ toast("Error: "+e.message,{err:true}); }
 }
@@ -1279,8 +1372,9 @@ $("fInvBtn").onclick=()=>{ const pid=$("fInvBtn").dataset.pid; closeEditor(); cu
 $("renameCatBtn").onclick=renameCategory;
 $("portadaInfo").onclick=openPortada;
 $("tabs").onclick=e=>{ const b=e.target.closest("button[data-tab]"); if(b) showTab(b.dataset.tab); };
-$("ordSeg").onclick=e=>{ const b=e.target.closest("button[data-st]"); if(!b) return; ordStatus=b.dataset.st; document.querySelectorAll("#ordSeg button").forEach(x=>x.classList.toggle("on",x===b)); loadOrders(); };
-$("ordersList").onclick=e=>{ const r=e.target.closest("[data-resend]"); if(r) return resendReceipt(r.dataset.resend, r.dataset.mail); const p=e.target.closest("[data-pay]"); if(p) return payOrder(p.dataset.pay, p.dataset.hasUser==="1", p.dataset.mail); const c=e.target.closest("[data-cancel]"); if(c) cancelOrder(c.dataset.cancel); };
+$("ordSeg").onclick=e=>{ const b=e.target.closest("button[data-st]"); if(!b) return; ordStatus=b.dataset.st; paintOrders(); };
+$("ordKpis").onclick=e=>{ if(e.target.closest("[data-archive-all]")) archiveAll(); };
+$("ordersList").onclick=e=>{ const k=e.target.closest("[data-cost]"); if(k){ const o=ORD.find(x=>x.id===k.dataset.cost); if(o&&window.CanevaVentas&&CanevaVentas.editCost) CanevaVentas.editCost(o,()=>loadOrders(),{api:API_BASE,token:token}); return; } const r=e.target.closest("[data-resend]"); if(r) return resendReceipt(r.dataset.resend, r.dataset.mail); const p=e.target.closest("[data-pay]"); if(p) return payOrder(p.dataset.pay, p.dataset.hasUser==="1", p.dataset.mail); const c=e.target.closest("[data-cancel]"); if(c) cancelOrder(c.dataset.cancel); };
 $("gfSeg").onclick=e=>{ const b=e.target.closest("button[data-gf]"); if(!b) return; gfStatus=b.dataset.gf; document.querySelectorAll("#gfSeg button").forEach(x=>x.classList.toggle("on",x===b)); loadGifts(); };
 $("gfCheck").onclick=gfCheck;
 $("gfList").onclick=async e=>{ const a=e.target.closest("[data-gfact]"); if(a) return gfActivate(a.dataset.gfact);

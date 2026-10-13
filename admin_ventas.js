@@ -3,11 +3,16 @@
    Reportes, the month goal, Club points and inventory. Sales can be paid in full or with an abono: what she still
    owes goes to "Cuentas por cobrar", where later abonos are registered until it is paid.
    Shared by admin.html and admin_movil.html. Usage: CanevaVentas.mount(element, { api, token: () => "..." })
-   Needs Worker v58 (/admin/sales/manual, /admin/sales/receivables). */
+   Needs Worker v58 (/admin/sales/manual, /admin/sales/receivables).
+   v61: private cost per garment in each sale and a "Ganancia" tab with every paid sale (web and manual) and its profit.
+   Costs only live in the admin (Worker /admin/orders/:id/cost, /admin/profit): never in receipts, the store or e-mails.
+   CanevaVentas.editCost(order, onSaved) opens the cost editor from other screens (Pedidos). */
 (function(){
   "use strict";
   var OPT={api:"https://caneva-ai.canevacol.workers.dev",token:function(){try{return localStorage.getItem("caneva_admin_token_v1")||"";}catch(e){return "";}}};
-  var S={el:null,cat:[],cats:[],catSel:"",data:null,recv:null,days:1,view:"vender",lines:[],busy:false,payFull:true,plan:"contado",abTouched:false};
+  var S={el:null,cat:[],cats:[],catSel:"",data:null,recv:null,days:1,view:"vender",lines:[],busy:false,payFull:true,plan:"contado",abTouched:false,inv:{},prof:null,pdays:30,psrc:""};
+  var SRC={pasarela:"💳 Pasarela Bold",otro_medio:"🌐 Web · otro medio",manual:"💵 Venta manual"};
+  function pct(a,b){return b?Math.round(a/b*100):0;}
   var CH={tienda:"Tienda física",whatsapp:"WhatsApp",instagram:"Instagram",feria:"Feria / evento",otro:"Otro"};
   var PAY={efectivo:"Efectivo",transferencia:"Transferencia",nequi:"Nequi",daviplata:"Daviplata",datafono:"Datáfono",bold:"Link Bold",otro:"Otro"};
   var DOC={cc:"Cédula",pa:"Pasaporte",ti:"Tarjeta de identidad",otro:"Otro"};
@@ -59,6 +64,15 @@
   '.vt-hist{font-size:.76rem;color:rgba(247,247,244,.6);margin-top:4px}.vt-abono{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;justify-content:flex-end}.vt-abono input{width:120px}.vt-abono select{width:auto}'+
   '.vt-empty{color:rgba(247,247,244,.5);font-size:.86rem;padding:.6rem 0}'+
   '.vt-toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);opacity:0;background:#f7f7f4;color:#050505;padding:.7rem 1.1rem;border-radius:999px;font-weight:600;z-index:9999;transition:.3s;font-family:Inter,sans-serif;font-size:.88rem;max-width:92vw;text-align:center}.vt-toast.on{opacity:1;transform:translate(-50%,0)}.vt-toast.bad{background:#ffb4a8}'+
+  '.vt-cost{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px;padding:.35rem .5rem;border:1px dashed rgba(230,207,159,.35);border-radius:10px;background:rgba(230,207,159,.05);font-size:.78rem;color:#e6cf9f}.vt-cost input{width:110px!important;min-width:0!important;padding:.35rem .5rem!important;font-size:.82rem!important}.vt-cost .g{margin-left:auto;color:#9de08f}.vt-cost .g.neg{color:#ffb4a8}'+
+  '.vt-priv{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:10px;padding:.6rem .8rem;border:1px solid rgba(230,207,159,.35);border-radius:12px;background:rgba(230,207,159,.06);font-size:.86rem;color:#e6cf9f}.vt-priv b{color:#f7f7f4}.vt-priv .g{color:#9de08f}.vt-priv .g.neg{color:#ffb4a8}.vt-priv small{color:rgba(247,247,244,.5);font-size:.72rem;width:100%}'+
+  '.vt-kpi.good b{color:#9de08f}.vt-kpi.gold b{color:#e6cf9f}.vt-kpi small{display:block;color:rgba(247,247,244,.5);font-size:.7rem;margin-top:2px}'+
+  '.vt-src{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin:0 0 14px}.vt-src button{text-align:left;border:1px solid rgba(247,247,244,.14);border-radius:14px;background:#0d0d0d;color:#f7f7f4;padding:.75rem .85rem;cursor:pointer}.vt-src button.on{border-color:#e6cf9f;background:rgba(230,207,159,.08)}.vt-src b{display:block;font-size:.9rem}.vt-src span{display:block;font-size:.78rem;color:rgba(247,247,244,.6);margin-top:3px}.vt-src em{font-style:normal;color:#9de08f}'+
+  '.vt-row .tag.gold{border-color:#e6cf9f;color:#e6cf9f}.vt-row .pr{font-size:.8rem;margin-top:3px}.vt-row .pr .g{color:#9de08f}.vt-row .pr .g.neg{color:#ffb4a8}'+
+  '.vt-modal{position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.72);display:flex;align-items:flex-end;justify-content:center;font-family:Inter,system-ui,sans-serif;color:#f7f7f4}.vt-modal .bx{width:min(560px,100%);max-height:92vh;overflow:auto;background:#0b0b0b;border:1px solid rgba(247,247,244,.18);border-radius:20px 20px 0 0;padding:18px 16px 22px}'+
+  '@media(min-width:700px){.vt-modal{align-items:center}.vt-modal .bx{border-radius:20px}}.vt-modal h3{margin:0 0 2px;font-size:1.05rem}.vt-modal .dim{color:rgba(247,247,244,.55);font-size:.8rem}.vt-modal input{width:100%;background:#151515;border:1px solid rgba(247,247,244,.18);border-radius:10px;color:#f7f7f4;padding:.6rem .7rem;font:inherit;font-size:.92rem}.vt-modal label{display:block;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(247,247,244,.6);margin:12px 0 4px}'+
+  '.vt-ci{display:grid;grid-template-columns:40px 1fr 120px;gap:10px;align-items:center;padding:.5rem 0;border-bottom:1px solid rgba(247,247,244,.08)}.vt-ci img,.vt-ci .ph{width:40px;height:52px;object-fit:cover;border-radius:6px;background:#222}.vt-ci .n{font-size:.86rem;line-height:1.3}.vt-ci small{display:block;color:rgba(247,247,244,.55);font-size:.74rem}'+
+  '.vt-sum{display:grid;grid-template-columns:1fr auto;gap:4px 12px;margin-top:14px;padding-top:10px;border-top:1px solid rgba(247,247,244,.12);font-size:.9rem}.vt-sum b{text-align:right}.vt-sum .g{color:#9de08f}.vt-sum .g.neg{color:#ffb4a8}.vt-mact{display:flex;gap:8px;margin-top:16px}.vt-mact button{flex:1}'+
   '@media(max-width:560px){.vt h2{font-size:1.6rem}.vt-row{grid-template-columns:1fr}.vt-row .r{text-align:left}.vt-abono{justify-content:flex-start}}';
 
   // ---------------- layout ----------------
@@ -67,9 +81,9 @@
     var R=S.recv&&S.recv.totals;
     el.innerHTML='<div class="vt"><div class="vt-head"><div><div class="dim">Ventas que no pasan por la página</div><h2>💵 Ventas manuales</h2></div>'+
       (S.view==="vender"?'<div class="vt-seg">'+[[1,"Hoy"],[7,"7 días"],[30,"30 días"]].map(function(x){return '<button type="button" data-days="'+x[0]+'" class="'+(x[0]===S.days?"on":"")+'">'+x[1]+'</button>';}).join("")+'</div>':'')+'</div>'+
-      '<div class="vt-tabs"><button type="button" data-view="vender" class="'+(S.view==="vender"?"on":"")+'">Registrar venta</button><button type="button" data-view="cobrar" class="'+(S.view==="cobrar"?"on":"")+'">Cuentas por cobrar'+(R&&R.count?'<b>'+R.count+'</b>':'')+'</button></div>'+
-      (S.view==="vender"?sellHtml():recvHtml())+'</div>';
-    if(S.view==="vender"){paintCats();paintProds();paintLines();paintData();}else paintRecv();
+      '<div class="vt-tabs"><button type="button" data-view="vender" class="'+(S.view==="vender"?"on":"")+'">Registrar venta</button><button type="button" data-view="cobrar" class="'+(S.view==="cobrar"?"on":"")+'">Cuentas por cobrar'+(R&&R.count?'<b>'+R.count+'</b>':'')+'</button><button type="button" data-view="ganancia" class="'+(S.view==="ganancia"?"on":"")+'">🔒 Ganancia</button></div>'+
+      (S.view==="vender"?sellHtml():S.view==="ganancia"?profHtml():recvHtml())+'</div>';
+    if(S.view==="vender"){paintCats();paintProds();paintLines();paintData();}else if(S.view==="ganancia")paintProf();else paintRecv();
   }
 
   function sellHtml(){
@@ -98,6 +112,7 @@
           '<div><label>Nota</label><input id="vtNote" placeholder="Ej: cambio de talla, vendió Ana"></div>'+
         '</div>'+
         '<label class="vt-chk"><input type="checkbox" id="vtStock" checked> Descontar del inventario</label>'+
+        '<div class="vt-priv" id="vtPriv"></div>'+
         '<div class="vt-total"><div><div class="dim">Total de la venta</div><b id="vtTotal">$0</b></div><button type="button" class="vt-btn" id="vtSave">'+(S.editing?'Guardar cambios':'Guardar venta')+'</button></div>'+
       '</div>'+
       '<div class="vt-card"><h3>Ventas registradas</h3><div id="vtList"><div class="vt-empty">Cargando…</div></div></div>';
@@ -121,7 +136,8 @@
   function addProduct(key){
     var p=S.cat.find(function(x){return (x.id||x.nombre)===key;});if(!p)return;
     var sizes=sizesOf(p);
-    S.lines.push({pid:p.id||"",nombre:p.nombre,categoria:p.categoria||"",precio:num(p.precio),qty:1,size:sizes[0]||"",sizes:sizes,img:p.imagen||""});
+    var ic=p.id&&S.inv[p.id]?S.inv[p.id]:0;
+    S.lines.push({pid:p.id||"",nombre:p.nombre,categoria:p.categoria||"",precio:num(p.precio),qty:1,size:sizes[0]||"",sizes:sizes,img:p.imagen||"",costo:ic||null,invCost:ic});
     paintLines();toast("+ "+p.nombre);
   }
 
@@ -134,7 +150,8 @@
         (l.free?'<input data-f="nombre" value="'+esc(l.nombre)+'" placeholder="Nombre de la prenda">':'<div class="nm">'+esc(l.nombre)+'</div>')+
         '<div class="ctl">'+(sizes.length>1?'<select data-f="size">'+sizes.map(function(s){return '<option'+(s===l.size?' selected':'')+'>'+esc(s)+'</option>';}).join("")+'</select>':(l.free?'<input data-f="size" value="'+esc(l.size)+'" placeholder="Talla" style="width:80px">':''))+
         '<input class="q" data-f="qty" type="number" min="1" max="99" value="'+l.qty+'" title="Cantidad">'+
-        '<input class="p" data-f="precio" inputmode="numeric" value="'+esc(money(l.precio))+'" title="Precio de UNA prenda"><span class="dim" style="align-self:center">c/u</span><b class="lt" data-lt="'+i+'" style="align-self:center;margin-left:auto">'+((l.qty||1)>1?money(l.precio*(l.qty||1)):'')+'</b></div></div>'+
+        '<input class="p" data-f="precio" inputmode="numeric" value="'+esc(money(l.precio))+'" title="Precio de UNA prenda"><span class="dim" style="align-self:center">c/u</span><b class="lt" data-lt="'+i+'" style="align-self:center;margin-left:auto">'+((l.qty||1)>1?money(l.precio*(l.qty||1)):'')+'</b></div>'+
+        '<div class="vt-cost" title="Solo lo ves tú: no sale en el recibo">🔒 Costo c/u <input data-f="costo" inputmode="numeric" value="'+(l.costo?esc(money(l.costo)):'')+'" placeholder="'+(l.invCost?esc(money(l.invCost)):'¿Cuánto te costó?')+'"><span class="g" data-lg="'+i+'"></span></div></div>'+
         '<button type="button" class="vt-x" data-del="'+i+'" aria-label="Quitar">×</button></div>';}).join(""):'<div class="vt-empty">Toca una prenda arriba para agregarla.</div>';
     total();
   }
@@ -144,13 +161,17 @@
     var inp=S.el.querySelector("#vtAbono");
     if(inp&&!S.abTouched&&PLANS[S.plan]&&PLANS[S.plan].pct>0&&PLANS[S.plan].pct<1&&!S.editing){var sug=Math.round(t*PLANS[S.plan].pct/1000)*1000;if(num(inp.value)!==sug)inp.value=sug?money(sug):"";}
     var ab=S.plan==="contado"?t:Math.min(t,num((inp||{}).value));
-    return {sub:sub,disc:disc,total:t,paid:ab,owe:t-ab};
+    var cost=0,miss=0;S.lines.forEach(function(l){var u=l.costo||0;if(!u)miss++;cost+=u*(l.qty||1);});
+    return {sub:sub,disc:disc,total:t,paid:ab,owe:t-ab,cost:cost,profit:t-cost,miss:miss};
   }
   function total(){
     var T=totals(),el=S.el.querySelector("#vtTotal"),ow=S.el.querySelector("#vtOwe");
     if(el)el.textContent=money(T.total)+(T.disc?"  (desc. "+money(T.disc)+")":"");
     if(ow)ow.textContent=S.plan==="contado"?"":(T.total?"Abona "+money(T.paid)+" · queda debiendo "+money(T.owe)+(T.owe>0?" · fecha límite "+shortDate(addBizDays((S.el.querySelector("#vtDate")||{}).value,10))+" (10 días hábiles)":""):"");
-    S.lines.forEach(function(l,i){var e=S.el.querySelector('[data-lt="'+i+'"]');if(e)e.textContent=(l.qty||1)>1?"= "+money(l.precio*(l.qty||1)):"";});
+    S.lines.forEach(function(l,i){var e=S.el.querySelector('[data-lt="'+i+'"]');if(e)e.textContent=(l.qty||1)>1?"= "+money(l.precio*(l.qty||1)):"";
+      var g=S.el.querySelector('[data-lg="'+i+'"]');if(g){if(l.costo){var gp=(l.precio-l.costo)*(l.qty||1);g.textContent="ganas "+money(gp)+((l.qty||1)>1?" en total":"");g.className="g"+(gp<0?" neg":"");}else g.textContent="";}});
+    var pv=S.el.querySelector("#vtPriv");
+    if(pv)pv.innerHTML=S.lines.length?'🔒 <span>Costo <b>'+money(T.cost)+'</b></span><span>Ganancia <b class="g'+(T.profit<0?" neg":"")+'">'+money(T.profit)+'</b>'+(T.total?' ('+pct(T.profit,T.total)+'%)':'')+'</span>'+(T.miss?'<span style="color:#ffb4a8">⚠ '+T.miss+' prenda'+(T.miss>1?'s':'')+' sin costo</span>':'')+'<small>Solo lo ves tú. No sale en el recibo de la clienta.</small>':'';
   }
 
   // ---------------- sales list ----------------
@@ -159,7 +180,8 @@
     if(!D){k.innerHTML="";return;}
     var T=D.totals;
     k.innerHTML='<div class="vt-kpi"><span>Vendido '+(S.days===1?"hoy":"en "+S.days+" días")+'</span><b>'+money(T.revenue)+'</b></div><div class="vt-kpi"><span>Recibido</span><b>'+money(T.collected!=null?T.collected:T.revenue)+'</b></div>'+
-      (T.owed?'<div class="vt-kpi warn"><span>Quedó por cobrar</span><b>'+money(T.owed)+'</b></div>':'')+'<div class="vt-kpi"><span>Ventas</span><b>'+T.count+'</b></div>';
+      (T.owed?'<div class="vt-kpi warn"><span>Quedó por cobrar</span><b>'+money(T.owed)+'</b></div>':'')+'<div class="vt-kpi"><span>Ventas</span><b>'+T.count+'</b></div>'+
+      (T.profit!=null?'<div class="vt-kpi good"><span>🔒 Ganancia</span><b>'+money(T.profit)+'</b>'+(T.uncosted?'<small>'+T.uncosted+' sin costo</small>':'')+'</div>':'');
     list.innerHTML=D.list.length?D.list.map(rowHtml).join(""):'<div class="vt-empty">No hay ventas manuales en este periodo.</div>';
   }
   function rowHtml(v){
@@ -168,8 +190,8 @@
     return '<div class="vt-row'+(live?"":" void")+'"><div><div class="t">'+esc(v.ticket)+' · '+esc(when(v.paidAt))+(v.name?' · '+esc(v.name):'')+'</div><div class="it">'+it+'</div>'+
       '<span class="tag">'+esc(v.channelLabel||"")+'</span><span class="tag">'+esc(v.payLabel||"")+'</span>'+
       (v.plan&&v.plan!=="contado"?'<span class="tag">'+esc(PLAN_NAME[v.plan]||v.plan)+'</span>':'')+(live&&v.balance>0?'<span class="tag owe">Debe '+money(v.balance)+(v.dueAt?' · vence '+esc(shortDate(v.dueAt)):'')+'</span>':'')+(live&&v.payments&&v.payments.length>1&&!v.balance?'<span class="tag ok">Pagada con abonos</span>':'')+
-      (v.doc?'<span class="tag">'+esc(v.docLabel||"Doc")+' '+esc(v.doc)+'</span>':'')+(v.points?'<span class="tag">+'+v.points+' pts Club</span>':'')+(v.note?'<span class="tag">'+esc(v.note)+'</span>':'')+(live?'':'<span class="tag">Anulada</span>')+'</div>'+
-      '<div class="r"><b>'+money(v.total)+'</b>'+(live?'<button type="button" class="vt-mail" data-edit="'+esc(v.id)+'">✏️ Editar</button> '+shareBtns(v.id)+' <button type="button" class="vt-mail" data-mail="'+esc(v.id)+'" data-to="'+esc(v.email||"")+'">📧 Correo</button><br><button type="button" class="vt-void" data-void="'+esc(v.id)+'">Anular</button>':'')+'</div></div>';
+      (v.doc?'<span class="tag">'+esc(v.docLabel||"Doc")+' '+esc(v.doc)+'</span>':'')+(v.points?'<span class="tag">+'+v.points+' pts Club</span>':'')+(v.note?'<span class="tag">'+esc(v.note)+'</span>':'')+(live?'':'<span class="tag">Anulada</span>')+(live&&v.cost?'<div class="pr">🔒 Costo '+money(v.cost.cost)+' · <span class="g'+(v.cost.profit<0?" neg":"")+'">ganancia '+money(v.cost.profit)+'</span>'+(v.cost.missing?' · <span style="color:#ffb4a8">⚠ falta costo</span>':'')+'</div>':'')+'</div>'+
+      '<div class="r"><b>'+money(v.total)+'</b>'+(live?'<button type="button" class="vt-mail" data-edit="'+esc(v.id)+'">✏️ Editar</button> '+'<button type="button" class="vt-mail" data-cost="'+esc(v.id)+'">🔒 Costo</button> '+shareBtns(v.id)+' <button type="button" class="vt-mail" data-mail="'+esc(v.id)+'" data-to="'+esc(v.email||"")+'">📧 Correo</button><br><button type="button" class="vt-void" data-void="'+esc(v.id)+'">Anular</button>':'')+'</div></div>';
   }
 
   // ---------------- cuentas por cobrar ----------------
@@ -192,6 +214,72 @@
           '<div class="vt-abono" data-id="'+esc(v.id)+'"><input inputmode="numeric" placeholder="Abono $" data-amt><select data-pay>'+opts(PAY,"efectivo")+'</select><button type="button" class="vt-btn sm" data-abonar="'+esc(v.id)+'">Registrar abono</button></div>'+
           '<div class="vt-abono"><button type="button" class="vt-btn ghost sm" data-saldar="'+esc(v.id)+'" data-bal="'+v.balance+'">Pagó todo ('+money(v.balance)+')</button>'+(wa?'<a class="vt-btn ghost sm" style="text-decoration:none" target="_blank" rel="noopener" href="'+wa+'">💬 Recordar</a>':'')+'</div><div class="vt-abono">'+shareBtns(v.id)+'</div></div></div>';
     }).join(""):'<div class="vt-empty">Nadie debe nada 🎉</div>';
+  }
+
+  // ---------------- 🔒 Ganancia: every paid sale with its cost (web + manual) ----------------
+  function profHtml(){
+    return '<div class="vt-head" style="margin:-4px 0 10px"><div class="dim" style="max-width:560px">🔒 Solo lo ves tú. Aquí está cada venta pagada: las de la página (pasarela Bold u otro medio) y las manuales. Escribe cuánto te costó cada prenda y el admin calcula tu ganancia. Las prendas con costo en Inventario lo toman solas.</div>'+
+      '<div class="vt-seg">'+[[7,"7 días"],[30,"30 días"],[90,"90 días"]].map(function(x){return '<button type="button" data-pdays="'+x[0]+'" class="'+(x[0]===S.pdays?"on":"")+'">'+x[1]+'</button>';}).join("")+'</div></div>'+
+      '<div class="vt-kpis" id="vpKpis"></div><div class="vt-src" id="vpSrc"></div><div class="vt-card"><h3 id="vpTitle">Ventas pagadas</h3><div id="vpList"><div class="vt-empty">Cargando…</div></div></div>';
+  }
+  function paintProf(){
+    var D=S.prof,k=S.el&&S.el.querySelector("#vpKpis"),src=S.el&&S.el.querySelector("#vpSrc"),list=S.el&&S.el.querySelector("#vpList");if(!k||!list)return;
+    S.el.querySelectorAll("[data-pdays]").forEach(function(x){x.classList.toggle("on",+x.dataset.pdays===S.pdays);});
+    if(!D){list.innerHTML='<div class="vt-empty">Cargando…</div>';return;}
+    var T=D.totals;
+    k.innerHTML='<div class="vt-kpi"><span>Vendido · '+S.pdays+' días</span><b>'+money(T.revenue)+'</b><small>'+T.count+' ventas</small></div>'+
+      '<div class="vt-kpi"><span>Costo</span><b>'+money(T.cost)+'</b></div>'+
+      '<div class="vt-kpi good"><span>Ganancia</span><b>'+money(T.profit)+'</b><small>margen '+pct(T.profit,T.revenue)+'%</small></div>'+
+      (T.missing?'<div class="vt-kpi warn"><span>Sin costo</span><b>'+T.missing+'</b><small>ganancia real de lo que sí tiene costo: '+money(T.costedProfit)+'</small></div>':'');
+    src.innerHTML=D.bySource.map(function(x){return '<button type="button" data-psrc="'+x.key+'" class="'+(S.psrc===x.key?"on":"")+'"><b>'+SRC[x.key]+'</b><span>'+x.count+' ventas · '+money(x.revenue)+'</span><span>Ganancia <em>'+money(x.profit)+'</em>'+(x.missing?' · ⚠ '+x.missing+' sin costo':'')+'</span></button>';}).join("")+
+      '<button type="button" data-psrc="sin" class="'+(S.psrc==="sin"?"on":"")+'"><b>⚠ Sin costo</b><span>'+T.missing+' ventas para completar</span><span>Tócalas y escribe el costo</span></button>';
+    var l=D.list.filter(function(x){return !S.psrc||(S.psrc==="sin"?x.missing:x.source===S.psrc);});
+    var ttl=S.el.querySelector("#vpTitle");if(ttl)ttl.textContent=S.psrc?(S.psrc==="sin"?"Ventas sin costo":SRC[S.psrc]):"Ventas pagadas";
+    list.innerHTML=l.length?l.map(function(v){
+      var it=v.items.map(function(x){return esc(x.nombre)+(x.size?" ("+esc(x.size)+")":"")+(x.qty>1?" ×"+x.qty:"")+(x.unitCost?' <span class="dim">· costo '+money(x.unitCost)+'</span>':' <span style="color:#ffb4a8">· sin costo</span>');}).join(" · ");
+      return '<div class="vt-row"><div><div class="t">'+esc(v.ticket||"")+' · '+esc(when(v.paidAt))+(v.name?' · '+esc(v.name):'')+'</div><div class="it">'+it+'</div>'+
+        '<span class="tag gold">'+SRC[v.source]+'</span>'+(v.viaLabel?'<span class="tag">'+esc(v.viaLabel)+'</span>':'')+(v.source==="manual"&&v.channelLabel?'<span class="tag">'+esc(v.channelLabel)+'</span>':'')+(v.extra?'<span class="tag">Otros costos '+money(v.extra)+'</span>':'')+(v.note?'<span class="tag">'+esc(v.note)+'</span>':'')+(v.missing?'<span class="tag owe">⚠ '+v.missing+' sin costo</span>':'')+'</div>'+
+        '<div class="r"><b>'+money(v.total)+'</b><div class="pr">Costo '+money(v.cost)+'</div><div class="pr"><span class="g'+(v.profit<0?" neg":"")+'">Ganancia '+money(v.profit)+(v.margin!=null?' ('+v.margin+'%)':'')+'</span></div><button type="button" class="vt-mail" data-cost="'+esc(v.id)+'">🔒 '+(v.missing?"Poner costo":"Editar costo")+'</button></div></div>';
+    }).join(""):'<div class="vt-empty">'+(S.psrc==="sin"?"Todas las ventas tienen costo ✨":"No hay ventas pagadas en este periodo.")+'</div>';
+  }
+  function loadProf(){
+    S.prof=null;paintProf();
+    return api("/admin/profit?days="+S.pdays).then(function(d){S.prof=d;paintProf();}).catch(function(e){var l=S.el&&S.el.querySelector("#vpList");if(l)l.innerHTML='<div class="vt-empty">'+(/Ruta no encontrada|404/.test(e.message)?"Falta pegar la Worker v61 en Cloudflare para ver la ganancia.":esc(e.message))+'</div>';});
+  }
+  function loadInv(){return api("/admin/inventory?days=1").then(function(d){var m={};(d.products||[]).forEach(function(p){if(p.id&&p.cost>0)m[p.id]=p.cost;});S.inv=m;
+    var ch=false;S.lines.forEach(function(l){if(l.pid&&m[l.pid]&&!l.costo&&!l.invCost){l.costo=m[l.pid];l.invCost=m[l.pid];ch=true;}});if(ch)paintLines();}).catch(function(){});}
+
+  // Cost editor (also used from Pedidos). v: {id, ticket, total, items:[{nombre,size,qty,precio,imagen,unitCost?,costFrom?,invCost?}], cost?:{lines:[{unit,from}],extra,note}, extra?, note?}
+  function editCost(v,done){
+    if(!document.getElementById("vt-css")){var st=document.createElement("style");st.id="vt-css";st.textContent=CSS;document.head.appendChild(st);}
+    var items=v.items||[],cl=(v.cost&&v.cost.lines)||[];
+    var lines=items.map(function(x,i){var from=x.costFrom!==undefined?x.costFrom:(cl[i]&&cl[i].from)||"",unit=x.unitCost!==undefined?x.unitCost:(cl[i]&&cl[i].unit)||0;
+      var inv=x.invCost!==undefined?x.invCost:(x.pid&&S.inv[x.pid])||(from==="inventario"?unit:0);
+      return {own:from==="propio"?unit:null,inv:inv||0,qty:x.qty||1,precio:num(x.precio)};});
+    var extra=v.extra!=null?v.extra:(v.cost&&v.cost.extra)||0,note=v.note!=null?v.note:(v.cost&&v.cost.note)||"";
+    var m=document.createElement("div");m.className="vt-modal";
+    m.innerHTML='<div class="bx"><h3>🔒 Costo de '+esc(v.ticket||"la venta")+'</h3><div class="dim">Solo lo ves tú. No aparece en el recibo, el correo ni la tienda. Si dejas una prenda vacía usa el costo de Inventario.</div>'+
+      items.map(function(x,i){var L=lines[i];return '<div class="vt-ci">'+(x.imagen?'<img src="'+esc(x.imagen)+'" alt="">':'<span class="ph"></span>')+'<div class="n">'+esc(x.nombre)+(x.size?' · '+esc(x.size):'')+'<small>'+(L.qty>1?L.qty+' × ':'')+'vendida a '+esc(money(L.precio))+(L.inv?' · en Inventario: '+money(L.inv):'')+'</small></div><input data-ci="'+i+'" inputmode="numeric" placeholder="'+(L.inv?esc(money(L.inv)):'Costo c/u')+'" value="'+(L.own!=null?esc(money(L.own)):'')+'"></div>';}).join("")+
+      '<label>Otros costos de esta venta</label><input data-cx inputmode="numeric" placeholder="Envío, empaque, comisión de Bold…" value="'+(extra?esc(money(extra)):'')+'">'+
+      '<label>Nota (opcional)</label><input data-cn maxlength="160" placeholder="Ej: envío Interrapidísimo $12.000" value="'+esc(note)+'">'+
+      '<div class="vt-sum" data-sum></div><label class="vt-chk" style="text-transform:none;letter-spacing:0;font-size:.8rem"><input type="checkbox" data-rem checked style="width:auto"> Guardar el costo en Inventario para las prendas que aún no lo tienen</label>'+
+      '<div class="vt-mact"><button type="button" class="vt-btn ghost" data-x>Cancelar</button><button type="button" class="vt-btn" data-ok>Guardar costo</button></div></div>';
+    document.body.appendChild(m);
+    function calc(){var goods=0,miss=0;lines.forEach(function(L,i){var e=m.querySelector('[data-ci="'+i+'"]'),own=e&&e.value.trim()?num(e.value):null;L.cur=own;var u=own!=null?own:L.inv;if(!u)miss++;goods+=u*L.qty;});
+      var ex=num(m.querySelector("[data-cx]").value),c=goods+ex,p=(v.total||0)-c;
+      m.querySelector("[data-sum]").innerHTML='<span>Vendido</span><b>'+money(v.total)+'</b><span>Costo de las prendas</span><b>'+money(goods)+'</b>'+(ex?'<span>Otros costos</span><b>'+money(ex)+'</b>':'')+'<span>Ganancia</span><b class="g'+(p<0?" neg":"")+'">'+money(p)+(v.total?' ('+pct(p,v.total)+'%)':'')+'</b>'+(miss?'<span style="color:#ffb4a8;grid-column:1/-1">⚠ '+miss+' prenda'+(miss>1?'s':'')+' sin costo</span>':'');}
+    calc();
+    m.addEventListener("input",calc);
+    m.addEventListener("change",function(e){var t=e.target;if((t.dataset.ci!==undefined||t.hasAttribute("data-cx"))&&t.value)t.value=money(num(t.value));});
+    m.addEventListener("click",function(e){
+      if(e.target===m||e.target.closest("[data-x]"))return m.remove();
+      var ok=e.target.closest("[data-ok]");if(!ok)return;
+      ok.disabled=true;ok.textContent="Guardando…";
+      api("/admin/orders/"+v.id+"/cost",{method:"POST",body:{lines:lines.map(function(L){return L.cur;}),extra:num(m.querySelector("[data-cx]").value),note:m.querySelector("[data-cn]").value,remember:m.querySelector("[data-rem]").checked}})
+        .then(function(d){m.remove();toast("🔒 Costo guardado · ganancia "+money(d.profit)+(d.learned?" · "+d.learned+" costo"+(d.learned>1?"s":"")+" nuevo"+(d.learned>1?"s":"")+" en Inventario":""));if(d.learned)loadInv();if(done)done(d);})
+        .catch(function(x){ok.disabled=false;ok.textContent="Guardar costo";toast(/Ruta no encontrada|404/.test(x.message)?"Falta pegar la Worker v61 en Cloudflare":x.message,true);});
+    });
+    var f=m.querySelector("[data-ci]");if(f&&window.innerWidth>700)f.focus();
   }
 
   // ---------------- receipt to WhatsApp (text) and as an image to share ----------------
@@ -247,9 +335,11 @@
   function startEdit(id){
     var v=findSale(id);if(!v)return;
     S.editing={id:v.id,ticket:v.ticket,v:v};S.view="vender";
-    S.lines=(v.items||[]).map(function(x){var p=S.cat.find(function(c){return c.id&&c.id===x.pid;})||S.cat.find(function(c){return c.nombre===x.nombre;});var sizes=p?sizesOf(p):[];
+    S.lines=(v.items||[]).map(function(x,i){var p=S.cat.find(function(c){return c.id&&c.id===x.pid;})||S.cat.find(function(c){return c.nombre===x.nombre;});var sizes=p?sizesOf(p):[];
       if(x.size&&sizes.indexOf(String(x.size).toUpperCase())<0&&sizes.length)sizes=sizes.concat([String(x.size).toUpperCase()]);
-      return {pid:x.pid||(p&&p.id)||"",nombre:x.nombre,categoria:x.categoria||(p&&p.categoria)||"",precio:num(x.precio)||(p?num(p.precio):0),qty:x.qty||1,size:x.size?String(x.size).toUpperCase():(sizes[0]||""),sizes:sizes,img:x.imagen||(p&&p.imagen)||"",free:!p};});
+      var pid=x.pid||(p&&p.id)||"",cl=v.cost&&v.cost.lines&&v.cost.lines[i];
+      return {pid:pid,nombre:x.nombre,categoria:x.categoria||(p&&p.categoria)||"",precio:num(x.precio)||(p?num(p.precio):0),qty:x.qty||1,size:x.size?String(x.size).toUpperCase():(sizes[0]||""),sizes:sizes,img:x.imagen||(p&&p.imagen)||"",free:!p,
+        costo:cl&&cl.unit?cl.unit:(pid&&S.inv[pid]?S.inv[pid]:null),invCost:pid&&S.inv[pid]?S.inv[pid]:0};});
     S.payFull=!(v.balance>0);S.plan=v.balance>0?(PLANS[v.plan]&&v.plan!=="contado"?v.plan:"abono"):"contado";S.abTouched=true;
     render();
     var g=function(sel,val){var e=S.el.querySelector(sel);if(e&&val!=null)e.value=val;};
@@ -258,7 +348,7 @@
     if(!S.payFull)g("#vtAbono",money(v.paid));
     total();var f=S.el.querySelector("#vtForm");if(f)f.scrollIntoView({behavior:"smooth",block:"start"});
   }
-  function findSale(id){var all=[].concat((S.data&&S.data.list)||[],(S.recv&&S.recv.list)||[],S.last?[S.last]:[]);return all.find(function(x){return x.id===id;});}
+  function findSale(id){var all=[].concat((S.data&&S.data.list)||[],(S.recv&&S.recv.list)||[],(S.prof&&S.prof.list)||[],S.last?[S.last]:[]);return all.find(function(x){return x.id===id;});}
   function shareBtns(id){return '<button type="button" class="vt-mail" data-wa="'+esc(id)+'">💬 WhatsApp</button> <button type="button" class="vt-mail" data-img="'+esc(id)+'">🖼️ Imagen</button>';}
 
   // ---------------- data ----------------
@@ -292,6 +382,7 @@
     if(T.disc&&T.disc>=T.sub*0.5&&!confirm("El descuento es de "+money(T.disc)+" sobre "+money(T.sub)+" (queda en "+money(T.total)+"). ¿Es correcto?"))return;
     if(!S.payFull&&T.owe>0&&!g("#vtName").trim()&&!g("#vtPhone").trim())return toast("Para dejar saldo pendiente escribe el nombre o el celular de la clienta",true);
     var body={items:lines.map(function(l){return {pid:l.pid,nombre:l.nombre,categoria:l.categoria,precio:l.precio,qty:l.qty,size:l.size==="Única"?"":l.size,imagen:l.img};}),
+      costs:lines.map(function(l){return l.costo>0?l.costo:null;}),
       channel:g("#vtCh"),pay:g("#vtPay"),date:g("#vtDate"),discount:T.disc,paidNow:S.payFull?null:T.paid,plan:S.plan,
       name:g("#vtName"),phone:g("#vtPhone"),docType:g("#vtDocT"),doc:g("#vtDoc"),address:g("#vtAddr"),email:g("#vtMail").trim(),note:g("#vtNote"),noStock:!S.el.querySelector("#vtStock").checked};
     S.busy=true;var b=S.el.querySelector("#vtSave");b.disabled=true;b.textContent="Guardando…";
@@ -329,17 +420,22 @@
       if(t.id==="vtDisc"||t.id==="vtAbono"||t.id==="vtDate")return total();
       var row=t.closest(".vt-line");if(!row)return;
       var l=S.lines[+row.dataset.i],f=t.dataset.f;if(!l||!f)return;
-      if(f==="qty")l.qty=Math.max(1,Math.min(99,parseInt(t.value,10)||1));else if(f==="precio")l.precio=num(t.value);else l[f]=t.value;
-      if(f==="nombre"&&l.free&&!l.precio){var m=S.cat.find(function(c){return norm(c.nombre)===norm(t.value).trim();});if(m){l.precio=num(m.precio);l.pid=m.id||"";var pin=row.querySelector('[data-f="precio"]');if(pin)pin.value=money(l.precio);}}
+      if(f==="qty")l.qty=Math.max(1,Math.min(99,parseInt(t.value,10)||1));else if(f==="precio")l.precio=num(t.value);else if(f==="costo")l.costo=num(t.value)||null;else l[f]=t.value;
+      if(f==="nombre"&&l.free&&!l.precio){var m=S.cat.find(function(c){return norm(c.nombre)===norm(t.value).trim();});if(m){l.precio=num(m.precio);l.pid=m.id||"";if(m.id&&S.inv[m.id]&&!l.costo){l.costo=S.inv[m.id];l.invCost=S.inv[m.id];}var pin=row.querySelector('[data-f="precio"]');if(pin)pin.value=money(l.precio);}}
       total();
     });
     el.addEventListener("change",function(e){var t=e.target,row=t.closest(".vt-line");
       if(row&&t.dataset.f==="precio")t.value=money(S.lines[+row.dataset.i].precio);
+      if(row&&t.dataset.f==="costo"){var lc=S.lines[+row.dataset.i];t.value=lc.costo?money(lc.costo):"";}
+      if(t.closest(".vt-ci")&&t.value)t.value=money(num(t.value));
       if(row&&t.dataset.f==="size")S.lines[+row.dataset.i].size=t.value;
       if(t.id==="vtAbono"&&t.value)t.value=money(num(t.value));});
     el.addEventListener("click",function(e){
       var t=e.target,b;
-      if((b=t.closest("[data-view]"))){S.view=b.dataset.view;render();if(S.view==="cobrar")loadRecv();else load();return;}
+      if((b=t.closest("[data-view]"))){S.view=b.dataset.view;render();if(S.view==="cobrar")loadRecv();else if(S.view==="ganancia")loadProf();else load();return;}
+      if((b=t.closest("[data-pdays]"))){S.pdays=+b.dataset.pdays;return loadProf();}
+      if((b=t.closest("[data-psrc]"))){S.psrc=S.psrc===b.dataset.psrc?"":b.dataset.psrc;return paintProf();}
+      if((b=t.closest("[data-cost]"))){var vc=findSale(b.dataset.cost);if(vc)editCost(vc,function(){load();if(S.view==="ganancia")loadProf();});return;}
       if((b=t.closest("[data-days]"))){S.days=+b.dataset.days;el.querySelectorAll("[data-days]").forEach(function(x){x.classList.toggle("on",x===b);});return load();}
       if((b=t.closest("[data-cat]"))){S.catSel=b.dataset.cat;paintCats();return paintProds();}
       if((b=t.closest("[data-add]")))return addProduct(b.dataset.add);
@@ -371,7 +467,8 @@
     if(!document.getElementById("vt-css")){var st=document.createElement("style");st.id="vt-css";st.textContent=CSS;document.head.appendChild(st);}
     if(S.el!==el){S.el=el;bind(el);}
     render();
-    return Promise.all([loadCat(),load(),loadRecv()]);
+    return Promise.all([loadCat(),load(),loadRecv(),loadInv()].concat(S.view==="ganancia"?[loadProf()]:[]));
   }
-  window.CanevaVentas={mount:mount};
+  function setup(o){o=o||{};if(o.api)OPT.api=o.api;if(o.token)OPT.token=o.token;}
+  window.CanevaVentas={mount:mount,editCost:function(v,done,o){setup(o);if(!Object.keys(S.inv).length)loadInv();editCost(v,done);}};
 })();
