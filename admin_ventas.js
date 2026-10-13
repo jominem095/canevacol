@@ -41,7 +41,7 @@
   '.vt-chk{display:flex;gap:8px;align-items:center;font-size:.84rem;margin-top:10px;color:rgba(247,247,244,.8)}.vt-chk input{width:auto}'+
   '.vt-row{display:grid;grid-template-columns:1fr auto;gap:10px;padding:.75rem 0;border-bottom:1px solid rgba(247,247,244,.08)}.vt-row:last-child{border-bottom:0}.vt-row .t{font-weight:600}.vt-row .it{font-size:.82rem;color:rgba(247,247,244,.7);margin-top:2px}'+
   '.vt-row .tag{display:inline-block;font-size:.68rem;border:1px solid rgba(247,247,244,.2);border-radius:999px;padding:.12rem .5rem;margin:4px 4px 0 0;color:rgba(247,247,244,.75)}.vt-row.void{opacity:.45}.vt-row.void .t{text-decoration:line-through}'+
-  '.vt-row .r{text-align:right}.vt-row .r b{display:block;font-size:1.05rem}.vt-void{background:none;border:0;color:#ffb4a8;font-size:.75rem;cursor:pointer;margin-top:6px;padding:0}'+
+  '.vt-row .r{text-align:right}.vt-row .r b{display:block;font-size:1.05rem}.vt-void{background:none;border:0;color:#ffb4a8;font-size:.75rem;cursor:pointer;margin-top:6px;padding:0}.vt-mail{background:none;border:1px solid rgba(247,247,244,.25);border-radius:999px;color:#f7f7f4;font-size:.72rem;cursor:pointer;margin-top:6px;padding:.25rem .6rem}'+
   '.vt-empty{color:rgba(247,247,244,.5);font-size:.86rem;padding:.6rem 0}'+
   '.vt-toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);opacity:0;background:#f7f7f4;color:#050505;padding:.7rem 1.1rem;border-radius:999px;font-weight:600;z-index:9999;transition:.3s;font-family:Inter,sans-serif;font-size:.88rem}.vt-toast.on{opacity:1;transform:translate(-50%,0)}.vt-toast.bad{background:#ffb4a8}'+
   '@media(max-width:560px){.vt h2{font-size:1.6rem}.vt-line{grid-template-columns:40px 1fr auto}}';
@@ -64,7 +64,7 @@
           '<div><label>Descuento ($)</label><input id="vtDisc" inputmode="numeric" placeholder="0"></div>'+
           '<div><label>Clienta (opcional)</label><input id="vtName" placeholder="Nombre"></div>'+
           '<div><label>Celular (opcional)</label><input id="vtPhone" inputmode="tel" placeholder="300 000 0000"></div>'+
-          '<div><label>Correo (opcional)</label><input id="vtMail" type="email" inputmode="email" placeholder="Para recibo y puntos del Club"></div>'+
+          '<div><label>Enviar recibo al correo</label><input id="vtMail" type="email" inputmode="email" placeholder="clienta@gmail.com"></div>'+
           '<div><label>Nota (opcional)</label><input id="vtNote" placeholder="Ej: cambio de talla, vendió Ana"></div>'+
         '</div>'+
         '<label class="vt-chk"><input type="checkbox" id="vtStock" checked> Descontar del inventario</label>'+
@@ -102,7 +102,7 @@
       var it=v.items.map(function(x){return esc(x.nombre)+(x.size?" ("+esc(x.size)+")":"")+(x.qty>1?" ×"+x.qty:"");}).join(" · ");
       return '<div class="vt-row'+(v.status!=="pagado"?" void":"")+'"><div><div class="t">'+esc(v.ticket)+' · '+esc(when)+(v.name?' · '+esc(v.name):'')+'</div><div class="it">'+it+'</div>'+
         '<span class="tag">'+esc(v.channelLabel||"")+'</span><span class="tag">'+esc(v.payLabel||"")+'</span>'+(v.points?'<span class="tag">+'+v.points+' pts Club</span>':'')+(v.note?'<span class="tag">'+esc(v.note)+'</span>':'')+(v.status!=="pagado"?'<span class="tag">Anulada</span>':'')+'</div>'+
-        '<div class="r"><b>'+money(v.total)+'</b>'+(v.status==="pagado"?'<button type="button" class="vt-void" data-void="'+esc(v.id)+'">Anular</button>':'')+'</div></div>';}).join(""):'<div class="vt-empty">No hay ventas manuales en este periodo.</div>';
+        '<div class="r"><b>'+money(v.total)+'</b>'+(v.status==="pagado"?'<button type="button" class="vt-mail" data-mail="'+esc(v.id)+'">📧 Recibo</button><br><button type="button" class="vt-void" data-void="'+esc(v.id)+'">Anular</button>':'')+'</div></div>';}).join(""):'<div class="vt-empty">No hay ventas manuales en este periodo.</div>';
   }
 
   function load(){
@@ -137,7 +137,9 @@
     api("/admin/sales/manual",{method:"POST",body:body}).then(function(d){
       S.busy=false;S.lines=[];
       var w=(d.inventory&&d.inventory.warnings)||[];
-      toast("✓ Venta "+d.ticket+" guardada · "+money(d.total)+(d.points?" · +"+d.points+" pts":""));
+      var em=d.email||{},mailTxt=em.sent?" · 📧 recibo enviado":(body.email&&!em.skipped?" · ⚠ el recibo no se pudo enviar":"");
+      toast("✓ Venta "+d.ticket+" guardada · "+money(d.total)+(d.points?" · +"+d.points+" pts":"")+mailTxt,!!(body.email&&!em.sent&&!em.skipped));
+      if(body.email&&!em.sent&&!em.skipped)setTimeout(function(){alert("La venta quedó guardada, pero el recibo no se pudo enviar: "+(em.error||"revisa el correo")+"\nPuedes reenviarlo desde la lista con 📧 Recibo.");},500);
       if(w.length)setTimeout(function(){alert("Venta guardada. Revisa el inventario:\n\n"+w.join("\n"));},400);
       render();load();
     }).catch(function(e){S.busy=false;b.disabled=false;b.textContent="Guardar venta";toast(e.message,true);});
@@ -161,6 +163,12 @@
       if(t.closest("[data-free]")){S.lines.push({pid:"",nombre:"",categoria:"",precio:0,qty:1,size:"",sizes:[],img:"",free:true});paintLines();var ins=el.querySelectorAll('.vt-line [data-f="nombre"]');if(ins.length)ins[ins.length-1].focus();return;}
       if((b=t.closest("[data-del]"))){S.lines.splice(+b.dataset.del,1);return paintLines();}
       if(t.closest("#vtSave"))return save();
+      if((b=t.closest("[data-mail]"))){
+        var to=(prompt("¿A qué correo enviamos el recibo?")||"").trim();if(!to)return;
+        if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to))return toast("Ese correo no es válido",true);
+        b.disabled=true;b.textContent="Enviando…";
+        api("/admin/orders/"+b.dataset.mail+"/resend",{method:"POST",body:{email:to}}).then(function(d){toast("📧 Recibo "+d.ticket+" enviado a "+to);b.disabled=false;b.textContent="📧 Recibo";}).catch(function(x){b.disabled=false;b.textContent="📧 Recibo";toast(x.message,true);});return;
+      }
       if((b=t.closest("[data-void]"))){
         if(!confirm("¿Anular esta venta? Deja de contar en reportes, las prendas vuelven al inventario y se descuentan los puntos del Club."))return;
         api("/admin/sales/manual/"+b.dataset.void+"/void",{method:"POST",body:{}}).then(function(){toast("Venta anulada");load();}).catch(function(x){toast(x.message,true);});return;
