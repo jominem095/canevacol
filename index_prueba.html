@@ -1957,7 +1957,7 @@ textarea.gf{min-height:74px;resize:vertical}
       <div class="pm-note" id="pmNote"></div>
       <div class="pm-trust">
         <div><b id="pmTrustDays">1 día</b><span id="pmTrustDaysTxt">Entrega hábil Barranquilla</span></div>
-        <div><b>Contraentrega</b><span>Compra con confianza</span></div>
+        <div><b>Paga al recibir</b><span>Contraentrega en todo Colombia</span></div>
         <div><b>Stylist AI</b><span>Te arma el look completo</span></div>
       </div>
       <div class="pm-look-kit" id="pmLookKit">
@@ -2029,7 +2029,7 @@ textarea.gf{min-height:74px;resize:vertical}
       <div class="nos-items reveal reveal-d3">
         <div class="nos-item">Entrega en 1 d&iacute;a h&aacute;bil en Barranquilla</div>
         <div class="nos-item">Env&iacute;os a todo Colombia</div>
-        <div class="nos-item">Pago contraentrega disponible</div>
+        <div class="nos-item">Pago contraentrega en todo Colombia</div>
         <div class="nos-item">Atenci&oacute;n personalizada por WhatsApp</div>
       </div>
     </div>
@@ -2311,6 +2311,8 @@ function productSizes(p){
   var matches=txt.match(/\b(XXS|XS|S|M|L|XL|XXL|[0-9]{1,2})\b/gi)||[];
 
   var out=[];
+  // v64: combined sizes written together ("Sm / lxl" = S/M and L/XL): before they produced no size buttons
+  (txt.match(/\b(?:xs|s|m|l|xl)(?:s|m|l|xl|xxl)\b/gi)||[]).forEach(function(x){var mm=x.toUpperCase().match(/^(XS|S|M|L|XL)(S|M|L|XL|XXL)$/);if(mm&&mm[1]!==mm[2]){var v=mm[1]+'/'+mm[2];if(out.indexOf(v)<0)out.push(v);}});
   matches.forEach(function(x){
     var v=String(x).toUpperCase();
     // Evita convertir números que parecen años o textos raros largos.
@@ -2656,7 +2658,7 @@ window.addEventListener('scroll',function(){document.getElementById('nav').class
 
 // MARQUEE
 (function(){
-  var it=['Nueva Colecci\u00F3n','Env\u00EDos Nacionales','Moda Femenina','Contraentrega','Barranquilla','Calidad Premium','Domicilios BQ'];
+  var it=['Nueva Colecci\u00F3n','Env\u00EDos Nacionales','Moda Femenina','Paga al recibir en todo Colombia','Barranquilla','Calidad Premium','Domicilios BQ'];
   var s=it.map(function(i){return'<span>'+i+'</span><span class="dot">\u2756</span>';}).join('');
   document.getElementById('mqt').innerHTML=s+s+s+s;
 })();
@@ -2735,7 +2737,8 @@ var KB='Eres Caneva AI, asesora virtual premium de CANEVA, tienda de moda femeni
 'TIENDA: WhatsApp +573057637089 | Instagram @Caneva.col | Email canevamayra@gmail.com\n'+
 'ENTREGA: 1 día hábil en Barranquilla | Envíos nacionales\n'+
 'DOMICILIOS: Barranquilla $6.000 | Otros sectores $8.000-$9.000 | Soledad $7.000\n'+
-'PAGOS: Efectivo contraentrega | Bancolombia Ahorros 0831271463\n'+
+'PAGOS: Contraentrega en TODO Colombia (pagas al recibir, con Interrapidísimo) | Pago en línea con Bold | Bancolombia Ahorros 0831271463\n'+
+'CAMBIOS: si la talla no le queda, se cambia (escribir por WhatsApp al recibir)\n'+
 'TALLAS: 6=XS, 8=S, 10=M, 12=L, 14=XL, 16=XXL\n\n'+
 'CATÁLOGO REAL ('+P.length+' productos):\n'+
 P.map(function(p){return '- '+p.nombre+' | '+p.precio+' | '+p.categoria+(p.tallas?' | Tallas: '+p.tallas:'')+' | '+p.url;}).join('\n')+
@@ -4523,7 +4526,7 @@ body.cv-fast .bw-logo-wrap{transform:scale(.82);transform-origin:center top;marg
       '<button type="button" class="cv-si all" data-cvall>Ver todo<br>→</button></div>';
     // for ad visitors the garments go first; for everyone else, right after the category cards
     if(fromAd)vit.parentNode.insertBefore(d,vit);else vit.appendChild(d);
-    d.addEventListener('click',function(e){var b=e.target.closest('[data-cvsi]');if(b){openProductModal(parseInt(b.dataset.cvsi,10));return;}if(e.target.closest('[data-cvall]')&&window.cvSetCat)cvSetCat('Nuevo');});
+    d.addEventListener('click',function(e){var b=e.target.closest('[data-cvsi]');if(b){var bn=(b.querySelector('b')||{}).textContent||'',bi=P.findIndex(function(x){return x.nombre===bn;});openProductModal(bi>=0?bi:parseInt(b.dataset.cvsi,10));return;}if(e.target.closest('[data-cvall]')&&window.cvSetCat)cvSetCat('Nuevo');});
   }
   build();setTimeout(build,1500);
   // swipe hint: only if after 7 s she hasn't scrolled nor opened anything
@@ -5079,7 +5082,7 @@ body.cv-fast .bw-logo-wrap{transform:scale(.82);transform-origin:center top;marg
     if(inBaq(s))return '✨ A <b>'+esc(s.label||'tu ubicación')+'</b> te llega en <b>'+esc(days)+' hábil</b>. Pago contraentrega.';
     var N=window.CV_SHIP||{},nat=N.days?'te llega en <b>'+esc(N.days)+' días hábiles</b>'+(N.cost?' · envío <b>'+esc(N.cost)+'</b>':''):'te confirmamos tiempo y costo de envío por WhatsApp';
     if(!/,/.test(s.label||'')&&!s.lat)return '📦 Enviamos a <b>'+esc(s.label)+'</b>. En Barranquilla llega en <b>'+esc(days)+' hábil</b>; a otras ciudades '+nat+'.';
-    return '🚚 A <b>'+esc(s.label||'tu ciudad')+'</b> '+nat+'.';
+    return '🚚 A <b>'+esc(s.label||'tu ciudad')+'</b> '+nat+'. Pagas al recibir (contraentrega).';
   }
   function html(){
     var s=lg();
@@ -5136,8 +5139,8 @@ body.cv-fast .bw-logo-wrap{transform:scale(.82);transform-origin:center top;marg
     if(!local){
       // product window: delivery box speaks to her city
       var fix=function(){var a=document.getElementById('pmTrustDays'),b=document.getElementById('pmTrustDaysTxt');
-        if(a)a.textContent=N.days?N.days+' días':'Todo Colombia';if(b)b.textContent='Envío a '+(d.city||'tu ciudad');
-        var tr=document.querySelector('.pm-trust');if(tr&&tr.children[1])tr.children[1].innerHTML='<b>Todo Colombia</b><span>'+(N.cost?'Envío '+esc(N.cost):'Envío nacional')+'</span>';};
+        if(a)a.textContent=N.days?N.days+' días':'Todo Colombia';if(b)b.textContent='Envío a '+(d.city||'tu ciudad')+(N.cost?' · '+N.cost:'');
+        var tr=document.querySelector('.pm-trust');if(tr&&tr.children[1])tr.children[1].innerHTML='<b>Paga al recibir</b><span>Contraentrega en '+esc(d.city||'todo Colombia')+'</span>';};
       fix();var _o=window.openProductModal;if(typeof _o==='function')window.openProductModal=openProductModal=function(){var r=_o.apply(this,arguments);try{fix();}catch(e){}return r;};
     }
   }).catch(function(){});
@@ -6016,5 +6019,165 @@ body.product-open .cv-wel{display:none!important}
   setInterval(function(){if(!guest()){all();var x=document.getElementById('cvClubPdp');if(x)x.remove();}},4000);
 })();
 </script>
+<style id="cvsell-css">
+/* v64 CANEVA Vende: trust strip in the product, "Te guardo tu bolsa" and TikTok fast landing */
+.cv-trust2{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:.2rem 0 .8rem;font-family:'Inter',sans-serif}
+.cv-trust2 .t{display:flex;align-items:center;gap:7px;padding:.55rem .6rem;border:1px solid rgba(250,249,246,.14);border-radius:10px;background:rgba(250,249,246,.03);font-size:.68rem;line-height:1.25;color:rgba(250,249,246,.86)}
+.cv-trust2 .t i{font-style:normal;font-size:1rem;flex:none}
+.cv-trust2 .t b{display:block;color:#fff;font-weight:600}
+.cv-trust2 .t small{display:block;color:rgba(250,249,246,.55);font-size:.6rem}
+.cv-trust2 .cod{grid-column:1/-1;border-color:rgba(94,240,160,.45);background:linear-gradient(120deg,rgba(94,240,160,.11),rgba(94,240,160,.02))}
+.cv-trust2 a.t{text-decoration:none;cursor:pointer}
+.cv-trust2 a.t:active{transform:scale(.98)}
+.cv-save{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translate(-50%,150%);z-index:1700;width:min(440px,calc(100% - 20px));box-sizing:border-box;background:#0b0a09;border:1px solid rgba(250,249,246,.2);border-radius:18px;padding:16px 16px 14px;color:#faf9f6;font-family:'Inter',sans-serif;box-shadow:0 18px 50px rgba(0,0,0,.6);transition:transform .45s cubic-bezier(.16,1,.3,1)}
+.cv-save.on{transform:translate(-50%,0)}
+.cv-save .x{position:absolute;top:6px;right:10px;background:none;border:0;color:rgba(250,249,246,.6);font-size:1.4rem;cursor:pointer;padding:4px}
+.cv-save .hd{display:flex;gap:10px;align-items:center;margin-bottom:10px;padding-right:22px}
+.cv-save .hd img{width:46px;height:58px;object-fit:cover;border-radius:8px;flex:none}
+.cv-save h4{margin:0;font-family:'Cormorant Garamond',serif;font-weight:400;font-size:1.35rem;line-height:1.1}
+.cv-save p{margin:.2rem 0 0;font-size:.72rem;color:rgba(250,249,246,.65);line-height:1.4}
+.cv-save form{display:flex;gap:6px}
+.cv-save input{flex:1;min-width:0;background:#141210;border:1px solid rgba(250,249,246,.2);border-radius:10px;padding:.75rem .8rem;color:#faf9f6;font-size:16px;outline:none}
+.cv-save input:focus{border-color:#d9c49b}
+.cv-save button.go{background:#f7f7f4;color:#050505;border:0;border-radius:10px;padding:0 .9rem;font:700 .62rem Inter,sans-serif;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;white-space:nowrap}
+.cv-save .err{color:#ff8a80;font-size:.66rem;margin-top:6px;min-height:0}
+.cv-save .ok{font-size:.8rem;line-height:1.45}
+.cv-save .ok b{color:#5ef0a0}
+.cv-save .row2{display:flex;gap:6px;margin-top:10px}
+.cv-save .row2 button{flex:1;border-radius:999px;padding:.7rem;font:700 .6rem Inter,sans-serif;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;border:1px solid rgba(250,249,246,.25);background:none;color:#faf9f6}
+.cv-save .row2 button.p{background:#f7f7f4;color:#050505;border-color:#f7f7f4}
+.cv-save .fine{display:block;margin-top:8px;font-size:.58rem;color:rgba(250,249,246,.4)}
+</style>
+<script id="cvsell">
+// v64 CANEVA Vende:
+// 1) Trust strip in the product window: pay on delivery all over Colombia, size exchange and "¿Qué talla soy?" by WhatsApp.
+// 2) "Te guardo tu bolsa": when someone with garments in the bag stops, comes back from another app or is leaving,
+//    she can leave her WhatsApp (optional) so Caneva can write to her. It shows in Control → Bolsas para rescatar.
+// 3) TikTok fast landing: visitors from TikTok with ?p= see the garment at once (from the catalog inside the page),
+//    without waiting for the live catalog; without ?p= they go straight to the garments.
+(function(){
+  if(typeof openProductModal!=='function'||typeof P==='undefined')return;
+  var PHONE=String((typeof WA_PHONE!=='undefined'&&WA_PHONE)||'573057637089');
+  function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function push(ev){try{if(window.cvStatsPush)cvStatsPush(ev);}catch(e){}}
+  function lg(k){try{return localStorage.getItem(k)||'';}catch(e){return '';}}
+  function ls(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+  function ss(k,v){try{if(v===undefined)return sessionStorage.getItem(k);sessionStorage.setItem(k,v);}catch(e){return null;}}
+  function cur(){var i=typeof currentProductIndex!=='undefined'?currentProductIndex:-1;return i>=0?P[i]:null;}
+
+  // ---------- 1) trust strip ----------
+  function trust(){
+    var p=cur(),acts=document.querySelector('#pmodal .pm-actions');if(!p||!acts)return;
+    var old=document.getElementById('cvTrust2');if(old)old.remove();
+    var txt='Hola Caneva ✨ ¿Qué talla soy para el '+p.nombre+' ('+(p.precio||'')+')?'+(function(){var z=typeof productSizes==='function'?productSizes(p):[];return z.length?' Veo tallas: '+z.join(', ')+'.':'';})()+'\nNormalmente uso talla: \nMi estatura: ';
+    var d=document.createElement('div');d.id='cvTrust2';d.className='cv-trust2';
+    d.innerHTML='<div class="t cod"><i>💵</i><div><b>Paga al recibir en todo Colombia</b><small>Contraentrega: pagas cuando la prenda llega a tus manos</small></div></div>'+
+      '<div class="t"><i>🔁</i><div><b>Cambio de talla</b><small>Si no te queda, la cambiamos</small></div></div>'+
+      '<a class="t" id="cvSizeWa" href="https://wa.me/'+PHONE+'?text='+encodeURIComponent(txt)+'" target="_blank" rel="noopener"><i>📏</i><div><b>¿Qué talla soy?</b><small>Te asesoramos por WhatsApp</small></div></a>';
+    acts.parentNode.insertBefore(d,acts);
+  }
+  document.addEventListener('click',function(e){
+    var a=e.target&&e.target.closest&&e.target.closest('#cvSizeWa');if(a){var p=cur();push({t:'k',k:'que_talla',l:p?String(p.nombre).slice(0,40):''});}
+  },true);
+  var oOpen=openProductModal;
+  window.openProductModal=openProductModal=function(i){var r=oOpen.apply(this,arguments);try{trust();}catch(e){}return r;};
+
+  // ---------- 2) "Te guardo tu bolsa" ----------
+  var BUYER='caneva_buyer_v1',SAVED='cv_bag_wa',t0=Date.now(),idleT=null,shown=false;
+  function bag(){return window.CART||[];}
+  function knownPhone(){
+    try{var u=window.clubUser&&clubUser();if(u&&u.phone)return String(u.phone);}catch(e){}
+    return lg(SAVED);
+  }
+  function guess(){
+    var b={};try{b=JSON.parse(lg(BUYER)||'{}')||{};}catch(e){}
+    var u=null;try{u=window.clubUser&&clubUser();}catch(e){}
+    return {phone:String(b.phone||(u&&u.phone)||'').replace(/\D/g,'').replace(/^57(?=\d{10}$)/,''),name:String(b.name||(u&&(u.firstName||u.name))||'').split(' ')[0]};
+  }
+  function busy(){
+    var b=document.body;
+    return b.classList.contains('cart-open')||b.classList.contains('product-open')||!!document.querySelector('.pmodal.open,.ai-dock.open,.club-ov.open,#cvSheet,#cvBPay,.cv-exit,#cvGeo,#cvIg,#cvBack,#cvSave,.cv-wel.show');
+  }
+  function allowed(){
+    if(shown||ss('cv_save_done')||!bag().length||knownPhone())return false;
+    var no=parseInt(lg('cv_save_no'),10)||0,last=parseInt(lg('cv_save_at'),10)||0;
+    if(no>=2&&Date.now()-last<3*86400000)return false; // she closed it twice: rest for 3 days
+    return true;
+  }
+  function promoLine(){
+    try{var pr=window.SITE_CONFIG&&SITE_CONFIG.promo;if(pr&&pr.enabled&&(!pr.until||Date.parse(pr.until)>Date.now())&&pr.code)return ' y te guardo el código <b>'+esc(pr.code)+'</b>';}catch(e){}
+    return '';
+  }
+  function show(why){
+    if(!allowed()||busy())return;
+    shown=true;ss('cv_save_done','1');ls('cv_save_at',String(Date.now()));
+    var it=bag()[0]||{},n=bag().reduce(function(a,x){return a+(Number(x.qty)||1);},0),g=guess();
+    var o=document.createElement('div');o.id='cvSave';o.className='cv-save';o.setAttribute('role','dialog');o.setAttribute('aria-label','Guardar mi bolsa');
+    o.innerHTML='<button type="button" class="x" aria-label="Cerrar">×</button>'+
+      '<div class="hd">'+(it.imagen?'<img src="'+esc(window.cvImg?cvImg(it.imagen,200):it.imagen)+'" alt="">':'')+'<div><h4>'+(g.name?esc(g.name)+', te':'Te')+' guardo tu bolsa 🛍</h4><p>Tienes '+n+' prenda'+(n>1?'s':'')+' esperándote. Déjame tu WhatsApp y te aviso antes de que se agote tu talla'+promoLine()+'.</p></div></div>'+
+      '<form novalidate><input type="tel" inputmode="numeric" autocomplete="tel" maxlength="14" placeholder="Tu WhatsApp · 300 123 4567" value="'+esc(g.phone)+'"><button class="go" type="submit">Guardar</button></form>'+
+      '<div class="err" hidden></div><span class="fine">Solo lo usamos para escribirte sobre tu bolsa. Pagas al recibir en todo Colombia.</span>';
+    document.body.appendChild(o);requestAnimationFrame(function(){o.classList.add('on');});
+    push({t:'k',k:'bolsa_rescate_visto',l:why});
+    var bye=function(){o.classList.remove('on');setTimeout(function(){o.remove();},500);};
+    o.querySelector('.x').onclick=function(){ls('cv_save_no',String((parseInt(lg('cv_save_no'),10)||0)+1));bye();};
+    o.querySelector('form').onsubmit=function(e){
+      e.preventDefault();var inp=o.querySelector('input'),v=inp.value.replace(/\D/g,'').replace(/^57(?=\d{10}$)/,''),er=o.querySelector('.err');
+      if(!/^3\d{9}$/.test(v)){er.hidden=false;er.textContent='Escribe tu celular de 10 dígitos (empieza por 3)';inp.focus();return;}
+      ls(SAVED,v);ls('cv_save_no','0');
+      push({t:'bagwa',p:'57'+v,n:(g.name||'').slice(0,40)});push({t:'k',k:'bolsa_guardada'});
+      var tx='Hola Caneva ✨ Quiero terminar mi pedido:\n'+bag().map(function(x){return '• '+x.nombre+(x.size?' talla '+x.size:'')+' ('+x.precio+')';}).join('\n');
+      o.querySelector('form').remove();er.remove();
+      var ok=document.createElement('div');ok.innerHTML='<div class="ok"><b>¡Listo! Tu bolsa quedó guardada.</b> Si quieres, termina ya: pagas al recibir o en línea.</div>'+
+        '<div class="row2"><button type="button" class="p" data-bag>Ver mi bolsa</button><button type="button" data-wa>Pedir por WhatsApp</button></div>';
+      o.insertBefore(ok,o.querySelector('.fine'));
+      ok.querySelector('[data-bag]').onclick=function(){bye();if(typeof renderCart==='function')renderCart();if(typeof openCart==='function')openCart();};
+      ok.querySelector('[data-wa]').onclick=function(){bye();var h='https://wa.me/'+PHONE+'?text='+encodeURIComponent(tx);if(window.canevaWithRef)h=canevaWithRef(h);push({t:'wa',k:'bolsa guardada',bag:bag().slice(0,8).map(function(x){return x.nombre;})});window.open(h,'_blank');};
+      setTimeout(function(){if(o.parentNode)bye();},15000);
+    };
+  }
+  // a) she stopped for a while with garments in the bag
+  function idle(){clearTimeout(idleT);if(!bag().length||shown)return;idleT=setTimeout(function(){if(busy())idle();else show('quieta');},45000);}
+  ['pointerdown','scroll','keydown','touchstart'].forEach(function(ev){addEventListener(ev,idle,{passive:true});});
+  idle();
+  // b) she went to another app (WhatsApp, Instagram) and came back
+  var hidAt=0;
+  document.addEventListener('visibilitychange',function(){
+    if(document.visibilityState==='hidden'){hidAt=Date.now();return;}
+    var away=hidAt?Date.now()-hidAt:0;hidAt=0;if(away>=8000)setTimeout(function(){show('volvio');},900);
+  });
+  // c) she closed the bag without buying
+  if(typeof closeCart==='function'){var oClose=closeCart;window.closeCart=closeCart=function(){var r=oClose.apply(this,arguments);if(bag().length&&Date.now()-t0>15000)setTimeout(function(){show('cerro_bolsa');},6000);return r;};}
+  // d) computers: the mouse goes to close the tab
+  if(window.matchMedia&&matchMedia('(hover:hover) and (pointer:fine)').matches){
+    document.addEventListener('mouseout',function(e){if(e.relatedTarget||e.clientY>4||Date.now()-t0<10000)return;show('salida');});
+  }
+  if(typeof addToCartByIndex==='function'){var oAdd=addToCartByIndex;window.addToCartByIndex=addToCartByIndex=function(){var r=oAdd.apply(this,arguments);idle();return r;};}
+
+  // ---------- 3) TikTok fast landing ----------
+  var q=location.search,TT=/[?&]ttclid=/.test(q)||/[?&]utm_source=tiktok/i.test(q)||/TikTok|musical_ly|BytedanceWebview/i.test(navigator.userAgent);
+  var hasP=/[?&]p=[^&#]/.test(q),hasCat=/[?&]cat=[^&#]/.test(q),opened='';
+  if(TT){
+    document.documentElement.classList.add('cv-tt');
+    if(hasP&&typeof openSharedProduct==='function'&&!(typeof SHARED_DONE!=='undefined'&&SHARED_DONE)){
+      try{openSharedProduct(true);}catch(e){}
+      push({t:'k',k:'tiktok_directo',l:'prenda'});
+    } else if(!hasP&&!hasCat&&/[?&](ttclid|utm_source=tiktok)/i.test(q)){
+      setTimeout(function(){if(busy())return;var g=document.getElementById('cvStrip')||document.getElementById('catalogo');if(g&&scrollY<60)g.scrollIntoView({behavior:'smooth',block:'start'});},700);
+      push({t:'k',k:'tiktok_directo',l:'catalogo'});
+    }
+  }
+  // Keep the open garment right when the live catalog replaces the one inside the page (indexes can change)
+  var oOpen2=openProductModal;
+  window.openProductModal=openProductModal=function(i){var r=oOpen2.apply(this,arguments);try{var p=P[i];opened=p&&typeof productSlug==='function'?productSlug(p):'';}catch(e){}return r;};
+  if(typeof setProductCount==='function'){var oCount=setProductCount;window.setProductCount=setProductCount=function(){var r=oCount.apply(this,arguments);try{
+    var m=document.getElementById('pmodal');if(!opened||!m||!m.classList.contains('open'))return r;
+    var i=P.findIndex(function(p){return productSlug(p)===opened;});
+    if(i<0){var nm=opened.split('--')[0];i=P.findIndex(function(p){return productSlug(p).split('--')[0]===nm;});}
+    if(i>=0&&i!==currentProductIndex){if(!currentSelectedSize)openProductModal(i);else currentProductIndex=i;}
+  }catch(e){}return r;};}
+})();
+</script>
+
 </body>
 </html>
