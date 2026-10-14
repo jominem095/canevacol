@@ -1957,7 +1957,7 @@ textarea.gf{min-height:74px;resize:vertical}
       <div class="pm-note" id="pmNote"></div>
       <div class="pm-trust">
         <div><b id="pmTrustDays">1 día</b><span id="pmTrustDaysTxt">Entrega hábil Barranquilla</span></div>
-        <div><b>Paga al recibir</b><span>Contraentrega en todo Colombia</span></div>
+        <div><b>Paga al recibir</b><span>Contraentrega · solo adelantas el envío</span></div>
         <div><b>Stylist AI</b><span>Te arma el look completo</span></div>
       </div>
       <div class="pm-look-kit" id="pmLookKit">
@@ -2029,7 +2029,7 @@ textarea.gf{min-height:74px;resize:vertical}
       <div class="nos-items reveal reveal-d3">
         <div class="nos-item">Entrega en 1 d&iacute;a h&aacute;bil en Barranquilla</div>
         <div class="nos-item">Env&iacute;os a todo Colombia</div>
-        <div class="nos-item">Pago contraentrega en todo Colombia</div>
+        <div class="nos-item">Paga la prenda al recibir · solo adelantas el envío</div>
         <div class="nos-item">Atenci&oacute;n personalizada por WhatsApp</div>
       </div>
     </div>
@@ -2658,7 +2658,7 @@ window.addEventListener('scroll',function(){document.getElementById('nav').class
 
 // MARQUEE
 (function(){
-  var it=['Nueva Colecci\u00F3n','Env\u00EDos Nacionales','Moda Femenina','Paga al recibir en todo Colombia','Barranquilla','Calidad Premium','Domicilios BQ'];
+  var it=['Nueva Colecci\u00F3n','Env\u00EDos Nacionales','Moda Femenina','Paga la prenda al recibir','Barranquilla','Calidad Premium','Domicilios BQ'];
   var s=it.map(function(i){return'<span>'+i+'</span><span class="dot">\u2756</span>';}).join('');
   document.getElementById('mqt').innerHTML=s+s+s+s;
 })();
@@ -2737,7 +2737,7 @@ var KB='Eres Caneva AI, asesora virtual premium de CANEVA, tienda de moda femeni
 'TIENDA: WhatsApp +573057637089 | Instagram @Caneva.col | Email canevamayra@gmail.com\n'+
 'ENTREGA: 1 día hábil en Barranquilla | Envíos nacionales\n'+
 'DOMICILIOS: Barranquilla $6.000 | Otros sectores $8.000-$9.000 | Soledad $7.000\n'+
-'PAGOS: Contraentrega en TODO Colombia (pagas al recibir, con Interrapidísimo) | Pago en línea con Bold | Bancolombia Ahorros 0831271463\n'+
+'PAGOS: Barranquilla: pagas todo al recibir (domiciliario). Otras ciudades: adelantas SOLO el envío (Nequi, Bold o transferencia) y la prenda la pagas al recibir (contraentrega con Interrapidísimo). También pago en línea con Bold | Bancolombia Ahorros 0831271463\n'+
 'CAMBIOS: si la talla no le queda, se cambia (escribir por WhatsApp al recibir)\n'+
 'TALLAS: 6=XS, 8=S, 10=M, 12=L, 14=XL, 16=XXL\n\n'+
 'CATÁLOGO REAL ('+P.length+' productos):\n'+
@@ -5082,7 +5082,7 @@ body.cv-fast .bw-logo-wrap{transform:scale(.82);transform-origin:center top;marg
     if(inBaq(s))return '✨ A <b>'+esc(s.label||'tu ubicación')+'</b> te llega en <b>'+esc(days)+' hábil</b>. Pago contraentrega.';
     var N=window.CV_SHIP||{},nat=N.days?'te llega en <b>'+esc(N.days)+' días hábiles</b>'+(N.cost?' · envío <b>'+esc(N.cost)+'</b>':''):'te confirmamos tiempo y costo de envío por WhatsApp';
     if(!/,/.test(s.label||'')&&!s.lat)return '📦 Enviamos a <b>'+esc(s.label)+'</b>. En Barranquilla llega en <b>'+esc(days)+' hábil</b>; a otras ciudades '+nat+'.';
-    return '🚚 A <b>'+esc(s.label||'tu ciudad')+'</b> '+nat+'. Pagas al recibir (contraentrega).';
+    return '🚚 A <b>'+esc(s.label||'tu ciudad')+'</b> '+nat+'. Adelantas solo el envío y la prenda la pagas al recibir.';
   }
   function html(){
     var s=lg();
@@ -5140,7 +5140,7 @@ body.cv-fast .bw-logo-wrap{transform:scale(.82);transform-origin:center top;marg
       // product window: delivery box speaks to her city
       var fix=function(){var a=document.getElementById('pmTrustDays'),b=document.getElementById('pmTrustDaysTxt');
         if(a)a.textContent=N.days?N.days+' días':'Todo Colombia';if(b)b.textContent='Envío a '+(d.city||'tu ciudad')+(N.cost?' · '+N.cost:'');
-        var tr=document.querySelector('.pm-trust');if(tr&&tr.children[1])tr.children[1].innerHTML='<b>Paga al recibir</b><span>Contraentrega en '+esc(d.city||'todo Colombia')+'</span>';};
+        var tr=document.querySelector('.pm-trust');if(tr&&tr.children[1])tr.children[1].innerHTML='<b>Paga la prenda al recibir</b><span>Solo adelantas el envío</span>';};
       fix();var _o=window.openProductModal;if(typeof _o==='function')window.openProductModal=openProductModal=function(){var r=_o.apply(this,arguments);try{fix();}catch(e){}return r;};
     }
   }).catch(function(){});
@@ -6071,7 +6071,9 @@ body.product-open .cv-wel{display:none!important}
     var old=document.getElementById('cvTrust2');if(old)old.remove();
     var txt='Hola Caneva ✨ ¿Qué talla soy para el '+p.nombre+' ('+(p.precio||'')+')?'+(function(){var z=typeof productSizes==='function'?productSizes(p):[];return z.length?' Veo tallas: '+z.join(', ')+'.':'';})()+'\nNormalmente uso talla: \nMi estatura: ';
     var d=document.createElement('div');d.id='cvTrust2';d.className='cv-trust2';
-    d.innerHTML='<div class="t cod"><i>💵</i><div><b>Paga al recibir en todo Colombia</b><small>Contraentrega: pagas cuando la prenda llega a tus manos</small></div></div>'+
+    // Barranquilla: everything is paid to the delivery person. Other cities: only the shipping is paid first (protects against rejected parcels)
+    var baq=/barranquilla|soledad|puerto colombia|malambo|galapa/i.test(String(window.CV_CITY||''));
+    d.innerHTML='<div class="t cod"><i>💵</i><div>'+(baq?'<b>Paga al recibir</b><small>Le pagas al domiciliario cuando la prenda llega a tus manos</small>':'<b>Paga la prenda al recibir</b><small>Solo adelantas el envío · la prenda la pagas cuando llega a tus manos</small>')+'</div></div>'+
       '<div class="t"><i>🔁</i><div><b>Cambio de talla</b><small>Si no te queda, la cambiamos</small></div></div>'+
       '<a class="t" id="cvSizeWa" href="https://wa.me/'+PHONE+'?text='+encodeURIComponent(txt)+'" target="_blank" rel="noopener"><i>📏</i><div><b>¿Qué talla soy?</b><small>Te asesoramos por WhatsApp</small></div></a>';
     acts.parentNode.insertBefore(d,acts);
@@ -6116,7 +6118,7 @@ body.product-open .cv-wel{display:none!important}
     o.innerHTML='<button type="button" class="x" aria-label="Cerrar">×</button>'+
       '<div class="hd">'+(it.imagen?'<img src="'+esc(window.cvImg?cvImg(it.imagen,200):it.imagen)+'" alt="">':'')+'<div><h4>'+(g.name?esc(g.name)+', te':'Te')+' guardo tu bolsa 🛍</h4><p>Tienes '+n+' prenda'+(n>1?'s':'')+' esperándote. Déjame tu WhatsApp y te aviso antes de que se agote tu talla'+promoLine()+'.</p></div></div>'+
       '<form novalidate><input type="tel" inputmode="numeric" autocomplete="tel" maxlength="14" placeholder="Tu WhatsApp · 300 123 4567" value="'+esc(g.phone)+'"><button class="go" type="submit">Guardar</button></form>'+
-      '<div class="err" hidden></div><span class="fine">Solo lo usamos para escribirte sobre tu bolsa. Pagas al recibir en todo Colombia.</span>';
+      '<div class="err" hidden></div><span class="fine">Solo lo usamos para escribirte sobre tu bolsa. La prenda la pagas al recibir.</span>';
     document.body.appendChild(o);requestAnimationFrame(function(){o.classList.add('on');});
     push({t:'k',k:'bolsa_rescate_visto',l:why});
     var bye=function(){o.classList.remove('on');setTimeout(function(){o.remove();},500);};
