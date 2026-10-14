@@ -10,7 +10,7 @@
 (function(){
   "use strict";
   var OPT={api:"https://caneva-ai.canevacol.workers.dev",token:function(){try{return localStorage.getItem("caneva_admin_token_v1")||"";}catch(e){return "";}}};
-  var S={el:null,cat:[],cats:[],catSel:"",data:null,recv:null,days:1,view:"vender",lines:[],busy:false,payFull:true,plan:"contado",abTouched:false,inv:{},prof:null,pdays:30,psrc:""};
+  var S={el:null,cat:[],cats:[],catSel:"",data:null,recv:null,days:1,view:"vender",lines:[],busy:false,payFull:true,plan:"contado",abTouched:false,inv:{},prof:null,pdays:30,psrc:"",showEx:false};
   var SRC={pasarela:"💳 Pasarela Bold",otro_medio:"🌐 Web · otro medio",manual:"💵 Venta manual"};
   function pct(a,b){return b?Math.round(a/b*100):0;}
   var CH={tienda:"Tienda física",whatsapp:"WhatsApp",instagram:"Instagram",feria:"Feria / evento",otro:"Otro"};
@@ -169,9 +169,12 @@
     if(el)el.textContent=money(T.total)+(T.disc?"  (desc. "+money(T.disc)+")":"");
     if(ow)ow.textContent=S.plan==="contado"?"":(T.total?"Abona "+money(T.paid)+" · queda debiendo "+money(T.owe)+(T.owe>0?" · fecha límite "+shortDate(addBizDays((S.el.querySelector("#vtDate")||{}).value,10))+" (10 días hábiles)":""):"");
     S.lines.forEach(function(l,i){var e=S.el.querySelector('[data-lt="'+i+'"]');if(e)e.textContent=(l.qty||1)>1?"= "+money(l.precio*(l.qty||1)):"";
-      var g=S.el.querySelector('[data-lg="'+i+'"]');if(g){if(l.costo){var gp=(l.precio-l.costo)*(l.qty||1);g.textContent="ganas "+money(gp)+((l.qty||1)>1?" en total":"");g.className="g"+(gp<0?" neg":"");}else g.textContent="";}});
+      var g=S.el.querySelector('[data-lg="'+i+'"]');if(g){if(l.costo){var gp=(l.precio-l.costo)*(l.qty||1);g.textContent="ganas "+money(gp)+((l.qty||1)>1?" en total":"")+(T.disc?" (antes del descuento)":"");g.className="g"+(gp<0?" neg":"");}else g.textContent="";}});
     var pv=S.el.querySelector("#vtPriv");
-    if(pv)pv.innerHTML=S.lines.length?'🔒 <span>Costo <b>'+money(T.cost)+'</b></span><span>Ganancia <b class="g'+(T.profit<0?" neg":"")+'">'+money(T.profit)+'</b>'+(T.total?' ('+pct(T.profit,T.total)+'%)':'')+'</span>'+(T.miss?'<span style="color:#ffb4a8">⚠ '+T.miss+' prenda'+(T.miss>1?'s':'')+' sin costo</span>':'')+'<small>Solo lo ves tú. No sale en el recibo de la clienta.</small>':'';
+    var looksAbono=T.disc&&PLANS[S.plan]&&PLANS[S.plan].pct>0&&PLANS[S.plan].pct<1&&Math.abs(T.disc-T.sub*PLANS[S.plan].pct)<=1000;
+    if(pv)pv.innerHTML=S.lines.length?'🔒 <span>Prendas <b>'+money(T.sub)+'</b></span>'+(T.disc?'<span>Descuento <b style="color:#ffb4a8">-'+money(T.disc)+'</b></span>':'')+'<span>Costo <b>'+money(T.cost)+'</b></span><span>Ganancia <b class="g'+(T.profit<0?" neg":"")+'">'+money(T.profit)+'</b>'+(T.total?' ('+pct(T.profit,T.total)+'%)':'')+'</span>'+(T.miss?'<span style="color:#ffb4a8">⚠ '+T.miss+' prenda'+(T.miss>1?'s':'')+' sin costo</span>':'')+
+      (looksAbono?'<small style="color:#ffb4a8;font-size:.8rem">⚠ El descuento ('+money(T.disc)+') es igual al abono de '+esc(PLAN_NAME[S.plan])+'. Si eso es lo que pagó hoy, bórralo de <b>Descuento</b> y escríbelo en <b>¿Cuánto abonó hoy?</b>.</small>':'')+
+      '<small>Solo lo ves tú. No sale en el recibo de la clienta.</small>':'';
   }
 
   // ---------------- sales list ----------------
@@ -181,7 +184,7 @@
     var T=D.totals;
     k.innerHTML='<div class="vt-kpi"><span>Vendido '+(S.days===1?"hoy":"en "+S.days+" días")+'</span><b>'+money(T.revenue)+'</b></div><div class="vt-kpi"><span>Recibido</span><b>'+money(T.collected!=null?T.collected:T.revenue)+'</b></div>'+
       (T.owed?'<div class="vt-kpi warn"><span>Quedó por cobrar</span><b>'+money(T.owed)+'</b></div>':'')+'<div class="vt-kpi"><span>Ventas</span><b>'+T.count+'</b></div>'+
-      (T.profit!=null?'<div class="vt-kpi good"><span>🔒 Ganancia</span><b>'+money(T.profit)+'</b>'+(T.uncosted?'<small>'+T.uncosted+' sin costo</small>':'')+'</div>':'');
+      (T.profit!=null?'<div class="vt-kpi good"><span>🔒 Ganancia</span><b>'+money(T.profit)+'</b>'+(T.uncosted||T.excludedCount?'<small>'+[T.uncosted?T.uncosted+' sin costo':'',T.excludedCount?T.excludedCount+' no cuenta'+(T.excludedCount>1?'n':''):''].filter(Boolean).join(' · ')+'</small>':'')+'</div>':'');
     list.innerHTML=D.list.length?D.list.map(rowHtml).join(""):'<div class="vt-empty">No hay ventas manuales en este periodo.</div>';
   }
   function rowHtml(v){
@@ -190,7 +193,7 @@
     return '<div class="vt-row'+(live?"":" void")+'"><div><div class="t">'+esc(v.ticket)+' · '+esc(when(v.paidAt))+(v.name?' · '+esc(v.name):'')+'</div><div class="it">'+it+'</div>'+
       '<span class="tag">'+esc(v.channelLabel||"")+'</span><span class="tag">'+esc(v.payLabel||"")+'</span>'+
       (v.plan&&v.plan!=="contado"?'<span class="tag">'+esc(PLAN_NAME[v.plan]||v.plan)+'</span>':'')+(live&&v.balance>0?'<span class="tag owe">Debe '+money(v.balance)+(v.dueAt?' · vence '+esc(shortDate(v.dueAt)):'')+'</span>':'')+(live&&v.payments&&v.payments.length>1&&!v.balance?'<span class="tag ok">Pagada con abonos</span>':'')+
-      (v.doc?'<span class="tag">'+esc(v.docLabel||"Doc")+' '+esc(v.doc)+'</span>':'')+(v.points?'<span class="tag">+'+v.points+' pts Club</span>':'')+(v.note?'<span class="tag">'+esc(v.note)+'</span>':'')+(live?'':'<span class="tag">Anulada</span>')+(live&&v.cost?'<div class="pr">🔒 Costo '+money(v.cost.cost)+' · <span class="g'+(v.cost.profit<0?" neg":"")+'">ganancia '+money(v.cost.profit)+'</span>'+(v.cost.missing?' · <span style="color:#ffb4a8">⚠ falta costo</span>':'')+'</div>':'')+'</div>'+
+      (v.doc?'<span class="tag">'+esc(v.docLabel||"Doc")+' '+esc(v.doc)+'</span>':'')+(v.points?'<span class="tag">+'+v.points+' pts Club</span>':'')+(v.note?'<span class="tag">'+esc(v.note)+'</span>':'')+(live?'':'<span class="tag">Anulada</span>')+(live&&v.cost?'<div class="pr">'+(v.excluded?'<span class="dim">🚫 No cuenta en la ganancia · </span>':'')+'🔒 Costo '+money(v.cost.cost)+' · <span class="g'+(v.cost.profit<0?" neg":"")+'">ganancia '+money(v.cost.profit)+'</span>'+(v.cost.missing?' · <span style="color:#ffb4a8">⚠ falta costo</span>':'')+'</div>':'')+'</div>'+
       '<div class="r"><b>'+money(v.total)+'</b>'+(live?'<button type="button" class="vt-mail" data-edit="'+esc(v.id)+'">✏️ Editar</button> '+'<button type="button" class="vt-mail" data-cost="'+esc(v.id)+'">🔒 Costo</button> '+shareBtns(v.id)+' <button type="button" class="vt-mail" data-mail="'+esc(v.id)+'" data-to="'+esc(v.email||"")+'">📧 Correo</button><br><button type="button" class="vt-void" data-void="'+esc(v.id)+'">Anular</button>':'')+'</div></div>';
   }
 
@@ -220,7 +223,14 @@
   function profHtml(){
     return '<div class="vt-head" style="margin:-4px 0 10px"><div class="dim" style="max-width:560px">🔒 Solo lo ves tú. Aquí está cada venta pagada: las de la página (pasarela Bold u otro medio) y las manuales. Escribe cuánto te costó cada prenda y el admin calcula tu ganancia. Las prendas con costo en Inventario lo toman solas.</div>'+
       '<div class="vt-seg">'+[[7,"7 días"],[30,"30 días"],[90,"90 días"]].map(function(x){return '<button type="button" data-pdays="'+x[0]+'" class="'+(x[0]===S.pdays?"on":"")+'">'+x[1]+'</button>';}).join("")+'</div></div>'+
-      '<div class="vt-kpis" id="vpKpis"></div><div class="vt-src" id="vpSrc"></div><div class="vt-card"><h3 id="vpTitle">Ventas pagadas</h3><div id="vpList"><div class="vt-empty">Cargando…</div></div></div>';
+      '<div class="vt-kpis" id="vpKpis"></div><div class="vt-src" id="vpSrc"></div><div class="vt-card"><h3 id="vpTitle">Ventas pagadas</h3><div id="vpList"><div class="vt-empty">Cargando…</div></div></div><div class="vt-card" id="vpEx"></div>';
+  }
+  function profRow(v){
+      var it=v.items.map(function(x){return esc(x.nombre)+(x.size?" ("+esc(x.size)+")":"")+(x.qty>1?" ×"+x.qty:"")+(x.unitCost?' <span class="dim">· costo '+money(x.unitCost)+'</span>':' <span style="color:#ffb4a8">· sin costo</span>');}).join(" · ");
+      return '<div class="vt-row'+(v.excluded?' void':'')+'" style="'+(v.excluded?'opacity:.75':'')+'"><div><div class="t" style="text-decoration:none">'+esc(v.ticket||"")+' · '+esc(when(v.paidAt))+(v.name?' · '+esc(v.name):'')+'</div><div class="it">'+it+'</div>'+
+        '<span class="tag gold">'+SRC[v.source]+'</span>'+(v.viaLabel?'<span class="tag">'+esc(v.viaLabel)+'</span>':'')+(v.source==="manual"&&v.channelLabel?'<span class="tag">'+esc(v.channelLabel)+'</span>':'')+(v.extra?'<span class="tag">Otros costos '+money(v.extra)+'</span>':'')+(v.note?'<span class="tag">'+esc(v.note)+'</span>':'')+(v.missing&&!v.excluded?'<span class="tag owe">⚠ '+v.missing+' sin costo</span>':'')+(v.excluded?'<span class="tag">🚫 No cuenta · '+esc(v.excludedWhy||"")+'</span>':'')+'</div>'+
+        '<div class="r"><b>'+money(v.total)+'</b><div class="pr">Costo '+money(v.cost)+'</div><div class="pr"><span class="g'+(v.profit<0?" neg":"")+'">Ganancia '+money(v.profit)+(v.margin!=null?' ('+v.margin+'%)':'')+'</span></div>'+
+        '<button type="button" class="vt-mail" data-cost="'+esc(v.id)+'">🔒 '+(v.missing?"Poner costo":"Editar costo")+'</button> <button type="button" class="vt-mail" data-exc="'+esc(v.id)+'" data-on="'+(v.excluded?0:1)+'">'+(v.excluded?"↩ Contar":"🚫 No contar")+'</button></div></div>';
   }
   function paintProf(){
     var D=S.prof,k=S.el&&S.el.querySelector("#vpKpis"),src=S.el&&S.el.querySelector("#vpSrc"),list=S.el&&S.el.querySelector("#vpList");if(!k||!list)return;
@@ -233,14 +243,14 @@
       (T.missing?'<div class="vt-kpi warn"><span>Sin costo</span><b>'+T.missing+'</b><small>ganancia real de lo que sí tiene costo: '+money(T.costedProfit)+'</small></div>':'');
     src.innerHTML=D.bySource.map(function(x){return '<button type="button" data-psrc="'+x.key+'" class="'+(S.psrc===x.key?"on":"")+'"><b>'+SRC[x.key]+'</b><span>'+x.count+' ventas · '+money(x.revenue)+'</span><span>Ganancia <em>'+money(x.profit)+'</em>'+(x.missing?' · ⚠ '+x.missing+' sin costo':'')+'</span></button>';}).join("")+
       '<button type="button" data-psrc="sin" class="'+(S.psrc==="sin"?"on":"")+'"><b>⚠ Sin costo</b><span>'+T.missing+' ventas para completar</span><span>Tócalas y escribe el costo</span></button>';
-    var l=D.list.filter(function(x){return !S.psrc||(S.psrc==="sin"?x.missing:x.source===S.psrc);});
+    var l=D.list.filter(function(x){return !x.excluded&&(!S.psrc||(S.psrc==="sin"?x.missing:x.source===S.psrc));});
     var ttl=S.el.querySelector("#vpTitle");if(ttl)ttl.textContent=S.psrc?(S.psrc==="sin"?"Ventas sin costo":SRC[S.psrc]):"Ventas pagadas";
-    list.innerHTML=l.length?l.map(function(v){
-      var it=v.items.map(function(x){return esc(x.nombre)+(x.size?" ("+esc(x.size)+")":"")+(x.qty>1?" ×"+x.qty:"")+(x.unitCost?' <span class="dim">· costo '+money(x.unitCost)+'</span>':' <span style="color:#ffb4a8">· sin costo</span>');}).join(" · ");
-      return '<div class="vt-row"><div><div class="t">'+esc(v.ticket||"")+' · '+esc(when(v.paidAt))+(v.name?' · '+esc(v.name):'')+'</div><div class="it">'+it+'</div>'+
-        '<span class="tag gold">'+SRC[v.source]+'</span>'+(v.viaLabel?'<span class="tag">'+esc(v.viaLabel)+'</span>':'')+(v.source==="manual"&&v.channelLabel?'<span class="tag">'+esc(v.channelLabel)+'</span>':'')+(v.extra?'<span class="tag">Otros costos '+money(v.extra)+'</span>':'')+(v.note?'<span class="tag">'+esc(v.note)+'</span>':'')+(v.missing?'<span class="tag owe">⚠ '+v.missing+' sin costo</span>':'')+'</div>'+
-        '<div class="r"><b>'+money(v.total)+'</b><div class="pr">Costo '+money(v.cost)+'</div><div class="pr"><span class="g'+(v.profit<0?" neg":"")+'">Ganancia '+money(v.profit)+(v.margin!=null?' ('+v.margin+'%)':'')+'</span></div><button type="button" class="vt-mail" data-cost="'+esc(v.id)+'">🔒 '+(v.missing?"Poner costo":"Editar costo")+'</button></div></div>';
-    }).join(""):'<div class="vt-empty">'+(S.psrc==="sin"?"Todas las ventas tienen costo ✨":"No hay ventas pagadas en este periodo.")+'</div>';
+    list.innerHTML=l.length?l.map(profRow).join(""):'<div class="vt-empty">'+(S.psrc==="sin"?"Todas las ventas tienen costo ✨":"No hay ventas pagadas en este periodo.")+'</div>';
+    var ex=S.el.querySelector("#vpEx"),EX=D.list.filter(function(x){return x.excluded;}),E=D.excluded||{count:0,revenue:0,profit:0};
+    if(ex)ex.innerHTML='<h3>🚫 No cuentan en la ganancia'+(E.count?' · '+E.count+' venta'+(E.count>1?'s':'')+' · '+money(E.revenue):'')+'</h3>'+
+      '<div class="dim" style="margin:-4px 0 10px">Compras tuyas, de la familia o de prueba. Siguen en Ventas y Reportes, pero no suman aquí. Se sacan solas si la clienta se llama como alguno de estos nombres:</div>'+
+      '<div class="vt-abono" style="justify-content:flex-start"><input id="vpNames" style="flex:1;min-width:220px;width:auto" value="'+esc((D.excludeNames||[]).join(", "))+'" placeholder="Ej: Mayra, John Ríos"><button type="button" class="vt-btn sm" data-exnames="1">Guardar nombres</button></div>'+
+      (EX.length?'<div style="margin-top:8px"><button type="button" class="vt-btn ghost sm" data-showex="1">'+(S.showEx?'Ocultar':'Ver las '+EX.length)+'</button></div>'+(S.showEx?EX.map(profRow).join(""):''):'<div class="vt-empty">Ninguna venta en este periodo.</div>');
   }
   function loadProf(){
     S.prof=null;paintProf();
@@ -379,7 +389,8 @@
     if(!lines.length)return toast("Agrega al menos una prenda",true);
     if(lines.some(function(l){return !(l.precio>0);})&&!confirm("Hay prendas con precio $0. ¿Guardar así?"))return;
     var g=function(id){return (S.el.querySelector(id)||{}).value||"";},T=totals();
-    if(T.disc&&T.disc>=T.sub*0.5&&!confirm("El descuento es de "+money(T.disc)+" sobre "+money(T.sub)+" (queda en "+money(T.total)+"). ¿Es correcto?"))return;
+    if(T.disc&&PLANS[S.plan]&&PLANS[S.plan].pct>0&&PLANS[S.plan].pct<1&&Math.abs(T.disc-T.sub*PLANS[S.plan].pct)<=1000&&!confirm("Pusiste "+money(T.disc)+" como DESCUENTO, que es igual al abono de "+PLAN_NAME[S.plan]+".\nCon eso la venta queda en "+money(T.total)+".\n\nSi eso es lo que pagó hoy, toca Cancelar, bórralo de Descuento y escríbelo en el abono.\n¿Guardar con el descuento?"))return;
+    else if(T.disc&&T.disc>=T.sub*0.5&&!confirm("El descuento es de "+money(T.disc)+" sobre "+money(T.sub)+" (queda en "+money(T.total)+"). ¿Es correcto?"))return;
     if(!S.payFull&&T.owe>0&&!g("#vtName").trim()&&!g("#vtPhone").trim())return toast("Para dejar saldo pendiente escribe el nombre o el celular de la clienta",true);
     var body={items:lines.map(function(l){return {pid:l.pid,nombre:l.nombre,categoria:l.categoria,precio:l.precio,qty:l.qty,size:l.size==="Única"?"":l.size,imagen:l.img};}),
       costs:lines.map(function(l){return l.costo>0?l.costo:null;}),
@@ -433,6 +444,11 @@
     el.addEventListener("click",function(e){
       var t=e.target,b;
       if((b=t.closest("[data-view]"))){S.view=b.dataset.view;render();if(S.view==="cobrar")loadRecv();else if(S.view==="ganancia")loadProf();else load();return;}
+      if((b=t.closest("[data-exc]"))){var on=b.dataset.on==="1";b.disabled=true;
+        api("/admin/profit/exclude",{method:"POST",body:{id:b.dataset.exc,excluded:on}}).then(function(){toast(on?"🚫 Esa venta ya no cuenta en la ganancia":"↩ Esa venta vuelve a contar");loadProf();load();}).catch(function(x){b.disabled=false;toast(/Ruta no encontrada|404/.test(x.message)?"Falta pegar la Worker v62 en Cloudflare":x.message,true);});return;}
+      if(t.closest("[data-showex]")){S.showEx=!S.showEx;return paintProf();}
+      if(t.closest("[data-exnames]")){var nm=((S.el.querySelector("#vpNames")||{}).value||"").split(",").map(function(x){return x.trim();}).filter(Boolean);
+        api("/admin/profit/exclude",{method:"POST",body:{names:nm}}).then(function(d){toast("✓ No cuentan: "+(d.names.join(", ")||"nadie"));loadProf();load();}).catch(function(x){toast(/Ruta no encontrada|404/.test(x.message)?"Falta pegar la Worker v62 en Cloudflare":x.message,true);});return;}
       if((b=t.closest("[data-pdays]"))){S.pdays=+b.dataset.pdays;return loadProf();}
       if((b=t.closest("[data-psrc]"))){S.psrc=S.psrc===b.dataset.psrc?"":b.dataset.psrc;return paintProf();}
       if((b=t.closest("[data-cost]"))){var vc=findSale(b.dataset.cost);if(vc)editCost(vc,function(){load();if(S.view==="ganancia")loadProf();});return;}
