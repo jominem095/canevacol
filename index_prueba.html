@@ -3796,7 +3796,7 @@ document.getElementById('csend').addEventListener('click',sendChat);
   function prod(i){var p=window.P&&P[i];return p?{id:p.id||'',n:p.nombre,pr:p.precio,c:p.categoria,v:typeof priceNum==='function'?priceNum(p.precio):0}:null;}
   function learn(p,size){if(p.c)prof.cats[p.c]=(prof.cats[p.c]||0)+1;if(size)prof.sizes[size]=(prof.sizes[size]||0)+1;if(p.v>0&&p.v<999999999){prof.pmin=prof.pmin?Math.min(prof.pmin,p.v):p.v;prof.pmax=Math.max(prof.pmax||0,p.v);}saveProf();}
   function wrapG(name,fn){var f=window[name];if(typeof f!=='function')return;window[name]=function(){var r=f.apply(this,arguments);try{fn.apply(this,arguments);}catch(e){}return r;};}
-  wrapG('openProductModal',function(i){var p=prod(i);if(p){views++;addList('seen',p.n,20);learn(p);push({t:'p',id:p.id,n:p.n,pr:p.pr,c:p.c});}});
+  wrapG('openProductModal',function(i){if(window.CV_SILENT)return;var p=prod(i);if(p){views++;addList('seen',p.n,20);learn(p);push({t:'p',id:p.id,n:p.n,pr:p.pr,c:p.c});}});
   wrapG('addToCartByIndex',function(i,o,size){var p=prod(i);if(p){adds++;addList('bag',p.n+(size?' talla '+size:''),12);learn(p,size);push({t:'c',id:p.id,n:p.n,pr:p.pr,z:size||''});}});
   wrapG('sendChat',function(){push({t:'k',k:'ai_mensaje'});});
   // What she asks Caneva AI and what she searches (short text, helps understand demand)
@@ -6184,7 +6184,8 @@ body.product-open .cv-wel{display:none!important}
   if(TT){
     document.documentElement.classList.add('cv-tt');
     if(hasP&&typeof openSharedProduct==='function'&&!(typeof SHARED_DONE!=='undefined'&&SHARED_DONE)){
-      try{openSharedProduct(true);}catch(e){}
+      // the live catalog normally opens it first (right price and sizes); the page's own copy is only a fallback after 1.5 s
+      setTimeout(function(){if(!(typeof SHARED_DONE!=='undefined'&&SHARED_DONE))try{openSharedProduct(true);}catch(e){}},1500);
       push({t:'k',k:'tiktok_directo',l:'prenda'});
     } else if(!hasP&&!hasCat&&/[?&](ttclid|utm_source=tiktok)/i.test(q)){
       setTimeout(function(){if(busy())return;var g=document.getElementById('cvStrip')||document.getElementById('catalogo');if(g&&scrollY<60)g.scrollIntoView({behavior:'smooth',block:'start'});},700);
@@ -6198,7 +6199,8 @@ body.product-open .cv-wel{display:none!important}
     var m=document.getElementById('pmodal');if(!opened||!m||!m.classList.contains('open'))return r;
     var i=P.findIndex(function(p){return productSlug(p)===opened;});
     if(i<0){var nm=opened.split('--')[0];i=P.findIndex(function(p){return productSlug(p).split('--')[0]===nm;});}
-    if(i>=0&&i!==currentProductIndex){if(!currentSelectedSize)openProductModal(i);else currentProductIndex=i;}
+    if(i>=0&&i!==currentProductIndex){var a=P[currentProductIndex]||{},b=P[i];var same=a.precio===b.precio&&a.tallas===b.tallas&&a.imagen===b.imagen;
+      if(same||currentSelectedSize)currentProductIndex=i;else{window.CV_SILENT=1;try{openProductModal(i);}finally{window.CV_SILENT=0;}}}
   }catch(e){}return r;};}
 })();
 </script>
@@ -6306,6 +6308,24 @@ body.product-open .cv-wel{display:none!important}
 
   var oOpen=openProductModal;
   window.openProductModal=openProductModal=function(){var r=oOpen.apply(this,arguments);try{anchor();armHelp();}catch(e){}return r;};
+})();
+</script>
+<script id="cvver">
+// v67: coming from the light ad page (ver.html) with "Lo quiero": ?p=…&z=SIZE&add=1 → the garment opens
+// with that size chosen and goes straight into the bag (the "added" sheet shows next).
+(function(){
+  var Q=new URLSearchParams(location.search),z=Q.get('z')||'',add=Q.get('add')==='1';
+  if(!Q.get('p')||(!z&&!add)||typeof openProductModal!=='function')return;
+  var done=false,o=openProductModal;
+  window.openProductModal=openProductModal=function(){var r=o.apply(this,arguments);if(!done&&!window.CV_SILENT){done=true;setTimeout(go,120);}return r;};
+  function go(){
+    try{
+      if(z){var b=[].slice.call(document.querySelectorAll('#pmodal .pm-size-btn')).find(function(x){return String(x.dataset.size).toUpperCase()===z.toUpperCase();});if(b&&!b.disabled)b.click();else return;}
+      if(add){var a=document.getElementById('pmAddCart');if(a)a.click();if(window.cvStatsPush)cvStatsPush({t:'k',k:'lo_quiero_bolsa'});}
+      var u=location.search.replace(/([?&])(z|add)=[^&]*/g,'$1').replace(/[?&]+$/,'').replace(/&&+/g,'&').replace('?&','?');
+      history.replaceState(null,'',location.pathname+u+location.hash);
+    }catch(e){}
+  }
 })();
 </script>
 

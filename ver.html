@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>CANEVA</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#050403">
+<link rel="preconnect" href="https://caneva-ai.canevacol.workers.dev" crossorigin>
+<link rel="preconnect" href="https://wsrv.nl" crossorigin>
+<style>
+/* CANEVA Ver: light page for ads (TikTok/Meta). One garment, sizes, buy. ~10 KB instead of the full store. */
+*{box-sizing:border-box}
+html,body{margin:0;background:#050403;color:#faf9f6;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.top{position:fixed;top:0;left:0;right:0;z-index:5;display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:linear-gradient(#050403cc,#05040300)}
+.logo{font-size:15px;letter-spacing:.5em;font-weight:300;text-decoration:none}
+.top a.all{font-size:10px;letter-spacing:.16em;text-transform:uppercase;text-decoration:none;border:1px solid rgba(250,249,246,.3);border-radius:999px;padding:7px 11px;background:#05040399}
+.ph{position:relative;width:100%;aspect-ratio:3/4;max-height:72vh;background:#111;overflow:hidden}
+.sl{display:flex;height:100%;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
+.sl::-webkit-scrollbar{display:none}
+.sl img{flex:0 0 100%;width:100%;height:100%;object-fit:cover;scroll-snap-align:center;background:#111}
+.dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:5px}
+.dots i{width:6px;height:6px;border-radius:50%;background:rgba(250,249,246,.4)}.dots i.on{background:#faf9f6}
+.sk{position:absolute;inset:0;background:linear-gradient(100deg,#111 30%,#1f1d1a 50%,#111 70%);background-size:200% 100%;animation:s 1.2s linear infinite}
+@keyframes s{to{background-position:-100% 0}}
+.in{padding:16px 16px 120px;max-width:560px;margin:0 auto}
+.cat{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:rgba(250,249,246,.5)}
+h1{font-family:"Cormorant Garamond",Georgia,serif;font-weight:400;font-size:30px;line-height:1.1;margin:6px 0 4px}
+.pr{font-size:22px;font-weight:300}
+.anc{font-size:12px;color:rgba(250,249,246,.7);margin:4px 0 0}.anc b{color:#5ef0a0;font-weight:600}
+.promo{display:inline-block;margin-top:10px;padding:6px 10px;border:1px solid rgba(250,249,246,.3);border-radius:999px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:700}
+.lbl{margin:18px 0 8px;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:rgba(250,249,246,.6);display:flex;justify-content:space-between}
+.sz{display:flex;flex-wrap:wrap;gap:8px}
+.sz button{min-width:52px;height:46px;padding:0 12px;border-radius:999px;border:1px solid rgba(250,249,246,.3);background:none;color:#faf9f6;font:600 13px Inter,system-ui,sans-serif;cursor:pointer}
+.sz button.on{background:#faf9f6;color:#050403;border-color:#faf9f6}
+.sz button:disabled{opacity:.3;text-decoration:line-through}
+.sz.shake{animation:k .35s}
+@keyframes k{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.msg{font-size:12px;color:#ffb4a8;min-height:16px;margin-top:6px}
+.tr{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:16px}
+.tr div,.tr a{display:flex;gap:8px;align-items:center;padding:10px;border:1px solid rgba(250,249,246,.14);border-radius:10px;font-size:11px;line-height:1.3;text-decoration:none;color:rgba(250,249,246,.85)}
+.tr b{display:block;color:#fff;font-weight:600}
+.tr .w{grid-column:1/-1;border-color:rgba(94,240,160,.45);background:rgba(94,240,160,.07)}
+.desc{margin-top:16px;font-size:13px;line-height:1.6;color:rgba(250,249,246,.75);white-space:pre-line}
+.more h3{font-family:"Cormorant Garamond",Georgia,serif;font-weight:400;font-size:22px;margin:28px 0 10px}
+.g{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.g a{text-decoration:none}.g img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:8px;background:#111;display:block}
+.g b{display:block;font-size:11px;font-weight:500;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.g small{font-size:11px;color:rgba(250,249,246,.6)}
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:#050403f2;border-top:1px solid rgba(250,249,246,.12)}
+.bar button,.bar a{flex:1;height:52px;border-radius:999px;font:700 12px Inter,system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;display:flex;align-items:center;justify-content:center;text-decoration:none;cursor:pointer}
+.bar .buy{flex:1.4;background:#f7f7f4;color:#050403;border:0}
+.bar .wa{background:none;color:#faf9f6;border:1px solid rgba(250,249,246,.35)}
+.nf{padding:120px 24px;text-align:center;color:rgba(250,249,246,.7)}
+</style>
+</head>
+<body>
+<header class="top"><a class="logo" href="/" id="lg">CΛNEVΛ</a><a class="all" href="/" id="all">Ver tienda</a></header>
+<main id="app"><div class="ph"><div class="sk"></div></div><div class="in"><div class="cat">&nbsp;</div><h1>&nbsp;</h1></div></main>
+<script>
+// CANEVA Ver — light landing for ads. Loads only the catalog JSON, shows the garment at once,
+// and "Lo quiero" opens the full store with the garment and size already in the bag.
+(function(){
+  var API='https://caneva-ai.canevacol.workers.dev',PHONE='573057637089';
+  var Q=new URLSearchParams(location.search),slug=String(Q.get('p')||'').toLowerCase(),keep=location.search.replace(/^\?/,'');
+  // ?prueba=1 → hands off to the test store (index_prueba.html) instead of the live one
+  var BASE=Q.get('prueba')?'/index_prueba.html':'/';
+  function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function f(v){return String(v||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');}
+  function slugOf(p){return [f(p.nombre),f(p.categoria),String(p.precio||'').replace(/[^\d]/g,'')].filter(Boolean).join('--');}
+  function num(v){var n=String(v||'').replace(/[^\d]/g,'');return n?parseInt(n,10):0;}
+  function money(n){return '$'+Math.round(n).toLocaleString('es-CO');}
+  function img(u,w){return /^https:\/\//.test(u||'')?'https://wsrv.nl/?url='+encodeURIComponent(u)+'&w='+w+'&output=webp&q=74&we':u;}
+  function lg(k){try{return localStorage.getItem(k)||'';}catch(e){return '';}}
+  function ls(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+  function hidden(p){var s=String(p.stock||'').trim().toLowerCase();return /^0+$/.test(s)||s.indexOf('agotad')===0||s.indexOf('ocult')===0||/domicilio|domicl|mayorista|others/i.test(p.categoria||'');}
+  function photos(p){return [p.imagen||p.imagenPrincipal].concat(String(p.imagenesExtra||'').split(/\s*(?:\||\n|;|,)\s*/)).map(function(u){return String(u||'').trim();}).filter(function(u,k,a){return u.indexOf('http')===0&&a.indexOf(u)===k;});}
+  function sizes(p){
+    var t=String(p.tallas||p.variantes||'').replace(/[–—]/g,'-').trim(),out=[];
+    (t.match(/\b(XXS|XS|S|M|L|XL|XXL|[0-9]{1,2})\b/gi)||[]).forEach(function(x){var v=x.toUpperCase();if(out.indexOf(v)<0)out.push(v);});
+    (t.match(/\b(?:xs|s|m|l|xl)(?:s|m|l|xl|xxl)\b/gi)||[]).forEach(function(x){var m=x.toUpperCase().match(/^(XS|S|M|L|XL)(S|M|L|XL|XXL)$/);if(m&&m[1]!==m[2]){var v=m[1]+'/'+m[2];if(out.indexOf(v)<0)out.push(v);}});
+    var o=['XXS','XS','S','M','L','XL','XXL'];
+    return out.sort(function(a,b){var na=parseInt(a,10),nb=parseInt(b,10);if(!isNaN(na)&&!isNaN(nb))return na-nb;if(!isNaN(na))return -1;if(!isNaN(nb))return 1;return o.indexOf(a)-o.indexOf(b);});
+  }
+  // ---- stats: same visitor id and events as the store, so Control shows this visit ----
+  var vid=lg('caneva_vid');if(!/^[a-z0-9]{8,32}$/.test(vid)){vid=(Math.random().toString(36).slice(2)+Date.now().toString(36)).slice(0,20);ls('caneva_vid',vid);}
+  var REF=lg('caneva_ref');if(!/^[A-Z2-9]{4}$/.test(REF)){var AB='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';REF='';for(var i=0;i<4;i++)REF+=AB.charAt(Math.floor(Math.random()*AB.length));ls('caneva_ref',REF);}
+  var q=[],t0=Date.now();
+  function send(){if(!q.length)return;var b=JSON.stringify({v:vid,r:REF,e:q.splice(0,30)});try{if(navigator.sendBeacon&&navigator.sendBeacon(API+'/t',new Blob([b],{type:'text/plain'})))return;}catch(e){}try{fetch(API+'/t',{method:'POST',body:b,keepalive:true});}catch(e){}}
+  function push(ev){q.push(ev);clearTimeout(push.t);push.t=setTimeout(send,2500);}
+  var camp={};['utm_source','utm_campaign','utm_content','utm_medium','utm_term','ref','p'].forEach(function(k){var v=Q.get(k);if(v)camp[k.replace('utm_','')]=v.slice(0,60);});
+  ['ttclid','gclid','fbclid'].forEach(function(k){if(Q.get(k))camp[k]='1';});
+  push({t:'pv',s:Q.get('utm_source')||(Q.get('fbclid')?'facebook':'')||(Q.get('ttclid')?'tiktok':''),d:'m',cp:camp,ad:!!(Q.get('fbclid')||Q.get('ttclid')||Q.get('utm_campaign')),u:(location.pathname+location.search).slice(0,160),ref:(document.referrer||'').slice(0,100),hr:new Date().getHours(),lang:(navigator.language||'').slice(0,10)});
+  push({t:'k',k:'pagina_liviana'});
+  addEventListener('load',function(){setTimeout(function(){try{var n=performance.getEntriesByType('navigation')[0];push({t:'perf',load:Math.round(n?n.loadEventEnd:performance.now()),first:0});}catch(e){}},300);});
+  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden'){push({t:'end',sec:Math.round((Date.now()-t0)/1000),sc:0,pv:1,bag:[]});send();}});
+  var store=BASE+'?'+keep;document.getElementById('all').href=store;document.getElementById('lg').href=store;
+
+  var app=document.getElementById('app'),P=null,sel='',city='',promo=null;
+  function render(list){
+    var want=slug.split('--')[0];
+    P=list.find(function(p){return slugOf(p)===slug;})||list.find(function(p){return f(p.nombre)===want;});
+    if(!P){location.replace(store);return;}
+    var ph=photos(P),zs=sizes(P),inv=P.inv&&typeof P.inv==='object'?P.inv:null;
+    push({t:'p',id:P.id||'',n:P.nombre,pr:P.precio,c:P.categoria});
+    var price=num(P.precio);
+    app.innerHTML='<div class="ph"><div class="sl" id="sl">'+ph.map(function(u,k){return '<img src="'+esc(img(u,900))+'" alt="'+esc(P.nombre)+'"'+(k?' loading="lazy"':' fetchpriority="high"')+'>';}).join('')+'</div>'+(ph.length>1?'<div class="dots">'+ph.map(function(u,k){return '<i'+(k?'':' class="on"')+'></i>';}).join('')+'</div>':'')+'</div>'+
+      '<div class="in"><div class="cat">'+esc(P.categoria)+'</div><h1>'+esc(P.nombre)+'</h1><div class="pr">'+esc(P.precio)+'</div><div class="anc" id="anc"></div><div id="pm"></div>'+
+      (zs.length?'<div class="lbl"><span>Elige tu talla</span><a href="#" id="hz" style="text-decoration:underline;letter-spacing:.05em;text-transform:none">¿Qué talla soy?</a></div><div class="sz" id="sz">'+zs.map(function(z){var out=inv&&Object.keys(inv).length&&!(Number(inv[z])>0);return '<button type="button" data-z="'+esc(z)+'"'+(out?' disabled':'')+'>'+esc(z)+'</button>';}).join('')+'</div><div class="msg" id="msg"></div>':'')+
+      '<div class="tr" id="tr"></div>'+
+      (P.descripcion&&P.descripcion!==P.tallas&&/[a-záéíóúñ]{4,}/i.test(P.descripcion)?'<div class="desc">'+esc(P.descripcion)+'</div>':'')+
+      '<div class="more"><h3>También te puede gustar</h3><div class="g" id="g"></div></div></div>'+
+      '<div class="bar"><a class="wa" id="wa" href="#" target="_blank" rel="noopener">WhatsApp</a><button class="buy" id="buy" type="button">Lo quiero</button></div>';
+    var sl=document.getElementById('sl');if(sl&&ph.length>1)sl.addEventListener('scroll',function(){var k=Math.round(sl.scrollLeft/sl.clientWidth);document.querySelectorAll('.dots i').forEach(function(d,j){d.className=j===k?'on':'';});},{passive:true});
+    var sz=document.getElementById('sz');
+    if(sz)sz.addEventListener('click',function(e){var b=e.target.closest('[data-z]');if(!b||b.disabled)return;sel=b.dataset.z;sz.querySelectorAll('button').forEach(function(x){x.className=x===b?'on':'';});document.getElementById('msg').textContent='';push({t:'k',k:'talla',l:sel});});
+    var hz=document.getElementById('hz');if(hz)hz.onclick=function(e){e.preventDefault();push({t:'k',k:'que_talla',l:P.nombre.slice(0,40)});open(wa('¿Qué talla me recomiendas para el '+P.nombre+' ('+P.precio+')? Veo tallas: '+zs.join(', ')+'.\nNormalmente uso talla: '));};
+    document.getElementById('wa').href=wa('Me gusta el '+P.nombre+' ('+P.precio+')'+(sel?' en talla '+sel:'')+'. ¿Está disponible?');
+    document.getElementById('wa').onclick=function(){this.href=wa('Me gusta el '+P.nombre+' ('+P.precio+')'+(sel?' en talla '+sel:'')+'. ¿Está disponible?');push({t:'wa',r:REF,k:'página liviana',bag:[P.nombre]});send();};
+    document.getElementById('buy').onclick=function(){
+      if(zs.length&&!sel){var m=document.getElementById('msg');m.textContent='Elige tu talla 👆';sz.classList.remove('shake');void sz.offsetWidth;sz.classList.add('shake');sz.scrollIntoView({behavior:'smooth',block:'center'});return;}
+      push({t:'k',k:'lo_quiero',l:P.nombre.slice(0,40)});send();
+      var u=BASE+'?'+keep.replace(/(^|&)p=[^&]*/,'')+'&p='+encodeURIComponent(slugOf(P))+(sel?'&z='+encodeURIComponent(sel):'')+'&add=1';
+      location.href=u.replace('?&','?');
+    };
+    var others=list.filter(function(p){return p!==P&&photos(p).length&&num(p.precio)>=20000;}).sort(function(a,b){return (a.categoria===P.categoria?0:1)-(b.categoria===P.categoria?0:1)||num(a.precio)-num(b.precio);}).slice(0,6);
+    document.getElementById('g').innerHTML=others.map(function(p){return '<a href="?'+keep.replace(/(^|&)p=[^&]*/,'')+'&p='+encodeURIComponent(slugOf(p))+'"><img src="'+esc(img(photos(p)[0],300))+'" alt="" loading="lazy"><b>'+esc(p.nombre)+'</b><small>'+esc(p.precio)+'</small></a>';}).join('').replace(/href="\?&/g,'href="?');
+    paintTrust();
+  }
+  function wa(t){return 'https://wa.me/'+PHONE+'?text='+encodeURIComponent('Hola Caneva ✨ '+t+'\n\n🔖 Ref: '+REF);}
+  function paintTrust(){
+    if(!P)return;var baq=/barranquilla|soledad|puerto colombia|malambo|galapa/i.test(city);
+    var tr=document.getElementById('tr');if(tr)tr.innerHTML=(baq?'<div class="w">💵<span><b>Paga al recibir en '+esc(city)+'</b>Le pagas al domiciliario</span></div>':'<div class="w">🔒<span><b>Pago protegido con Bold</b>Tarjeta, PSE o Nequi · recibo y guía para rastrear'+(city?' hasta '+esc(city):'')+'</span></div>')+
+      '<div>🔁<span><b>Cambio de talla</b>Si no te queda</span></div><div>🚚<span><b>Envío a todo Colombia</b>'+(baq?'1 día hábil':'Rastreable')+'</span></div>';
+    var anc=document.getElementById('anc'),lay=promo&&promo.layaway,price=num(P.precio);
+    if(anc)anc.innerHTML=baq?'<b>Pagas al recibir</b> · te llega en 1 día hábil':(lay&&lay.enabled&&price>=90000?'o <b>apártala hoy con '+money(Math.ceil(price*(lay.depositPercent||30)/100/1000)*1000)+'</b>':'');
+    var pr=promo&&promo.promo,pm=document.getElementById('pm');
+    if(pm&&pr&&pr.enabled&&(!pr.until||Date.parse(pr.until)>Date.now()))pm.innerHTML='<span class="promo">🔥 '+esc(pr.text||(pr.kind==='envio'?'Lleva '+pr.min+' prendas y el envío es GRATIS':'Promo activa'))+'</span>';
+  }
+  fetch(API+'/catalog').then(function(r){return r.json();}).then(function(d){var l=(d&&d.products||[]).filter(function(p){return !hidden(p);});if(!l.length)throw 0;render(l);}).catch(function(){location.replace(store);});
+  fetch(API+'/hola').then(function(r){return r.json();}).then(function(d){city=(d&&d.city)||'';paintTrust();}).catch(function(){});
+  fetch(API+'/config').then(function(r){return r.json();}).then(function(d){promo=d&&d.config||null;paintTrust();}).catch(function(){});
+  if(!slug)location.replace(store);
+})();
+</script>
+</body>
+</html>
