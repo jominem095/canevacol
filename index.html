@@ -6205,6 +6205,13 @@ body.product-open .cv-wel{display:none!important}
 })();
 </script>
 <style id="cvclose-css">
+/* v67 phone: bigger photo, and size/color/buy come right after the price (description and tags go below the buttons) */
+@media(max-width:640px){
+  #pmodal .pm-content>#pmDesc,#pmodal .pm-content>#pmFabric,#pmodal .pm-content>#pmTags{order:20}
+  #pmodal .pm-content>.pm-look-kit,#pmodal .pm-content>.pm-related-title,#pmodal .pm-content>.pm-related{order:30}
+  #pmodal .pm-media{height:52dvh!important;max-height:52dvh!important}
+  #pmodal .pm-content{height:48dvh!important}
+}
 /* v66 CANEVA Cierre: price anchor, "1 more and shipping is free" in the added sheet, stylist bubble */
 .cv-anchor{margin:.15rem 0 .35rem;font-family:'Inter',sans-serif;font-size:.74rem;color:rgba(250,249,246,.72);letter-spacing:.02em}
 .cv-anchor b{color:#5ef0a0;font-weight:600}
