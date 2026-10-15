@@ -4956,7 +4956,7 @@ body.cv-fast .bw-logo-wrap{transform:scale(.82);transform-origin:center top;marg
   var first=P,t0=Date.now();
   (function wait(){if(window.CV_LIVE||P!==first||Date.now()-t0>2600){boot();return;}setTimeout(wait,150);})();
   setTimeout(function(){var n=favN(),s=null;try{s=sessionStorage.getItem('cv_fav_hi');sessionStorage.setItem('cv_fav_hi','1');}catch(e){}
-    if(n&&!s&&window.toastCart)toastCart('💖 Tus '+n+' favoritas te esperan · toca "Mis favoritas"');},4500);
+    /* v69 calm page: no favorites toast on load */},4500);
   if(/[?&]match=1/.test(location.search))setTimeout(function(){openMatch('enlace');},1200);
 })();
 </script>
@@ -4997,7 +4997,7 @@ body.cv-fast .bw-logo-wrap{transform:scale(.82);transform-origin:center top;marg
   }
   function busy(){return !!document.querySelector('.pmodal.open,.ai-dock.open,#cvGeo,#cvIg,#cvLuxIntro,.cv-wel.show,#cvSwipe')||document.body.classList.contains('cart-open');}
   function toast(){
-    if(shown>=3||!adds.length)return;
+    if(shown>=2||!adds.length)return;
     if(busy()){setTimeout(toast,6000);return;}
     var a=adds.shift();shown++;
     var el=document.createElement('div');el.className='cv-act';el.setAttribute('role','status');
@@ -5010,7 +5010,7 @@ body.cv-fast .bw-logo-wrap{transform:scale(.82);transform-origin:center top;marg
   function load(){
     fetch(API+'/pulse').then(function(r){return r.json();}).then(function(d){
       if(!d||!d.ok)return;liveTag(d);hot=d.hot||[];badge();
-      if(first){first=false;adds=(d.adds||[]).filter(function(a){return a.ago<=180;});setTimeout(toast,9000);}
+      if(first){first=false;adds=(d.adds||[]).filter(function(a){return a.ago<=180;});setTimeout(toast,20000);}
     }).catch(function(){});
   }
   setTimeout(load,1500);setInterval(load,60000);
@@ -6132,6 +6132,7 @@ body.product-open .cv-wel{display:none!important}
   }
   function allowed(){
     if(shown||ss('cv_save_done')||!bag().length||knownPhone())return false;
+    if(ss('cv_keep_seen'))return false; // v69: she already saw the inline "¿Te la guardo?" box: don't ask twice
     var no=parseInt(lg('cv_save_no'),10)||0,last=parseInt(lg('cv_save_at'),10)||0;
     if(no>=2&&Date.now()-last<3*86400000)return false; // she closed it twice: rest for 3 days
     return true;
@@ -6312,6 +6313,7 @@ body.product-open .cv-wel{display:none!important}
   function phoneKnown(){try{var u=window.clubUser&&clubUser();if(u&&u.phone)return true;}catch(e){}try{return !!localStorage.getItem('cv_bag_wa');}catch(e){return false;}}
   function keepBox(parent,before){
     if(phoneKnown()||!(window.CART||[]).length||parent.querySelector('.cv-keep'))return;
+    try{sessionStorage.setItem('cv_keep_seen','1');}catch(x){}
     var k=document.createElement('div');k.className='cv-keep';
     k.innerHTML='<p>📲 <b>¿Te la guardo?</b> Déjanos tu WhatsApp y te avisamos antes de que se agote tu talla.</p><form novalidate><input type="tel" inputmode="numeric" autocomplete="tel" maxlength="14" placeholder="300 123 4567"><button type="submit">Guardar</button></form><small hidden></small>';
     parent.insertBefore(k,before||null);
@@ -6345,7 +6347,9 @@ body.product-open .cv-wel{display:none!important}
       var u='https://wa.me/'+PHONE+'?text='+encodeURIComponent(txt);if(window.canevaWithRef)u=canevaWithRef(u);push({t:'wa',k:'ayuda talla',bag:[]});window.open(u,'_blank');});
     setTimeout(function(){if(h.parentNode)bye();},12000);
   }
-  function armHelp(){clearTimeout(helpT);openedAt=Date.now();helpT=setTimeout(function(){help();},16000);}
+  // v69 calm page: the bubble was seen 124 times and tapped once, so it stays off (set HELP_ON=true to bring it back)
+  var HELP_ON=false;
+  function armHelp(){clearTimeout(helpT);openedAt=Date.now();if(HELP_ON)helpT=setTimeout(function(){help();},16000);}
   var m=document.getElementById('pmodal');
   if(m&&window.MutationObserver)new MutationObserver(function(){if(!m.classList.contains('open')){clearTimeout(helpT);var h=document.getElementById('cvHelp');if(h)h.remove();}}).observe(m,{attributes:true,attributeFilter:['class']});
   document.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('#pmAddCart,#pmWhats,#cvSizeWa,#pmApartar'))clearTimeout(helpT);},true);
