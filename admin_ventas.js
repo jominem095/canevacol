@@ -473,7 +473,7 @@
       }
       if((b=t.closest("[data-void]"))){
         if(!confirm("¿Anular esta venta? Deja de contar en reportes, las prendas vuelven al inventario y se descuentan los puntos del Club."))return;
-        api("/admin/sales/manual/"+b.dataset.void+"/void",{method:"POST",body:{}}).then(function(){toast("Venta anulada");load();loadRecv();}).catch(function(x){toast(x.message,true);});return;
+        api((/^m[a-z0-9]{11}$/.test(b.dataset.void)?"/admin/sales/manual/"+b.dataset.void+"/void":"/admin/orders/"+b.dataset.void+"/void"),{method:"POST",body:{test:true}}).then(function(){toast("Venta anulada");load();loadRecv();}).catch(function(x){toast(x.message,true);});return;
       }
     });
   }

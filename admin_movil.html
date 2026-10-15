@@ -1110,7 +1110,7 @@ function orderCard(o){
   const wtxt=o.bucket==="abandonado"?`Hola ${(dv0.name||(u&&u.name)||"").split(" ")[0]} ✨ te escribimos de CΛNEVΛ. Vimos tu pedido de ${o.items.map(i=>i.nombre).slice(0,2).join(" y ")} y todavía te lo tenemos guardado 💛 ¿Te ayudamos a terminar la compra?`:`Hola ${(dv0.name||(u&&u.name)||"").split(" ")[0]} ✨ te escribimos de CΛNEVΛ por tu pedido (${money(o.total)}). ¿Te enviamos los datos para pagar? 💛`;
   const acts=o.status==="pendiente"
     ?`<div class="oact">${wnum?`<a class="ext" href="https://wa.me/${wnum}?text=${encodeURIComponent(wtxt)}" target="_blank" rel="noopener">💬 Escribirle</a>`:""}<button class="pay" data-pay="${o.id}" data-has-user="${u?1:0}" data-mail="${esc(o.receiptEmail||dv0.email||"")}">Marcar pagado ✓</button><button class="cancel" data-cancel="${o.id}">${o.bucket==="abandonado"?"Archivar":"Cancelar"}</button></div>`
-    :`<div class="oact"><a href="${API_BASE}/o/${o.id}" target="_blank" rel="noopener">Ver pedido</a>${o.status==="pagado"?`<button class="pay" data-resend="${o.id}" data-mail="${esc(o.receiptEmail||(u&&u.email)||"")}">${o.emailSentAt?"Reenviar recibo":"Enviar recibo ✉"}</button>`:""}</div>`;
+    :`<div class="oact"><a href="${API_BASE}/o/${o.id}" target="_blank" rel="noopener">Ver pedido</a>${o.status==="pagado"?`<button class="pay" data-resend="${o.id}" data-mail="${esc(o.receiptEmail||(u&&u.email)||"")}">${o.emailSentAt?"Reenviar recibo":"Enviar recibo ✉"}</button><button class="cancel" data-void="${o.id}" title="Para pedidos de prueba o por error">🧪 Anular</button>`:""}</div>`;
   const paid=o.status==="pagado"?`<div class="ocli">🧾 Recibo <b>${esc(o.ticket)}</b>${o.points?(u?` · +${o.points} pts`:` · ${o.points} pts guardados`):""} · ${o.emailSentAt?"correo enviado ✓":(o.receiptEmail?"correo no enviado":"sin correo")}</div>`:"";
   // Delivery details typed at checkout (name, ID, phone, e-mail, address)
   const dv=o.delivery||null, dph=dv&&dv.phone?String(dv.phone).replace(/[^\d]/g,""):"";
@@ -1281,6 +1281,14 @@ async function archiveAll(){
   for(const o of l){ try{ await adminFetch(`/admin/orders/${o.id}/cancel`,{method:"POST",body:{}}); ok++; }catch(e){} }
   busy(false); toast(`${ok} pedidos archivados`); loadOrders();
 }
+// v63 route: a paid test order (or a mistake) leaves Reportes, the month goal, Ganancia and Ventas;
+// garments go back to stock and Club points are removed. Money is not refunded here.
+async function voidOrder(id){
+  const o=ORD.find(x=>x.id===id);
+  if(!confirm("¿Anular "+((o&&o.ticket)||"este pedido")+"?\n\nÚsalo para pedidos de prueba o por error: deja de contar en Reportes, la meta, Ganancia y Ventas; las prendas vuelven al inventario y se quitan los puntos del Club.\n\nNo devuelve plata (eso se hace en Bold).")) return;
+  try{ await adminFetch(`/admin/orders/${id}/void`,{method:"POST",body:{test:true}}); toast("Pedido anulado ✓"); loadOrders(); }
+  catch(e){ toast("Error: "+e.message,{err:true,ms:8000}); }
+}
 async function cancelOrder(id){
   const o=ORD.find(x=>x.id===id);
   if(!confirm(o&&o.bucket==="abandonado"?"¿Archivar este pedido abandonado? Deja de salir como pendiente.":"¿Cancelar este pedido?")) return;
@@ -1374,7 +1382,7 @@ $("portadaInfo").onclick=openPortada;
 $("tabs").onclick=e=>{ const b=e.target.closest("button[data-tab]"); if(b) showTab(b.dataset.tab); };
 $("ordSeg").onclick=e=>{ const b=e.target.closest("button[data-st]"); if(!b) return; ordStatus=b.dataset.st; paintOrders(); };
 $("ordKpis").onclick=e=>{ if(e.target.closest("[data-archive-all]")) archiveAll(); };
-$("ordersList").onclick=e=>{ const k=e.target.closest("[data-cost]"); if(k){ const o=ORD.find(x=>x.id===k.dataset.cost); if(o&&window.CanevaVentas&&CanevaVentas.editCost) CanevaVentas.editCost(o,()=>loadOrders(),{api:API_BASE,token:token}); return; } const r=e.target.closest("[data-resend]"); if(r) return resendReceipt(r.dataset.resend, r.dataset.mail); const p=e.target.closest("[data-pay]"); if(p) return payOrder(p.dataset.pay, p.dataset.hasUser==="1", p.dataset.mail); const c=e.target.closest("[data-cancel]"); if(c) cancelOrder(c.dataset.cancel); };
+$("ordersList").onclick=e=>{ const k=e.target.closest("[data-cost]"); if(k){ const o=ORD.find(x=>x.id===k.dataset.cost); if(o&&window.CanevaVentas&&CanevaVentas.editCost) CanevaVentas.editCost(o,()=>loadOrders(),{api:API_BASE,token:token}); return; } const r=e.target.closest("[data-resend]"); if(r) return resendReceipt(r.dataset.resend, r.dataset.mail); const p=e.target.closest("[data-pay]"); if(p) return payOrder(p.dataset.pay, p.dataset.hasUser==="1", p.dataset.mail); const vd=e.target.closest("[data-void]"); if(vd) return voidOrder(vd.dataset.void); const c=e.target.closest("[data-cancel]"); if(c) cancelOrder(c.dataset.cancel); };
 $("gfSeg").onclick=e=>{ const b=e.target.closest("button[data-gf]"); if(!b) return; gfStatus=b.dataset.gf; document.querySelectorAll("#gfSeg button").forEach(x=>x.classList.toggle("on",x===b)); loadGifts(); };
 $("gfCheck").onclick=gfCheck;
 $("gfList").onclick=async e=>{ const a=e.target.closest("[data-gfact]"); if(a) return gfActivate(a.dataset.gfact);
