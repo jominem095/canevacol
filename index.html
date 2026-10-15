@@ -6161,7 +6161,7 @@ body.product-open .cv-wel{display:none!important}
     };
   }
   // a) she stopped for a while with garments in the bag
-  function idle(){clearTimeout(idleT);if(!bag().length||shown)return;idleT=setTimeout(function(){if(busy())idle();else show('quieta');},45000);}
+  function idle(){clearTimeout(idleT);if(!bag().length||shown)return;idleT=setTimeout(function(){if(busy())idle();else show('quieta');},25000);}
   ['pointerdown','scroll','keydown','touchstart'].forEach(function(ev){addEventListener(ev,idle,{passive:true});});
   idle();
   // b) she went to another app (WhatsApp, Instagram) and came back
@@ -6223,6 +6223,13 @@ body.product-open .cv-wel{display:none!important}
 .cv-up img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:9px;display:block;background:#141210}
 .cv-up button b{display:block;font-size:.64rem;font-weight:500;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cv-up button small{font-size:.62rem;color:rgba(250,249,246,.6)}
+.cv-keep{display:block!important;margin:10px 0 2px;padding:11px 12px;border:1px dashed rgba(250,249,246,.28);border-radius:12px;font-family:'Inter',sans-serif}
+.cv-keep p{margin:0 0 8px;font-size:.74rem;line-height:1.4;color:rgba(250,249,246,.85)}
+.cv-keep form{display:flex!important;gap:6px;width:100%}.cv-keep input{width:auto!important;height:44px}
+.cv-keep input{flex:1;min-width:0;background:#141210;border:1px solid rgba(250,249,246,.2);border-radius:10px;padding:.65rem .75rem;color:#faf9f6;font-size:16px;outline:none}
+.cv-keep button{background:#f7f7f4;color:#050505;border:0;border-radius:10px;padding:0 .8rem;font:700 .6rem Inter,sans-serif;letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
+.cv-keep small{display:block;margin-top:6px;font-size:.62rem;color:#ff8a80}
+.cv-keep.ok p{color:#5ef0a0;margin:0}
 .cv-help{position:fixed;right:12px;bottom:calc(92px + env(safe-area-inset-bottom));z-index:1650;max-width:min(300px,calc(100% - 24px));background:#f7f7f4;color:#050505;border-radius:16px 16px 4px 16px;padding:12px 30px 12px 14px;font-family:'Inter',sans-serif;font-size:.76rem;line-height:1.4;box-shadow:0 14px 40px rgba(0,0,0,.55);transform:translateY(20px);opacity:0;transition:all .4s cubic-bezier(.16,1,.3,1);cursor:pointer}
 .cv-help.on{transform:none;opacity:1}
 .cv-help b{display:block;font-size:.8rem;margin-bottom:2px}
@@ -6285,11 +6292,33 @@ body.product-open .cv-wel{display:none!important}
     var d=document.createElement('div');d.className='cv-up';
     d.innerHTML='<p>'+msg+'</p><div class="r">'+list.map(function(x){return '<button type="button" data-cvup="'+esc(x.nombre)+'"><img src="'+esc(window.cvImg?cvImg(x.imagen,240):x.imagen)+'" alt="" loading="eager"><b>'+esc(x.nombre)+'</b><small>'+esc(x.precio)+'</small></button>';}).join('')+'</div>';
     var stay=box.querySelector('.cv-stay');box.insertBefore(d,stay||null);
+    keepBox(box,stay);
     push({t:'k',k:'combina_visto'});
     d.addEventListener('click',function(e){var b=e.target.closest('[data-cvup]');if(!b)return;var i=P.findIndex(function(x){return x.nombre===b.dataset.cvup;});if(i<0)return;
       var s=document.getElementById('cvSheet');if(s)s.remove();push({t:'k',k:'combina_prenda',l:b.dataset.cvup.slice(0,40)});openProductModal(i);});
   }
-  if(window.MutationObserver)new MutationObserver(function(ms){ms.forEach(function(m){m.addedNodes.forEach(function(n){if(n.id==='cvSheet')try{upsell(n);}catch(e){}});});}).observe(document.body,{childList:true});
+  if(window.MutationObserver)new MutationObserver(function(ms){ms.forEach(function(m){m.addedNodes.forEach(function(n){if(n.id==='cvSheet'){try{upsell(n);}catch(e){}try{var bx=n.querySelector('.cv-shb');if(bx&&bx.querySelector('.cv-added'))keepBox(bx,bx.querySelector('.cv-stay'));}catch(e){}}});});}).observe(document.body,{childList:true});
+
+  // ---------- 2b) "¿Te la guardo?": her WhatsApp at the moment of highest interest (most people close the
+  //       Instagram/TikTok browser without warning, so waiting for her to leave is too late) ----------
+  function phoneKnown(){try{var u=window.clubUser&&clubUser();if(u&&u.phone)return true;}catch(e){}try{return !!localStorage.getItem('cv_bag_wa');}catch(e){return false;}}
+  function keepBox(parent,before){
+    if(phoneKnown()||!(window.CART||[]).length||parent.querySelector('.cv-keep'))return;
+    var k=document.createElement('div');k.className='cv-keep';
+    k.innerHTML='<p>📲 <b>¿Te la guardo?</b> Déjanos tu WhatsApp y te avisamos antes de que se agote tu talla.</p><form novalidate><input type="tel" inputmode="numeric" autocomplete="tel" maxlength="14" placeholder="300 123 4567"><button type="submit">Guardar</button></form><small hidden></small>';
+    parent.insertBefore(k,before||null);
+    k.querySelector('form').onsubmit=function(e){
+      e.preventDefault();var v=k.querySelector('input').value.replace(/\D/g,'').replace(/^57(?=\d{10}$)/,''),er=k.querySelector('small');
+      if(!/^3\d{9}$/.test(v)){er.hidden=false;er.textContent='Celular de 10 dígitos (empieza por 3)';return;}
+      try{localStorage.setItem('cv_bag_wa',v);}catch(x){}
+      var nm='';try{var b=JSON.parse(localStorage.getItem('caneva_buyer_v1')||'{}');nm=String(b.name||'').split(' ')[0];}catch(x){}
+      push({t:'bagwa',p:'57'+v,n:nm.slice(0,40)});push({t:'k',k:'bolsa_guardada',l:'en la hoja'});
+      k.className='cv-keep ok';k.innerHTML='<p>✓ Listo, tu bolsa queda guardada. Te escribimos si se agota tu talla.</p>';
+      document.querySelectorAll('.cv-keep:not(.ok)').forEach(function(x){x.remove();});
+    };
+  }
+  // also at the top of the bag
+  if(typeof renderCart==='function'){var oRc=renderCart;window.renderCart=renderCart=function(){var r=oRc.apply(this,arguments);try{var it=document.getElementById('cartItems');if(it){var old=it.querySelector('.cv-keep:not(.ok)');if(old)old.remove();keepBox(it,it.firstChild);}}catch(e){}return r;};}
 
   // ---------- 3) stylist bubble ----------
   var helpT=null,openedAt=0;
