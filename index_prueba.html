@@ -16,6 +16,14 @@
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@200;300;400;500;600&family=Montserrat:wght@200;300;400&display=swap">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@200;300;400;500;600&family=Montserrat:wght@200;300;400&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@200;300;400;500;600&family=Montserrat:wght@200;300;400&display=swap" rel="stylesheet"></noscript>
+<script id="cvgo-ver">
+// v68: someone who taps an ad (TikTok, Instagram, Facebook) for one garment goes to the light page ver.html,
+// which shows it in under a second. Coming back from ver.html (from=ver) or ?full=1 keeps the full store.
+(function(){try{var q=location.search;
+if(!/[?&]p=[^&#]/.test(q)||/[?&](from=ver|full=1|add=1|z=)/.test(q))return;
+var ad=/[?&](ttclid|fbclid|utm_source|utm_campaign)=/.test(q),app=/TikTok|musical_ly|BytedanceWebview|Instagram|FBAN|FBAV|FB_IAB/i.test(navigator.userAgent);
+if(ad&&app)location.replace('/ver.html'+q+location.hash);}catch(e){}})();
+</script>
 <script id="cviab-head">
 /* Instagram / Facebook / TikTok in-app browsers (Android WebView) flicker with blur behind moving photos
    and with the Pasarela wipe effect. There the store switches to a lighter, steady render. ?iab=1 forces it, ?iab=0 turns it off. */

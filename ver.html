@@ -62,7 +62,7 @@ h1{font-family:"Cormorant Garamond",Georgia,serif;font-weight:400;font-size:30px
 // and "Lo quiero" opens the full store with the garment and size already in the bag.
 (function(){
   var API='https://caneva-ai.canevacol.workers.dev',PHONE='573057637089';
-  var Q=new URLSearchParams(location.search),slug=String(Q.get('p')||'').toLowerCase(),keep=location.search.replace(/^\?/,'');
+  var Q=new URLSearchParams(location.search),slug=String(Q.get('p')||'').toLowerCase(),keep=location.search.replace(/^\?/,'').replace(/(^|&)from=ver/g,'').replace(/^&/,'')+'&from=ver';
   // ?prueba=1 → hands off to the test store (index_prueba.html) instead of the live one
   var BASE=Q.get('prueba')?'/index_prueba.html':'/';
   function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
