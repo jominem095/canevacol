@@ -194,7 +194,7 @@
       '<span class="tag">'+esc(v.channelLabel||"")+'</span><span class="tag">'+esc(v.payLabel||"")+'</span>'+
       (v.plan&&v.plan!=="contado"?'<span class="tag">'+esc(PLAN_NAME[v.plan]||v.plan)+'</span>':'')+(live&&v.balance>0?'<span class="tag owe">Debe '+money(v.balance)+(v.dueAt?' · vence '+esc(shortDate(v.dueAt)):'')+'</span>':'')+(live&&v.payments&&v.payments.length>1&&!v.balance?'<span class="tag ok">Pagada con abonos</span>':'')+
       (v.doc?'<span class="tag">'+esc(v.docLabel||"Doc")+' '+esc(v.doc)+'</span>':'')+(v.points?'<span class="tag">+'+v.points+' pts Club</span>':'')+(v.note?'<span class="tag">'+esc(v.note)+'</span>':'')+(live?'':'<span class="tag">Anulada</span>')+(live&&v.cost?'<div class="pr">'+(v.excluded?'<span class="dim">🚫 No cuenta en la ganancia · </span>':'')+'🔒 Costo '+money(v.cost.cost)+' · <span class="g'+(v.cost.profit<0?" neg":"")+'">ganancia '+money(v.cost.profit)+'</span>'+(v.cost.missing?' · <span style="color:#ffb4a8">⚠ falta costo</span>':'')+'</div>':'')+'</div>'+
-      '<div class="r"><b>'+money(v.total)+'</b>'+(live?'<button type="button" class="vt-mail" data-edit="'+esc(v.id)+'">✏️ Editar</button> '+'<button type="button" class="vt-mail" data-cost="'+esc(v.id)+'">🔒 Costo</button> '+shareBtns(v.id)+' <button type="button" class="vt-mail" data-mail="'+esc(v.id)+'" data-to="'+esc(v.email||"")+'">📧 Correo</button><br><button type="button" class="vt-void" data-void="'+esc(v.id)+'">Anular</button>':'')+'</div></div>';
+      '<div class="r"><b>'+money(v.total)+'</b>'+(live?'<button type="button" class="vt-mail" data-edit="'+esc(v.id)+'">✏️ Editar</button> '+'<button type="button" class="vt-mail" data-cost="'+esc(v.id)+'">🔒 Costo</button> '+shareBtns(v.id)+' <button type="button" class="vt-mail" data-mail="'+esc(v.id)+'" data-to="'+esc(v.email||"")+'">📧 Correo</button><br><button type="button" class="vt-void" data-void="'+esc(v.id)+'">Anular</button>':(v.status==="anulado"?'<button type="button" class="vt-mail" data-restore="'+esc(v.id)+'" title="Vuelve a dejarla pagada, descuenta el inventario y devuelve los puntos">↩ Restaurar</button>':''))+'</div></div>';
   }
 
   // ---------------- cuentas por cobrar ----------------
@@ -470,6 +470,12 @@
         if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to))return toast("Ese correo no es válido",true);
         b.disabled=true;b.textContent="Enviando…";
         api("/admin/orders/"+b.dataset.mail+"/resend",{method:"POST",body:{email:to}}).then(function(d){toast("📧 Recibo "+d.ticket+" enviado a "+to);b.disabled=false;b.textContent="📧 Recibo";}).catch(function(x){b.disabled=false;b.textContent="📧 Recibo";toast(x.message,true);});return;
+      }
+      // v68: undo a void made by mistake (the sale is paid again and can be edited)
+      if((b=t.closest("[data-restore]"))){
+        if(!confirm("¿Restaurar esta venta? Vuelve a contar como pagada, las prendas se descuentan otra vez del inventario y la clienta recupera sus puntos."))return;
+        b.disabled=true;
+        api("/admin/orders/"+b.dataset.restore+"/restore",{method:"POST",body:{}}).then(function(d){toast("↩ Venta "+(d.ticket||"")+" restaurada");load();loadRecv();}).catch(function(x){b.disabled=false;toast(/Ruta no encontrada|404/.test(x.message)?"Falta pegar la Worker v68 en Cloudflare":x.message,true);});return;
       }
       if((b=t.closest("[data-void]"))){
         if(!confirm("¿Anular esta venta? Deja de contar en reportes, las prendas vuelven al inventario y se descuentan los puntos del Club."))return;
