@@ -21,7 +21,7 @@
 // which shows it in under a second. Coming back from ver.html (from=ver) or ?full=1 keeps the full store.
 (function(){try{var q=location.search;
 if(!/[?&]p=[^&#]/.test(q)||/[?&](from=ver|full=1|add=1|z=)/.test(q))return;
-var ad=/[?&](ttclid|fbclid|utm_source|utm_campaign)=/.test(q),app=/TikTok|musical_ly|BytedanceWebview|Instagram|FBAN|FBAV|FB_IAB/i.test(navigator.userAgent);
+var ad=/[?&](ttclid|fbclid|utm_source|utm_campaign)=/.test(q),app=/TikTok|musical_ly|BytedanceWebview/i.test(navigator.userAgent); // v67: TikTok only. Meta reviews the catalog link as is, so Instagram/Facebook visitors stay on the store page they were sent to
 if(ad&&app)location.replace('/ver.html'+q+location.hash);}catch(e){}})();
 </script>
 <script id="cviab-head">
