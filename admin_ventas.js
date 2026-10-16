@@ -99,6 +99,7 @@
           '<div><label>Cómo pagó</label><select id="vtPay">'+opts(PAY,"efectivo")+'</select></div>'+
           '<div><label>Fecha</label><input id="vtDate" type="date" value="'+today()+'" max="'+today()+'"></div>'+
           '<div><label>Descuento ($)</label><input id="vtDisc" inputmode="numeric" placeholder="0"></div>'+
+          '<div><label>Domicilio ($)</label><input id="vtShip" inputmode="numeric" placeholder="0" title="Sale en el recibo y se le cobra a la clienta, pero no suma a ventas ni a ganancia"></div>'+
         '</div>'+
         '<div class="vt-pay" style="margin-top:12px">'+Object.keys(PLANS).map(function(k){return '<button type="button" data-plan="'+k+'" class="'+(S.plan===k?"on":"")+'">'+PLANS[k].label+'</button>';}).join("")+'</div>'+
         '<div id="vtAbonoBox" '+(S.plan==="contado"?'hidden':'')+' style="margin-top:10px"><div class="vt-grid"><div><label>'+(S.editing?'Total abonado hasta hoy':'¿Cuánto abonó hoy?')+'</label><input id="vtAbono" inputmode="numeric" placeholder="$0"></div></div><div class="vt-owe" id="vtOwe"></div></div>'+
@@ -162,11 +163,13 @@
     if(inp&&!S.abTouched&&PLANS[S.plan]&&PLANS[S.plan].pct>0&&PLANS[S.plan].pct<1&&!S.editing){var sug=Math.round(t*PLANS[S.plan].pct/1000)*1000;if(num(inp.value)!==sug)inp.value=sug?money(sug):"";}
     var ab=S.plan==="contado"?t:Math.min(t,num((inp||{}).value));
     var cost=0,miss=0;S.lines.forEach(function(l){var u=l.costo||0;if(!u)miss++;cost+=u*(l.qty||1);});
-    return {sub:sub,disc:disc,total:t,paid:ab,owe:t-ab,cost:cost,profit:t-cost,miss:miss};
+    // v69: home delivery fee: charged on the receipt, but kept out of the sale total and the profit
+    var ship=num((S.el.querySelector("#vtShip")||{}).value);
+    return {sub:sub,disc:disc,total:t,paid:ab,owe:t-ab,cost:cost,profit:t-cost,miss:miss,ship:ship};
   }
   function total(){
     var T=totals(),el=S.el.querySelector("#vtTotal"),ow=S.el.querySelector("#vtOwe");
-    if(el)el.textContent=money(T.total)+(T.disc?"  (desc. "+money(T.disc)+")":"");
+    if(el)el.textContent=money(T.total)+(T.disc?"  (desc. "+money(T.disc)+")":"")+(T.ship?"  + domicilio "+money(T.ship)+" = cobrar "+money(T.total+T.ship):"");
     if(ow)ow.textContent=S.plan==="contado"?"":(T.total?"Abona "+money(T.paid)+" · queda debiendo "+money(T.owe)+(T.owe>0?" · fecha límite "+shortDate(addBizDays((S.el.querySelector("#vtDate")||{}).value,10))+" (10 días hábiles)":""):"");
     S.lines.forEach(function(l,i){var e=S.el.querySelector('[data-lt="'+i+'"]');if(e)e.textContent=(l.qty||1)>1?"= "+money(l.precio*(l.qty||1)):"";
       var g=S.el.querySelector('[data-lg="'+i+'"]');if(g){if(l.costo){var gp=(l.precio-l.costo)*(l.qty||1);g.textContent="ganas "+money(gp)+((l.qty||1)>1?" en total":"")+(T.disc?" (antes del descuento)":"");g.className="g"+(gp<0?" neg":"");}else g.textContent="";}});
@@ -300,7 +303,8 @@
     (v.items||[]).forEach(function(x){var q=x.qty||1,u=num(x.precio);sub+=u*q;L.push("• "+x.nombre+(x.size?" ("+x.size+")":"")+" — "+(q>1?q+" × "+money(u)+" = "+money(u*q):money(u)));});
     L.push("");
     if(v.discount){L.push("Subtotal: "+money(sub));L.push("Descuento: -"+money(v.discount));}
-    L.push("*Total: "+money(v.total)+"*");
+    if(v.shipping)L.push("Domicilio: +"+money(v.shipping));
+    L.push("*Total: "+money((v.total||0)+(v.shipping||0))+"*");
     var pays=(v.payments||[]);
     if(pays.length>1||v.balance>0){pays.forEach(function(p){L.push("Abono "+when(p.at,false)+": "+money(p.amount)+(p.pay?" ("+(PAY[p.pay]||p.pay)+")":""));});}
     else if(v.payLabel)L.push("Pago: "+v.payLabel);
@@ -326,7 +330,8 @@
     x.strokeStyle="rgba(247,247,244,.2)";x.lineWidth=2;x.beginPath();x.moveTo(90,y-30);x.lineTo(W-90,y-30);x.stroke();y+=30;
     function row(a,b,big,col){x.fillStyle=col||"#f7f7f4";x.font=(big?"bold 46px":"32px")+" Arial,sans-serif";x.textAlign="left";x.fillText(a,90,y);x.textAlign="right";x.fillText(b,W-90,y);y+=big?70:52;}
     if(v.discount){row("Subtotal",money(sub),false,"rgba(247,247,244,.75)");row("Descuento","-"+money(v.discount),false,"rgba(247,247,244,.75)");}
-    row("Total",money(v.total),true);
+    if(v.shipping)row("Domicilio","+"+money(v.shipping),false,"rgba(247,247,244,.75)");
+    row("Total",money((v.total||0)+(v.shipping||0)),true);
     var pays=v.payments||[];
     if(pays.length>1||v.balance>0)pays.forEach(function(p){row("Abono "+when(p.at,false),money(p.amount),false,"rgba(247,247,244,.75)");});
     if(v.balance>0){row("Saldo pendiente",money(v.balance),true,"#ffb4a8");if(v.dueAt)row(PLAN_NAME[v.plan]||"Fecha límite","Hasta "+shortDate(v.dueAt),false,"rgba(247,247,244,.75)");}else row("Estado","Pagado ✓",false,"#9de08f");
@@ -353,7 +358,7 @@
     S.payFull=!(v.balance>0);S.plan=v.balance>0?(PLANS[v.plan]&&v.plan!=="contado"?v.plan:"abono"):"contado";S.abTouched=true;
     render();
     var g=function(sel,val){var e=S.el.querySelector(sel);if(e&&val!=null)e.value=val;};
-    g("#vtCh",v.channel);g("#vtPay",v.pay);g("#vtDate",String(new Date(Date.parse(v.paidAt)-5*3600000).toISOString()).slice(0,10));g("#vtDisc",v.discount?money(v.discount):"");
+    g("#vtCh",v.channel);g("#vtPay",v.pay);g("#vtDate",String(new Date(Date.parse(v.paidAt)-5*3600000).toISOString()).slice(0,10));g("#vtDisc",v.discount?money(v.discount):"");g("#vtShip",v.shipping?money(v.shipping):"");
     g("#vtName",v.name);g("#vtPhone",v.phone);g("#vtDocT",v.docType);g("#vtDoc",v.doc);g("#vtAddr",v.address);g("#vtMail",v.email);g("#vtNote",v.note);
     if(!S.payFull)g("#vtAbono",money(v.paid));
     total();var f=S.el.querySelector("#vtForm");if(f)f.scrollIntoView({behavior:"smooth",block:"start"});
@@ -394,7 +399,7 @@
     if(!S.payFull&&T.owe>0&&!g("#vtName").trim()&&!g("#vtPhone").trim())return toast("Para dejar saldo pendiente escribe el nombre o el celular de la clienta",true);
     var body={items:lines.map(function(l){return {pid:l.pid,nombre:l.nombre,categoria:l.categoria,precio:l.precio,qty:l.qty,size:l.size==="Única"?"":l.size,imagen:l.img};}),
       costs:lines.map(function(l){return l.costo>0?l.costo:null;}),
-      channel:g("#vtCh"),pay:g("#vtPay"),date:g("#vtDate"),discount:T.disc,paidNow:S.payFull?null:T.paid,plan:S.plan,
+      channel:g("#vtCh"),pay:g("#vtPay"),date:g("#vtDate"),discount:T.disc,shipping:T.ship,paidNow:S.payFull?null:T.paid,plan:S.plan,
       name:g("#vtName"),phone:g("#vtPhone"),docType:g("#vtDocT"),doc:g("#vtDoc"),address:g("#vtAddr"),email:g("#vtMail").trim(),note:g("#vtNote"),noStock:!S.el.querySelector("#vtStock").checked};
     S.busy=true;var b=S.el.querySelector("#vtSave");b.disabled=true;b.textContent="Guardando…";
     if(S.editing){
@@ -409,7 +414,7 @@
     api("/admin/sales/manual",{method:"POST",body:body}).then(function(d){
       S.busy=false;S.lines=[];S.payFull=true;S.plan="contado";S.abTouched=false;
       S.last={id:d.id,ticket:d.ticket,total:d.total,paidAt:new Date().toISOString(),items:body.items.map(function(x){return {nombre:x.nombre,size:x.size,qty:x.qty,precio:money(x.precio)};}),
-        discount:body.discount,balance:d.balance||0,payments:(d.paid?[{at:new Date().toISOString(),amount:d.paid,pay:body.pay}]:[]),payLabel:PAY[body.pay]||"",channelLabel:CH[body.channel]||"",name:body.name,phone:body.phone,plan:d.plan||body.plan,dueAt:d.dueAt||""};
+        discount:body.discount,shipping:body.shipping||0,balance:d.balance||0,payments:(d.paid?[{at:new Date().toISOString(),amount:d.paid,pay:body.pay}]:[]),payLabel:PAY[body.pay]||"",channelLabel:CH[body.channel]||"",name:body.name,phone:body.phone,plan:d.plan||body.plan,dueAt:d.dueAt||""};
       var w=(d.inventory&&d.inventory.warnings)||[],em=d.email||{},mailBad=body.email&&!em.sent&&!em.skipped;
       toast("✓ Venta "+d.ticket+" guardada · "+money(d.total)+(d.balance>0?" · debe "+money(d.balance):"")+(em.sent?" · 📧 recibo enviado":"")+(mailBad?" · ⚠ recibo sin enviar":""),mailBad);
       if(mailBad)setTimeout(function(){alert("La venta quedó guardada, pero el recibo no se pudo enviar: "+(em.error||"revisa el correo")+"\nPuedes reenviarlo desde la lista con 📧 Recibo.");},500);
@@ -428,7 +433,7 @@
       var t=e.target;
       if(t.id==="vtQ")return paintProds();
       if(t.id==="vtAbono")S.abTouched=true;
-      if(t.id==="vtDisc"||t.id==="vtAbono"||t.id==="vtDate")return total();
+      if(t.id==="vtDisc"||t.id==="vtShip"||t.id==="vtAbono"||t.id==="vtDate")return total();
       var row=t.closest(".vt-line");if(!row)return;
       var l=S.lines[+row.dataset.i],f=t.dataset.f;if(!l||!f)return;
       if(f==="qty")l.qty=Math.max(1,Math.min(99,parseInt(t.value,10)||1));else if(f==="precio")l.precio=num(t.value);else if(f==="costo")l.costo=num(t.value)||null;else l[f]=t.value;
