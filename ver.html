@@ -100,7 +100,7 @@ h1{font-family:"Cormorant Garamond",Georgia,serif;font-weight:400;font-size:30px
   function render(list){
     var want=slug.split('--')[0];
     P=list.find(function(p){return slugOf(p)===slug;})||list.find(function(p){return f(p.nombre)===want;});
-    if(!P){location.replace(store);return;}
+    if(!P){gone(list);return;}
     var ph=photos(P),zs=sizes(P),inv=P.inv&&typeof P.inv==='object'?P.inv:null;
     push({t:'p',id:P.id||'',n:P.nombre,pr:P.precio,c:P.categoria});
     var price=num(P.precio);
@@ -127,6 +127,11 @@ h1{font-family:"Cormorant Garamond",Georgia,serif;font-weight:400;font-size:30px
     document.getElementById('g').innerHTML=others.map(function(p){return '<a href="?'+keep.replace(/(^|&)p=[^&]*/,'')+'&p='+encodeURIComponent(slugOf(p))+'"><img src="'+esc(img(photos(p)[0],300))+'" alt="" loading="lazy"><b>'+esc(p.nombre)+'</b><small>'+esc(p.precio)+'</small></a>';}).join('').replace(/href="\?&/g,'href="?');
     paintTrust();
   }
+  // v67: no automatic redirects. If the garment is not found, say so and show the store and other garments.
+  function gone(list){
+    app.innerHTML='<div class="nf"><h1>Esta prenda ya no está disponible</h1><p>Mira otras prendas de CANEVA</p><p style="margin-top:18px"><a href="'+esc(store)+'" style="display:inline-block;background:#f7f7f4;color:#050403;border-radius:999px;padding:14px 22px;text-decoration:none;font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-size:12px">Ver la tienda</a></p>'+
+      (list&&list.length?'<div class="g" style="margin-top:28px;text-align:left">'+list.filter(function(p){return photos(p).length;}).slice(0,6).map(function(p){return '<a href="?'+keep.replace(/(^|&)p=[^&]*/,'')+'&p='+encodeURIComponent(slugOf(p))+'"><img src="'+esc(img(photos(p)[0],300))+'" alt="" loading="lazy"><b>'+esc(p.nombre)+'</b><small>'+esc(p.precio)+'</small></a>';}).join('').replace(/href="\?&/g,'href="?')+'</div>':'')+'</div>';
+  }
   function wa(t){return 'https://wa.me/'+PHONE+'?text='+encodeURIComponent('Hola Caneva ✨ '+t+'\n\n🔖 Ref: '+REF);}
   function paintTrust(){
     if(!P)return;var baq=/barranquilla|soledad|puerto colombia|malambo|galapa/i.test(city);
@@ -137,10 +142,10 @@ h1{font-family:"Cormorant Garamond",Georgia,serif;font-weight:400;font-size:30px
     var pr=promo&&promo.promo,pm=document.getElementById('pm');
     if(pm&&pr&&pr.enabled&&(!pr.until||Date.parse(pr.until)>Date.now()))pm.innerHTML='<span class="promo">🔥 '+esc(pr.text||(pr.kind==='envio'?'Lleva '+pr.min+' prendas y el envío es GRATIS':'Promo activa'))+'</span>';
   }
-  fetch(API+'/catalog').then(function(r){return r.json();}).then(function(d){var l=(d&&d.products||[]).filter(function(p){return !hidden(p);});if(!l.length)throw 0;render(l);}).catch(function(){location.replace(store);});
+  fetch(API+'/catalog').then(function(r){return r.json();}).then(function(d){var l=(d&&d.products||[]).filter(function(p){return !hidden(p);});if(!l.length)throw 0;render(l);}).catch(function(){gone(null);});
   fetch(API+'/hola').then(function(r){return r.json();}).then(function(d){city=(d&&d.city)||'';paintTrust();}).catch(function(){});
   fetch(API+'/config').then(function(r){return r.json();}).then(function(d){promo=d&&d.config||null;paintTrust();}).catch(function(){});
-  if(!slug)location.replace(store);
+  if(!slug)gone(null);
 })();
 </script>
 </body>
