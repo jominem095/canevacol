@@ -10,7 +10,7 @@
 (function(){
   "use strict";
   var OPT={api:"https://caneva-ai.canevacol.workers.dev",token:function(){try{return localStorage.getItem("caneva_admin_token_v1")||"";}catch(e){return "";}}};
-  var S={el:null,cat:[],cats:[],catSel:"",data:null,recv:null,days:1,view:"vender",lines:[],busy:false,payFull:true,plan:"contado",abTouched:false,inv:{},prof:null,pdays:30,psrc:"",showEx:false};
+  var S={el:null,cat:[],cats:[],catSel:"",data:null,recv:null,days:30,view:"vender",lines:[],busy:false,payFull:true,plan:"contado",abTouched:false,inv:{},prof:null,pdays:30,psrc:"",showEx:false};
   var SRC={pasarela:"💳 Pasarela Bold",otro_medio:"🌐 Web · otro medio",manual:"💵 Venta manual"};
   function pct(a,b){return b?Math.round(a/b*100):0;}
   var CH={tienda:"Tienda física",whatsapp:"WhatsApp",instagram:"Instagram",feria:"Feria / evento",otro:"Otro"};
