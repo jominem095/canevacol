@@ -2052,7 +2052,7 @@ if(p&&p.imagen){var l=document.createElement('link');l.rel='preload';l.as='image
       <div class="nos-items reveal reveal-d3">
         <div class="nos-item">Entrega en 1 d&iacute;a h&aacute;bil en Barranquilla</div>
         <div class="nos-item">Env&iacute;os a todo Colombia</div>
-        <div class="nos-item">Contraentrega en Barranquilla · pago protegido con Bold en todo Colombia</div>
+        <div class="nos-item">Paga con Bre-B sin comisión, con Bold o contraentrega en Barranquilla</div>
         <div class="nos-item">Atenci&oacute;n personalizada por WhatsApp</div>
       </div>
     </div>
@@ -2272,7 +2272,7 @@ async function loadSiteConfig(){
   try{
     var res=await fetch(API_BASE+'/config',{cache:'no-store'});
     var data=res.ok?await res.json():null;
-    if(data&&data.ok){SITE_CONFIG=data.config;renderLookbook();if(window.applySiteConfig)window.applySiteConfig(SITE_CONFIG);}
+    if(data&&data.ok){SITE_CONFIG=data.config;renderLookbook();try{cvAbout(SITE_CONFIG);}catch(e){}if(window.applySiteConfig)window.applySiteConfig(SITE_CONFIG);}
   }catch(e){}
   lbReveal();
 }
@@ -2717,11 +2717,32 @@ window.addEventListener('scroll',function(){document.getElementById('nav').class
   }).observe(el);
 })();
 
-// NOSOTROS IMG
-(function(){
-  var p=P.find(function(x){return x.categoria==='Camisas / crop tops'&&x.imagen&&x.imagen.indexOf('http')===0;})||P.find(function(x){return x.imagen&&x.imagen.indexOf('http')===0;});
-  if(p){var img=document.createElement('img');img.loading='lazy';img.src=cvImg(p.imagen,800);img.alt='Caneva';var el=document.getElementById('nos-r');el.insertBefore(img,el.firstChild);}
-})();
+// NOSOTROS (v71): text and photo from the admin (config.about); without them, CΛNEVΛ's story and a living diamond
+var ABOUT_DEF={eyebrow:'Nuestra historia',title:'Hecho para <em>brillar</em>',text:'CΛNEVΛ nació en Barranquilla del sueño de <b>Mayra Caneva</b>, una mujer emprendedora y visionaria que convirtió su amor por la moda en una marca con empuje propio.\n\nComo los diamantes, CΛNEVΛ se formó con presión, paciencia y visión: cada prenda se escoge pensando en una mujer real que trabaja, sueña y brilla.\n\nUn diamante no nace brillando: <b>se pule</b>. Así queremos que te sientas con cada prenda: segura, auténtica y lista para brillar donde estés.'};
+function cvAbout(cfg){
+  var a=(cfg&&cfg.about&&cfg.about.enabled&&cfg.about.text)?cfg.about:null,l=document.querySelector('#nosotros .nos-l'),r=document.getElementById('nos-r');if(!l||!r)return;
+  var eb=l.querySelector('.eyebrow'),h=l.querySelector('h2'),body=l.querySelector('.nos-body');
+  if(eb)eb.textContent=a&&a.eyebrow?a.eyebrow:ABOUT_DEF.eyebrow;
+  if(h)h.innerHTML=a&&a.title?escHtml(a.title):ABOUT_DEF.title;
+  if(body)body.innerHTML=(a?escHtml(a.text):ABOUT_DEF.text).split(/\n\s*\n/).map(function(t){return t.replace(/\n/g,'<br>');}).join('<br><br>');
+  if(!document.getElementById('nosQuote')&&body){var q=document.createElement('blockquote');q.id='nosQuote';q.className='nos-quote';q.innerHTML='“Un diamante es carbón que nunca se rindió.”<span>Así nació CΛNEVΛ 💎</span>';body.parentNode.insertBefore(q,body.nextSibling);}
+  if(!document.getElementById('nosClub')){var c=document.createElement('div');c.id='nosClub';c.className='nos-club';
+    var pts=(window.clubInfo&&clubInfo().welcome)||100;
+    c.innerHTML='<div class="nc-ico">👑</div><div class="nc-t"><b>Club Caneva</b><span>Únete gratis y recibe <em>'+pts+' puntos</em> de bienvenida. Sumas en cada compra y los cambias por descuentos y sorpresas.</span></div><button type="button">Quiero ser parte</button>';
+    (l.querySelector('.nos-items')||l).insertAdjacentElement('afterend',c);
+    c.querySelector('button').addEventListener('click',function(){try{if(window.cvStatsPush)cvStatsPush({t:'k',k:'club'});}catch(e){}if(window.openClub)openClub();});}
+  r.querySelectorAll('img,.nos-gem').forEach(function(x){x.remove();});
+  if(a&&a.image&&/^https?:/.test(a.image)){var img=document.createElement('img');img.loading='lazy';img.src=window.cvImg?cvImg(a.image,900):a.image;img.alt='CΛNEVΛ';r.insertBefore(img,r.firstChild);r.classList.remove('nos-dia');}
+  else{r.classList.add('nos-dia');var g=document.createElement('div');g.className='nos-gem';g.innerHTML=
+    '<svg viewBox="0 0 200 180" aria-hidden="true"><defs><linearGradient id="ngA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".45" stop-color="#d9ecff"/><stop offset="1" stop-color="#8fb6d6"/></linearGradient><linearGradient id="ngB" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4f9ff"/><stop offset="1" stop-color="#6f94b3"/></linearGradient>'+
+    '<clipPath id="ngC"><path d="M40 40H160L190 75L100 170L10 75Z"/></clipPath></defs>'+
+    '<path d="M40 40H160L190 75L100 170L10 75Z" fill="url(#ngA)"/><path d="M10 75L40 40L70 75Z M70 75L100 40L130 75Z M130 75L160 40L190 75Z" fill="#ffffff" opacity=".55"/><path d="M10 75H190L100 170Z" fill="url(#ngB)" opacity=".55"/><path d="M70 75L100 170L130 75Z" fill="#ffffff" opacity=".35"/>'+
+    '<path d="M40 40H160L190 75L100 170L10 75Z M10 75H190 M40 40L70 75L100 40L130 75L160 40 M70 75L100 170 M130 75L100 170 M10 75L100 170 M190 75L100 170" fill="none" stroke="#ffffff" stroke-opacity=".75" stroke-width="1.2" stroke-linejoin="round"/>'+
+    '<g clip-path="url(#ngC)"><rect class="ng-shine" x="-80" y="0" width="40" height="180" fill="#ffffff" opacity=".85" transform="skewX(-20)"/></g></svg>'+
+    '<div class="ng-spark s1">✦</div><div class="ng-spark s2">✧</div><div class="ng-spark s3">✦</div><div class="ng-word">CΛNEVΛ</div><div class="ng-tag">Hecho para brillar</div>';
+    r.insertBefore(g,r.firstChild);}
+}
+cvAbout(null);
 
 // CATALOG
 var acat='Todos',sq='';
@@ -5771,6 +5792,26 @@ body.cv-has-pbar .ann-bar{display:none!important}
 })();
 </script>
 <style id="cvbreb-css">
+/* v71 Nosotros: living diamond, quote and Club card */
+.nos-r.nos-dia{background:radial-gradient(circle at 50% 40%,rgba(159,211,255,.16),transparent 55%),radial-gradient(circle at 70% 75%,rgba(201,167,255,.12),transparent 50%),#050506;display:flex;align-items:center;justify-content:center}
+.nos-r.nos-dia .nos-ov{display:none}
+@media(max-width:900px){.nos-r.nos-dia{height:380px!important;padding:20px 0}}
+.nos-gem{position:relative;width:min(340px,70%);text-align:center;animation:ngFloat 6s ease-in-out infinite}
+.nos-gem svg{width:100%;height:auto;filter:drop-shadow(0 0 30px rgba(170,215,255,.45)) drop-shadow(0 18px 40px rgba(0,0,0,.6))}
+.ng-shine{animation:ngShine 3.6s ease-in-out infinite}
+@keyframes ngShine{0%{transform:skewX(-20deg) translateX(0)}60%,100%{transform:skewX(-20deg) translateX(360px)}}
+@keyframes ngFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.ng-spark{position:absolute;color:#fff;font-size:1.1rem;text-shadow:0 0 12px #cfe6ff;animation:ngTw 2.4s ease-in-out infinite}
+.ng-spark.s1{top:4%;left:8%}.ng-spark.s2{top:18%;right:2%;animation-delay:.8s;font-size:1.4rem}.ng-spark.s3{bottom:30%;left:0;animation-delay:1.5s;font-size:.9rem}
+@keyframes ngTw{0%,100%{opacity:.15;transform:scale(.6)}50%{opacity:1;transform:scale(1.15)}}
+.ng-word{margin-top:22px;font-family:'Montserrat','Inter',sans-serif;font-weight:300;letter-spacing:.55em;font-size:1.25rem;color:#f4f8ff;padding-left:.55em}
+.ng-tag{margin-top:8px;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.05rem;color:rgba(244,248,255,.7)}
+.nos-quote{margin:18px 0 6px;padding:14px 18px;border-left:2px solid #cfe6ff;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.35rem;line-height:1.35;color:#f4f8ff;background:linear-gradient(90deg,rgba(207,230,255,.06),transparent)}
+.nos-quote span{display:block;margin-top:6px;font-family:'Inter',sans-serif;font-style:normal;font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(244,248,255,.6)}
+.nos-club{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:22px;padding:16px;border-radius:18px;border:1px solid rgba(207,230,255,.3);background:linear-gradient(135deg,rgba(159,211,255,.08),rgba(201,167,255,.08))}
+.nos-club .nc-ico{font-size:1.8rem}.nos-club .nc-t{flex:1;min-width:200px;font-family:'Inter',sans-serif}
+.nos-club .nc-t b{display:block;font-size:.9rem;letter-spacing:.08em;text-transform:uppercase;color:#f4f8ff}.nos-club .nc-t span{font-size:.82rem;line-height:1.5;color:rgba(244,248,255,.75)}.nos-club em{font-style:normal;color:#8ef0c8;font-weight:700}
+.nos-club button{border:0;cursor:pointer;border-radius:999px;padding:.8rem 1.2rem;font:700 .66rem 'Inter',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#050505;background:linear-gradient(120deg,#cfd6db,#ffffff 45%,#e8eef2 60%,#c3ccd2)}
 /* v71: the cart scrolls as one piece (items + payment options), so nothing is squeezed on phones */
 .cart-drawer{display:flex!important;flex-direction:column!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 .cart-drawer .cart-items{flex:0 0 auto!important;overflow:visible!important;max-height:none!important;min-height:90px}

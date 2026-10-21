@@ -292,6 +292,7 @@ main{padding:14px 16px 120px}
     <div id="venView" class="hidden"><div id="venBody"></div></div>
     <div id="prodView">
     <button id="portadaInfo" class="promo" type="button"></button>
+    <button id="aboutInfo" class="promo" type="button">📖 <b>Nosotros</b> — la historia de CΛNEVΛ en la tienda<span class="go">Editar ›</span></button>
     <div class="hrow" style="margin:0 0 10px">
       <p id="countLine" class="muted" style="font-size:12px;margin:0"></p>
       <button class="iconbtn hidden" id="renameCatBtn">✎ Renombrar categoría</button>
@@ -400,6 +401,23 @@ main{padding:14px 16px 120px}
   <p class="hint">Con esto tus anuncios saben quién vio un producto, quién lo agregó a la bolsa y quién escribió por WhatsApp. Solo pega el ID, no el código completo.</p>
   <button class="btn" id="sSave">Guardar ajustes</button>
   <button class="btn ghost" id="sCancel">Cancelar</button>
+</section>
+
+<!-- v71 "Nosotros" editor -->
+<div id="aSheetBg" class="sheet-bg hidden"></div>
+<section id="aSheet" class="sheet hidden">
+  <div class="grab"></div>
+  <h2 class="ptitle">Nosotros · nuestra historia</h2>
+  <p class="muted" style="font-size:13px;margin:0">Lo que sale en la sección "Nosotros" de la tienda. Si lo apagas, sale la historia de CΛNEVΛ con el diamante.</p>
+  <label class="checkrow"><input type="checkbox" id="aEnabled"><span><b>Usar mi texto.</b></span></label>
+  <div class="field"><label>Texto pequeño</label><input id="aEyebrow" type="text" placeholder="Nuestra historia"></div>
+  <div class="field"><label>Título</label><input id="aTitle" type="text" placeholder="Hecho para brillar"></div>
+  <div class="field"><label>Historia (deja una línea en blanco para separar párrafos)</label><textarea id="aText" rows="9" style="width:100%;background:var(--k2);color:var(--w);border:1px solid var(--b);border-radius:10px;padding:10px;font:inherit;font-size:14px;line-height:1.5"></textarea></div>
+  <div class="field"><label>Foto (opcional — sin foto sale el diamante de CΛNEVΛ)</label>
+    <div id="aPhoto" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"></div>
+    <input id="aFile" type="file" accept="image/*" class="hidden"></div>
+  <button class="btn" id="aSave">Guardar Nosotros</button>
+  <button class="btn ghost" id="aCancel">Cancelar</button>
 </section>
 
 <!-- Home lookbook editor -->
@@ -636,6 +654,30 @@ function renderPortadaInfo(){
   $("portadaInfo").innerHTML = (lb&&lb.enabled&&n)
     ? `★ <b>Portada: tu selección</b> (${n} foto${n>1?"s":""})<span class="go">Editar ›</span>`
     : `☆ <b>Portada: automática</b> — la tienda elige sola<span class="go">Elegir fotos ›</span>`;
+}
+// ---------- v71 "Nosotros" editor (config.about) ----------
+let about={enabled:false,eyebrow:"",title:"",text:"",image:"",file:null,preview:""};
+const ABOUT_DEFAULT={eyebrow:"Nuestra historia",title:"Hecho para brillar",text:"CΛNEVΛ nació en Barranquilla del sueño de Mayra Caneva, una mujer emprendedora y visionaria que convirtió su amor por la moda en una marca con empuje propio.\n\nComo los diamantes, CΛNEVΛ se formó con presión, paciencia y visión: cada prenda se escoge pensando en una mujer real que trabaja, sueña y brilla.\n\nUn diamante no nace brillando: se pule. Así queremos que te sientas con cada prenda: segura, auténtica y lista para brillar donde estés."};
+function paintAboutPhoto(){ const src=about.preview||about.image;
+  $("aPhoto").innerHTML=(src?`<img src="${esc(src)}" alt="" style="width:90px;height:110px;object-fit:cover;border-radius:10px;border:1px solid var(--b)">`:`<div style="width:90px;height:110px;border-radius:10px;border:1px dashed var(--b);display:flex;align-items:center;justify-content:center;font-size:30px">💎</div>`)+
+    `<button type="button" class="iconbtn" id="aPick">${src?"Cambiar foto":"Subir foto"}</button>${src?`<button type="button" class="iconbtn" id="aDrop">Quitar foto</button>`:""}`;
+  $("aPick").onclick=()=>$("aFile").click(); const d=$("aDrop"); if(d) d.onclick=()=>{about.image="";about.file=null;about.preview="";paintAboutPhoto();}; }
+async function openAbout(){
+  busy(true,"Cargando…"); try{ siteConfig=await fetchConfig(); }catch(e){ busy(false); toast(e.message,{err:true,ms:9000}); return; } busy(false);
+  const a=siteConfig.about||{};
+  about={enabled:!!a.enabled||!a.text,eyebrow:a.eyebrow||ABOUT_DEFAULT.eyebrow,title:a.title||ABOUT_DEFAULT.title,text:a.text||ABOUT_DEFAULT.text,image:a.image||"",file:null,preview:""};
+  $("aEnabled").checked=about.enabled; $("aEyebrow").value=about.eyebrow; $("aTitle").value=about.title; $("aText").value=about.text; paintAboutPhoto();
+  $("aSheet").classList.remove("hidden"); $("aSheetBg").classList.remove("hidden");
+}
+function closeAbout(){ $("aSheet").classList.add("hidden"); $("aSheetBg").classList.add("hidden"); }
+async function saveAbout(){
+  const cfg={...(siteConfig||{}), about:{enabled:$("aEnabled").checked, eyebrow:$("aEyebrow").value.trim(), title:$("aTitle").value.trim(), text:$("aText").value.trim(), image:about.file?about.file.name:about.image}};
+  const fd=new FormData(); fd.append("config",JSON.stringify(cfg)); if(about.file) fd.append("images",about.file,about.file.name);
+  busy(true,"Guardando Nosotros…");
+  try{ const res=await api(API_BASE+"/admin/config",{method:"POST",headers:{"x-admin-token":token()},body:fd}); let data={}; try{ data=await res.json(); }catch(e){}
+    if(!res.ok||!data.ok) throw new Error(data.error||("Error "+res.status));
+    siteConfig=data.config; busy(false); closeAbout(); toast(cfg.about.enabled?"Nosotros publicado ✓":"Nosotros: historia de CΛNEVΛ con el diamante ✓");
+  }catch(e){ busy(false); toast("Error: "+e.message,{err:true,ms:9000}); }
 }
 async function openPortada(){
   busy(true,"Cargando portada…");
@@ -1415,6 +1457,8 @@ $("fInvBtn").onclick=()=>{ const pid=$("fInvBtn").dataset.pid; closeEditor(); cu
   CanevaPro.mount($("invBody"),"inventario",proOpts()).then(()=>CanevaPro.openItem(pid)); };
 $("renameCatBtn").onclick=renameCategory;
 $("portadaInfo").onclick=openPortada;
+$("aboutInfo").onclick=openAbout; $("aCancel").onclick=closeAbout; $("aSheetBg").onclick=closeAbout; $("aSave").onclick=saveAbout;
+$("aFile").onchange=e=>{ const f=e.target.files&&e.target.files[0]; if(!f) return; about.file=new File([f],"nosotros-"+Date.now()+"."+((f.name.split(".").pop()||"jpg").toLowerCase()),{type:f.type}); about.preview=URL.createObjectURL(f); paintAboutPhoto(); e.target.value=""; };
 $("tabs").onclick=e=>{ const b=e.target.closest("button[data-tab]"); if(b) showTab(b.dataset.tab); };
 $("ordSeg").onclick=e=>{ const b=e.target.closest("button[data-st]"); if(!b) return; ordStatus=b.dataset.st; paintOrders(); };
 $("ordKpis").onclick=e=>{ if(e.target.closest("[data-archive-all]")) archiveAll(); };
