@@ -5796,6 +5796,18 @@ body.cv-has-pbar .ann-bar{display:none!important}
 .nos-r.nos-dia{background:radial-gradient(circle at 50% 40%,rgba(159,211,255,.16),transparent 55%),radial-gradient(circle at 70% 75%,rgba(201,167,255,.12),transparent 50%),#050506;display:flex;align-items:center;justify-content:center}
 .nos-r.nos-dia .nos-ov{display:none}
 @media(max-width:900px){.nos-r.nos-dia{height:380px!important;padding:20px 0}}
+/* v71: on phones the story is centered */
+@media(max-width:760px){
+#nosotros .nos-l{text-align:center!important;padding-left:22px!important;padding-right:22px!important;align-items:center}
+#nosotros .nos-l .eyebrow{justify-content:center;text-align:center}
+#nosotros .nos-l h2,#nosotros .nos-body{text-align:center!important;margin-left:auto!important;margin-right:auto!important}
+#nosotros .nos-quote{border-left:0;border-top:1px solid rgba(207,230,255,.5);border-bottom:1px solid rgba(207,230,255,.2);background:radial-gradient(circle at 50% 0,rgba(207,230,255,.08),transparent 70%);text-align:center}
+#nosotros .nos-items{display:flex;flex-direction:column;align-items:center}
+#nosotros .nos-item{justify-content:center;text-align:center;padding-left:0!important}
+#nosotros .nos-item::before{display:none!important}
+#nosotros .nos-club{flex-direction:column;text-align:center;justify-content:center}
+#nosotros .nos-club .nc-t{min-width:0}
+}
 .nos-gem{position:relative;width:min(340px,70%);text-align:center;animation:ngFloat 6s ease-in-out infinite}
 .nos-gem svg{width:100%;height:auto;filter:drop-shadow(0 0 30px rgba(170,215,255,.45)) drop-shadow(0 18px 40px rgba(0,0,0,.6))}
 .ng-shine{animation:ngShine 3.6s ease-in-out infinite}
