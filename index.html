@@ -1626,6 +1626,20 @@ textarea.gf{min-height:74px;resize:vertical}
 .gopt{display:flex;gap:.5rem;align-items:center;font-size:.76rem;margin:.3rem 0;color:rgba(247,247,244,.85)}
 .gbuy{display:block;width:100%;margin-top:.9rem;padding:.95rem;background:#f7f7f4;color:#050505;border:0;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;font-weight:600;cursor:pointer}
 .gbuy:disabled{opacity:.5}
+.gpays{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.45rem;padding-top:6px}
+.gpay{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;padding:.85rem .6rem .7rem;min-width:0;border-radius:14px;border:1px solid rgba(247,247,244,.2);background:#0b0b0a;color:#f7f7f4;cursor:pointer;font:inherit;transition:all .2s}
+.gpay .gpi{font-size:1.15rem;line-height:1}.gpay b{font-size:.8rem;letter-spacing:.04em}.gpay small{font-size:.64rem;color:rgba(247,247,244,.6);line-height:1.3}
+.gpay em{position:absolute;top:-8px;left:6px;font-style:normal;font-size:.5rem;letter-spacing:.14em;text-transform:uppercase;font-weight:800;background:#f7f7f4;color:#050505;border-radius:999px;padding:.16rem .45rem}
+.gpay.on{border-color:#f7f7f4;box-shadow:0 0 0 3px rgba(247,247,244,.12);background:#151513}
+.gpay-breb.on{background:linear-gradient(120deg,#cfd6db,#ffffff 45%,#e8eef2 60%,#c3ccd2);color:#050505;border-color:transparent}.gpay-breb.on small{color:rgba(5,5,5,.66)}.gpay-breb.on em{background:#050505;color:#fff}
+.gbuy.gbuy-breb{background:linear-gradient(120deg,#cfd6db,#ffffff 45%,#e8eef2 60%,#c3ccd2);background-size:200% 100%;animation:bbShine 4s ease-in-out infinite;border-radius:999px;font-weight:800}
+.gbb-amt{text-align:center;border-radius:16px;padding:12px;margin:.6rem 0 12px;background:linear-gradient(120deg,#cfd6db,#ffffff 40%,#e8eef2 60%,#c3ccd2);color:#050505}.gbb-amt small{display:block;font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;font-weight:700;opacity:.7}.gbb-amt b{display:block;font-size:2rem;font-weight:700;font-family:'Inter',sans-serif}.gbb-amt em{display:block;font-style:normal;font-size:.7rem;opacity:.75}
+.gbb{display:flex;align-items:center;gap:12px;width:100%;margin:8px 0;padding:13px;border-radius:16px;border:1px solid rgba(247,247,244,.16);background:#121212;color:#f7f7f4;text-align:left;font:inherit;font-size:.84rem;opacity:.55;transition:all .25s;box-sizing:border-box;cursor:pointer}
+.gbb.on{opacity:1;border-color:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.12)}.gbb.done{opacity:.85;border-color:#5ef0a0}
+.gbb i,.gbb-done i{flex:0 0 30px;height:30px;border-radius:50%;background:#f7f7f4;color:#050505;font-style:normal;font-weight:800;display:flex;align-items:center;justify-content:center}.gbb.done i{background:#5ef0a0}
+.gbb span{flex:1;min-width:0;line-height:1.35}.gbb span b{display:block;font-size:1.05rem;font-weight:700;word-break:break-all}.gbb3 span b{display:inline;font-size:inherit;word-break:normal}
+.gbb u{text-decoration:none;flex:0 0 auto;background:#f7f7f4;color:#050505;border-radius:999px;padding:.5rem .85rem;font-size:.66rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase}.gbb.done u{background:#5ef0a0}
+.gbb-done{display:flex;align-items:center;gap:12px;margin:10px 0 4px;padding:14px;border-radius:16px;background:#25d366;color:#04140a;text-decoration:none;font-weight:800;font-size:1rem}.gbb-done i{background:#04140a;color:#25d366}.gbb-done small{display:block;font-weight:500;font-size:.72rem}
 .gnote{font-size:.66rem;line-height:1.55;color:rgba(247,247,244,.55);margin-top:.7rem}
 .gmsg{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-size:1.15rem;line-height:1.5;text-align:center;margin:.4rem 0 .6rem}
 .pm-tryon[hidden]{display:none!important}
@@ -3689,7 +3703,12 @@ document.getElementById('csend').addEventListener('click',sendChat);
   function giftCfg(){var g=(C.cfg&&C.cfg.gift)||{};return {enabled:!!g.enabled,amounts:(g.amounts&&g.amounts.length)?g.amounts:[50000,100000,150000,200000],min:g.minCustom||30000,months:g.months||12};}
   function giftOn(){return giftCfg().enabled;}
   var gov=document.getElementById('giftOv'),gbody=document.getElementById('giftBody');
-  var G={tab:'buy',amount:0,design:'noir',toName:'',fromName:'',toEmail:'',message:'',when:'now',date:'',buyer:''};
+  var G={tab:'buy',amount:0,design:'noir',toName:'',fromName:'',toEmail:'',message:'',when:'now',date:'',buyer:'',pay:'breb'};
+  // v72: the gift card is paid like the cart: Bre-B (recommended, no fee), Bold (card, PSE, Nequi; it activates by itself) or WhatsApp
+  var GBOLD=false;try{fetch(API_BASE+'/pay/bold/config').then(function(r){return r.json();}).then(function(d){GBOLD=!!(d&&d.enabled);if(gov.classList.contains('open')&&G.tab==='buy'&&document.getElementById('gPays'))renderGift();}).catch(function(){});}catch(e){}
+  function gpayOpts(){var o=[{k:'breb',i:'💎',t:'Bre-B',s:'Sin comisión · al instante',tag:'Recomendado'}];if(GBOLD)o.push({k:'bold',i:'💳',t:'Tarjeta o PSE',s:'Nequi, Bancolombia · Bold'});o.push({k:'wa',i:'💬',t:'WhatsApp',s:'Te ayudamos a pagar'});if(!GBOLD&&G.pay==='bold')G.pay='breb';return o;}
+  function gbuyTxt(){var a=G.amount?' '+money(G.amount):'';return G.pay==='breb'?'💎 Regalar'+a+' · pagar con Bre-B':G.pay==='bold'?'💳 Regalar'+a+' · pagar en línea':'Regalar'+a+' · pagar por WhatsApp';}
+  function gpayNote(gc){return (G.pay==='bold'?'Pagas seguro con Bold y la tarjeta <b>se activa sola</b>: llega por correo con su código único.':G.pay==='breb'?'Envías el valor a la llave <b>@caneva119</b> desde tu banco o Nequi. Apenas confirmemos el pago, la tarjeta llega por correo con su código único.':'Te enviamos los datos para pagar por WhatsApp. Cuando confirmemos el pago, la tarjeta llega por correo con su código único.')+' Vale '+gc.months+' meses y se usa en una o varias compras.';}
   function gshow(){gov.classList.add('open');gov.setAttribute('aria-hidden','false');}
   function gclose(){gov.classList.remove('open');gov.setAttribute('aria-hidden','true');}
   document.getElementById('giftX').onclick=gclose;gov.addEventListener('click',function(e){if(e.target===gov)gclose();});
@@ -3722,11 +3741,13 @@ document.getElementById('csend').addEventListener('click',sendChat);
       '<div class="gsec">Entrega</div><label class="gopt"><input type="radio" name="gwhen" value="now"'+(G.when==='now'?' checked':'')+'> Apenas confirmemos el pago</label><label class="gopt"><input type="radio" name="gwhen" value="date"'+(G.when==='date'?' checked':'')+'> Programar fecha (ej: su cumpleaños)</label>'+
       '<input class="gf" id="gDate" type="date" style="'+(G.when==='date'?'':'display:none')+'" value="'+esc(G.date)+'">'+
       '<div class="gsec">Tu correo</div><input class="gf" id="gBuyer" type="email" inputmode="email" placeholder="Para enviarte la confirmación *" value="'+esc(G.buyer)+'">'+
-      '<button type="button" class="gbuy" id="gBuy">Regalar '+(G.amount?money(G.amount):'')+' · pagar por WhatsApp</button>'+
-      '<p class="gnote">Pagas por WhatsApp. Cuando confirmemos el pago, la tarjeta llega por correo con su código único. Vale '+gc.months+' meses y se puede usar en una o varias compras.</p>'+
+      '<div class="gsec">Cómo pagas</div><div class="gpays" id="gPays">'+gpayOpts().map(function(o){return '<button type="button" class="gpay'+(G.pay===o.k?' on':'')+(o.k==='breb'?' gpay-breb':'')+'" data-gp="'+o.k+'">'+(o.tag?'<em>'+o.tag+'</em>':'')+'<span class="gpi">'+o.i+'</span><b>'+o.t+'</b><small>'+o.s+'</small></button>';}).join('')+'</div>'+
+      '<button type="button" class="gbuy'+(G.pay==='breb'?' gbuy-breb':'')+'" id="gBuy">'+gbuyTxt()+'</button>'+
+      '<p class="gnote" id="gPayNote">'+gpayNote(gc)+'</p>'+
       '<div class="club-msg'+(err?' err':'')+'" id="gMsg">'+(msg||'')+'</div>';
     bindGiftTabs();
-    var prev=function(){document.getElementById('gPrev').innerHTML=gcardHtml(G);var b=document.getElementById('gBuy');if(b)b.textContent='Regalar '+(G.amount?money(G.amount):'')+' · pagar por WhatsApp';};
+    var prev=function(){document.getElementById('gPrev').innerHTML=gcardHtml(G);var b=document.getElementById('gBuy');if(b){b.textContent=gbuyTxt();b.classList.toggle('gbuy-breb',G.pay==='breb');}var n=document.getElementById('gPayNote');if(n)n.innerHTML=gpayNote(gc);};
+    gbody.querySelectorAll('[data-gp]').forEach(function(b){b.onclick=function(){G.pay=b.dataset.gp;gbody.querySelectorAll('[data-gp]').forEach(function(x){x.classList.toggle('on',x===b);});prev();if(window.cvStatsPush)try{cvStatsPush({t:'k',k:'regalo_pago',l:G.pay});}catch(e){}};});
     gbody.querySelectorAll('[data-ga]').forEach(function(b){b.onclick=function(){var o=document.getElementById('gOther');gbody.querySelectorAll('[data-ga]').forEach(function(x){x.classList.toggle('on',x===b);});if(b.dataset.ga==='other'){o.style.display='';o.focus();G.amount=parseInt(o.value.replace(/\D/g,''),10)||0;}else{o.style.display='none';G.amount=+b.dataset.ga;}prev();};});
     document.getElementById('gOther').oninput=function(){this.value=this.value.replace(/\D/g,'');G.amount=parseInt(this.value,10)||0;prev();};
     gbody.querySelectorAll('[data-gd]').forEach(function(b){b.onclick=function(){G.design=b.dataset.gd;gbody.querySelectorAll('[data-gd]').forEach(function(x){x.classList.toggle('on',x===b);});prev();};});
@@ -3742,11 +3763,15 @@ document.getElementById('csend').addEventListener('click',sendChat);
     if(G.toEmail&&!validEmail(G.toEmail.trim()))return err('Revisa el correo de quien recibe.');
     if(!validEmail(G.buyer.trim()))return err('Escribe tu correo para enviarte la confirmación.');
     if(G.when==='date'&&!G.date)return err('Elige la fecha de entrega.');
-    var win=null;try{win=window.open('','_blank');}catch(e){}
-    var b=document.getElementById('gBuy');b.disabled=true;m.className='club-msg';m.textContent='Preparando tu regalo…';
+    var how=G.pay||'breb',win=null;if(how==='wa'){try{win=window.open('','_blank');}catch(e){}}
+    var b=document.getElementById('gBuy');b.disabled=true;m.className='club-msg';m.textContent=how==='bold'?'Abriendo el pago seguro…':'Preparando tu regalo…';
     try{
       var d=await api('/gift',{method:'POST',body:{amount:G.amount,design:G.design,toName:G.toName.trim(),fromName:G.fromName.trim(),toEmail:G.toEmail.trim(),message:G.message.trim(),buyerEmail:G.buyer.trim(),sendDate:G.when==='date'?G.date:''}});
       var g=d.gift;
+      if(window.canevaTrack)try{canevaTrack('InitiateCheckout',{value:g.amount,currency:'COP',content_name:'Tarjeta Regalo'});}catch(e){}
+      if(how==='bold'){await giftBold(g);b.disabled=false;return;}
+      if(how==='breb'){giftBreb(g);G.toName='';G.toEmail='';G.message='';G.date='';G.when='now';b.disabled=false;return;}
+      try{fetch(API_BASE+'/gift/pay',{method:'POST',headers:{'Content-Type':'application/json'},keepalive:true,body:JSON.stringify({id:g.id,via:'whatsapp'})}).catch(function(){});}catch(e){}
       var txt='Hola Caneva ✨ Quiero comprar una TARJETA REGALO 🎁\n💳 Valor: '+money(g.amount)+'\n🎀 Para: '+g.toName+(g.toEmail?' ('+g.toEmail+')':'')+'\n'+(g.fromName?'💌 De: '+g.fromName+'\n':'')+(g.sendAt?'📅 Entregar el: '+gdate(g.sendAt)+'\n':'')+'🔖 Ref. regalo: '+g.ref+'\n\n¿Me envías los datos para pagar?';
       var url='https://wa.me/'+WA_PHONE+'?text='+encodeURIComponent(txt);
       if(win){win.location.href=url;}else{location.href=url;}
@@ -3754,9 +3779,50 @@ document.getElementById('csend').addEventListener('click',sendChat);
         '<p class="club-p">Envíanos el mensaje de WhatsApp para pagar (referencia <b>'+esc(g.ref)+'</b>). Cuando confirmemos el pago, '+(g.toEmail?'la tarjeta le llegará a <b>'+esc(g.toEmail)+'</b>'+(g.sendAt?' el '+gdate(g.sendAt):'')+' y a ti la confirmación.':'te la enviamos a tu correo para que se la entregues.')+'</p>'+
         '<a class="gbuy" style="text-align:center;text-decoration:none" href="'+esc(url)+'" target="_blank" rel="noopener">Abrir WhatsApp de nuevo</a>';
       G.toName='';G.toEmail='';G.message='';G.date='';G.when='now';
-      if(window.canevaTrack)try{canevaTrack('InitiateCheckout',{value:g.amount,currency:'COP',content_name:'Tarjeta Regalo'});}catch(e){}
     }catch(e){if(win)try{win.close();}catch(x){}err(e.message);b.disabled=false;}
   }
+  function gtxtLines(g){return '🎁 Tarjeta Regalo '+money(g.amount)+'\n🎀 Para: '+g.toName+(g.fromName?'\n💌 De: '+g.fromName:'')+(g.sendAt?'\n📅 Entregar el: '+gdate(g.sendAt):'')+'\n🔖 Ref. regalo: '+g.ref;}
+  function gcopy(txt){try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).catch(old);return;}}catch(e){}old();
+    function old(){var t=document.createElement('textarea');t.value=txt;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();try{document.execCommand('copy');}catch(e){}t.remove();}}
+  // Bre-B: same 4 big steps as the cart, inside the gift window
+  function giftBreb(g){
+    var LL='@caneva119',amt=Math.round(g.amount);
+    try{fetch(API_BASE+'/gift/pay',{method:'POST',headers:{'Content-Type':'application/json'},keepalive:true,body:JSON.stringify({id:g.id,via:'breb'})}).catch(function(){});}catch(e){}
+    var wa='https://wa.me/'+WA_PHONE+'?text='+encodeURIComponent('Hola Caneva ✨ Pagué con Bre-B a la llave '+LL+' una TARJETA REGALO\n'+gtxtLines(g)+'\n\nTe envío el comprobante 👇');
+    gbody.innerHTML='<div class="club-kicker">Tarjeta Regalo · CANEVA</div><h3 class="club-h">Paga en <em>4 pasos</em> 💎</h3>'+
+      '<div class="gbb-amt"><small>Valor a pagar</small><b>'+money(amt)+'</b><em>Ref. regalo '+esc(g.ref)+' · para '+esc(g.toName)+'</em></div>'+
+      '<button type="button" class="gbb on" data-gs="1" data-gcp="'+esc(LL)+'"><i>1</i><span>Copiar la llave<b>'+esc(LL)+'</b></span><u>Copiar</u></button>'+
+      '<button type="button" class="gbb" data-gs="2" data-gcp="'+amt+'"><i>2</i><span>Copiar el valor<b>'+money(amt)+'</b></span><u>Copiar</u></button>'+
+      '<div class="gbb gbb3" data-gs="3"><i>3</i><span>Abre tu banco o Nequi → <b>Bre-B / Enviar con llave</b> → pega la llave y el valor → <b>Enviar</b></span></div>'+
+      '<a class="gbb-done" id="gBbDone" href="'+esc(wa)+'" target="_blank" rel="noopener"><i>4</i><span>Ya pagué<small>Enviar el comprobante por WhatsApp</small></span></a>'+
+      '<p class="gnote" style="text-align:center">Apenas confirmemos tu pago, '+(g.toEmail?'la tarjeta le llega a <b>'+esc(g.toEmail)+'</b>'+(g.sendAt?' el '+gdate(g.sendAt):'')+' y a ti la confirmación.':'te la enviamos a tu correo para que se la entregues.')+'</p>';
+    function step(n){gbody.querySelectorAll('.gbb').forEach(function(x){var k=+x.getAttribute('data-gs');x.classList.toggle('on',k===n);x.classList.toggle('done',k<n);});}
+    gbody.querySelectorAll('[data-gcp]').forEach(function(c){c.onclick=function(){gcopy(c.getAttribute('data-gcp'));var u=c.querySelector('u');if(u)u.textContent='✓ Copiado';if(navigator.vibrate)try{navigator.vibrate(15);}catch(x){}step(+c.getAttribute('data-gs')+1);};});
+    document.getElementById('gBbDone').onclick=function(){
+      try{fetch(API_BASE+'/gift/pay',{method:'POST',headers:{'Content-Type':'application/json'},keepalive:true,body:JSON.stringify({id:g.id,via:'breb',claim:true})}).catch(function(){});}catch(e){}
+      if(window.cvStatsPush)try{cvStatsPush({t:'k',k:'regalo_ya_pague',l:money(amt)});}catch(e){}
+      setTimeout(function(){gbody.innerHTML='<div class="club-kicker">Tarjeta Regalo · CANEVA</div><h3 class="club-h">¡Gracias! <em>🖤</em></h3>'+gcardHtml(g)+
+        '<p class="club-p">Manda la <b>foto del comprobante</b> en el chat de WhatsApp que se abrió. Revisamos tu pago y activamos el regalo <b>'+esc(g.ref)+'</b> en minutos.</p>'+
+        '<a class="gbuy" style="text-align:center;text-decoration:none" href="'+esc(wa)+'" target="_blank" rel="noopener">Abrir WhatsApp otra vez</a>';},400);
+    };
+  }
+  // Bold: card, PSE, Nequi. Bold sends her back to the store and the Worker activates the card by itself.
+  async function giftBold(g){
+    var m=document.getElementById('gMsg');
+    try{
+      var d=await api('/pay/bold/gift',{method:'POST',body:{id:g.id}});
+      try{localStorage.setItem('caneva_gift_bold',JSON.stringify({id:d.orderId,at:Date.now()}));}catch(e){}
+      if(!window.cvLoadBold)throw new Error('No se pudo cargar Bold');
+      await window.cvLoadBold();
+      var buyer=null;try{buyer=window.cvBuyer&&cvBuyer();}catch(e){}
+      var opts={orderId:d.orderId,currency:'COP',amount:String(d.amount),apiKey:d.apiKey,integritySignature:d.signature,description:d.description,
+        redirectionUrl:'https://canevacol.com'+(/^\/[a-z0-9_\-]+\.html$/i.test(location.pathname)?location.pathname:'/')+'?pago=bold',originUrl:location.href.split('#')[0]};
+      opts.customerData=JSON.stringify(buyer&&buyer.name?{email:G.buyer||buyer.email,fullName:buyer.name,phone:buyer.phone,dialCode:'+57',documentNumber:buyer.doc,documentType:'CC'}:{email:(G.buyer||'').trim()});
+      new BoldCheckout(opts).open();
+      if(m){m.className='club-msg';m.textContent='';}
+    }catch(e){if(m){m.className='club-msg err';m.textContent=(e&&e.message||'No pudimos abrir el pago')+'. Puedes pagar con Bre-B o por WhatsApp.';}}
+  }
+  window.cvGiftCard=function(g){return gcardHtml(g||{});};
   async function viewGift(id){
     try{var d=await api('/gift/view?id='+encodeURIComponent(id));var g=d.gift;
       gbody.innerHTML='<div class="club-kicker">Tarjeta Regalo · CANEVA</div><h3 class="club-h">'+(g.status==='solicitada'?'Tu regalo se está <em>preparando</em>':'Un regalo <em>para ti</em>')+'</h3>'+gcardHtml(g)+(g.message?'<p class="gmsg">“'+esc(g.message)+'”</p>':'')+
@@ -6240,7 +6306,15 @@ body.cv-has-pbar .ann-bar{display:none!important}
   }
   fetch(API_BASE+'/pay/bold/config').then(function(r){return r.json();}).then(function(d){if(d&&d.enabled)enable();}).catch(function(){});
   function loadBold(){return new Promise(function(ok,ko){if(window.BoldCheckout)return ok();var s=document.createElement('script');s.src=BOLD_JS;s.onload=function(){window.BoldCheckout?ok():ko(new Error('Bold'));};s.onerror=function(){ko(new Error('No se pudo cargar Bold'));};document.head.appendChild(s);});}
+  window.cvLoadBold=loadBold;
   function overlay(html){var o=document.getElementById('cvBPay');if(!o){o=document.createElement('div');o.id='cvBPay';o.className='cv-bpay';document.body.appendChild(o);}o.innerHTML='<div class="cv-bbox">'+html+'</div>';return o;}
+  // v72: a gift card paid with Bold
+  function giftPaid(d){var g=d.gift||{};try{localStorage.removeItem('caneva_gift_bold');}catch(e){}push({t:'k',k:'regalo_pagado',l:money(g.amount||d.total)});
+    try{if(window.fbq)fbq('track','Purchase',{value:Number(g.amount||d.total)||0,currency:'COP',content_name:'Tarjeta Regalo'});}catch(e){}
+    var later=g.sendAt&&new Date(g.sendAt).getTime()>Date.now();
+    overlay('<div class="cv-rc"><div class="cv-rc-ok">✓</div><h3>¡Regalo pagado! 🎁</h3><p class="cv-rc-sub">Tu Tarjeta Regalo ya está <b>activa</b></p>'+(window.cvGiftCard?cvGiftCard({amount:g.amount,design:g.design,toName:g.toName,fromName:g.fromName}):'')+
+      '<div class="cv-rc-ship"><strong>✉ Entrega</strong>'+(g.toEmail?(later?'Le llega por correo el '+esc(new Date(g.sendAt).toLocaleDateString('es-CO',{day:'numeric',month:'long'}))+', con su código único.':'Ya le enviamos la tarjeta por correo con su código único.'):'Te enviamos la tarjeta con su código a tu correo para que se la entregues.')+(g.buyerEmail?' La confirmación va a '+esc(g.buyerEmail)+'.':'')+' Revisa también spam.</div>'+
+      '<button class="pri" type="button" data-cvb="close">Seguir mirando</button><a class="cv-rc-help" href="'+waHref('Hola Caneva ✨ Pagué una Tarjeta Regalo con Bold (ref '+(g.ref||'')+').')+'" target="_blank" rel="noopener">¿Tienes alguna duda? Escríbenos</a></div>');}
   function closeOverlay(){var o=document.getElementById('cvBPay');if(o)o.remove();}
   function waHref(txt){return 'https://wa.me/'+(typeof WA_PHONE!=='undefined'?WA_PHONE:'573057637089')+'?text='+encodeURIComponent(txt);}
   // ---- receipt on screen after a successful payment: no need to write by WhatsApp, the delivery details are already in ----
@@ -6331,6 +6405,10 @@ body.cv-has-pbar .ann-bar{display:none!important}
       else if(/REJECTED|FAILED|VOIDED/.test(st)){try{localStorage.removeItem('caneva_bold_pending');}catch(e){}}
     }).catch(function(){});},2500);}
     else if(pend)localStorage.removeItem('caneva_bold_pending');}catch(e){}}
+  if(!oid){try{var gp=JSON.parse(localStorage.getItem('caneva_gift_bold')||'null');
+    if(gp&&gp.id&&Date.now()-gp.at<3*864e5){setTimeout(function(){fetch(API_BASE+'/pay/bold/status?id='+encodeURIComponent(gp.id)).then(function(r){return r.json();}).then(function(d){var st=(d&&d.status)||'';
+      if(st==='APPROVED'&&d.isGift)giftPaid(d);else if(/REJECTED|FAILED|VOIDED/.test(st))localStorage.removeItem('caneva_gift_bold');}).catch(function(){});},3200);}
+    else if(gp)localStorage.removeItem('caneva_gift_bold');}catch(e){}}
   if(oid){
     try{history.replaceState(null,'',location.pathname);}catch(e){}
     overlay('<div class="cv-bspin"></div><h3>Verificando tu pago…</h3><p>Un momento, estamos confirmando con Bold.</p>');
@@ -6342,10 +6420,12 @@ body.cv-has-pbar .ann-bar{display:none!important}
         if(st==='APPROVED'){
           try{window.CART=[];if(typeof CART!=='undefined')CART.length=0;if(typeof saveCart==='function')saveCart();localStorage.removeItem('caneva_bold_pending');}catch(e){}
           push({t:'k',k:'pago_aprobado',l:oid});
+          if(d.isGift){giftPaid(d);return;}
           try{if(window.fbq)fbq('track','Purchase',{value:Number(d.total)||0,currency:'COP'});}catch(e){}
           showReceipt(oid,d);
         }else if(/REJECTED|FAILED|VOIDED/.test(st)){
           push({t:'k',k:'pago_rechazado',l:st});
+          if(d.isGift){try{localStorage.removeItem('caneva_gift_bold');}catch(e){}overlay('<div class="cv-bico">💳</div><h3>El pago no se completó</h3><p>Bold indica que la transacción fue rechazada. Tu regalo no se cobró: puedes intentarlo otra vez o pagarlo con Bre-B, sin comisión.</p><button class="pri" type="button" data-cvb="close" onclick="setTimeout(function(){if(window.openGift)openGift(\'buy\');},50)">Intentar de nuevo</button><a class="sec" href="'+waHref('Hola Caneva ✨ Intenté pagar una Tarjeta Regalo con Bold y no pasó. ¿Me ayudas?')+'" target="_blank" rel="noopener">Pedir por WhatsApp</a>');return;}
           overlay('<div class="cv-bico">💳</div><h3>El pago no se completó</h3><p>Bold indica que la transacción fue rechazada. Tus prendas siguen en tu carrito: puedes intentarlo de nuevo o pedir por WhatsApp.</p><button class="pri" type="button" data-cvb="retry">Intentar de nuevo</button><a class="sec" href="'+waHref('Hola Caneva ✨ Intenté pagar con Bold y no pasó. ¿Me ayudas?')+'" target="_blank" rel="noopener">Pedir por WhatsApp</a>');
         }else if(tries<8){setTimeout(check,tries<3?3000:6000);}
         else overlay('<div class="cv-bico">⏳</div><h3>Pago en proceso</h3><p>Bold aún está confirmando tu pago (pasa con PSE). Te avisamos por WhatsApp apenas se apruebe.</p><a class="pri" href="'+waHref('Hola Caneva ✨ Pagué con Bold mi pedido #'+oid.toUpperCase().slice(0,6)+' y está en proceso.')+'" target="_blank" rel="noopener">Avisar a Caneva</a><button class="sec" type="button" data-cvb="close">Seguir mirando</button>');
@@ -6897,5 +6977,32 @@ body.product-open .cv-wel{display:none!important}
 </script>
 
 
+<style id="cvgiftcart-css">
+.cv-gcart{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin:.7rem 0 0;padding:.75rem .9rem;border:1px dashed rgba(250,249,246,.3);border-radius:999px;background:rgba(250,249,246,.03);color:#faf9f6;font:500 .74rem 'Inter',sans-serif;letter-spacing:.02em;cursor:pointer;transition:all .2s}
+.cv-gcart:hover{border-color:#faf9f6;background:rgba(250,249,246,.07)}.cv-gcart b{font-weight:700}
+.cart-empty .cv-gcart{margin-top:1.1rem;width:auto;padding:.75rem 1.1rem}
+.cv-gcart b,.cart-empty .cv-gcart b{display:inline!important;font:700 .74rem 'Inter',sans-serif!important;color:inherit!important;margin:0!important;letter-spacing:.02em!important;text-transform:none!important}
+</style>
+<script id="cvgiftcart">
+// v72: link from the cart to the Gift Card window (the gift is paid there, not in the cart)
+(function(){
+  function on(){var n=document.getElementById('navGift')||document.getElementById('mobileGift');return !!(window.openGift&&n&&!n.hidden);}
+  function btn(empty){var b=document.createElement('button');b.type='button';b.className='cv-gcart';b.setAttribute('data-gcart',empty?'empty':'foot');
+    b.innerHTML=empty?'🎁 <span>¿Es para alguien? <b>Regala una Tarjeta Regalo</b></span>':'🎁 <span>¿No sabes su talla? <b>Regala una Tarjeta Regalo</b></span>';return b;}
+  function paint(){
+    var ok=on();
+    var foot=document.querySelector('.cart-foot .cart-mini-note'),f=document.querySelector('[data-gcart="foot"]');
+    if(ok&&foot&&!f)foot.parentNode.insertBefore(btn(false),foot.nextSibling);else if(!ok&&f)f.remove();
+    var em=document.querySelector('#cartItems .cart-empty > div'),e=document.querySelector('[data-gcart="empty"]');
+    if(ok&&em&&!e)em.appendChild(btn(true));
+  }
+  document.addEventListener('click',function(ev){var t=ev.target.closest&&ev.target.closest('[data-gcart]');if(!t)return;
+    try{if(window.cvStatsPush)cvStatsPush({t:'k',k:'regalo_desde_carrito',l:t.getAttribute('data-gcart')});}catch(e){}
+    try{if(typeof closeCart==='function')closeCart();}catch(e){}setTimeout(function(){window.openGift('buy');},250);});
+  var it=document.getElementById('cartItems');if(it&&window.MutationObserver)new MutationObserver(paint).observe(it,{childList:true});
+  ['navGift','mobileGift'].forEach(function(id){var n=document.getElementById(id);if(n&&window.MutationObserver)new MutationObserver(paint).observe(n,{attributes:true,attributeFilter:['hidden']});});
+  paint();setTimeout(paint,2500);
+})();
+</script>
 </body>
 </html>
