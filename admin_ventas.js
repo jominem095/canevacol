@@ -10,7 +10,7 @@
 (function(){
   "use strict";
   var OPT={api:"https://caneva-ai.canevacol.workers.dev",token:function(){try{return localStorage.getItem("caneva_admin_token_v1")||"";}catch(e){return "";}}};
-  var S={el:null,cat:[],cats:[],catSel:"",data:null,recv:null,days:30,view:"vender",lines:[],busy:false,payFull:true,plan:"contado",abTouched:false,inv:{},prof:null,pdays:30,psrc:"",showEx:false,year:null,pmonth:""};
+  var S={vsrc:"",all:null,el:null,cat:[],cats:[],catSel:"",data:null,recv:null,days:30,view:"vender",lines:[],busy:false,payFull:true,plan:"contado",abTouched:false,inv:{},prof:null,pdays:30,psrc:"",showEx:false,year:null,pmonth:""};
   var SRC={pasarela:"💳 Pasarela Bold",otro_medio:"🌐 Web · otro medio",manual:"💵 Venta manual"};
   function pct(a,b){return b?Math.round(a/b*100):0;}
   var CH={tienda:"Tienda física",whatsapp:"WhatsApp",instagram:"Instagram",feria:"Feria / evento",otro:"Otro"};
@@ -84,7 +84,7 @@
   function render(){
     var el=S.el;if(!el)return;
     var R=S.recv&&S.recv.totals;
-    el.innerHTML='<div class="vt"><div class="vt-head"><div><div class="dim">Ventas que no pasan por la página</div><h2>💵 Ventas manuales</h2></div>'+
+    el.innerHTML='<div class="vt"><div class="vt-head"><div><div class="dim">Todas tus ventas: la página web y las manuales (tienda, WhatsApp, Instagram)</div><h2>💵 Ventas</h2></div>'+
       (S.view==="vender"?'<div class="vt-seg">'+[[1,"Hoy"],[7,"7 días"],[30,"30 días"]].map(function(x){return '<button type="button" data-days="'+x[0]+'" class="'+(x[0]===S.days?"on":"")+'">'+x[1]+'</button>';}).join("")+'</div>':'')+'</div>'+
       '<div class="vt-tabs"><button type="button" data-view="vender" class="'+(S.view==="vender"?"on":"")+'">Registrar venta</button><button type="button" data-view="cobrar" class="'+(S.view==="cobrar"?"on":"")+'">Cuentas por cobrar'+(R&&R.count?'<b>'+R.count+'</b>':'')+'</button><button type="button" data-view="ganancia" class="'+(S.view==="ganancia"?"on":"")+'">🔒 Ganancia</button></div>'+
       (S.view==="vender"?sellHtml():S.view==="ganancia"?profHtml():recvHtml())+'</div>';
@@ -121,7 +121,7 @@
         '<div class="vt-priv" id="vtPriv"></div>'+
         '<div class="vt-total"><div><div class="dim">Total de la venta</div><b id="vtTotal">$0</b></div><button type="button" class="vt-btn" id="vtSave">'+(S.editing?'Guardar cambios':'Guardar venta')+'</button></div>'+
       '</div>'+
-      '<div class="vt-card"><h3>Ventas registradas</h3><div id="vtList"><div class="vt-empty">Cargando…</div></div></div>';
+      '<div class="vt-card"><div class="vt-head" style="margin:0 0 8px;align-items:center"><h3 style="margin:0">Ventas del periodo</h3><div class="vt-seg" id="vtSrc">'+[["","Todas"],["web","🌐 Página"],["manual","💵 Manuales"]].map(function(x){return '<button type="button" data-vsrc="'+x[0]+'" class="'+(S.vsrc===x[0]?"on":"")+'">'+x[1]+'</button>';}).join("")+'</div></div><div id="vtList"><div class="vt-empty">Cargando…</div></div></div>';
   }
   function recvHtml(){return '<div class="vt-kpis" id="vrKpis"></div><div class="vt-card"><h3>Clientas que deben</h3><div class="dim" style="margin:-4px 0 8px">Las más antiguas primero. Registra cada abono hasta que quede en $0.</div><div id="vrList"><div class="vt-empty">Cargando…</div></div></div>';}
 
@@ -189,11 +189,36 @@
   function paintData(){
     var D=S.data,k=S.el&&S.el.querySelector("#vtKpis"),list=S.el&&S.el.querySelector("#vtList");if(!k||!list)return;
     if(!D){k.innerHTML="";return;}
-    var T=D.totals;
+    var T=D.totals,A=S.all,per=(S.days===1?"hoy":"en "+S.days+" días");
+    if(A&&A.totals){
+      var src={};(A.bySource||[]).forEach(function(x){src[x.key]=x;});
+      var web={revenue:((src.pasarela||{}).revenue||0)+((src.otro_medio||{}).revenue||0),profit:((src.pasarela||{}).profit||0)+((src.otro_medio||{}).profit||0),count:((src.pasarela||{}).count||0)+((src.otro_medio||{}).count||0)},man=src.manual||{revenue:0,profit:0,count:0};
+      k.innerHTML='<div class="vt-kpi"><span>Vendido '+per+'</span><b>'+money(A.totals.revenue)+'</b><small>🌐 página '+money(web.revenue)+' · 💵 manuales '+money(man.revenue)+'</small></div>'+
+        '<div class="vt-kpi"><span>Recibido</span><b>'+money(web.revenue+(T.collected!=null?T.collected:T.revenue))+'</b><small>lo que ya entró a tu cuenta</small></div>'+
+        (T.owed?'<div class="vt-kpi warn"><span>Quedó por cobrar</span><b>'+money(T.owed)+'</b><small>ventas manuales a crédito</small></div>':'')+
+        '<div class="vt-kpi"><span>Ventas</span><b>'+A.totals.count+'</b><small>🌐 '+web.count+' · 💵 '+man.count+'</small></div>'+
+        '<div class="vt-kpi good"><span>🔒 Ganancia '+per+'</span><b>'+money(A.totals.profit)+'</b><small>🌐 '+money(web.profit)+' · 💵 '+money(man.profit)+(A.totals.missing?' · ⚠ '+A.totals.missing+' sin costo':'')+'</small></div>';
+      paintAll(list);return;
+    }
     k.innerHTML='<div class="vt-kpi"><span>Vendido '+(S.days===1?"hoy":"en "+S.days+" días")+'</span><b>'+money(T.revenue)+'</b></div><div class="vt-kpi"><span>Recibido</span><b>'+money(T.collected!=null?T.collected:T.revenue)+'</b></div>'+
       (T.owed?'<div class="vt-kpi warn"><span>Quedó por cobrar</span><b>'+money(T.owed)+'</b></div>':'')+'<div class="vt-kpi"><span>Ventas</span><b>'+T.count+'</b></div>'+
       (T.profit!=null?'<div class="vt-kpi good"><span>🔒 Ganancia · solo manuales</span><b>'+money(T.profit)+'</b>'+(T.uncosted||T.excludedCount||1?'<small>'+['de estas '+(S.days===1?'ventas de hoy':S.days+' días'),T.uncosted?T.uncosted+' sin costo':'',T.excludedCount?T.excludedCount+' no cuenta'+(T.excludedCount>1?'n':''):''].filter(Boolean).join(' · ')+'</small>':'')+'</div>':'');
     list.innerHTML=D.list.length?D.list.map(rowHtml).join(""):'<div class="vt-empty">No hay ventas manuales en este periodo.</div>';
+  }
+  // v71: one list with web orders and manual sales (manual rows keep their edit / credit buttons)
+  function paintAll(list){
+    var man=(S.data&&S.data.list)||[],web=((S.all&&S.all.list)||[]).filter(function(x){return x.source!=="manual";});
+    var rows=[];if(S.vsrc!=="web")man.forEach(function(v){rows.push({at:v.paidAt,h:rowHtml(v)});});
+    if(S.vsrc!=="manual")web.forEach(function(v){rows.push({at:v.paidAt,h:webRowHtml(v)});});
+    rows.sort(function(a,b){return Date.parse(b.at||0)-Date.parse(a.at||0);});
+    list.innerHTML=rows.length?rows.map(function(r){return r.h;}).join(""):'<div class="vt-empty">No hay ventas en este periodo.</div>';
+  }
+  function webRowHtml(v){
+    var it=(v.items||[]).map(function(x){return esc(x.nombre)+(x.size?" ("+esc(x.size)+")":"")+(x.qty>1?" ×"+x.qty:"");}).join(" · ");
+    return '<div class="vt-row"><div><div class="t">'+esc(v.ticket||"")+' · '+esc(when(v.paidAt))+(v.name?' · '+esc(v.name):'')+'</div><div class="it">'+it+'</div>'+
+      '<span class="tag gold">🌐 Página web</span>'+(v.viaLabel?'<span class="tag">'+esc(v.viaLabel)+'</span>':'')+(v.excluded?'<span class="tag">🚫 No cuenta en la ganancia</span>':'')+
+      '<div class="pr">🔒 Costo '+money(v.cost)+' · <span class="g'+(v.profit<0?" neg":"")+'">ganancia '+money(v.profit)+'</span>'+(v.missing?' · <span style="color:#ffb4a8">⚠ falta costo</span>':'')+'</div></div>'+
+      '<div class="r"><b>'+money(v.total)+'</b><button type="button" class="vt-mail" data-cost="'+esc(v.id)+'">🔒 Costo</button></div></div>';
   }
   function rowHtml(v){
     var it=v.items.map(function(x){return esc(x.nombre)+(x.size?" ("+esc(x.size)+")":"")+(x.qty>1?" ×"+x.qty:"");}).join(" · ");
@@ -420,11 +445,13 @@
     if(!S.payFull)g("#vtAbono",money(v.paid));
     total();var f=S.el.querySelector("#vtForm");if(f)f.scrollIntoView({behavior:"smooth",block:"start"});
   }
-  function findSale(id){var all=[].concat((S.data&&S.data.list)||[],(S.recv&&S.recv.list)||[],(S.prof&&S.prof.list)||[],(S.year&&S.year.list)||[],S.last?[S.last]:[]);return all.find(function(x){return x.id===id;});}
+  function findSale(id){var all=[].concat((S.data&&S.data.list)||[],(S.recv&&S.recv.list)||[],(S.prof&&S.prof.list)||[],(S.year&&S.year.list)||[],(S.all&&S.all.list)||[],S.last?[S.last]:[]);return all.find(function(x){return x.id===id;});}
   function shareBtns(id){return '<button type="button" class="vt-mail" data-wa="'+esc(id)+'">💬 WhatsApp</button> <button type="button" class="vt-mail" data-img="'+esc(id)+'">🖼️ Imagen</button>';}
 
   // ---------------- data ----------------
   function load(){
+    // v71: every paid sale of the period (web + manual) for the totals and the list; manual details for credit and editing
+    api("/admin/profit?days="+S.days).then(function(d){S.all=d;paintData();}).catch(function(){S.all=null;});
     return api("/admin/sales/manual?days="+S.days).then(function(d){S.data=d;paintData();}).catch(function(e){
       var l=S.el&&S.el.querySelector("#vtList");if(l)l.innerHTML='<div class="vt-empty">'+(/Ruta no encontrada|404/.test(e.message)?"Falta pegar la Worker v58 en Cloudflare para usar este módulo.":esc(e.message))+'</div>';});
   }
@@ -515,6 +542,7 @@
       if((b=t.closest("[data-pmonth]"))){var pm=b.getAttribute("data-pmonth");S.pmonth=(pm&&pm!==S.pmonth)?pm:"";S.psrc="";paintProf();return;}
       if((b=t.closest("[data-psrc]"))){S.psrc=S.psrc===b.dataset.psrc?"":b.dataset.psrc;return paintProf();}
       if((b=t.closest("[data-cost]"))){var vc=findSale(b.dataset.cost);if(vc)editCost(vc,function(){load();if(S.view==="ganancia")loadProf();});return;}
+      if((b=t.closest("[data-vsrc]"))){S.vsrc=b.dataset.vsrc;el.querySelectorAll("[data-vsrc]").forEach(function(x){x.classList.toggle("on",x===b);});paintData();return;}
       if((b=t.closest("[data-days]"))){S.days=+b.dataset.days;el.querySelectorAll("[data-days]").forEach(function(x){x.classList.toggle("on",x===b);});return load();}
       if((b=t.closest("[data-cat]"))){S.catSel=b.dataset.cat;paintCats();return paintProds();}
       if((b=t.closest("[data-add]")))return addProduct(b.dataset.add);
