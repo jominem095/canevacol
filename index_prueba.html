@@ -5750,11 +5750,11 @@ body.cv-has-pbar .ann-bar{display:none!important}
   }
   function show(id,total,cart,buyer,auto){
     var ref=id.toUpperCase(),amt=Math.round(total),base=Math.floor(amt/1000)*1000,extra=amt-base;push({t:'k',k:'pago_breb',l:money(total)});
-    var wa='https://wa.me/'+phone()+'?text='+encodeURIComponent('Hola Caneva ✨ Pagué con Bre-B a la llave '+LLAVE+'.\nPedido '+ref+' por '+money(total)+'\n'+lines(cart)+'\n\nTe envío el comprobante 👇\n'+API_BASE+'/o/'+id);
+    var wa='https://wa.me/'+phone()+'?text='+encodeURIComponent('Hola Caneva ✨ Pagué con Bre-B a la llave '+LLAVE+'.\nPedido '+ref+' por '+money(total)+(buyer&&buyer.name?'\nA nombre de: '+buyer.name+(buyer.doc?' · CC '+buyer.doc:''):'')+'\n'+lines(cart)+'\n\nTe envío el comprobante 👇\n'+API_BASE+'/o/'+id);
     // v70b: 3 big steps a 12-year-old gets: copy key, copy amount, pay in your bank. No description needed (the amount identifies her).
     var o=overlay('<div class="cv-bb3">'+
       '<div class="cv-bbh"><span>💎</span><b>Paga en 4 pasos</b><small>Sin comisión · desde cualquier banco o billetera</small></div>'+
-      '<div class="cv-bbamt"><small>Envía exactamente</small><b>'+money(amt)+'</b>'+(auto&&extra?'<em>⚠️ Con los <u>$'+extra+'</u> del final. Así sabemos que eres tú.</em>':'')+'</div>'+
+      '<div class="cv-bbamt"><small>Valor a pagar</small><b>'+money(amt)+'</b>'+(buyer&&buyer.name?'<em>A nombre de '+esc(buyer.name)+(buyer.doc?' · CC '+esc(buyer.doc):'')+'</em>':'')+'</div>'+
       '<button type="button" class="cv-bbs on" data-step="1" data-cp="'+esc(LLAVE)+'"><i>1</i><span>Copiar la llave<b>'+esc(LLAVE)+'</b></span><u>Copiar</u></button>'+
       '<button type="button" class="cv-bbs" data-step="2" data-cp="'+amt+'"><i>2</i><span>Copiar el valor<b>'+money(amt)+'</b></span><u>Copiar</u></button>'+
       '<div class="cv-bbs cv-bbs3" data-step="3"><i>3</i><span>Abre tu banco o Nequi → <b>Bre-B / Enviar con llave</b> → pega la llave y el valor → <b>Enviar</b></span></div>'+

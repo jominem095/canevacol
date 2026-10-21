@@ -1051,7 +1051,7 @@ async function refreshPendingCount(){
 // ---------- Pedidos clasificados (Worker v61). With an older Worker the buckets are worked out here. ----------
 const OB={
   por_cobrar:{t:"💬 Por cobrar",h:"Pidieron por <b>WhatsApp</b> en las últimas 48 h y todavía no pagan. Escríbeles y, cuando paguen, toca <b>Marcar pagado</b> y elige cómo pagaron."},
-  breb:{t:"💎 Bre-B por confirmar",h:"Pagan con <b>Bre-B</b> a la llave <b>@caneva119</b>. Busca en tu Bancolombia una transferencia por el <b>valor exacto</b> de cada pedido (los pesos del final lo identifican) y toca <b>✅ Confirmar pago</b>."},
+  breb:{t:"💎 Bre-B por confirmar",h:"Pagan con <b>Bre-B</b> a la llave <b>@caneva119</b>. Busca en tu Bancolombia la transferencia por el <b>valor</b> y el <b>nombre / cédula</b> de cada pedido y toca <b>✅ Confirmar pago</b>."},
   pagando:{t:"⏳ Pagando en línea",h:"Abrieron el pago con <b>Bold</b> hace menos de 2 h. Se confirma solo cuando el banco aprueba (PSE puede tardar)."},
   abandonado:{t:"🛒 Abandonados",h:"Pedidos de WhatsApp sin pagar después de <b>48 h</b> y pagos en línea que no terminaron. Escríbeles una vez más o archívalos para que no se mezclen con las ventas."},
   pasarela:{t:"✅ Pagados · Pasarela",h:"Pagados en línea con <b>Bold</b> (tarjeta, PSE, Nequi dentro de Bold)."},
@@ -1152,7 +1152,7 @@ function orderCard(o){
   const age=Math.floor((Date.now()-Date.parse(o.createdAt))/36e5);
   const via=o.bucket==="pasarela"?`<span class="obadge pas">💳 Pagado en línea con Bold</span>`
     :o.bucket==="otro_medio"?`<span class="obadge ok">✅ Pagó por ${esc(o.paidViaLabel||VIA[o.paidVia]||"otro medio")}</span>`
-    :o.bucket==="breb"?`<span class="obadge pas">💎 Busca en Bancolombia: <b>${money(dv0.brebAmount||o.total)}</b></span>${dv0.brebClaimedAt?`<span class="obadge ok">📲 Dijo que ya pagó · ${esc(when(dv0.brebClaimedAt))}</span>`:`<span class="obadge">Todavía no ha tocado "Ya pagué"</span>`}`
+    :o.bucket==="breb"?`<span class="obadge pas">💎 Busca en Bancolombia: <b>${money(dv0.brebAmount||o.total)}</b>${dv0.name?` de <b>${esc(dv0.name)}</b>`:""}${dv0.doc?` · CC <b>${esc(dv0.doc)}</b>`:""}</span>${dv0.brebClaimedAt?`<span class="obadge ok">📲 Dijo que ya pagó · ${esc(when(dv0.brebClaimedAt))}</span>`:`<span class="obadge">Todavía no ha tocado "Ya pagué"</span>`}`
     :o.bucket==="pagando"?`<span class="obadge pas">⏳ Pago con Bold en proceso (se confirma solo)</span>`
     :o.bucket==="abandonado"?`<span class="obadge bad">🛒 ${dv&&dv.pay==="bold"?"No terminó el pago en línea":"Sin pagar hace "+(age>=48?Math.floor(age/24)+" días":age+" h")}</span>`
     :o.bucket==="por_cobrar"?(dv&&dv.pay==="breb"?`<span class="obadge pas">⚡ Dice que paga con Bre-B (@caneva119) · hace ${age<1?"menos de 1 h":age+" h"}. Revisa tu Bancolombia y toca Marcar pagado → Bre-B</span>`:`<span class="obadge">💬 Pidió por WhatsApp hace ${age<1?"menos de 1 h":age+" h"}</span>`):"";
