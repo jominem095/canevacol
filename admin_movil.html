@@ -1044,13 +1044,14 @@ const money=n=>"$"+Number(n||0).toLocaleString("es-CO");
 const when=iso=>iso?new Date(iso).toLocaleString("es-CO",{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"}):"";
 function clubOff(msg){ return `<div class="empty">${esc(msg)}<br><br>Para activarlo: crea la base de datos <b>D1</b> en Cloudflare y conéctala al Worker como <b>CANEVA_DB</b> (ver guía).</div>`; }
 async function refreshPendingCount(){
-  try{ const d=await adminFetch("/admin/orders?status=todos"); const l=d.orders.map(withBucket); $("pendCount").textContent=l.filter(o=>o.bucket==="por_cobrar"||o.bucket==="pagando").length||""; }catch(e){ $("pendCount").textContent=""; }
+  try{ const d=await adminFetch("/admin/orders?status=todos"); const l=d.orders.map(withBucket); $("pendCount").textContent=l.filter(o=>o.bucket==="por_cobrar"||o.bucket==="pagando"||o.bucket==="breb").length||""; }catch(e){ $("pendCount").textContent=""; }
   try{ const d=await adminFetch("/admin/gifts?status=solicitada"); $("gfCount").textContent=(d.counts&&d.counts.solicitada)||""; }catch(e){ $("gfCount").textContent=""; }
   try{ const d=await adminFetch("/admin/layaways?status=solicitado"); const c=d.counts||{}; $("apCount").textContent=(c.solicitado||0)+(c.activo||0)||""; }catch(e){ $("apCount").textContent=""; }
 }
 // ---------- Pedidos clasificados (Worker v61). With an older Worker the buckets are worked out here. ----------
 const OB={
   por_cobrar:{t:"💬 Por cobrar",h:"Pidieron por <b>WhatsApp</b> en las últimas 48 h y todavía no pagan. Escríbeles y, cuando paguen, toca <b>Marcar pagado</b> y elige cómo pagaron."},
+  breb:{t:"💎 Bre-B por confirmar",h:"Pagan con <b>Bre-B</b> a la llave <b>@caneva119</b>. Busca en tu Bancolombia una transferencia por el <b>valor exacto</b> de cada pedido (los pesos del final lo identifican) y toca <b>✅ Confirmar pago</b>."},
   pagando:{t:"⏳ Pagando en línea",h:"Abrieron el pago con <b>Bold</b> hace menos de 2 h. Se confirma solo cuando el banco aprueba (PSE puede tardar)."},
   abandonado:{t:"🛒 Abandonados",h:"Pedidos de WhatsApp sin pagar después de <b>48 h</b> y pagos en línea que no terminaron. Escríbeles una vez más o archívalos para que no se mezclen con las ventas."},
   pasarela:{t:"✅ Pagados · Pasarela",h:"Pagados en línea con <b>Bold</b> (tarjeta, PSE, Nequi dentro de Bold)."},
@@ -1065,6 +1066,7 @@ function withBucket(o){
   if(dv.manual) b="manual";
   else if(o.status==="cancelado") b="cancelado";
   else if(o.status==="pagado") b=(dv.paidVia||(dv.pay==="bold"?"bold":""))==="bold"?"pasarela":"otro_medio";
+  else if(dv.pay==="breb") b=age>7*864e5?"abandonado":"breb";
   else if(dv.pay==="bold") b=/REJECTED|FAILED|VOIDED|SIN_PAGO/.test(dv.boldStatus||"")||age>2*3600000?"abandonado":"pagando";
   else b=age>=48*3600000?"abandonado":"por_cobrar";
   return {...o,bucket:b,paidVia:o.paidVia||(o.status==="pagado"?(dv.paidVia||(dv.pay==="bold"?"bold":"")):""),paidViaLabel:o.paidViaLabel||""};
@@ -1083,7 +1085,7 @@ async function loadOrders(){
 }
 function paintOrders(){
   const n=k=>ORD.filter(o=>o.bucket===k).length;
-  $("pendCount").textContent=(n("por_cobrar")+n("pagando"))||"";
+  $("pendCount").textContent=(n("por_cobrar")+n("pagando")+n("breb"))||"";
   $("ordSeg").innerHTML=Object.keys(OB).map(k=>`<button type="button" data-st="${k}" class="${k===ordStatus?"on":""}">${OB[k].t}<i>${n(k)}</i></button>`).join("");
   $("ordHint").innerHTML=OB[ordStatus].h;
   const l=ORD.filter(o=>o.bucket===ordStatus);
@@ -1095,11 +1097,11 @@ function paintOrders(){
     k=`<div class="okpis"><div class="okpi"><span>Vendido 30 días</span><b>${money(sum(m30))}</b></div><div class="okpi"><span>Pedidos</span><b>${m30.length}</b></div>${wc.length?`<div class="okpi g"><span>🔒 Ganancia</span><b>${money(prof)}</b></div>`:""}${miss?`<div class="okpi"><span>Sin costo</span><b style="color:var(--bad)">${miss}</b></div>`:""}</div>`;
   } else if(ordStatus==="abandonado"&&l.length){
     k=`<div class="okpis"><div class="okpi"><span>Se quedaron en</span><b>${money(sum(l))}</b></div><div class="okpi"><span>Pedidos</span><b>${l.length}</b></div></div><button type="button" class="secondary" data-archive-all="1" style="width:100%;margin:0 0 12px;border:1px solid var(--b);background:none;color:var(--w);border-radius:12px;padding:11px;font-size:13px">Archivar los ${l.length} abandonados</button>`;
-  } else if((ordStatus==="por_cobrar"||ordStatus==="pagando")&&l.length){
+  } else if((ordStatus==="por_cobrar"||ordStatus==="pagando"||ordStatus==="breb")&&l.length){
     k=`<div class="okpis"><div class="okpi"><span>Por cobrar</span><b>${money(sum(l))}</b></div><div class="okpi"><span>Pedidos</span><b>${l.length}</b></div></div>`;
   }
-  $("ordKpis").innerHTML=`<div class="oboldq"><input id="oboldRef" placeholder="Ref. del pedido (ej. UMBENZZBBVBM)" maxlength="16" autocomplete="off"><button type="button" id="oboldGo">🔎 Ver en Bold</button></div><div id="oboldOut"></div>`+(ordStatus==="por_cobrar"?`<div id="brebIn"></div>`:"")+k;
-  autoBold(); if(ordStatus==="por_cobrar") brebInbox();
+  $("ordKpis").innerHTML=`<div class="oboldq"><input id="oboldRef" placeholder="Ref. del pedido (ej. UMBENZZBBVBM)" maxlength="16" autocomplete="off"><button type="button" id="oboldGo">🔎 Ver en Bold</button></div><div id="oboldOut"></div>`+(ordStatus==="breb"?`<div id="brebIn"></div>`:"")+k;
+  autoBold(); if(ordStatus==="breb") brebInbox();
   $("ordersList").innerHTML=l.length?l.map(orderCard).join(""):`<div class="empty">No hay pedidos aquí ✨</div>`;
 }
 // v70: asks Bold (through the Worker, the same check the store does) how a payment is going.
@@ -1141,7 +1143,7 @@ function orderCard(o){
   const dv0=o.delivery||{}, wph=String(dv0.phone||(u&&u.phone)||"").replace(/[^\d]/g,""), wnum=wph.length===10?"57"+wph:wph;
   const wtxt=o.bucket==="abandonado"?`Hola ${(dv0.name||(u&&u.name)||"").split(" ")[0]} ✨ te escribimos de CΛNEVΛ. Vimos tu pedido de ${o.items.map(i=>i.nombre).slice(0,2).join(" y ")} y todavía te lo tenemos guardado 💛 ¿Te ayudamos a terminar la compra?`:`Hola ${(dv0.name||(u&&u.name)||"").split(" ")[0]} ✨ te escribimos de CΛNEVΛ por tu pedido (${money(o.total)}). ¿Te enviamos los datos para pagar? 💛`;
   const acts=o.status==="pendiente"
-    ?`<div class="oact">${wnum?`<a class="ext" href="https://wa.me/${wnum}?text=${encodeURIComponent(wtxt)}" target="_blank" rel="noopener">💬 Escribirle</a>`:""}<button class="pay" data-pay="${o.id}" data-has-user="${u?1:0}" data-mail="${esc(o.receiptEmail||dv0.email||"")}">Marcar pagado ✓</button><button class="cancel" data-cancel="${o.id}">${o.bucket==="abandonado"?"Archivar":"Cancelar"}</button></div>`
+    ?`<div class="oact">${wnum?`<a class="ext" href="https://wa.me/${wnum}?text=${encodeURIComponent(wtxt)}" target="_blank" rel="noopener">💬 Escribirle</a>`:""}${o.bucket==="breb"?`<button class="pay" data-brebok="${o.id}" data-mail="${esc(o.receiptEmail||dv0.email||"")}" data-amt="${dv0.brebAmount||o.total}">✅ Confirmar pago</button>`:`<button class="pay" data-pay="${o.id}" data-has-user="${u?1:0}" data-mail="${esc(o.receiptEmail||dv0.email||"")}">Marcar pagado ✓</button>`}<button class="cancel" data-cancel="${o.id}">${o.bucket==="abandonado"?"Archivar":"Cancelar"}</button></div>`
     :`<div class="oact"><a href="${API_BASE}/o/${o.id}" target="_blank" rel="noopener">Ver pedido</a>${o.status==="pagado"?`<button class="pay" data-resend="${o.id}" data-mail="${esc(o.receiptEmail||(u&&u.email)||"")}">${o.emailSentAt?"Reenviar recibo":"Enviar recibo ✉"}</button><button class="cancel" data-void="${o.id}" title="Para pedidos de prueba o por error">🧪 Anular</button>`:""}</div>`;
   const paid=o.status==="pagado"?`<div class="ocli">🧾 Recibo <b>${esc(o.ticket)}</b>${o.points?(u?` · +${o.points} pts`:` · ${o.points} pts guardados`):""} · ${o.emailSentAt?"correo enviado ✓":(o.receiptEmail?"correo no enviado":"sin correo")}</div>`:"";
   // Delivery details typed at checkout (name, ID, phone, e-mail, address)
@@ -1150,6 +1152,7 @@ function orderCard(o){
   const age=Math.floor((Date.now()-Date.parse(o.createdAt))/36e5);
   const via=o.bucket==="pasarela"?`<span class="obadge pas">💳 Pagado en línea con Bold</span>`
     :o.bucket==="otro_medio"?`<span class="obadge ok">✅ Pagó por ${esc(o.paidViaLabel||VIA[o.paidVia]||"otro medio")}</span>`
+    :o.bucket==="breb"?`<span class="obadge pas">💎 Busca en Bancolombia: <b>${money(dv0.brebAmount||o.total)}</b></span>${dv0.brebClaimedAt?`<span class="obadge ok">📲 Dijo que ya pagó · ${esc(when(dv0.brebClaimedAt))}</span>`:`<span class="obadge">Todavía no ha tocado "Ya pagué"</span>`}`
     :o.bucket==="pagando"?`<span class="obadge pas">⏳ Pago con Bold en proceso (se confirma solo)</span>`
     :o.bucket==="abandonado"?`<span class="obadge bad">🛒 ${dv&&dv.pay==="bold"?"No terminó el pago en línea":"Sin pagar hace "+(age>=48?Math.floor(age/24)+" días":age+" h")}</span>`
     :o.bucket==="por_cobrar"?(dv&&dv.pay==="breb"?`<span class="obadge pas">⚡ Dice que paga con Bre-B (@caneva119) · hace ${age<1?"menos de 1 h":age+" h"}. Revisa tu Bancolombia y toca Marcar pagado → Bre-B</span>`:`<span class="obadge">💬 Pidió por WhatsApp hace ${age<1?"menos de 1 h":age+" h"}</span>`):"";
@@ -1418,6 +1421,11 @@ $("ordKpis").onclick=e=>{ if(e.target.closest("[data-archive-all]")) archiveAll(
 $("ordersList").addEventListener("click",async e=>{ const b=e.target.closest("[data-bold]"); if(!b) return; e.stopPropagation(); b.disabled=true; b.textContent="Consultando…"; try{ const d=await boldCheck(b.dataset.bold); boldPaint(b.dataset.bold,d); if(d.status==="APPROVED"){ toast("✅ Bold aprobó el pago. Quedó como pagado."); setTimeout(loadOrders,1200);} }catch(x){ b.disabled=false; b.textContent="🔎 Consultar Bold"; toast(x.message,{err:true});} },true);
 $("ordKpis").addEventListener("click",async e=>{ if(!e.target.closest("#oboldGo")) return; const inp=$("oboldRef"), out=$("oboldOut"), id=String(inp.value||"").trim(); out.innerHTML=`<div class="obold">Consultando a Bold…</div>`; try{ const d=await boldCheck(id); const l=BOLD_LBL[d.status]||[""]; const o=ORD.find(x=>x.id===id.toLowerCase()); out.innerHTML=`<div class="obold ${l[0]}">Ref. <b>${esc(id.toUpperCase())}</b>${d.total?` · ${money(d.total)}`:""}${d.method?` · ${esc(d.method)}`:""}<br>${boldTxt(d.status)}${o?"":"<br><span style=\"color:var(--dim)\">Ese pedido no está en esta lista (puede estar en otra pestaña).</span>"}</div>`; if(d.status==="APPROVED") setTimeout(loadOrders,1500); }catch(x){ out.innerHTML=`<div class="obold bad">${esc(x.message)}</div>`; } });
 $("ordKpis").addEventListener("keydown",e=>{ if(e.key==="Enter"&&e.target.id==="oboldRef"){ e.preventDefault(); $("oboldGo").click(); } });
+$("ordersList").addEventListener("click",async e=>{ const b=e.target.closest("[data-brebok]"); if(!b) return; e.stopPropagation();
+  if(!confirm("¿Ya viste en tu Bancolombia la transferencia Bre-B por "+money(+b.dataset.amt)+"?\n\nSe genera el recibo, se suman los puntos y se descuenta del inventario.")) return;
+  busy(true,"Generando recibo…");
+  try{ const d=await adminFetch(`/admin/orders/${b.dataset.brebok}/pay`,{method:"POST",body:{email:b.dataset.mail||"",via:"breb"}}); busy(false); toast(`💎 Pago Bre-B confirmado · Recibo ${d.ticket}${d.points?` · +${d.points} pts`:""}`,{ms:7000}); loadOrders(); }
+  catch(x){ busy(false); toast("Error: "+x.message,{err:true,ms:8000}); } },true);
 $("ordersList").onclick=e=>{ const k=e.target.closest("[data-cost]"); if(k){ const o=ORD.find(x=>x.id===k.dataset.cost); if(o&&window.CanevaVentas&&CanevaVentas.editCost) CanevaVentas.editCost(o,()=>loadOrders(),{api:API_BASE,token:token}); return; } const r=e.target.closest("[data-resend]"); if(r) return resendReceipt(r.dataset.resend, r.dataset.mail); const p=e.target.closest("[data-pay]"); if(p) return payOrder(p.dataset.pay, p.dataset.hasUser==="1", p.dataset.mail); const vd=e.target.closest("[data-void]"); if(vd) return voidOrder(vd.dataset.void); const c=e.target.closest("[data-cancel]"); if(c) cancelOrder(c.dataset.cancel); };
 $("gfSeg").onclick=e=>{ const b=e.target.closest("button[data-gf]"); if(!b) return; gfStatus=b.dataset.gf; document.querySelectorAll("#gfSeg button").forEach(x=>x.classList.toggle("on",x===b)); loadGifts(); };
 $("gfCheck").onclick=gfCheck;

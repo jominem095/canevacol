@@ -5701,7 +5701,8 @@ body.cv-has-pbar .ann-bar{display:none!important}
 .cv-bbs i{flex:0 0 30px;height:30px;border-radius:50%;background:#faf9f6;color:#050505;font-style:normal;font-weight:800;display:flex;align-items:center;justify-content:center}.cv-bbs.done i{background:#5ef0a0}
 .cv-bbs span{flex:1;min-width:0;line-height:1.35}.cv-bbs span b{display:block;font-size:1.1rem;font-weight:700}.cv-bbs3 span b{display:inline;font-size:inherit}
 .cv-bbs u{text-decoration:none;flex:0 0 auto;background:#faf9f6;color:#050505;border-radius:999px;padding:.55rem .9rem;font-size:.7rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase}.cv-bbs.done u{background:#5ef0a0}
-.cv-bpay a.cv-bbwa[hidden]{display:none!important}
+.cv-bpay a.cv-bbdone{display:flex!important;align-items:center;gap:12px;margin:12px 0 4px;padding:14px!important;border-radius:16px!important;background:linear-gradient(120deg,#5ef0a0,#b9ffd9)!important;color:#050505!important;text-align:left!important;text-transform:none!important;letter-spacing:0!important;font-size:1.05rem!important;font-weight:800!important;box-shadow:0 10px 30px rgba(94,240,160,.25);text-decoration:none}
+.cv-bbdone i{flex:0 0 30px;height:30px;border-radius:50%;background:#050505;color:#5ef0a0;font-style:normal;font-weight:800;display:flex;align-items:center;justify-content:center}.cv-bbdone span{flex:1}.cv-bbdone small{display:block;font-size:.74rem;font-weight:600;opacity:.75}
 .cv-bpay a.cv-bbwa{display:block;text-align:center;margin-top:10px;background:none;border:1px solid rgba(250,249,246,.3);color:#faf9f6;border-radius:999px;padding:.85rem;font-size:.66rem;letter-spacing:.08em;text-transform:none}
 .cv-bpay button.cv-bbback{background:none!important;border:0!important;color:rgba(250,249,246,.6)!important;text-transform:none!important;letter-spacing:0!important;font-size:.78rem!important;font-weight:500!important;padding:.6rem!important;margin-top:4px}
 .cv-bpay .cv-bb-small{font-size:.7rem;color:rgba(250,249,246,.55);margin:.7rem 0 0;line-height:1.5}
@@ -5752,13 +5753,13 @@ body.cv-has-pbar .ann-bar{display:none!important}
     var wa='https://wa.me/'+phone()+'?text='+encodeURIComponent('Hola Caneva ✨ Pagué con Bre-B a la llave '+LLAVE+'.\nPedido '+ref+' por '+money(total)+'\n'+lines(cart)+'\n\nTe envío el comprobante 👇\n'+API_BASE+'/o/'+id);
     // v70b: 3 big steps a 12-year-old gets: copy key, copy amount, pay in your bank. No description needed (the amount identifies her).
     var o=overlay('<div class="cv-bb3">'+
-      '<div class="cv-bbh"><span>💎</span><b>Paga en 3 pasos</b><small>Sin comisión · desde cualquier banco o billetera</small></div>'+
+      '<div class="cv-bbh"><span>💎</span><b>Paga en 4 pasos</b><small>Sin comisión · desde cualquier banco o billetera</small></div>'+
       '<div class="cv-bbamt"><small>Envía exactamente</small><b>'+money(amt)+'</b>'+(auto&&extra?'<em>⚠️ Con los <u>$'+extra+'</u> del final. Así sabemos que eres tú.</em>':'')+'</div>'+
       '<button type="button" class="cv-bbs on" data-step="1" data-cp="'+esc(LLAVE)+'"><i>1</i><span>Copiar la llave<b>'+esc(LLAVE)+'</b></span><u>Copiar</u></button>'+
       '<button type="button" class="cv-bbs" data-step="2" data-cp="'+amt+'"><i>2</i><span>Copiar el valor<b>'+money(amt)+'</b></span><u>Copiar</u></button>'+
       '<div class="cv-bbs cv-bbs3" data-step="3"><i>3</i><span>Abre tu banco o Nequi → <b>Bre-B / Enviar con llave</b> → pega la llave y el valor → <b>Enviar</b></span></div>'+
-      (auto?'<div class="cv-bb-wait" id="cvBbWait"><span class="cv-bspin" style="width:16px;height:16px;border-width:2px;margin:0"></span><span>Cuando pagues, esta pantalla cambia sola ✓</span></div>':'')+
-      '<a class="'+(auto?'cv-bbwa':'pri')+'" href="'+wa+'" target="_blank" rel="noopener" data-bb="'+(auto?'wa':'done')+'" id="cvBbWa"'+(auto?' hidden':'')+'>'+(auto?'¿Ya pagaste y no cambia? Envíanos el comprobante':'✅ Ya pagué · enviar comprobante')+'</a>'+
+      '<span id="cvBbWait" hidden></span>'+
+      '<a class="cv-bbdone" href="'+wa+'" target="_blank" rel="noopener" data-bb="done"><i>4</i><span>Ya pagué<small>Enviar el comprobante por WhatsApp</small></span></a>'+
       '<button class="cv-bbback" type="button" data-bb="back">← Volver al carrito</button>'+
       '<p class="cv-bb-small">Pedido '+esc(ref)+(isLocal((buyer&&buyer.city)||window.CV_CITY)?'':' · El envío a tu ciudad te lo confirmamos por WhatsApp')+'</p></div>');
     var stop=false,t0=Date.now();
@@ -5769,13 +5770,12 @@ body.cv-has-pbar .ann-bar{display:none!important}
       var b=e.target.closest('[data-bb]');if(!b)return;var k=b.getAttribute('data-bb');
       if(k==='back'){stop=true;close();return;}
       if(k==='wa'){push({t:'k',k:'breb_ya_pague',l:money(total)});return;}
-      push({t:'k',k:'breb_ya_pague',l:money(total)});
-      setTimeout(function(){clearCart();overlay('<div class="cv-bico">🖤</div><h3>¡Gracias!</h3><p>Envíanos el comprobante por WhatsApp. Apenas veamos tu pago te confirmamos y despachamos tu pedido <b>'+esc(ref)+'</b>.</p><a class="pri" href="'+wa+'" target="_blank" rel="noopener">Abrir WhatsApp otra vez</a><button class="sec" type="button" data-cvb="close">Seguir mirando</button>');
+      push({t:'k',k:'breb_ya_pague',l:money(total)});stop=true;
+      try{fetch(API_BASE+'/pay/breb/claim',{method:'POST',headers:{'Content-Type':'application/json'},keepalive:true,body:JSON.stringify({id:id})}).catch(function(){});}catch(x){}
+      setTimeout(function(){clearCart();overlay('<div class="cv-bico">🖤</div><h3>¡Gracias!</h3><p>Manda la <b>foto del comprobante</b> en el chat de WhatsApp que se abrió. Revisamos tu pago y te confirmamos tu pedido <b>'+esc(ref)+'</b> en minutos.</p><a class="pri" href="'+wa+'" target="_blank" rel="noopener">Abrir WhatsApp otra vez</a><button class="sec" type="button" data-cvb="close">Seguir mirando</button>');
         var o2=document.getElementById('cvBPay');if(o2)o2.addEventListener('click',function(ev){if(ev.target.closest('[data-cvb="close"]'))close();});},400);
     });
     if(!auto)return;
-    // after 2 minutes, offer WhatsApp in case the bank alert is slow or she sent a rounded amount
-    setTimeout(function(){var w=document.getElementById('cvBbWa');if(w&&!stop)w.hidden=false;},120000);
     try{localStorage.setItem('caneva_breb_pending',JSON.stringify({id:id,at:Date.now()}));}catch(e){}
     (function poll(){if(stop||!document.getElementById('cvBbWait')||Date.now()-t0>30*60000)return;
       fetch(API_BASE+'/pay/breb/status?id='+id,{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){
