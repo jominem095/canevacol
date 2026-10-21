@@ -110,7 +110,8 @@ body{background:var(--k);color:var(--w);font-family:'Inter',sans-serif;font-weig
 
 /* CURSOR */
 .cur,.cur-r{position:fixed;border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);mix-blend-mode:difference}
-.cur{width:6px;height:6px;background:var(--g);transition:transform .08s}
+.cur{display:none!important}
+@media(hover:hover) and (pointer:fine){html,body,a,button,label,summary,select,[role=button],.pc,.rc,.lb-item{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ffffff'/%3E%3Cstop offset='.5' stop-color='%23dff3ff'/%3E%3Cstop offset='1' stop-color='%239fcfe8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M10.5 10.5L27 27M27 27L22.6 27.6M27 27L27.6 22.6M24.6 24.6L20.6 25.4M24.6 24.6L25.4 20.6' stroke='%23050505' stroke-width='3.4' stroke-linecap='round' fill='none'/%3E%3Cpath d='M10.5 10.5L27 27M27 27L22.6 27.6M27 27L27.6 22.6M24.6 24.6L20.6 25.4M24.6 24.6L25.4 20.6' stroke='%23f7f7f4' stroke-width='1.5' stroke-linecap='round' fill='none'/%3E%3Cpath d='M2 2L11.2 4.1L11.9 7.7L7.7 11.9L4.1 11.2Z' fill='url%28%23g%29' stroke='%23050505' stroke-width='1.1' stroke-linejoin='round'/%3E%3Cpath d='M11.2 4.1L4.1 11.2M2 2L9.8 9.8M7.7 7.7L11.9 7.7M7.7 7.7L7.7 11.9' stroke='%236aa9c9' stroke-width='.6' fill='none'/%3E%3C/svg%3E") 2 2,auto!important}input,textarea{cursor:text!important}}
 .cur-r{width:38px;height:38px;border:1px solid rgba(201,169,110,.4);transition:all .2s}
 .cur-r.h{width:64px;height:64px;border-color:var(--g);background:rgba(201,169,110,.04)}
 @media(hover:none){.cur,.cur-r{display:none}}
@@ -1838,9 +1839,9 @@ if(p&&p.imagen){var l=document.createElement('link');l.rel='preload';l.as='image
 
     <button class="nclub" id="navGift" type="button" hidden>🎁 Regalo</button>
     <button class="nclub" id="navClub" type="button" hidden>Club Caneva</button>
-    <button class="ncart" id="navCart" type="button" aria-label="Abrir Bolsa Caneva">
+    <button class="ncart" id="navCart" type="button" aria-label="Abrir tu Vestidor Caneva">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8a3 3 0 0 1 6 0"/></svg>
-      <span>Bolsa</span><b id="navCartCount">0</b>
+      <span>Vestidor</span><b id="navCartCount">0</b>
     </button>
     <a class="nwa" href="https://wa.me/573057637089?text=Hola!%20Vi%20el%20sitio%20Caneva" target="_blank"><span>Pedir ahora</span> <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>
   </div>
@@ -1856,7 +1857,7 @@ if(p&&p.imagen){var l=document.createElement('link');l.rel='preload';l.as='image
 
   <button class="mclub" id="mobileGift" type="button" hidden>🎁 Tarjeta Regalo</button>
   <button class="mclub" id="mobileClub" type="button" hidden>Club Caneva</button>
-  <button class="mcart" id="mobileCart" type="button">Bolsa · <b id="mobileCartCount">0</b></button>
+  <button class="mcart" id="mobileCart" type="button">Vestidor · <b id="mobileCartCount">0</b></button>
   <a class="mwa" href="https://wa.me/573057637089" target="_blank"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg> WhatsApp</a>
 </div>
 
@@ -1960,10 +1961,10 @@ if(p&&p.imagen){var l=document.createElement('link');l.rel='preload';l.as='image
       <div class="pm-size-wrap" id="pmSizeWrap" aria-live="polite">
         <div class="pm-size-head"><div class="pm-size-title">Selecciona talla</div><div class="pm-size-help" id="pmSizeHelp">Obligatorio</div></div>
         <div class="pm-size-options" id="pmSizeOptions"></div>
-        <div class="pm-size-note" id="pmSizeNote">Elige una talla para agregar esta prenda al carrito.</div>
+        <div class="pm-size-note" id="pmSizeNote">Elige una talla para agregar esta prenda a tu vestidor.</div>
       </div>
       <div class="pm-actions">
-        <button class="btn-p cart-add" id="pmAddCart" type="button"><span>Agregar al carrito</span></button>
+        <button class="btn-p cart-add" id="pmAddCart" type="button"><span>Agregar a mi vestidor</span></button>
         <button class="btn-o pm-apartar" id="pmApartar" type="button" hidden><span>Apartar</span></button>
         <a class="btn-o" id="pmWhats" href="#" target="_blank" rel="noopener"><span>Comprar por WhatsApp</span></a>
         <button class="btn-o" id="pmIgDm" type="button" hidden><span>💌 Pedir por Instagram</span></button>
@@ -1972,8 +1973,8 @@ if(p&&p.imagen){var l=document.createElement('link');l.rel='preload';l.as='image
       <div class="pm-apartar-note" id="pmApartarNote" hidden></div>
       <button class="pm-tryon" id="pmTryon" type="button" hidden><span>✨ Verla puesta</span><small>Pruébatela con IA: en modelo o en tu foto</small></button>
       <div class="pm-cart-state" id="pmCartState" aria-live="polite">
-        <div class="pm-cart-copy"><strong id="pmCartTitle">Agregado a tu carrito</strong><span id="pmCartMeta">1 prenda lista para comprar</span></div>
-        <button class="pm-view-cart" id="pmViewCart" type="button">Ver carrito</button>
+        <div class="pm-cart-copy"><strong id="pmCartTitle">Agregado a tu vestidor</strong><span id="pmCartMeta">1 prenda lista para comprar</span></div>
+        <button class="pm-view-cart" id="pmViewCart" type="button">Ver mi vestidor</button>
       </div>
       <div class="pm-note" id="pmNote"></div>
       <div class="pm-trust">
@@ -2007,17 +2008,17 @@ if(p&&p.imagen){var l=document.createElement('link');l.rel='preload';l.as='image
   </div>
 </div>
 
-<button class="cart-fab" id="cartFab" type="button" aria-label="Abrir carrito Caneva">
+<button class="cart-fab" id="cartFab" type="button" aria-label="Abrir tu Vestidor Caneva">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6h15l-1.5 8.5H8L6 3H3"/><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/></svg>
-  <span class="cart-fab-brand">CΛNEVΛ</span><span>Bolsa</span>
+  <span class="cart-fab-brand">CΛNEVΛ</span><span>Vestidor</span>
   <b class="cart-count" id="cartCount">0</b>
 </button>
 <div class="cart-backdrop" id="cartBackdrop"></div>
 <aside class="cart-drawer" id="cartDrawer" aria-hidden="true">
   <div class="cart-head">
     <div class="cart-brand-seal" aria-hidden="true">CΛ</div>
-    <div class="cart-title"><small>CΛNEVΛ · Ropa para mujeres</small><strong>Bolsa Caneva</strong></div>
-    <button class="cart-close" id="cartClose" type="button" aria-label="Cerrar carrito">×</button>
+    <div class="cart-title"><small>CΛNEVΛ · Ropa para mujeres</small><strong>Tu Vestidor</strong></div>
+    <button class="cart-close" id="cartClose" type="button" aria-label="Cerrar vestidor">×</button>
   </div>
   <div class="cart-items" id="cartItems">
     <div class="cart-empty"><div><b>CΛNEVΛ</b>Agrega tus prendas favoritas y arma tu pedido con estilo.</div></div>
@@ -2027,18 +2028,18 @@ if(p&&p.imagen){var l=document.createElement('link');l.rel='preload';l.as='image
     <div class="club-cart" id="clubCartNote" hidden></div>
 
     <div class="cart-actions">
+      <button class="cart-pay cv-breb-btn" id="cartBreb" type="button"><span class="bb-tag">✦ Recomendado</span><span class="bb-main">💎 Paga con Bre-B</span><span class="bb-sub">Sin comisión · al instante · desde cualquier banco</span></button>
       <button class="cart-pay cart-bold-off" id="cartBold" type="button" hidden>Pagar con Bold</button>
-      <button class="cart-pay cv-breb-btn" id="cartBreb" type="button">⚡ Pagar con Bre-B · sin comisión</button>
       <button class="cart-wa" id="cartWhats" type="button">Enviar pedido por WhatsApp</button>
       <button class="cart-keep" id="cartKeep" type="button">Seguir mirando</button>
     </div>
     <div class="cart-mini-note">Confirmamos disponibilidad, pago y entrega por WhatsApp en minutos 🖤</div>
   </div>
 </aside>
-<div class="cart-toast" id="cartToast">Producto agregado</div>
+<div class="cart-toast" id="cartToast">Agregado a tu vestidor 💎</div>
 <div class="mobile-shop-dock" id="mobileShopDock" aria-label="Accesos rápidos Caneva móvil">
   <a href="#catalogo">Colección</a>
-  <button id="mobileDockCart" type="button">Bolsa <b id="mobileDockCartCount">0</b></button>
+  <button id="mobileDockCart" type="button">Vestidor <b id="mobileDockCartCount">0</b></button>
   <button id="mobileDockAi" type="button">AI Stylist</button>
 </div>
 
@@ -2373,7 +2374,7 @@ function renderSizeSelector(p){
   }
   wrap.classList.add('show');
   if(help)help.textContent='Obligatorio';
-  if(note)note.textContent='Elige la talla antes de agregar al carrito. Si no estás segura, Caneva confirma disponibilidad por WhatsApp.';
+  if(note)note.textContent='Elige la talla antes de agregarla a tu vestidor. Si no estás segura, Caneva confirma disponibilidad por WhatsApp.';
   var managed=!!invOf(p);
   if(managed&&note)note.textContent='Las tallas tachadas están agotadas. Elige una disponible.';
   opts.innerHTML=sizes.map(function(sz){var out=managed&&invQty(p,sz)<=0;return '<button class="pm-size-btn'+(out?' out':'')+'" type="button" data-size="'+escAttr(sz)+'"'+(out?' disabled aria-disabled="true" title="Agotada"':'')+'>'+escHtml(sz)+'</button>';}).join('');
@@ -2821,12 +2822,12 @@ function updateProductCartState(idx){
   if(!it){
     state.classList.remove('show');
     btn.classList.remove('added');
-    btn.innerHTML='<span>Agregar al carrito</span>';
+    btn.innerHTML='<span>Agregar a mi vestidor</span>';
     return;
   }
   btn.classList.add('added');
   btn.innerHTML='<span>Agregado ✓ · sumar otro</span>';
-  if(title)title.textContent='Agregado a tu carrito';
+  if(title)title.textContent='Agregado a tu vestidor';
   var sizeTxt=(it.size||selected)?' · talla '+(it.size||selected):'';
   if(meta)meta.textContent=(Number(it.qty)||1)+' unidad(es)'+sizeTxt+' · subtotal de esta prenda '+moneyCOP((Number(it.price)||0)*(Number(it.qty)||1));
   state.classList.add('show');
@@ -2835,8 +2836,8 @@ function loadCart(){try{CART=JSON.parse(localStorage.getItem(CART_KEY)||'[]')||[
 function saveCart(){localStorage.setItem(CART_KEY,JSON.stringify(CART));renderCart();if(currentProductIndex>=0)updateProductCartState(currentProductIndex);}
 function cartTotal(){return CART.reduce(function(s,it){return s+(Number(it.price)||0)*(Number(it.qty)||1);},0);}
 function cartQty(){return CART.reduce(function(s,it){return s+(Number(it.qty)||1);},0);}
-function toastCart(msg){var t=document.getElementById('cartToast');if(!t)return;t.textContent=msg||'Producto agregado';t.classList.add('show');setTimeout(function(){t.classList.remove('show');},1700);}
-function addToCartByIndex(idx,open,size){var p=P[idx];if(!p)return;size=size||'';var key=productKey(p,size);var it=CART.find(function(x){return x.key===key;});var max=invQty(p,size);if((it?it.qty:0)+1>max){toastCart(max<=0?'Esta talla se agotó':'Solo quedan '+max+(size?' en talla '+size:''));return;}if(it){it.qty+=1;}else{CART.push({key:key,pid:p.id||'',nombre:p.nombre,categoria:p.categoria,precio:p.precio,price:priceNum(p.precio),tallas:p.tallas||'',size:size,imagen:p.imagen||'',url:p.url||'',qty:1});}saveCart();flyToBag(p);toastCart(size?'Agregado · talla '+size:'Agregado al carrito');if(open)openCart();}
+function toastCart(msg){var t=document.getElementById('cartToast');if(!t)return;t.textContent=msg||'Agregado a tu vestidor 💎';t.classList.add('show');setTimeout(function(){t.classList.remove('show');},1700);}
+function addToCartByIndex(idx,open,size){var p=P[idx];if(!p)return;size=size||'';var key=productKey(p,size);var it=CART.find(function(x){return x.key===key;});var max=invQty(p,size);if((it?it.qty:0)+1>max){toastCart(max<=0?'Esta talla se agotó':'Solo quedan '+max+(size?' en talla '+size:''));return;}if(it){it.qty+=1;}else{CART.push({key:key,pid:p.id||'',nombre:p.nombre,categoria:p.categoria,precio:p.precio,price:priceNum(p.precio),tallas:p.tallas||'',size:size,imagen:p.imagen||'',url:p.url||'',qty:1});}saveCart();flyToBag(p);toastCart(size?'Agregado · talla '+size:'Agregado a tu vestidor');if(open)openCart();}
 function changeCartQty(key,delta){var it=CART.find(function(x){return x.key===key;});if(!it)return;if(delta>0){var cp=P.find(function(x){return (it.pid&&x.id===it.pid)||(x.nombre===it.nombre&&x.categoria===it.categoria);});var max=cp?invQty(cp,it.size):Infinity;if((Number(it.qty)||1)+delta>max){toastCart('Solo quedan '+max+(it.size?' en talla '+it.size:''));return;}}it.qty=(Number(it.qty)||1)+delta;if(it.qty<=0){CART=CART.filter(function(x){return x.key!==key;});}saveCart();}
 function removeCartItem(key){CART=CART.filter(function(x){return x.key!==key;});saveCart();}
 
@@ -2848,14 +2849,14 @@ function renderCart(){
   updateCartBadges();
   if(total)total.textContent=moneyCOP(cartTotal());
   if(!items)return;
-  if(!CART.length){items.innerHTML='<div class="cart-empty"><div><b>Bolsa Caneva</b>Agrega tus prendas favoritas y arma tu pedido con estilo.</div></div>';return;}
+  if(!CART.length){items.innerHTML='<div class="cart-empty"><div><b>Tu Vestidor</b>Agrega tus prendas favoritas y arma tu pedido con estilo.</div></div>';return;}
   var list=CART.map(function(it){
     var img=it.imagen&&it.imagen.indexOf('http')===0?'<img src="'+escAttr(cvImg(it.imagen,200))+'" alt="'+escAttr(it.nombre)+'" loading="lazy">':'C';
     var sizeLine=it.size?'<div class="cart-size"><strong>Talla:</strong> '+escHtml(it.size)+'</div>':(it.tallas?'<div class="cart-size">Tallas disponibles: '+escHtml(it.tallas)+'</div>':'');
     return '<div class="cart-item" data-key="'+escAttr(it.key)+'"><div class="cart-thumb">'+img+'</div><div class="cart-meta"><div class="cart-name">'+escHtml(it.nombre)+'</div><div class="cart-cat">'+escHtml(it.categoria)+'</div>'+sizeLine+'<div class="cart-price">'+escHtml(it.precio)+'</div></div><div class="cart-line"><button class="cart-remove" type="button" data-act="remove" aria-label="Quitar">×</button><div class="cart-qty"><button type="button" data-act="minus">−</button><span>'+it.qty+'</span><button type="button" data-act="plus">+</button></div></div></div>';
   }).join('');
   var ups=cartUpsellProducts();
-  if(ups.length){list+='<div class="cart-upsell"><div class="cart-upsell-title">Completa tu bolsa</div><div class="cart-upsell-list">'+ups.map(function(p){var pid=P.indexOf(p),ih=p.imagen?'<img src="'+escAttr(cvImg(p.imagen,200))+'" alt="'+escAttr(p.nombre)+'" loading="lazy">':'C';return '<div class="cart-upsell-item"><div class="cart-upsell-img">'+ih+'</div><div><div class="cart-upsell-name">'+escHtml(p.nombre)+'</div><div class="cart-upsell-price">'+escHtml(p.precio)+'</div></div><button class="cart-upsell-btn" type="button" data-upsell-pid="'+pid+'">Agregar</button></div>';}).join('')+'</div></div>';}
+  if(ups.length){list+='<div class="cart-upsell"><div class="cart-upsell-title">Completa tu vestidor</div><div class="cart-upsell-list">'+ups.map(function(p){var pid=P.indexOf(p),ih=p.imagen?'<img src="'+escAttr(cvImg(p.imagen,200))+'" alt="'+escAttr(p.nombre)+'" loading="lazy">':'C';return '<div class="cart-upsell-item"><div class="cart-upsell-img">'+ih+'</div><div><div class="cart-upsell-name">'+escHtml(p.nombre)+'</div><div class="cart-upsell-price">'+escHtml(p.precio)+'</div></div><button class="cart-upsell-btn" type="button" data-upsell-pid="'+pid+'">Agregar</button></div>';}).join('')+'</div></div>';}
   items.innerHTML=list;
 }
 function openCart(){document.body.classList.add('cart-open');var d=document.getElementById('cartDrawer');if(d)d.setAttribute('aria-hidden','false');}
@@ -2869,8 +2870,8 @@ function postOrder(id,items){try{fetch(API_BASE+'/order',{method:'POST',headers:
 function createOrder(items,defer){var id=orderId();if(defer)ORDER_PENDING[id]=items;else postOrder(id,items);return API_BASE+'/o/'+id;}
 document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a[href*="wa.me"]');if(!a)return;var m=decodeURIComponent(a.getAttribute('href')||'').match(/\/o\/([a-z0-9]{8,16})/);if(m&&ORDER_PENDING[m[1]])postOrder(m[1],ORDER_PENDING[m[1]]);},true);
 function cartWhatsText(orderUrl){if(!CART.length)return 'Hola Caneva ✨ Quiero hacer un pedido.';var lines=CART.map(function(it,i){return (i+1)+'. '+it.nombre+' x'+it.qty+' - '+it.precio+(it.size?' | Talla: '+it.size:(it.tallas?' | Tallas disponibles: '+it.tallas:''));});return 'Hola Caneva ✨ Quiero hacer este pedido:\n'+(window.clubMemberLine?clubMemberLine():'')+(orderUrl?'🖼 Ver pedido con fotos: '+orderUrl+'\n':'')+'\n'+lines.join('\n')+'\n\nSubtotal: '+moneyCOP(cartTotal())+'\n¿Me confirmas disponibilidad y domicilio?';}
-function sendCartWhatsApp(){if(!CART.length){toastCart('Tu carrito está vacío');return;}var url=createOrder(CART.map(function(it){return orderItem(it,it.qty,it.size);}),false);window.open('https://wa.me/'+WA_PHONE+'?text='+encodeURIComponent(cartWhatsText(url)),'_blank','noopener');}
-function checkoutBold(){if(!CART.length){toastCart('Tu carrito está vacío');return;}alert('El pago con Bold está temporalmente fuera de servicio. Por ahora finaliza tu pedido por WhatsApp y Caneva te confirma disponibilidad, domicilio y forma de pago.');}
+function sendCartWhatsApp(){if(!CART.length){toastCart('Tu vestidor está vacío');return;}var url=createOrder(CART.map(function(it){return orderItem(it,it.qty,it.size);}),false);window.open('https://wa.me/'+WA_PHONE+'?text='+encodeURIComponent(cartWhatsText(url)),'_blank','noopener');}
+function checkoutBold(){if(!CART.length){toastCart('Tu vestidor está vacío');return;}alert('El pago con Bold está temporalmente fuera de servicio. Por ahora finaliza tu pedido por WhatsApp y Caneva te confirma disponibilidad, domicilio y forma de pago.');}
 function bindCartEvents(){
   var fab=document.getElementById('cartFab'),navCart=document.getElementById('navCart'),mobileCart=document.getElementById('mobileCart'),mobileDockCart=document.getElementById('mobileDockCart'),mobileDockAi=document.getElementById('mobileDockAi'),close=document.getElementById('cartClose'),back=document.getElementById('cartBackdrop'),keep=document.getElementById('cartKeep'),wa=document.getElementById('cartWhats'),bold=document.getElementById('cartBold'),items=document.getElementById('cartItems');
   [fab,navCart,mobileCart,mobileDockCart].forEach(function(el){if(el)el.addEventListener('click',function(){openCart();var mm=document.getElementById('mm');if(mm)mm.classList.remove('o');});});
@@ -2931,7 +2932,7 @@ function aiExtras(ps,sugs){
   if(ps&&ps.length){
     var total=0;ps.forEach(function(p){var n=priceNum(p.precio);if(n<999999999)total+=n;});
     h+='<div class="ai-look">'+(ps.length>1?'<div class="ai-look-head"><small>Tu look Caneva · '+ps.length+' prendas</small><strong>$'+total.toLocaleString('es-CO')+'</strong></div>':'')+
-       '<div class="ai-look-act">'+(ps.length>1?'<button type="button" class="ai-look-add">Agregar look a la bolsa</button>':'<button type="button" class="ai-look-view">Elegir talla y agregar</button>')+
+       '<div class="ai-look-act">'+(ps.length>1?'<button type="button" class="ai-look-add">Agregar look a mi vestidor</button>':'<button type="button" class="ai-look-view">Elegir talla y agregar</button>')+
        '<a class="ai-wa" href="'+lookWhatsLink(ps)+'" target="_blank" rel="noopener">WhatsApp →</a></div>'+
        (window.clubTryOn&&clubTryOn()?'<button type="button" class="ai-look-try">✨ '+(ps.length>1?'Ver el look puesto':'Verla puesta')+' · IA</button>':'')+
        (function(){var L=window.clubLayaway&&clubLayaway();if(!L)return '';if(ps.length===1)return '<button type="button" class="ai-look-ap" data-api="0">Apártala con $'+L.deposit(ps[0].precio).toLocaleString('es-CO')+' · resto en '+L.days+' días</button>';return '<div class="ai-look-apl"><small>¿No te alcanza hoy? Aparta cada prenda con el '+L.pct+'%:</small>'+ps.map(function(p,i){return '<button type="button" class="ai-look-ap sm" data-api="'+i+'">'+escHtml(p.nombre)+' · $'+L.deposit(p.precio).toLocaleString('es-CO')+'</button>';}).join('')+'</div>';})()+
@@ -2945,7 +2946,7 @@ function bindAiExtras(d,ps){
   if(add)add.addEventListener('click',function(){
     var sizes=[];ps.forEach(function(p){var i=P.indexOf(p);if(i<0)return;var sz=chatSizeFor(p);sizes.push(sz);addToCartByIndex(i,false,sz);});
     add.textContent='Look agregado ✓';add.disabled=true;
-    toastCart(sizes.indexOf('Por confirmar')>=0?'Look agregado · confirma tallas en la bolsa':'Look agregado a tu bolsa');
+    toastCart(sizes.indexOf('Por confirmar')>=0?'Look agregado · confirma tallas en tu vestidor':'Look agregado a tu vestidor');
     setTimeout(openCart,450);
   });
   var tr=d.querySelector('.ai-look-try');if(tr)tr.addEventListener('click',function(){if(window.tryStart)tryStart(ps);});
@@ -3267,7 +3268,7 @@ document.getElementById('csend').addEventListener('click',sendChat);
     el.hidden=false;
     // Compact rows: the bag items stay visible on phones; details open on tap
     if(C.user)h+='<div class="cn-row">✨ <span><b>'+esc(C.user.firstName)+'</b>, con esta compra sumas <b>'+pts+' puntos</b></span></div>';
-    if(layOn()&&tot>0)h+='<details class="cn"><summary>🔖 <span>¿No te alcanza? <b>Aparta con '+money(depositFor(tot))+'</b></span></summary><p>Pagas el '+lay().pct+'% hoy y el resto en '+lay().days+' días, en los abonos que quieras. Si no completas, tu abono queda como saldo a favor.</p><button type="button" id="cartApartar">Apartar mi bolsa · '+money(depositFor(tot))+'</button></details>';
+    if(layOn()&&tot>0)h+='<details class="cn"><summary>🔖 <span>¿No te alcanza? <b>Aparta con '+money(depositFor(tot))+'</b></span></summary><p>Pagas el '+lay().pct+'% hoy y el resto en '+lay().days+' días, en los abonos que quieras. Si no completas, tu abono queda como saldo a favor.</p><button type="button" id="cartApartar">Apartar mi vestidor · '+money(depositFor(tot))+'</button></details>';
     if(!C.user){
       h+='<details class="cn"><summary>🖤 <span>Gana <b>'+(pts+loyalty().welcome)+' puntos</b> con esta compra</span></summary><p>Únete gratis al Club Caneva con Google en 10 segundos (incluye '+loyalty().welcome+' de bienvenida).</p><button type="button" id="clubCartJoin">Unirme gratis</button></details>';
       var gv=lsGet(GUEST_KEY);
@@ -3535,9 +3536,9 @@ document.getElementById('csend').addEventListener('click',sendChat);
   // Whole bag from the cart
   async function apartarBolsa(){
     if(!window.CART||!CART.length)return;
-    if(!C.user){if(typeof closeCart==='function')closeCart();openClub();var m=document.getElementById('clubMsg');if(m){m.className='club-msg';m.textContent='Para apartar tu bolsa, entra al Club Caneva: toma 10 segundos 🖤';}return;}
+    if(!C.user){if(typeof closeCart==='function')closeCart();openClub();var m=document.getElementById('clubMsg');if(m){m.className='club-msg';m.textContent='Para apartar tu vestidor, entra al Club Caneva: toma 10 segundos 🖤';}return;}
     var total=cartTotal(),dep=depositFor(total);
-    if(!confirm('Apartar tu bolsa ('+CART.reduce(function(s,x){return s+(Number(x.qty)||1);},0)+' prendas · '+money(total)+')\n\nCuota inicial: '+money(dep)+'\nEl resto ('+money(total-dep)+') lo pagas en '+lay().days+' días, en los abonos que quieras.\nSi no completas, lo abonado queda como saldo a favor.\n\n¿Continuar?'))return;
+    if(!confirm('Apartar tu vestidor ('+CART.reduce(function(s,x){return s+(Number(x.qty)||1);},0)+' prendas · '+money(total)+')\n\nCuota inicial: '+money(dep)+'\nEl resto ('+money(total-dep)+') lo pagas en '+lay().days+' días, en los abonos que quieras.\nSi no completas, lo abonado queda como saldo a favor.\n\n¿Continuar?'))return;
     var win=null;try{win=window.open('','_blank');}catch(e){}
     try{
       var items=CART.map(function(x){return {nombre:x.nombre,categoria:x.categoria,precio:x.precio,size:x.size||'',qty:Number(x.qty)||1};});
@@ -3545,7 +3546,7 @@ document.getElementById('csend').addEventListener('click',sendChat);
       var url=layWhats(d.layaway);
       if(win){win.location.href=url;}else{location.href=url;}
       CART=[];saveCart();if(typeof closeCart==='function')closeCart();
-      if(typeof toastCart==='function')toastCart('Bolsa apartada ✓ Envía tu cuota por WhatsApp');
+      if(typeof toastCart==='function')toastCart('Vestidor apartado ✓ Envía tu cuota por WhatsApp');
       loadAccount();
     }catch(e){if(win)try{win.close();}catch(x){}alert(e.message);}
   }
@@ -3615,7 +3616,7 @@ document.getElementById('csend').addEventListener('click',sendChat);
     var one=TRY.items.length===1,p=TRY.items[0],L=window.clubLayaway&&clubLayaway();
     tbody.innerHTML='<div class="club-kicker">Probador virtual · IA</div><h3 class="club-h">'+(mode==='me'?'Así te verías ✨':'Así se ve puesta ✨')+'</h3>'+
       '<div class="try-result"><img src="'+esc(d.image)+'" alt="Simulación con IA de la prenda puesta"></div>'+
-      '<div class="try-acts"><button type="button" class="main" id="tryAdd">'+(one?'Agregar a la bolsa':'Agregar el look')+'</button>'+
+      '<div class="try-acts"><button type="button" class="main" id="tryAdd">'+(one?'Agregar a mi vestidor':'Agregar el look')+'</button>'+
       (L?'<button type="button" id="tryAp">Apartar · '+money(one?L.deposit(p.precio):TRY.items.reduce(function(s,x){return s+L.deposit(x.precio);},0))+'</button>':'<a href="'+esc(d.image)+'" download="caneva-probador.jpg">Descargar</a>')+
       '<button type="button" id="tryOther">'+(mode==='me'?'Otra foto':'Probar en mí')+'</button>'+
       '<a href="'+esc(d.image)+'" download="caneva-probador.jpg" target="_blank" rel="noopener">Guardar imagen</a></div>'+
@@ -4161,15 +4162,15 @@ body.cv-on .bw-inner{min-width:0;max-width:100%}body.cv-on .bw-inner>*{min-width
     if(busy()){setTimeout(function(){maybeWelcome(true);},2500);return;}
     shown=true;var pts=(clubInfo().welcome)||100;
     var d=document.createElement('div');d.className='cv-wel';d.setAttribute('role','dialog');d.setAttribute('aria-label','Club Caneva');
-    d.innerHTML='<button class="x" type="button" aria-label="Cerrar">✕</button><small>Solo para Canevalovers</small><h4>Tienes un <b>regalo</b> 🖤</h4>'+
+    d.innerHTML='<button class="x" type="button" aria-label="Cerrar">✕</button><small>Solo para Canevalovers</small><h4>Tienes un <b>diamante</b> 💎</h4>'+
       '<div class="cv-scr"><div class="cv-scr-prize"><span>🎁</span><b>'+pts+' puntos</b><em>para tu primera compra</em></div><canvas aria-label="Raspa para descubrir tu regalo"></canvas><div class="cv-scr-hint">Raspa con el dedo ✨</div></div>'+
       '<p>Únete al Club Caneva en 10 segundos, con Google o tu correo. Sumas puntos en cada compra y los cambias por descuentos y una prenda sorpresa.</p><div class="cv-wb"><button class="yes" type="button">Reclamar mis puntos</button><button class="no" type="button">Ahora no</button></div>';
     document.body.appendChild(d);requestAnimationFrame(function(){requestAnimationFrame(function(){d.classList.add('show');});});
     // Scratch layer: black-and-gold foil that she scratches with the finger to reveal the prize
     (function(){var box=d.querySelector('.cv-scr'),cv=box.querySelector('canvas'),x=cv.getContext('2d'),done=false,down=false,last=null;
       function size(){var r=box.getBoundingClientRect(),k=Math.min(devicePixelRatio||1,2);cv.width=r.width*k;cv.height=r.height*k;x.setTransform(k,0,0,k,0,0);
-        var g=x.createLinearGradient(0,0,r.width,r.height);g.addColorStop(0,'#2a2418');g.addColorStop(.45,'#c9a96e');g.addColorStop(.55,'#f1e0b8');g.addColorStop(1,'#3a2f1c');x.fillStyle=g;x.fillRect(0,0,r.width,r.height);
-        x.fillStyle='rgba(5,5,5,.75)';x.font='600 12px Inter,sans-serif';x.textAlign='center';x.fillText('RASPA AQUÍ',r.width/2,r.height/2+4);x.globalCompositeOperation='destination-out';}
+        var g=x.createLinearGradient(0,0,r.width,r.height);g.addColorStop(0,'#2b2f33');g.addColorStop(.42,'#cfd6db');g.addColorStop(.5,'#ffffff');g.addColorStop(.58,'#dfe7ec');g.addColorStop(1,'#33383d');x.fillStyle=g;x.fillRect(0,0,r.width,r.height);
+        x.fillStyle='rgba(5,5,5,.75)';x.font='600 12px Inter,sans-serif';x.textAlign='center';x.fillText('💎 RASPA TU DIAMANTE',r.width/2,r.height/2+4);x.globalCompositeOperation='destination-out';}
       setTimeout(size,60);
       function pos(e){var r=cv.getBoundingClientRect(),t=e.touches?e.touches[0]:e;return {x:t.clientX-r.left,y:t.clientY-r.top};}
       function scratch(e){if(!down||done)return;e.preventDefault();var p=pos(e);x.lineWidth=34;x.lineCap='round';x.beginPath();x.moveTo((last||p).x,(last||p).y);x.lineTo(p.x,p.y);x.stroke();last=p;
@@ -4185,6 +4186,8 @@ body.cv-on .bw-inner{min-width:0;max-width:100%}body.cv-on .bw-inner>*{min-width
     d.querySelector('.no').onclick=function(){close(7);};d.querySelector('.x').onclick=function(){close(7);};
   }
   setTimeout(function(){maybeWelcome(true);},30000);
+  // v70: when she scrolls past the first screen, the Club gift shows (once; only guests, never over other windows)
+  var sc=function(){if((window.scrollY||0)>window.innerHeight*1.1){window.removeEventListener('scroll',sc);setTimeout(function(){maybeWelcome(true);},700);}};window.addEventListener('scroll',sc,{passive:true});
 })();
 </script>
 <style id="cv-ai-pro-css">
@@ -4244,7 +4247,7 @@ body.cv-on .bw-inner{min-width:0;max-width:100%}body.cv-on .bw-inner>*{min-width
     box.addEventListener('click',function(e){
       var c=e.target.closest('.lk');if(!c)return;var l=L[+c.dataset.lk];LAST=l.items;
       var ph=e.target.closest('[data-pid]');if(ph){openProductModal(parseInt(ph.dataset.pid,10));return;}
-      if(e.target.closest('.add')){l.items.forEach(function(p){var i=P.indexOf(p);if(i>=0)addToCartByIndex(i,false,chatSizeFor(p));});toastCart('Look agregado a la bolsa ✨');return;}
+      if(e.target.closest('.add')){l.items.forEach(function(p){var i=P.indexOf(p);if(i>=0)addToCartByIndex(i,false,chatSizeFor(p));});toastCart('Look agregado a tu vestidor ✨');return;}
       if(e.target.closest('.try')&&window.tryStart){tryStart(l.items);}
     });
     cmsgs.scrollTop=cmsgs.scrollHeight;
@@ -5078,7 +5081,7 @@ body.cv-fast .bw-logo-wrap{transform:scale(.82);transform-origin:center top;marg
     clearTimeout(idle);
     var items=CART.slice(0,4),total=typeof cartTotal==='function'?cartTotal():0,n=CART.reduce(function(s,x){return s+(x.qty||1);},0);
     var d=document.createElement('div');d.className='cv-bagn';d.setAttribute('role','dialog');
-    d.innerHTML='<h5>💛 Tu bolsa te está esperando</h5><p>Tienes '+n+(n===1?' prenda':' prendas')+(total?' por $'+Number(total).toLocaleString('es-CO'):'')+'. Escríbenos y te las apartamos antes de que se agoten.</p>'+
+    d.innerHTML='<h5>💎 Tu vestidor te está esperando</h5><p>Tienes '+n+(n===1?' prenda':' prendas')+(total?' por $'+Number(total).toLocaleString('es-CO'):'')+'. Escríbenos y te las apartamos antes de que se agoten.</p>'+
       '<div class="im">'+items.map(function(it){return it.imagen?'<img src="'+esc(it.imagen)+'" alt="">':'';}).join('')+'</div>'+
       '<div class="bt"><button type="button" class="go">Pedir por WhatsApp</button><button type="button" class="later">Seguir viendo</button></div>';
     document.body.appendChild(d);requestAnimationFrame(function(){d.classList.add('show');});
@@ -5575,7 +5578,7 @@ body.cv-has-pbar .ann-bar{display:none!important}
   }
   function paintQty(){var n=document.getElementById('cvQtyN');if(n)n.textContent=wantQty;var m=document.querySelector('#cvQty [data-cq="-1"]');if(m)m.disabled=wantQty<=1;}
   if(typeof openProductModal==='function'){var oOpen=openProductModal;openProductModal=function(){var r=oOpen.apply(this,arguments);try{qtyRow();}catch(e){}return r;};}
-  // ---- after "Agregar al carrito" in the product: add the chosen quantity and show the sheet ----
+  // ---- after "Agregar a mi vestidor" in the product: add the chosen quantity and show the sheet ----
   document.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('#pmAddCart'))fromModal=true;},true);
   var oAdd=addToCartByIndex;
   addToCartByIndex=function(idx,open,size){
@@ -5595,11 +5598,11 @@ body.cv-has-pbar .ann-bar{display:none!important}
   function addedSheet(key,p){
     var it=(window.CART||[]).find(function(x){return x.key===key;});if(!it)return;
     var meta=[it.size?'Talla '+it.size:'',it.color?'Color '+it.color:''].filter(Boolean).join(' · ');
-    var s=sheet('<div class="cv-shh"><b>✓ Agregado a tu bolsa</b><button type="button" data-sh="x" aria-label="Cerrar">×</button></div>'+
+    var s=sheet('<div class="cv-shh"><b>✓ Agregado a tu vestidor</b><button type="button" data-sh="x" aria-label="Cerrar">×</button></div>'+
       '<div class="cv-added">'+(it.imagen?'<img src="'+esc(cvImg(it.imagen,200))+'" alt="">':'')+'<div><h4>'+esc(it.nombre)+'</h4><small>'+esc(meta||it.precio)+(meta?' · '+esc(it.precio):'')+'</small>'+
       '<div class="cv-qbox"><button type="button" data-sq="-1" aria-label="Menos">−</button><b id="cvShQ">'+it.qty+'</b><button type="button" data-sq="1" aria-label="Más">+</button></div></div></div>'+
-      '<div class="cv-bagline"><span>Tu bolsa: <b id="cvShU">'+units()+'</b> prenda(s)</span><b id="cvShT">'+money(typeof cartTotal==='function'?cartTotal():0)+'</b></div>'+
-      '<button type="button" class="cv-go" data-sh="bag">🛍 Ir a la bolsa y pedir</button><button type="button" class="cv-stay" data-sh="stay">Seguir comprando</button>');
+      '<div class="cv-bagline"><span>Tu vestidor: <b id="cvShU">'+units()+'</b> prenda(s)</span><b id="cvShT">'+money(typeof cartTotal==='function'?cartTotal():0)+'</b></div>'+
+      '<button type="button" class="cv-go" data-sh="bag">💎 Ir a mi vestidor y pedir</button><button type="button" class="cv-stay" data-sh="stay">Seguir comprando</button>');
     push({t:'k',k:'agregado_hoja'});
     s.addEventListener('click',function(e){
       var q=e.target.closest('[data-sq]');
@@ -5639,7 +5642,7 @@ body.cv-has-pbar .ann-bar{display:none!important}
       cvMadeHtml(cvMade(window.CART||[]))+
       f(FIELDS[0])+'<div class="cv-row2">'+f(FIELDS[1])+f(FIELDS[2])+'</div>'+f(FIELDS[3])+'<div class="cv-row2">'+f(FIELDS[4])+f(FIELDS[5])+'</div>'+f(FIELDS[6])+f(FIELDS[7])+f(FIELDS[8])+
       '<label class="cv-keep"><input type="checkbox" name="keep" checked> Recordar mis datos en este celular</label>'+
-      '<button type="submit" class="cv-go">'+(target==='cartBreb'?'⚡ Continuar al pago con Bre-B':bold?'💳 Continuar al pago':'Enviar pedido por WhatsApp')+'</button><button type="button" class="cv-stay" data-sh="x">Volver a la bolsa</button>'+
+      '<button type="submit" class="cv-go">'+(target==='cartBreb'?'💎 Continuar al pago con Bre-B':bold?'💳 Continuar al pago':'Enviar pedido por WhatsApp')+'</button><button type="button" class="cv-stay" data-sh="x">Volver a mi vestidor</button>'+
       '<div class="cv-priv">Usamos tus datos solo para tu pedido y envío. <a href="privacidad.html" target="_blank" rel="noopener">Privacidad</a></div></form>','cv-formbox');
     push({t:'k',k:'checkout_form',l:target==='cartBreb'?'breb':bold?'bold':'whatsapp'});
     var form=s.querySelector('form');
@@ -5675,11 +5678,17 @@ body.cv-has-pbar .ann-bar{display:none!important}
 </script>
 
 <style id="cvbreb-css">
-#cartBreb.cv-breb-btn{display:flex!important;align-items:center;justify-content:center;width:100%;background:transparent!important;color:#faf9f6!important;border:1px solid #5ef0a0!important;padding:.95rem 1.2rem;font-family:'Inter',sans-serif;font-size:.64rem;letter-spacing:.18em;text-transform:uppercase;font-weight:700;cursor:pointer;border-radius:999px;margin-top:.5rem}
-.cv-breb-note{font-family:'Inter',sans-serif;font-size:.6rem;color:var(--dim,rgba(250,249,246,.6));text-align:center;margin:.35rem 0 .6rem;letter-spacing:.04em}
+#cartBreb.cv-breb-btn{position:relative;overflow:hidden;display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:3px;width:100%;margin:.2rem 0 .7rem;padding:1.05rem 1.2rem .95rem;border:0!important;border-radius:999px;cursor:pointer;color:#050505!important;font-family:'Inter',sans-serif;background:linear-gradient(120deg,#cfd6db 0%,#ffffff 28%,#e8eef2 50%,#ffffff 72%,#c3ccd2 100%)!important;background-size:220% 100%!important;animation:bbShine 5s ease-in-out infinite;box-shadow:0 0 0 1px rgba(255,255,255,.55),0 12px 34px rgba(190,225,255,.22),inset 0 1px 0 #fff}
+#cartBreb.cv-breb-btn::after{content:'';position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.95),transparent);transform:skewX(-20deg);animation:bbSweep 3.2s ease-in-out infinite;pointer-events:none}
+#cartBreb .bb-main{font-size:.74rem;letter-spacing:.2em;text-transform:uppercase;font-weight:800}
+#cartBreb .bb-sub{font-size:.64rem;letter-spacing:.02em;text-transform:none;color:rgba(5,5,5,.66);font-weight:500}
+#cartBreb .bb-tag{position:static;margin-bottom:3px;font-size:.5rem;letter-spacing:.16em;text-transform:uppercase;font-weight:800;background:#050505;color:#fff;border-radius:999px;padding:.18rem .5rem}
+@keyframes bbShine{0%,100%{background-position:0 0}50%{background-position:100% 0}}@keyframes bbSweep{0%{left:-60%}55%,100%{left:130%}}
+#cartBold.cv-bold-on{background:transparent!important;color:#faf9f6!important;border:1px solid rgba(250,249,246,.35)!important}
+.cv-breb-note{display:none}
 .cv-bpay .cv-bb-tot{font-size:2rem;font-weight:600;margin:.2rem 0 .8rem;font-family:'Inter',sans-serif}
 .cv-bpay .cv-bb-step{display:flex;align-items:center;gap:10px;text-align:left;border:1px solid rgba(250,249,246,.14);border-radius:14px;padding:.7rem .8rem;margin:.45rem 0;font-size:.8rem;line-height:1.4}
-.cv-bpay .cv-bb-step i{flex:0 0 22px;height:22px;border-radius:50%;background:#5ef0a0;color:#050505;font-style:normal;font-weight:700;font-size:.72rem;display:flex;align-items:center;justify-content:center}
+.cv-bpay .cv-bb-step i{flex:0 0 22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#ffffff,#cfd6db);color:#050505;font-style:normal;font-weight:700;font-size:.72rem;display:flex;align-items:center;justify-content:center}
 .cv-bpay .cv-bb-step div{flex:1;min-width:0}.cv-bpay .cv-bb-step small{display:block;color:rgba(250,249,246,.6);font-size:.68rem}
 .cv-bpay .cv-bb-step b{font-size:1rem;word-break:break-all}
 .cv-bpay .cv-bb-step button.cp{display:inline-block;width:auto;margin:0;flex:0 0 auto;padding:.5rem .8rem;font-size:.58rem;letter-spacing:.12em;background:none;color:#faf9f6;border:1px solid rgba(250,249,246,.35);border-radius:999px}
@@ -5715,14 +5724,14 @@ body.cv-has-pbar .ann-bar{display:none!important}
     push({t:'k',k:'pago_breb',l:money(total)});
     var lines=cart.map(function(it){return '• '+it.nombre+(it.size?' (talla '+it.size+')':'')+(it.qty>1?' x'+it.qty:'');}).join('\n');
     var wa='https://wa.me/'+phone()+'?text='+encodeURIComponent('Hola Caneva ✨ Ya pagué con Bre-B a la llave '+LLAVE+'.\nPedido '+ref+' por '+money(total)+'\n'+lines+'\n\nTe envío el comprobante 👇\n'+API_BASE+'/o/'+id);
-    var o=overlay('<div class="cv-bico">⚡</div><h3>Paga con Bre-B</h3><p>Sin comisión, desde la app de tu banco o billetera. Te llega al instante.</p>'+
+    var o=overlay('<div class="cv-bico">💎</div><h3>Paga con Bre-B</h3><p>Sin comisión, desde la app de tu banco o billetera. Te llega al instante.</p>'+
       '<div class="cv-bb-tot">'+money(total)+'</div>'+
       '<div class="cv-bb-step"><i>1</i><div>En tu app (Nequi, Bancolombia, Daviplata…) elige <b style="font-size:.8rem">Bre-B · Enviar con llave</b></div></div>'+
       '<div class="cv-bb-step"><i>2</i><div><small>Llave</small><b>'+esc(LLAVE)+'</b></div><button type="button" class="cp" data-cp="'+esc(LLAVE)+'">Copiar</button></div>'+
       '<div class="cv-bb-step"><i>3</i><div><small>Valor</small><b>'+money(total)+'</b></div><button type="button" class="cp" data-cp="'+Math.round(total)+'">Copiar</button></div>'+
       '<div class="cv-bb-step"><i>4</i><div><small>En la descripción escribe</small><b>Pedido '+esc(ref)+'</b></div><button type="button" class="cp" data-cp="Pedido '+esc(ref)+'">Copiar</button></div>'+
       '<a class="pri" href="'+wa+'" target="_blank" rel="noopener" data-bb="done">✅ Ya pagué · enviar comprobante</a>'+
-      '<button class="sec" type="button" data-bb="back">Volver a la bolsa</button>'+
+      '<button class="sec" type="button" data-bb="back">Volver a mi vestidor</button>'+
       '<p class="cv-bb-small">'+(/barranquilla|soledad|puerto colombia|malambo|galapa/i.test(String((buyer&&buyer.city)||window.CV_CITY||''))?'':'El envío a tu ciudad te lo confirmamos por WhatsApp. ')+'Tu pedido queda apartado y lo despachamos apenas veamos tu pago (normalmente en minutos).</p>');
     busy=false;
     o.addEventListener('click',function(e){
@@ -5859,7 +5868,7 @@ body.cv-has-pbar .ann-bar{display:none!important}
     });
   }
   function pay(){
-    if(busyNow)return;var cart=window.CART||[];if(!cart.length){if(typeof toastCart==='function')toastCart('Tu carrito está vacío');return;}
+    if(busyNow)return;var cart=window.CART||[];if(!cart.length){if(typeof toastCart==='function')toastCart('Tu vestidor está vacío');return;}
     busyNow=true;var b=btn();if(b){b.disabled=true;b.innerHTML='Preparando pago…';}
     var body={items:cart.map(function(it){return {pid:it.pid||'',nombre:it.nombre,categoria:it.categoria,qty:it.qty,size:it.size||'',color:it.color||''};})};
     var buyer=window.cvBuyer?cvBuyer():null;if(buyer){body.buyer=buyer;body.email=buyer.email;}
@@ -5877,7 +5886,7 @@ body.cv-has-pbar .ann-bar{display:none!important}
           c.open();
         });
       })
-      .catch(function(e){overlay('<div class="cv-bico">⚠️</div><h3>No pudimos abrir el pago</h3><p>'+esc(e.message)+'</p><button class="pri" type="button" data-cvb="close">Volver a la bolsa</button><a class="sec" href="'+waHref('Hola Caneva ✨ Quiero pagar mi pedido y no me abrió Bold.')+'" target="_blank" rel="noopener">Pedir por WhatsApp</a>');})
+      .catch(function(e){overlay('<div class="cv-bico">⚠️</div><h3>No pudimos abrir el pago</h3><p>'+esc(e.message)+'</p><button class="pri" type="button" data-cvb="close">Volver a mi vestidor</button><a class="sec" href="'+waHref('Hola Caneva ✨ Quiero pagar mi pedido y no me abrió Bold.')+'" target="_blank" rel="noopener">Pedir por WhatsApp</a>');})
       .then(function(){busyNow=false;var b2=btn();if(b2){b2.disabled=false;b2.innerHTML='💳 Pagar en línea · Bold';}});
   }
   // Capture phase: runs before the old "Bold fuera de servicio" handler
@@ -5912,7 +5921,7 @@ body.cv-has-pbar .ann-bar{display:none!important}
           showReceipt(oid,d);
         }else if(/REJECTED|FAILED|VOIDED/.test(st)){
           push({t:'k',k:'pago_rechazado',l:st});
-          overlay('<div class="cv-bico">💳</div><h3>El pago no se completó</h3><p>Bold indica que la transacción fue rechazada. Tus prendas siguen en la bolsa: puedes intentarlo de nuevo o pedir por WhatsApp.</p><button class="pri" type="button" data-cvb="retry">Intentar de nuevo</button><a class="sec" href="'+waHref('Hola Caneva ✨ Intenté pagar con Bold y no pasó. ¿Me ayudas?')+'" target="_blank" rel="noopener">Pedir por WhatsApp</a>');
+          overlay('<div class="cv-bico">💳</div><h3>El pago no se completó</h3><p>Bold indica que la transacción fue rechazada. Tus prendas siguen en tu vestidor: puedes intentarlo de nuevo o pedir por WhatsApp.</p><button class="pri" type="button" data-cvb="retry">Intentar de nuevo</button><a class="sec" href="'+waHref('Hola Caneva ✨ Intenté pagar con Bold y no pasó. ¿Me ayudas?')+'" target="_blank" rel="noopener">Pedir por WhatsApp</a>');
         }else if(tries<8){setTimeout(check,tries<3?3000:6000);}
         else overlay('<div class="cv-bico">⏳</div><h3>Pago en proceso</h3><p>Bold aún está confirmando tu pago (pasa con PSE). Te avisamos por WhatsApp apenas se apruebe.</p><a class="pri" href="'+waHref('Hola Caneva ✨ Pagué con Bold mi pedido #'+oid.toUpperCase().slice(0,6)+' y está en proceso.')+'" target="_blank" rel="noopener">Avisar a Caneva</a><button class="sec" type="button" data-cvb="close">Seguir mirando</button>');
       }).catch(function(){if(tries<8)setTimeout(check,5000);});
@@ -6041,7 +6050,7 @@ body.product-open .cv-wel{display:none!important}
     pr.textContent=p.precio||'';
     sm.textContent=s?('Talla '+s):(sizes.length>1?'Tallas '+sizes.join(' · '):(sizes[0]?'Talla '+sizes[0]:'Envío a toda Colombia'));
     var need=needsSize(p);btn.classList.toggle('size',need);
-    btn.textContent=need?'Elegir talla':'Agregar a la bolsa';
+    btn.textContent=need?'Elegir talla':'Agregar a mi vestidor';
   }
   var o=openProductModal;
   openProductModal=window.openProductModal=function(){var r=o.apply(this,arguments);try{if(window.matchMedia('(max-width:640px)').matches&&build()){bar.classList.remove('off');paint();}}catch(e){}return r;};
@@ -6124,7 +6133,7 @@ body.product-open .cv-wel{display:none!important}
 })();
 </script>
 <style id="cvsell-css">
-/* v64 CANEVA Vende: trust strip in the product, "Te guardo tu bolsa" and TikTok fast landing */
+/* v64 CANEVA Vende: trust strip in the product, "Te guardo tus prendas" and TikTok fast landing */
 .cv-trust2{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:.2rem 0 .8rem;font-family:'Inter',sans-serif}
 .cv-trust2 .t{display:flex;align-items:center;gap:7px;padding:.55rem .6rem;border:1px solid rgba(250,249,246,.14);border-radius:10px;background:rgba(250,249,246,.03);font-size:.68rem;line-height:1.25;color:rgba(250,249,246,.86)}
 .cv-trust2 .t i{font-style:normal;font-size:1rem;flex:none}
@@ -6156,7 +6165,7 @@ body.product-open .cv-wel{display:none!important}
 <script id="cvsell">
 // v64 CANEVA Vende:
 // 1) Trust strip in the product window: pay on delivery all over Colombia, size exchange and "¿Qué talla soy?" by WhatsApp.
-// 2) "Te guardo tu bolsa": when someone with garments in the bag stops, comes back from another app or is leaving,
+// 2) "Te guardo tus prendas": when someone with garments in the bag stops, comes back from another app or is leaving,
 //    she can leave her WhatsApp (optional) so Caneva can write to her. It shows in Control → Bolsas para rescatar.
 // 3) TikTok fast landing: visitors from TikTok with ?p= see the garment at once (from the catalog inside the page),
 //    without waiting for the live catalog; without ?p= they go straight to the garments.
@@ -6199,7 +6208,7 @@ body.product-open .cv-wel{display:none!important}
   var oOpen=openProductModal;
   window.openProductModal=openProductModal=function(i){var r=oOpen.apply(this,arguments);try{trust();}catch(e){}return r;};
 
-  // ---------- 2) "Te guardo tu bolsa" ----------
+  // ---------- 2) "Te guardo tus prendas" ----------
   var BUYER='caneva_buyer_v1',SAVED='cv_bag_wa',t0=Date.now(),idleT=null,shown=false;
   function bag(){return window.CART||[];}
   function knownPhone(){
@@ -6230,11 +6239,11 @@ body.product-open .cv-wel{display:none!important}
     if(!allowed()||busy())return;
     shown=true;ss('cv_save_done','1');ls('cv_save_at',String(Date.now()));
     var it=bag()[0]||{},n=bag().reduce(function(a,x){return a+(Number(x.qty)||1);},0),g=guess();
-    var o=document.createElement('div');o.id='cvSave';o.className='cv-save';o.setAttribute('role','dialog');o.setAttribute('aria-label','Guardar mi bolsa');
+    var o=document.createElement('div');o.id='cvSave';o.className='cv-save';o.setAttribute('role','dialog');o.setAttribute('aria-label','Guardar mis prendas');
     o.innerHTML='<button type="button" class="x" aria-label="Cerrar">×</button>'+
-      '<div class="hd">'+(it.imagen?'<img src="'+esc(window.cvImg?cvImg(it.imagen,200):it.imagen)+'" alt="">':'')+'<div><h4>'+(g.name?esc(g.name)+', te':'Te')+' guardo tu bolsa 🛍</h4><p>Tienes '+n+' prenda'+(n>1?'s':'')+' esperándote. Déjame tu WhatsApp y te aviso antes de que se agote tu talla'+promoLine()+'.</p></div></div>'+
+      '<div class="hd">'+(it.imagen?'<img src="'+esc(window.cvImg?cvImg(it.imagen,200):it.imagen)+'" alt="">':'')+'<div><h4>'+(g.name?esc(g.name)+', te':'Te')+' guardo tus prendas 💎</h4><p>Tienes '+n+' prenda'+(n>1?'s':'')+' esperándote. Déjame tu WhatsApp y te aviso antes de que se agote tu talla'+promoLine()+'.</p></div></div>'+
       '<form novalidate><input type="tel" inputmode="numeric" autocomplete="tel" maxlength="14" placeholder="Tu WhatsApp · 300 123 4567" value="'+esc(g.phone)+'"><button class="go" type="submit">Guardar</button></form>'+
-      '<div class="err" hidden></div><span class="fine">Solo lo usamos para escribirte sobre tu bolsa.</span>';
+      '<div class="err" hidden></div><span class="fine">Solo lo usamos para escribirte sobre tus prendas.</span>';
     document.body.appendChild(o);requestAnimationFrame(function(){o.classList.add('on');});
     push({t:'k',k:'bolsa_rescate_visto',l:why});
     var bye=function(){o.classList.remove('on');setTimeout(function(){o.remove();},500);};
@@ -6246,8 +6255,8 @@ body.product-open .cv-wel{display:none!important}
       push({t:'bagwa',p:'57'+v,n:(g.name||'').slice(0,40)});push({t:'k',k:'bolsa_guardada'});
       var tx='Hola Caneva ✨ Quiero terminar mi pedido:\n'+bag().map(function(x){return '• '+x.nombre+(x.size?' talla '+x.size:'')+' ('+x.precio+')';}).join('\n');
       o.querySelector('form').remove();er.remove();
-      var ok=document.createElement('div');ok.innerHTML='<div class="ok"><b>¡Listo! Tu bolsa quedó guardada.</b> Si quieres, termínala ya: es 1 minuto.</div>'+
-        '<div class="row2"><button type="button" class="p" data-bag>Ver mi bolsa</button><button type="button" data-wa>Pedir por WhatsApp</button></div>';
+      var ok=document.createElement('div');ok.innerHTML='<div class="ok"><b>¡Listo! Tus prendas quedaron guardadas.</b> Si quieres, termínala ya: es 1 minuto.</div>'+
+        '<div class="row2"><button type="button" class="p" data-bag>Ver mi vestidor</button><button type="button" data-wa>Pedir por WhatsApp</button></div>';
       o.insertBefore(ok,o.querySelector('.fine'));
       ok.querySelector('[data-bag]').onclick=function(){bye();if(typeof renderCart==='function')renderCart();if(typeof openCart==='function')openCart();};
       ok.querySelector('[data-wa]').onclick=function(){bye();var h='https://wa.me/'+PHONE+'?text='+encodeURIComponent(tx);if(window.canevaWithRef)h=canevaWithRef(h);push({t:'wa',k:'bolsa guardada',bag:bag().slice(0,8).map(function(x){return x.nombre;})});window.open(h,'_blank');};
@@ -6408,7 +6417,7 @@ body.product-open .cv-wel{display:none!important}
       try{localStorage.setItem('cv_bag_wa',v);}catch(x){}
       var nm='';try{var b=JSON.parse(localStorage.getItem('caneva_buyer_v1')||'{}');nm=String(b.name||'').split(' ')[0];}catch(x){}
       push({t:'bagwa',p:'57'+v,n:nm.slice(0,40)});push({t:'k',k:'bolsa_guardada',l:'en la hoja'});
-      k.className='cv-keep ok';k.innerHTML='<p>✓ Listo, tu bolsa queda guardada. Te escribimos si se agota tu talla.</p>';
+      k.className='cv-keep ok';k.innerHTML='<p>✓ Listo, tus prendas quedan guardadas. Te escribimos si se agota tu talla.</p>';
       document.querySelectorAll('.cv-keep:not(.ok)').forEach(function(x){x.remove();});
     };
   }
