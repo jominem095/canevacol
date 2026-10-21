@@ -5882,8 +5882,8 @@ body.cv-has-pbar .ann-bar{display:none!important}
       el.addEventListener('click',function(){try{if(window.cvStatsPush)cvStatsPush({t:'k',k:'club'});}catch(e){}if(window.openClub)openClub();});}
     // guests: first thing on the page, like an ad; members: under the top garment
     var mt=document.getElementById('cvMatchT'),reel=document.getElementById('cvReel');
-    if(!u&&reel&&reel.parentNode){if(el.nextSibling!==reel)reel.parentNode.insertBefore(el,reel);}
-    else if(mt&&mt.parentNode){if(el.nextSibling!==mt)mt.parentNode.insertBefore(el,mt);}
+    // v71b: always right under the stories runway (before the style game)
+    if(mt&&mt.parentNode){if(el.nextSibling!==mt)mt.parentNode.insertBefore(el,mt);}
     else if(reel&&reel.parentNode){if(el.previousSibling!==reel)reel.parentNode.insertBefore(el,reel.nextSibling);}
     else return;
     var html;
