@@ -4621,7 +4621,7 @@ body.cv-fast .bw-logo-wrap{transform:scale(.82);transform-origin:center top;marg
       '<button type="button" class="cv-si all" data-cvall>Ver todo<br>→</button></div>';
     // v71: a Club Caneva tile as the 3rd card for guests
     try{var ci=window.clubInfo&&clubInfo();if(ci&&ci.active&&!ci.user){var row=d.querySelector('.cv-strip-row'),ref=row.children[2]||null,t=document.createElement('button');t.type='button';t.className='cv-si cv-si-club';
-      t.innerHTML='<span><i class="g">💎</i><i class="k">👑 Club Caneva</i><i class="c"><i class="w">CΛNEVΛ</i><i class="p">'+(ci.welcome||100)+'<small>pts</small></i></i><i class="u">Unirme →</i></span><b>Club Caneva</b><small>🎁 '+(ci.welcome||100)+' puntos de regalo</small>';
+      t.innerHTML='<span><i class="k">👑 Club Caneva</i><i class="c"><i class="w">CΛNEVΛ</i><i class="p">'+(ci.welcome||100)+'<small>pts</small></i></i><i class="u">Unirme →</i></span><b>Club Caneva</b><small>🎁 '+(ci.welcome||100)+' puntos de regalo</small>';
       t.addEventListener('click',function(ev){ev.stopPropagation();try{if(window.cvStatsPush)cvStatsPush({t:'k',k:'club',l:'lo mas nuevo'});}catch(x){}if(window.openClub)openClub();});row.insertBefore(t,ref);}}catch(x){}
     // for ad visitors the garments go first; for everyone else, right after the category cards
     if(fromAd)vit.parentNode.insertBefore(d,vit);else vit.appendChild(d);
@@ -4725,7 +4725,7 @@ body.cv-fast .bw-logo-wrap{transform:scale(.82);transform-origin:center top;marg
     list=l;builtFrom=P;cur=-1;clearTimeout(timer);endShown=false;
     r.innerHTML='<div class="cv-rbars">'+list.map(function(){return '<i><b></b></i>';}).join('')+'</div>'+
       '<div class="cv-rtop"><span class="wm">CΛNEVΛ</span><span class="tg"></span></div>'+
-      list.map(function(p,i){if(p.__club)return '<div class="cv-rs cv-rs-club"><div class="rcb"><div class="rcb-glow"></div><div class="rcb-k">👑 Club Caneva</div><div class="rcb-card"><span class="gem">💎</span><span class="w">CΛNEVΛ</span><span class="cl">CLUB · MEMBER</span><span class="chip"></span><span class="nm">Tu nombre aquí</span><span class="pt"><b>'+p.welcome+'</b><small>puntos</small></span></div><div class="rcb-perks"><span>🎁 '+p.welcome+' pts al unirte</span><span>💎 Puntos en cada compra</span><span>🏷️ Descuentos y sorpresas</span></div></div></div>';
+      list.map(function(p,i){if(p.__club)return '<div class="cv-rs cv-rs-club"><div class="rcb"><div class="rcb-glow"></div><div class="rcb-k">👑 Club Caneva</div><div class="rcb-card"><span class="gem">💎</span><span class="w">CΛNEVΛ</span><span class="cl">CLUB · MEMBER</span><span class="chip"></span><span class="nm">Tu nombre aquí</span><span class="pt"><b>'+p.welcome+'</b><small>puntos</small></span></div><div class="rcb-perks"><span>🎁 '+p.welcome+' pts al unirte</span><span>✦ Puntos en cada compra</span><span>🏷️ Descuentos y sorpresas</span></div></div></div>';
         return '<div class="cv-rs"><img alt="'+esc(p.nombre)+'" decoding="async"'+(i===0?' fetchpriority="high" src="'+esc(cvImg(p.imagen,900))+'"':' data-src="'+esc(cvImg(p.imagen,900))+'"')+'></div>';}).join('')+
       '<div class="cv-rinfo"><small></small><h2><span></span></h2><div class="pr"><b></b><button type="button" data-rgo>Ver prenda →</button></div></div><div class="cv-rtap"><i></i>Toca la foto para verla</div><div class="cv-rend"></div>';
     slides=r.querySelectorAll('.cv-rs');bars=r.querySelectorAll('.cv-rbars i');
@@ -5874,32 +5874,34 @@ body.cv-has-pbar .ann-bar{display:none!important}
     return {per:Number.isFinite(l.pointsPer1000)?l.pointsPer1000:1,welcome:Number.isFinite(l.welcomePoints)?l.welcomePoints:100,rewards:rw.slice().sort(function(a,b){return a.points-b.points;})};}
   function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
   var last='';
+  // v71b: always right under the stories runway (before the style game)
+  function place(el){var reel=document.getElementById('cvReel'),mt=document.getElementById('cvMatchT');
+    if(reel&&reel.parentNode){if(reel.nextSibling!==el)reel.parentNode.insertBefore(el,reel.nextSibling);return true;}
+    if(mt&&mt.parentNode){if(el.nextSibling!==mt)mt.parentNode.insertBefore(el,mt);return true;}
+    return false;}
   function render(){
     var ci=info();if(!ci||!ci.active)return;
     var u=ci.user,l=L(),r0=l.rewards[0]||{name:'un descuento',points:300},key=u?('u'+(u.points||0)+(u.firstName||'')):'g'+l.welcome;
-    var el=document.getElementById('cvClubHero');if(el&&key===last)return;last=key;
+    var el=document.getElementById('cvClubHero');if(el&&key===last){place(el);return;}last=key;
     if(!el){el=document.createElement('div');el.id='cvClubHero';el.className='cv-clubh';el.setAttribute('role','button');el.tabIndex=0;
       el.addEventListener('click',function(){try{if(window.cvStatsPush)cvStatsPush({t:'k',k:'club'});}catch(e){}if(window.openClub)openClub();});}
     // guests: first thing on the page, like an ad; members: under the top garment
     var mt=document.getElementById('cvMatchT'),reel=document.getElementById('cvReel');
-    // v71b: always right under the stories runway (before the style game)
-    if(mt&&mt.parentNode){if(el.nextSibling!==mt)mt.parentNode.insertBefore(el,mt);}
-    else if(reel&&reel.parentNode){if(el.previousSibling!==reel)reel.parentNode.insertBefore(el,reel.nextSibling);}
-    else return;
+    if(!place(el))return;
     var html;
     if(u){var pts=u.points||0,next=l.rewards.find(function(r){return r.points>pts;}),has=l.rewards.filter(function(r){return r.points<=pts;}).pop();
       html='<div class="cv-clubh-in"><div class="cv-clubh-top"><small>👑 Club Caneva</small><em>Miembro</em></div>'+
-        '<h3>Hola, <b>'+esc(u.firstName||'Canevalover')+'</b> 💎</h3>'+
+        '<h3>Hola, <b>'+esc(u.firstName||'Canevalover')+'</b></h3>'+
         '<p>'+(has?'¡Ya puedes cambiar tus puntos por <b>'+esc(has.name)+'</b>!':next?'Te faltan <b>'+(next.points-pts)+' puntos</b> para <b>'+esc(next.name)+'</b>. Cada $1.000 que compras suma '+l.per+' punto'+(l.per>1?'s':'')+'.':'Sigue sumando con cada compra.')+'</p>'+
         (next?'<div class="cv-clubh-bar"><i style="width:'+Math.min(100,Math.round(pts/next.points*100))+'%"></i></div>':'')+
         '<div class="cv-clubh-card"><span class="gem">💎</span><span class="w">CΛNEVΛ</span><span class="club">CLUB · MEMBER</span><span class="chip"></span><span class="nm">'+esc(u.name||u.firstName||'')+'</span><span class="pt"><b>'+pts+'</b><small>puntos</small></span></div>'+
-        '<span class="cv-clubh-go">'+(has?'🎁 Usar mis puntos':'💎 Ver mi Club')+'</span></div>';
+        '<span class="cv-clubh-go">'+(has?'🎁 Usar mis puntos':'👑 Ver mi Club')+'</span></div>';
     }else{
       html='<div class="cv-clubh-in"><div class="cv-clubh-top"><small>👑 Club Caneva</small><em>Gratis</em></div>'+
-        '<h3>Tu primer regalo:<br><b>'+l.welcome+' puntos</b> 💎</h3>'+
+        '<h3>Tu primer regalo:<br><b>'+l.welcome+' puntos</b></h3>'+
         '<p>Únete en 10 segundos y empieza a ganar desde tu primera compra. Las Canevalovers compran con beneficios.</p>'+
         '<div class="cv-clubh-card"><span class="gem">💎</span><span class="w">CΛNEVΛ</span><span class="club">CLUB · MEMBER</span><span class="chip"></span><span class="nm">Tu nombre aquí</span><span class="pt"><b>'+l.welcome+'</b><small>puntos</small></span></div>'+
-        '<div class="cv-clubh-perks"><div><i>🎁</i><b>'+l.welcome+' pts</b><span>al unirte</span></div><div><i>💎</i><b>'+l.per+' pt</b><span>por cada $1.000</span></div><div><i>🏷️</i><b>'+r0.points+' pts</b><span>'+esc(r0.name)+'</span></div></div>'+
+        '<div class="cv-clubh-perks"><div><i>🎁</i><b>'+l.welcome+' pts</b><span>al unirte</span></div><div><i>✦</i><b>'+l.per+' pt</b><span>por cada $1.000</span></div><div><i>🏷️</i><b>'+r0.points+' pts</b><span>'+esc(r0.name)+'</span></div></div>'+
         '<span class="cv-clubh-go">✨ Unirme gratis</span><span class="cv-clubh-note">Con Google o tu correo · sin contraseñas</span></div>';
     }
     el.innerHTML=html;
