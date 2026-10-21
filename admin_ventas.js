@@ -14,7 +14,7 @@
   var SRC={pasarela:"💳 Pasarela Bold",otro_medio:"🌐 Web · otro medio",manual:"💵 Venta manual"};
   function pct(a,b){return b?Math.round(a/b*100):0;}
   var CH={tienda:"Tienda física",whatsapp:"WhatsApp",instagram:"Instagram",feria:"Feria / evento",otro:"Otro"};
-  var PAY={efectivo:"Efectivo",transferencia:"Transferencia",nequi:"Nequi",daviplata:"Daviplata",datafono:"Datáfono",bold:"Link Bold",otro:"Otro"};
+  var PAY={efectivo:"Efectivo",breb:"Bre-B",transferencia:"Transferencia",nequi:"Nequi",daviplata:"Daviplata",datafono:"Datáfono",bold:"Link Bold",otro:"Otro"};
   var DOC={cc:"Cédula",pa:"Pasaporte",ti:"Tarjeta de identidad",otro:"Otro"};
   // Payment plans: what she pays today; the rest goes to Cuentas por cobrar with a 10 business-day limit
   var PLANS={contado:{label:"✓ Pagó todo",pct:1},credito:{label:"Crédito Caneva · abona 50%",pct:.5},apartado:{label:"Apartado · abona 30%",pct:.3},abono:{label:"Otro abono",pct:0}};

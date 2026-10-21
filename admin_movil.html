@@ -1057,7 +1057,7 @@ const OB={
   otro_medio:{t:"✅ Pagados · Otro medio",h:"Pagados por fuera de la página: <b>Nequi, transferencia, efectivo, datáfono, link de Bold o contraentrega</b>. Se registra al marcar pagado."},
   cancelado:{t:"Archivados",h:"Pedidos cancelados o archivados. No cuentan en ventas."}
 };
-const VIA={nequi:"Nequi",transferencia:"Transferencia",daviplata:"Daviplata",efectivo:"Efectivo",datafono:"Datáfono",bold_link:"Link de Bold",contraentrega:"Contraentrega",otro:"Otro",bold:"Bold (pasarela)"};
+const VIA={breb:"Bre-B",nequi:"Nequi",transferencia:"Transferencia",daviplata:"Daviplata",efectivo:"Efectivo",datafono:"Datáfono",bold_link:"Link de Bold",contraentrega:"Contraentrega",otro:"Otro",bold:"Bold (pasarela)"};
 function withBucket(o){
   if(o.bucket) return o;
   const dv=o.delivery||{}, age=Date.now()-(Date.parse(o.createdAt)||Date.now());
@@ -1145,7 +1145,7 @@ function orderCard(o){
     :o.bucket==="otro_medio"?`<span class="obadge ok">✅ Pagó por ${esc(o.paidViaLabel||VIA[o.paidVia]||"otro medio")}</span>`
     :o.bucket==="pagando"?`<span class="obadge pas">⏳ Pago con Bold en proceso (se confirma solo)</span>`
     :o.bucket==="abandonado"?`<span class="obadge bad">🛒 ${dv&&dv.pay==="bold"?"No terminó el pago en línea":"Sin pagar hace "+(age>=48?Math.floor(age/24)+" días":age+" h")}</span>`
-    :o.bucket==="por_cobrar"?`<span class="obadge">💬 Pidió por WhatsApp hace ${age<1?"menos de 1 h":age+" h"}</span>`:"";
+    :o.bucket==="por_cobrar"?(dv&&dv.pay==="breb"?`<span class="obadge pas">⚡ Dice que paga con Bre-B (@caneva119) · hace ${age<1?"menos de 1 h":age+" h"}. Revisa tu Bancolombia y toca Marcar pagado → Bre-B</span>`:`<span class="obadge">💬 Pidió por WhatsApp hace ${age<1?"menos de 1 h":age+" h"}</span>`):"";
   const C=o.cost;
   const cst=o.status==="pagado"&&C?`<div class="ocost">🔒 Costo <b>${money(C.cost)}</b> · <span class="g${C.profit<0?" neg":""}">ganancia ${money(C.profit)}${C.margin!=null?" ("+C.margin+"%)":""}</span>${C.missing?` · <span style="color:var(--bad)">⚠ ${C.missing} sin costo</span>`:""}<button type="button" data-cost="${o.id}">${C.missing?"Poner costo":"Editar"}</button></div>`
     :o.status==="pagado"?`<div class="ocost">🔒 Costo y ganancia: pega la Worker v61 para verlos</div>`:"";
@@ -1156,7 +1156,7 @@ function orderCard(o){
 function paySheet(hasUser,mail){
   return new Promise(res=>{
     const m=document.createElement("div"); m.className="paysheet";
-    const keys=["nequi","transferencia","daviplata","efectivo","datafono","bold_link","contraentrega","otro"];
+    const keys=["breb","nequi","transferencia","daviplata","efectivo","datafono","bold_link","contraentrega","otro"];
     let via="";
     m.innerHTML=`<div class="bx"><h3>¿Cómo pagó?</h3><p>Así el pedido queda en <b>Pagados · Otro medio</b> y sabes por dónde entró la plata. Se genera el recibo, se suman los puntos y se descuenta del inventario.</p>
       <div class="opts">${keys.map(k=>`<button type="button" data-v="${k}">${VIA[k]}</button>`).join("")}</div>
