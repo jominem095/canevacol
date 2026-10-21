@@ -1379,13 +1379,36 @@ async function loadClub(){
     const d=await adminFetch("/admin/club");
     const active=d.coupons.filter(c=>c.status==="activo").length;
     $("clubView").innerHTML=`<div class="stats"><div class="stat"><b>${d.members.length}</b><span>Miembros</span></div><div class="stat"><b>${esc(d.lastTicket||"—")}</b><span>Último recibo</span></div><div class="stat"><b>${d.members.reduce((s,m)=>s+(m.points||0),0)}</b><span>Puntos en circulación</span></div><div class="stat"><b>${active}</b><span>Códigos activos</span></div></div>
+      <div class="sect" style="margin-top:0;border:0;padding:0">➕ Inscribir clienta al Club</div>
+      <div class="ocard" style="margin:8px 0 14px">
+        <div class="row2"><div class="field"><label>Nombre y apellido</label><input id="enName" type="text" autocomplete="off"></div><div class="field"><label>Celular (WhatsApp)</label><input id="enPhone" type="tel" inputmode="tel" autocomplete="off"></div></div>
+        <div class="field"><label>Correo (con este entra después y ve sus puntos)</label><input id="enEmail" type="email" inputmode="email" autocomplete="off"></div>
+        <div class="row2"><div class="field"><label>Talla (opcional)</label><input id="enSize" type="text" placeholder="M, 8…"></div><div class="field"><label>Cumpleaños (opcional)</label><input id="enBday" type="date"></div></div>
+        <label class="checkrow"><input type="checkbox" id="enOk"><span>La clienta <b>me autorizó</b> (en persona o por WhatsApp) a guardar sus datos para el Club.</span></label>
+        <button class="btn" id="enGo" type="button">👑 Inscribir y darle sus puntos</button>
+        <div id="enOut"></div>
+      </div>
       <div class="sect" style="margin-top:0;border:0;padding:0">Validar código de recompensa</div>
       <div style="display:flex;gap:8px;margin:8px 0 6px"><input id="cpCode" class="search" style="margin:0" placeholder="CANEVA-XXXXXX" autocapitalize="characters"><button class="iconbtn" id="cpCheck" type="button">Revisar</button></div>
       <div id="cpResult"></div>
       <div class="sect">Miembros</div>
       ${d.members.length?d.members.map(m=>{const ph=String(m.phone||"").replace(/[^\d]/g,"");return `<div class="mrow"><div><b>${esc(m.name)}</b> <span class="tag">${m.points} pts</span><br><small>${esc(m.email)}${m.phone?` · <a href="https://wa.me/${ph.length===10?"57"+ph:ph}" target="_blank" rel="noopener">${esc(m.phone)}</a>`:""}${m.size?` · Talla ${esc(m.size)}`:""}${m.birthday?` · 🎂 ${esc(m.birthday.split("-").reverse().join("/"))}`:""}</small></div><button type="button" data-adj="${esc(m.id)}" data-name="${esc(m.name)}">± Puntos</button></div>`;}).join(""):`<div class="empty">Aún no hay miembros. Cuando alguien se registre aparecerá aquí.</div>`}`;
     $("cpCheck").onclick=()=>checkCoupon(false);
+    $("enGo").onclick=enrollMember;
   }catch(e){ $("clubView").innerHTML=/D1|activado/.test(e.message)?clubOff(e.message):`<div class="empty">${esc(e.message)}</div>`; }
+}
+// v71: enroll a client in the Club from the admin; then send her the welcome by WhatsApp
+async function enrollMember(){
+  const body={name:$("enName").value.trim(),phone:$("enPhone").value.trim(),email:$("enEmail").value.trim(),size:$("enSize").value.trim(),birthday:$("enBday").value,consent:$("enOk").checked};
+  if(!body.consent) return toast("Marca que la clienta te autorizó.",{err:true});
+  busy(true,"Inscribiendo…");
+  try{ const d=await adminFetch("/admin/club/members",{method:"POST",body}); busy(false);
+    const first=(d.name||"").split(" ")[0], ph=String(d.phone||"").replace(/[^\d]/g,""), num=ph.length===10?"57"+ph:ph;
+    const msg=`Hola ${first} 💎 ¡Bienvenida al Club Caneva! Te regalamos ${d.welcome} puntos para tu próxima compra.\n\nCada $1.000 que compres te suma puntos y los cambias por descuentos y sorpresas.\n\nPara verlos entra a canevacol.com → Club${d.email?` con tu correo ${d.email}`:""}. 🖤`;
+    $("enOut").innerHTML=`<div class="obold ok" style="margin-top:10px">✅ <b>${esc(d.name)}</b> ya es del Club con <b>${d.points} puntos</b>${d.claimed&&d.claimed.orders?` · se le sumaron ${d.claimed.orders} compra(s) anteriores`:""}.${num?`<br><a class="btn" style="display:block;text-align:center;margin-top:8px;text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/${num}?text=${encodeURIComponent(msg)}">💬 Enviarle la bienvenida por WhatsApp</a>`:""}</div>`;
+    ["enName","enPhone","enEmail","enSize","enBday"].forEach(k=>$(k).value=""); $("enOk").checked=false;
+    toast("👑 "+d.name+" inscrita · "+d.points+" pts");
+  }catch(e){ busy(false); toast(e.message,{err:true,ms:8000}); }
 }
 async function checkCoupon(use){
   const code=$("cpCode").value.trim().toUpperCase(); if(!code) return;

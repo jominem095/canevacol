@@ -5869,9 +5869,13 @@ body.cv-has-pbar .ann-bar{display:none!important}
     var u=ci.user,l=L(),r0=l.rewards[0]||{name:'un descuento',points:300},key=u?('u'+(u.points||0)+(u.firstName||'')):'g'+l.welcome;
     var el=document.getElementById('cvClubHero');if(el&&key===last)return;last=key;
     if(!el){el=document.createElement('div');el.id='cvClubHero';el.className='cv-ch';el.setAttribute('role','button');el.tabIndex=0;
-      var mt=document.getElementById('cvMatchT'),reel=document.getElementById('cvReel');
-      if(mt&&mt.parentNode)mt.parentNode.insertBefore(el,mt);else if(reel&&reel.parentNode)reel.parentNode.insertBefore(el,reel.nextSibling);else return;
       el.addEventListener('click',function(){try{if(window.cvStatsPush)cvStatsPush({t:'k',k:'club'});}catch(e){}if(window.openClub)openClub();});}
+    // guests: first thing on the page, like an ad; members: under the top garment
+    var mt=document.getElementById('cvMatchT'),reel=document.getElementById('cvReel');
+    if(!u&&reel&&reel.parentNode){if(el.nextSibling!==reel)reel.parentNode.insertBefore(el,reel);}
+    else if(mt&&mt.parentNode){if(el.nextSibling!==mt)mt.parentNode.insertBefore(el,mt);}
+    else if(reel&&reel.parentNode){if(el.previousSibling!==reel)reel.parentNode.insertBefore(el,reel.nextSibling);}
+    else return;
     var html;
     if(u){var pts=u.points||0,next=l.rewards.find(function(r){return r.points>pts;}),has=l.rewards.filter(function(r){return r.points<=pts;}).pop();
       html='<div class="cv-ch-in"><div class="cv-ch-top"><small>👑 Club Caneva</small><em>Miembro</em></div>'+
