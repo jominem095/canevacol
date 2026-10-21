@@ -287,6 +287,10 @@ main{padding:14px 16px 120px}
 .hy-mg a{flex:0 0 auto;text-decoration:none;font-weight:700;font-size:12px;color:#050505;background:linear-gradient(120deg,#8ef0c8,#b9ffd9);border-radius:999px;padding:9px 12px}
 .hy-mic{border:1px solid rgba(207,230,255,.3)!important;background:rgba(207,230,255,.06)!important;color:var(--w)!important;width:44px;padding:0!important}
 .hy-mic.rec{background:#ff4d6d!important}
+.hy-studio h3{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);font-weight:500;margin:6px 0 8px}.hy-studio h3 small{letter-spacing:0;text-transform:none}
+.hy-sg{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px}@media(min-width:760px){.hy-sg{grid-template-columns:repeat(3,1fr)}}
+.hy-sg button{position:relative;overflow:hidden;text-align:left;border:1px solid rgba(207,230,255,.22);border-radius:16px;padding:14px 12px;color:var(--w);background:radial-gradient(circle at 100% 0%,rgba(201,167,255,.16),transparent 60%),radial-gradient(circle at 0% 100%,rgba(159,211,255,.12),transparent 55%),#0b0c0f;transition:transform .2s}
+.hy-sg button:active{transform:scale(.97)}.hy-sg i{font-style:normal;font-size:24px;display:block}.hy-sg b{display:block;font-size:14px;margin-top:6px}.hy-sg small{display:block;font-size:11px;color:var(--dim)}
 .hy-ok{border:1px dashed var(--b);border-radius:14px;padding:14px;text-align:center;color:var(--dim);font-size:13px}
 </style>
 </head>
@@ -1160,7 +1164,7 @@ function hoyPaint(){
     <div class="hy-kpis">
       <div class="hy-k"><span>Vendido hoy</span><b>${f?money(t.revenue||0):"…"}</b><small>${f?(t.orders||0)+" venta"+((t.orders||0)===1?"":"s")+" · ayer "+money(y.revenue||0):""}</small></div>
       <div class="hy-k"><span>Este mes</span><b>${f?money(m.revenue||0):"…"}</b><small>${f?(m.goal?goalPct+"% de tu meta "+money(m.goal):"a este ritmo cierras en "+money(pace)):""}</small>${m.goal?`<div class="hy-bar"><i style="width:${goalPct}%"></i></div>`:""}</div>
-      <div class="hy-k g"><span>🔒 Ganancia del mes</span><b>${g?money(g.ganancia):"…"}</b><small>${g&&g.ventas_sin_costo?"⚠ "+g.ventas_sin_costo+" venta(s) sin costo":g?"después de costos":""}</small></div>
+      <div class="hy-k g"><span>🔒 Ganancia del mes</span><b>${g?money(g.ganancia):"…"}</b><small>${g?hoyCanal(g):""}${g&&g.ventas_sin_costo?"<br>⚠ "+g.ventas_sin_costo+" venta(s) sin costo":""}</small></div>
       <div class="hy-k"><span>Visitantes hoy</span><b>${f?(t.visitors||0):"…"}</b><small>${f?(t.carts||0)+" al carrito · "+(t.whatsapp||0)+" WhatsApp":""}</small></div>
     </div>
     ${hoyChart()}
@@ -1171,6 +1175,7 @@ function hoyPaint(){
       <div class="hy-chips" id="hyChips">${["📈 ¿Cómo voy este mes?","🔥 ¿Qué prenda promociono hoy?","📸 Escríbeme un post para Instagram","💬 ¿A quién le escribo hoy?","💡 Dame 3 ideas para vender más esta semana","🎂 Mensaje para una cumpleañera","🗓️ Plan de contenido para esta semana","🏷️ ¿Qué promo hago este fin de semana?"].map(c=>`<button type="button">${c}</button>`).join("")}</div>
       <div class="hy-in"><button type="button" id="hyMic" class="hy-mic" title="Hablar" hidden>🎙️</button><input id="hyIn" placeholder="Pregúntale lo que quieras de tu tienda…" enterkeyhint="send"><button type="button" id="hySend">Enviar</button></div>
     </div></div>
+    <div class="hy-studio"><h3>🎨 Estudio creativo <small>· Caneva AI lo crea por ti</small></h3><div class="hy-sg">${HOY_STUDIO.map((x,i)=>`<button type="button" data-st="${i}"><i>${x[0]}</i><b>${x[1]}</b><small>${x[2]}</small></button>`).join("")}</div></div>
     ${hoyStars()}
     ${hoyMsgs()}
     <div class="hy-todo"><h3>Hoy te toca</h3>${todo.length?todo.map(x=>`<button type="button" class="hy-t${x[5]?" hot":""}" data-go="${x[4]}"><i>${x[0]}</i><span><b>${x[2]}</b><small>${esc(x[3])}</small></span><em>${x[1]}</em></button>`).join(""):`<div class="hy-ok">${f?"Todo al día ✨ Nada pendiente por ahora.":"Cargando…"}</div>`}</div>
@@ -1178,6 +1183,9 @@ function hoyPaint(){
   hoyLog();
   $("hyNew").onclick=()=>{HOY.chat=[];hoyLog();};
   $("hySpeak").onclick=()=>hoySay();
+  const sg=v.querySelector(".hy-sg");if(sg)sg.onclick=e=>{const b=e.target.closest("[data-st]");if(!b)return;const x=HOY_STUDIO[+b.dataset.st];
+    if(x[4]){const t=prompt("Pega aquí el mensaje de la clienta:","");if(!t)return;hoyAsk(x[3].replace("{msg}",t));}else hoyAsk(x[3]);
+    const l=$("hyLog");if(l)l.scrollIntoView({behavior:"smooth",block:"center"});};
   const ii=$("hyIdeas");if(ii)ii.onclick=e=>{const b=e.target.closest("[data-idea]");if(b){const x=HOY.ideas[+b.dataset.idea];if(x)hoyAsk(x.q);}};
   hoyMicSetup();
   const st=v.querySelector(".hy-stars");if(st)st.onclick=e=>{const b=e.target.closest("[data-story],[data-post]");if(!b)return;
@@ -1190,8 +1198,8 @@ function hoyPaint(){
 }
 function hoyLog(){const l=$("hyLog");if(!l)return;
   const items=HOY.chat.length?HOY.chat:[{r:"a",t:HOY.brief||"",typing:!HOY.brief}];
-  l.innerHTML=items.map((m,i)=>m.typing?`<div class="hy-m"><span class="hy-typ"><i></i><i></i><i></i></span></div>`:`<div class="hy-m${m.r==="u"?" me":""}">${esc(m.t).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/^\s*[*-]\s+/gm,"• ")}${m.r==="a"&&m.t.length>140?`<br><button type="button" class="cp" data-cp="${i}">Copiar</button>`:""}</div>`).join("");
-  l.onclick=e=>{const b=e.target.closest("[data-cp]");if(!b)return;const m=items[+b.dataset.cp];try{navigator.clipboard.writeText(m.t);b.textContent="✓ Copiado";}catch(x){}};
+  l.innerHTML=items.map((m,i)=>m.typing?`<div class="hy-m"><span class="hy-typ"><i></i><i></i><i></i></span></div>`:`<div class="hy-m${m.r==="u"?" me":""}">${esc(m.t).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/^\s*[*-]\s+/gm,"• ")}${m.r==="a"&&m.t?`<br><button type="button" class="cp" data-cp="${i}">Copiar</button>${i>0&&m.t.length<=260&&HOY.chat.length?` <button type="button" class="cp" data-qs="${i}">📸 Hacer historia</button>`:""}`:""}</div>`).join("");
+  l.onclick=e=>{const q=e.target.closest("[data-qs]");if(q){hoyQuoteStory(items[+q.dataset.qs].t,q);return;}const b=e.target.closest("[data-cp]");if(!b)return;const m=items[+b.dataset.cp];try{navigator.clipboard.writeText(m.t);b.textContent="✓ Copiado";}catch(x){}};
   l.scrollTop=l.scrollHeight;}
 async function hoyAsk(q){q=String(q||"").trim();if(!q||HOY.loading)return;$("hyIn").value="";
   if(!HOY.chat.length&&HOY.brief)HOY.chat.push({r:"a",t:HOY.brief});
@@ -1208,6 +1216,33 @@ async function loadHoy(fresh){
   }catch(e){HOY.brief=/Worker/.test(e.message)?"Para ver tu resumen con Caneva AI falta pegar el Worker v71 en Cloudflare 💎":e.message;}
   if(currentTab==="hoy")hoyPaint();}
 
+// ---------- v71c: where the profit comes from, creative studio and quote stories ----------
+function hoyCanal(g){const c=g.por_canal||{},w=(c.pasarela?c.pasarela.ganancia:0)+(c.otro_medio?c.otro_medio.ganancia:0),m=c.manual?c.manual.ganancia:0;return (w||m)?`del 1 a hoy · página ${money(w)} + manuales ${money(m)}`:"del 1 a hoy · todas las ventas";}
+const HOY_STUDIO=[
+  ["✨","Frase del día","para tu historia","Escríbeme UNA frase corta e inspiradora (máximo 18 palabras) para una historia de CΛNEVΛ, con el tono de los diamantes y la mujer que brilla. Solo la frase, sin comillas ni explicación."],
+  ["🎬","Guion de Reel","15 segundos","Escríbeme un guion de Reel/TikTok de 15 segundos con mi prenda estrella de esta semana: escenas segundo a segundo, texto en pantalla, audio sugerido y texto del post."],
+  ["🏷️","Promo relámpago","para hoy","Propón una promo relámpago para hoy según mis números: nombre, condición, texto corto para la barra de la tienda y texto para la historia de Instagram."],
+  ["💌","Responder a una clienta","cierra la venta","Una clienta me escribió: \"{msg}\". Escríbeme la mejor respuesta para cerrar la venta: cálida, corta y con el tono de CΛNEVΛ. Dame 2 opciones.",true],
+  ["🧠","Análisis de la semana","qué funcionó","Analiza mis ventas de los últimos 7 días y mis prendas más vistas: qué funcionó, qué no, y 3 acciones concretas para la próxima semana."],
+  ["🎁","Idea para el Club","que vuelvan a comprar","Dame una idea creativa para que las clientas del Club Caneva vuelvan a comprar este mes (con texto del mensaje de WhatsApp listo)."]
+];
+// a short AI text as a 1080x1920 story with the diamond, ready to post
+async function hoyQuoteStory(text,btn){text=String(text||"").replace(/\*\*/g,"").replace(/^["“]|["”]$/g,"").trim();if(!text)return;
+  try{await Promise.all([document.fonts.load('italic 300 80px "Cormorant Garamond"'),document.fonts.load('300 40px Montserrat')]);}catch(e){}
+  const W=1080,H=1920,c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");
+  const g=x.createRadialGradient(W/2,620,40,W/2,760,1100);g.addColorStop(0,"#1b2430");g.addColorStop(.45,"#0a0b0e");g.addColorStop(1,"#030304");x.fillStyle=g;x.fillRect(0,0,W,H);
+  x.fillStyle="rgba(255,255,255,.85)";[[170,330,5],[910,420,7],[90,880,4],[995,1200,5],[140,1500,3],[950,1640,4]].forEach(p=>{x.beginPath();x.arc(p[0],p[1],p[2],0,7);x.fill();});
+  x.save();x.translate(W/2-210,300);x.scale(2.1,2.1);x.shadowColor="rgba(170,215,255,.6)";x.shadowBlur=30;const d=new Path2D("M40 40H160L190 75L100 170L10 75Z"),gg=x.createLinearGradient(0,0,200,180);gg.addColorStop(0,"#fff");gg.addColorStop(.45,"#d9ecff");gg.addColorStop(1,"#8fb6d6");x.fillStyle=gg;x.fill(d);x.shadowBlur=0;
+  x.fillStyle="rgba(255,255,255,.5)";x.fill(new Path2D("M10 75L40 40L70 75Z M70 75L100 40L130 75Z M130 75L160 40L190 75Z"));x.fillStyle="rgba(111,148,179,.45)";x.fill(new Path2D("M10 75H190L100 170Z"));
+  x.strokeStyle="rgba(255,255,255,.8)";x.lineWidth=1.1;x.stroke(new Path2D("M40 40H160L190 75L100 170L10 75Z M10 75H190 M40 40L70 75L100 40L130 75L160 40 M70 75L100 170 M130 75L100 170"));x.restore();
+  x.textAlign="center";x.fillStyle="#f4f8ff";let size=86;const wrap=s=>{x.font=`italic 300 ${size}px "Cormorant Garamond", Georgia, serif`;const words=s.split(/\s+/),lines=[];let cur="";words.forEach(w=>{const t=cur?cur+" "+w:w;if(x.measureText(t).width>880&&cur){lines.push(cur);cur=w;}else cur=t;});if(cur)lines.push(cur);return lines;};
+  let lines=wrap("“"+text+"”");while(lines.length>6&&size>50){size-=8;lines=wrap("“"+text+"”");}
+  const top=760+(6-lines.length)*size*.45;lines.forEach((l,i)=>x.fillText(l,W/2,top+i*size*1.2));
+  x.fillStyle="rgba(207,230,255,.6)";x.fillRect(W/2-90,1440,180,2);x.fillStyle="#f4f8ff";x.font="300 46px Montserrat, Inter, sans-serif";try{x.letterSpacing="22px";}catch(e){}x.fillText("CΛNEVΛ",W/2+11,1530);try{x.letterSpacing="0px";}catch(e){}
+  x.fillStyle="rgba(244,248,255,.72)";x.font='italic 400 44px "Cormorant Garamond", Georgia, serif';x.fillText("Hecho para brillar",W/2,1600);x.fillStyle="rgba(244,248,255,.6)";x.font="500 32px Inter, sans-serif";x.fillText("@caneva.col  ·  canevacol.com",W/2,1770);
+  const blob=await new Promise(r=>c.toBlob(r,"image/png"));const file=new File([blob],"caneva-frase.png",{type:"image/png"});
+  if(navigator.canShare&&navigator.canShare({files:[file]}))await navigator.share({files:[file]}).catch(()=>{});else{const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=file.name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);toast("📸 Historia descargada");}
+  if(btn)btn.textContent="✓ Historia lista";}
 // ---------- v71b "Hoy" boosters: 7-day chart, star garments with story maker, ready WhatsApp messages, voice ----------
 function hoyChart(){const se=HOY.ui&&HOY.ui.series;if(!se||!se.length)return"";const max=Math.max(1,...se.map(x=>x.revenue)),tot=se.reduce((a,x)=>a+x.revenue,0);
   const dn=d=>new Date(d+"T12:00:00Z").toLocaleDateString("es-CO",{timeZone:"UTC",weekday:"short"}).replace(".","");
