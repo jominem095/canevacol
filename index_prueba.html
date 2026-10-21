@@ -5694,6 +5694,16 @@ body.cv-has-pbar .ann-bar{display:none!important}
 .cv-bpay .cv-bb-step button.cp{display:inline-block;width:auto;margin:0;flex:0 0 auto;padding:.5rem .8rem;font-size:.58rem;letter-spacing:.12em;background:none;color:#faf9f6;border:1px solid rgba(250,249,246,.35);border-radius:999px}
 .cv-bpay .cv-bb-step button.cp.ok{border-color:#5ef0a0;color:#5ef0a0}
 .cv-bpay .cv-bb-wait{display:flex;align-items:center;justify-content:center;gap:10px;margin:.8rem 0 .2rem;font-size:.76rem;color:#dfe7ec}
+.cv-bb3{text-align:left}.cv-bbh{text-align:center;margin-bottom:12px}.cv-bbh span{font-size:2rem;display:block}.cv-bbh b{display:block;font-family:'Cormorant Garamond',serif;font-weight:400;font-size:1.9rem}.cv-bbh small{color:rgba(250,249,246,.6);font-size:.74rem}
+.cv-bbamt{text-align:center;border-radius:16px;padding:12px;margin:0 0 12px;background:linear-gradient(120deg,#cfd6db,#ffffff 40%,#e8eef2 60%,#c3ccd2);color:#050505}.cv-bbamt small{display:block;font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;font-weight:700;opacity:.7}.cv-bbamt b{display:block;font-size:2.3rem;font-weight:800;line-height:1.1}.cv-bbamt em{display:block;font-style:normal;font-size:.76rem;font-weight:600;margin-top:4px}
+.cv-bpay .cv-bbs{display:flex!important;align-items:center;gap:12px;width:100%;margin:8px 0!important;padding:14px!important;border-radius:16px!important;border:1px solid rgba(250,249,246,.16)!important;background:#121212!important;color:#faf9f6!important;text-align:left!important;text-transform:none!important;letter-spacing:0!important;font-size:.86rem!important;font-weight:500!important;opacity:.55;transition:all .25s;box-sizing:border-box}
+.cv-bpay .cv-bbs.on{opacity:1;border-color:#ffffff!important;box-shadow:0 0 0 3px rgba(255,255,255,.12);transform:scale(1.02)}.cv-bpay .cv-bbs.done{opacity:.8;border-color:#5ef0a0!important}
+.cv-bbs i{flex:0 0 30px;height:30px;border-radius:50%;background:#faf9f6;color:#050505;font-style:normal;font-weight:800;display:flex;align-items:center;justify-content:center}.cv-bbs.done i{background:#5ef0a0}
+.cv-bbs span{flex:1;min-width:0;line-height:1.35}.cv-bbs span b{display:block;font-size:1.1rem;font-weight:700}.cv-bbs3 span b{display:inline;font-size:inherit}
+.cv-bbs u{text-decoration:none;flex:0 0 auto;background:#faf9f6;color:#050505;border-radius:999px;padding:.55rem .9rem;font-size:.7rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase}.cv-bbs.done u{background:#5ef0a0}
+.cv-bpay a.cv-bbwa[hidden]{display:none!important}
+.cv-bpay a.cv-bbwa{display:block;text-align:center;margin-top:10px;background:none;border:1px solid rgba(250,249,246,.3);color:#faf9f6;border-radius:999px;padding:.85rem;font-size:.66rem;letter-spacing:.08em;text-transform:none}
+.cv-bpay button.cv-bbback{background:none!important;border:0!important;color:rgba(250,249,246,.6)!important;text-transform:none!important;letter-spacing:0!important;font-size:.78rem!important;font-weight:500!important;padding:.6rem!important;margin-top:4px}
 .cv-bpay .cv-bb-small{font-size:.7rem;color:rgba(250,249,246,.55);margin:.7rem 0 0;line-height:1.5}
 </style>
 <script id="cvbreb">
@@ -5738,21 +5748,24 @@ body.cv-has-pbar .ann-bar{display:none!important}
     show(id,total,cart,buyer,false);
   }
   function show(id,total,cart,buyer,auto){
-    var ref=id.toUpperCase();push({t:'k',k:'pago_breb',l:money(total)});
+    var ref=id.toUpperCase(),amt=Math.round(total),base=Math.floor(amt/1000)*1000,extra=amt-base;push({t:'k',k:'pago_breb',l:money(total)});
     var wa='https://wa.me/'+phone()+'?text='+encodeURIComponent('Hola Caneva ✨ Pagué con Bre-B a la llave '+LLAVE+'.\nPedido '+ref+' por '+money(total)+'\n'+lines(cart)+'\n\nTe envío el comprobante 👇\n'+API_BASE+'/o/'+id);
-    var o=overlay('<div class="cv-bico">💎</div><h3>Paga con Bre-B</h3><p>Sin comisión, desde la app de tu banco o billetera.'+(auto?' <b>Se confirma solo</b> apenas llegue tu pago.':'')+'</p>'+
-      '<div class="cv-bb-tot">'+money(total)+'</div>'+
-      '<div class="cv-bb-step"><i>1</i><div>En tu app (Nequi, Bancolombia, Daviplata…) elige <b style="font-size:.8rem">Bre-B · Enviar con llave</b></div></div>'+
-      '<div class="cv-bb-step"><i>2</i><div><small>Llave</small><b>'+esc(LLAVE)+'</b></div><button type="button" class="cp" data-cp="'+esc(LLAVE)+'">Copiar</button></div>'+
-      '<div class="cv-bb-step"><i>3</i><div><small>Valor exacto'+(auto?' (con los pesos del final, así sabemos que eres tú)':'')+'</small><b>'+money(total)+'</b></div><button type="button" class="cp" data-cp="'+Math.round(total)+'">Copiar</button></div>'+
-      '<div class="cv-bb-step"><i>4</i><div><small>En la descripción escribe</small><b>Pedido '+esc(ref)+'</b></div><button type="button" class="cp" data-cp="Pedido '+esc(ref)+'">Copiar</button></div>'+
-      (auto?'<div class="cv-bb-wait" id="cvBbWait"><span class="cv-bspin" style="width:16px;height:16px;border-width:2px;margin:0"></span> Esperando tu pago… no cierres esta ventana</div>':'')+
-      (auto?'<a class="sec" href="'+wa+'" target="_blank" rel="noopener" data-bb="wa">¿Ya pagaste y no se confirma? Escríbenos</a>':'<a class="pri" href="'+wa+'" target="_blank" rel="noopener" data-bb="done">✅ Ya pagué · enviar comprobante</a>')+
-      '<button class="sec" type="button" data-bb="back">Volver al carrito</button>'+
-      '<p class="cv-bb-small">'+(isLocal((buyer&&buyer.city)||window.CV_CITY)?'':'El envío a tu ciudad te lo confirmamos por WhatsApp. ')+'Tu pedido queda apartado mientras pagas.</p>');
+    // v70b: 3 big steps a 12-year-old gets: copy key, copy amount, pay in your bank. No description needed (the amount identifies her).
+    var o=overlay('<div class="cv-bb3">'+
+      '<div class="cv-bbh"><span>💎</span><b>Paga en 3 pasos</b><small>Sin comisión · desde cualquier banco o billetera</small></div>'+
+      '<div class="cv-bbamt"><small>Envía exactamente</small><b>'+money(amt)+'</b>'+(auto&&extra?'<em>⚠️ Con los <u>$'+extra+'</u> del final. Así sabemos que eres tú.</em>':'')+'</div>'+
+      '<button type="button" class="cv-bbs on" data-step="1" data-cp="'+esc(LLAVE)+'"><i>1</i><span>Copiar la llave<b>'+esc(LLAVE)+'</b></span><u>Copiar</u></button>'+
+      '<button type="button" class="cv-bbs" data-step="2" data-cp="'+amt+'"><i>2</i><span>Copiar el valor<b>'+money(amt)+'</b></span><u>Copiar</u></button>'+
+      '<div class="cv-bbs cv-bbs3" data-step="3"><i>3</i><span>Abre tu banco o Nequi → <b>Bre-B / Enviar con llave</b> → pega la llave y el valor → <b>Enviar</b></span></div>'+
+      (auto?'<div class="cv-bb-wait" id="cvBbWait"><span class="cv-bspin" style="width:16px;height:16px;border-width:2px;margin:0"></span><span>Cuando pagues, esta pantalla cambia sola ✓</span></div>':'')+
+      '<a class="'+(auto?'cv-bbwa':'pri')+'" href="'+wa+'" target="_blank" rel="noopener" data-bb="'+(auto?'wa':'done')+'" id="cvBbWa"'+(auto?' hidden':'')+'>'+(auto?'¿Ya pagaste y no cambia? Envíanos el comprobante':'✅ Ya pagué · enviar comprobante')+'</a>'+
+      '<button class="cv-bbback" type="button" data-bb="back">← Volver al carrito</button>'+
+      '<p class="cv-bb-small">Pedido '+esc(ref)+(isLocal((buyer&&buyer.city)||window.CV_CITY)?'':' · El envío a tu ciudad te lo confirmamos por WhatsApp')+'</p></div>');
     var stop=false,t0=Date.now();
+    function step(n){o.querySelectorAll('.cv-bbs').forEach(function(x){var k=+x.getAttribute('data-step');x.classList.toggle('on',k===n);x.classList.toggle('done',k<n);});}
     o.addEventListener('click',function(e){
-      var c=e.target.closest('[data-cp]');if(c){copy(c.getAttribute('data-cp'),c);push({t:'k',k:'breb_copiar'});return;}
+      var c=e.target.closest('[data-cp]');if(c){var u=c.querySelector('u');copy(c.getAttribute('data-cp'),null);if(u){u.textContent='✓ Copiado';}
+        if(navigator.vibrate)try{navigator.vibrate(15);}catch(x){}step(+c.getAttribute('data-step')+1);push({t:'k',k:'breb_copiar'});return;}
       var b=e.target.closest('[data-bb]');if(!b)return;var k=b.getAttribute('data-bb');
       if(k==='back'){stop=true;close();return;}
       if(k==='wa'){push({t:'k',k:'breb_ya_pague',l:money(total)});return;}
@@ -5761,6 +5774,8 @@ body.cv-has-pbar .ann-bar{display:none!important}
         var o2=document.getElementById('cvBPay');if(o2)o2.addEventListener('click',function(ev){if(ev.target.closest('[data-cvb="close"]'))close();});},400);
     });
     if(!auto)return;
+    // after 2 minutes, offer WhatsApp in case the bank alert is slow or she sent a rounded amount
+    setTimeout(function(){var w=document.getElementById('cvBbWa');if(w&&!stop)w.hidden=false;},120000);
     try{localStorage.setItem('caneva_breb_pending',JSON.stringify({id:id,at:Date.now()}));}catch(e){}
     (function poll(){if(stop||!document.getElementById('cvBbWait')||Date.now()-t0>30*60000)return;
       fetch(API_BASE+'/pay/breb/status?id='+id,{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){
