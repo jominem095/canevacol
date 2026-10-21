@@ -1098,8 +1098,8 @@ function paintOrders(){
   } else if((ordStatus==="por_cobrar"||ordStatus==="pagando")&&l.length){
     k=`<div class="okpis"><div class="okpi"><span>Por cobrar</span><b>${money(sum(l))}</b></div><div class="okpi"><span>Pedidos</span><b>${l.length}</b></div></div>`;
   }
-  $("ordKpis").innerHTML=`<div class="oboldq"><input id="oboldRef" placeholder="Ref. del pedido (ej. UMBENZZBBVBM)" maxlength="16" autocomplete="off"><button type="button" id="oboldGo">🔎 Ver en Bold</button></div><div id="oboldOut"></div>`+k;
-  autoBold();
+  $("ordKpis").innerHTML=`<div class="oboldq"><input id="oboldRef" placeholder="Ref. del pedido (ej. UMBENZZBBVBM)" maxlength="16" autocomplete="off"><button type="button" id="oboldGo">🔎 Ver en Bold</button></div><div id="oboldOut"></div>`+(ordStatus==="por_cobrar"?`<div id="brebIn"></div>`:"")+k;
+  autoBold(); if(ordStatus==="por_cobrar") brebInbox();
   $("ordersList").innerHTML=l.length?l.map(orderCard).join(""):`<div class="empty">No hay pedidos aquí ✨</div>`;
 }
 // v70: asks Bold (through the Worker, the same check the store does) how a payment is going.
@@ -1124,6 +1124,13 @@ async function autoBold(){
   if(!l.length||BOLD_AUTO++>20) return; let paid=0;
   for(const o of l){ try{ const d=await boldCheck(o.id); boldPaint(o.id,d); if(d.status==="APPROVED") paid++; }catch(e){} }
   if(paid){ toast("✅ Bold aprobó "+paid+" pago"+(paid>1?"s":"")+". Ya quedaron como pagados."); setTimeout(loadOrders,1200); }
+}
+// v70: last Bancolombia alert e-mails the Worker read for Bre-B (to check the automatic confirmation works)
+async function brebInbox(){ const box=$("brebIn"); if(!box) return;
+  try{ const l=(await adminFetch("/admin/breb/inbox")).list||[];
+    if(!l.length){ box.innerHTML=`<div class="obold">💎 Bre-B automático: todavía no ha llegado ningún correo de Bancolombia.</div>`; return; }
+    box.innerHTML=`<details class="obold"><summary>💎 Bre-B automático · último correo ${esc(when(l[0].at))}: ${l[0].ok?`<b style="color:#9de08f">✅ pedido ${esc(String(l[0].order||"").toUpperCase())} pagado</b>`:`<b style="color:#ffb4a8">${esc(l[0].why||"no se asoció")}</b>`}</summary>${l.slice(0,10).map(x=>`<div style="margin-top:6px;border-top:1px solid var(--b);padding-top:6px">${esc(when(x.at))} · ${x.ok?"✅ "+esc(String(x.order||"").toUpperCase())+(x.ticket?" · "+esc(x.ticket):""):"⚠ "+esc(x.why||"")}${x.amounts&&x.amounts.length?" · "+x.amounts.map(a=>money(a)).join(" / "):""}<br><span style="color:var(--dim)">${esc(x.snippet||"")}</span></div>`).join("")}</details>`;
+  }catch(e){ box.innerHTML=/404|Ruta/.test(e.message)?"":`<div class="obold bad">${esc(e.message)}</div>`; }
 }
 function orderCard(o){
   const u=o.user;
