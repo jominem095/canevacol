@@ -13,6 +13,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://wsrv.nl" crossorigin>
+<link rel="preconnect" href="https://wsrv.nl">
+<link rel="preconnect" href="https://caneva-ai.canevacol.workers.dev" crossorigin>
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@200;300;400;500;600&family=Montserrat:wght@200;300;400&display=swap">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@200;300;400;500;600&family=Montserrat:wght@200;300;400&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@200;300;400;500;600&family=Montserrat:wght@200;300;400&display=swap" rel="stylesheet"></noscript>
@@ -2284,7 +2286,8 @@ async function loadRemoteCatalog(){
       render();
       setProductCount();
       renderLookbook();
-      openSharedProduct();
+      // v70: live catalog is in, so match by name right away (old ad links after a price/category change)
+      openSharedProduct(true);
     }
   }catch(e){
     console.warn("Caneva catálogo remoto no disponible, usando fallback local.", e);
@@ -2559,8 +2562,24 @@ async function shareStory(p){
 document.addEventListener('click',function(e){var m=document.getElementById('pmShareMenu');if(!m||m.hidden)return;if(e.target.closest('#pmShareMenu')||e.target.closest('#pmShare'))return;m.hidden=true;});
 // Opening a shared link (?p=slug) shows that garment
 var SHARED_DONE=false;
-function openSharedProduct(loose){if(SHARED_DONE)return;var m=location.search.match(/[?&]p=([^&#]+)/);if(!m){SHARED_DONE=true;return;}var slug=decodeURIComponent(m[1]).toLowerCase();var i=P.findIndex(function(p){return productSlug(p)===slug;});if(i<0&&loose){var nm=slug.split('--')[0];i=P.findIndex(function(p){return productSlug(p).split('--')[0]===nm;});}if(i<0)return;SHARED_DONE=true;setTimeout(function(){openProductModal(i);},300);}
-setTimeout(function(){openSharedProduct(true);SHARED_DONE=true;},4000);
+function openSharedProduct(loose){if(SHARED_DONE)return;var m=location.search.match(/[?&]p=([^&#]+)/);if(!m){SHARED_DONE=true;return;}var slug=decodeURIComponent(m[1]).toLowerCase();var i=P.findIndex(function(p){return productSlug(p)===slug;});if(i<0&&loose){var nm=slug.split('--')[0];nm=CV_ALIAS[nm]||nm;i=P.findIndex(function(p){return productSlug(p).split('--')[0]===nm;});}if(i<0){if(loose&&window.CV_LIVE){SHARED_DONE=true;cvOpening(false);cvGone(slug);}return;}SHARED_DONE=true;setTimeout(function(){cvOpening(false);openProductModal(i);},300);}
+// v70: garments renamed after an ad was created: old link name -> current name (slug of the name only)
+var CV_ALIAS={'vestido-princesa':'vestido-coquette'};
+// v70: while an ad link opens its garment, say so (instead of showing the home as if nothing happened)
+function cvOpening(on){var e=document.getElementById('cvOpening');if(!on){if(e){e.classList.remove('on');setTimeout(function(){e.remove();},300);}return;}
+  if(e||!/[?&]p=/.test(location.search))return;e=document.createElement('div');e.id='cvOpening';e.className='cv-opening on';e.innerHTML='<i></i>Abriendo tu prenda…';document.body.appendChild(e);setTimeout(function(){cvOpening(false);},7000);var iv=setInterval(function(){if(document.querySelector('.pmodal.open')||!document.getElementById('cvOpening')){clearInterval(iv);cvOpening(false);}},200);}
+// v70: the garment of the ad is no longer in the store: say it and offer 3 similar ones (same category first)
+function cvGone(slug){try{var parts=slug.split('--'),cat=parts[1]||'',pr=parseInt(parts[2]||'0',10)||0,f=function(v){return String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');};
+  var list=P.filter(function(p){return p&&p.imagen&&String(p.imagen).indexOf('http')===0&&!/domicil|domicl|mayorista|others/i.test(p.categoria||'');});
+  list.sort(function(a,b){var ca=f(a.categoria)===cat?0:1,cb=f(b.categoria)===cat?0:1,pa=Math.abs((parseInt(String(a.precio).replace(/[^\d]/g,''),10)||0)-pr),pb=Math.abs((parseInt(String(b.precio).replace(/[^\d]/g,''),10)||0)-pr);return ca-cb||pa-pb;});
+  var seen={};list=list.filter(function(p){var k=f(p.nombre);if(seen[k])return false;seen[k]=1;return true;}).slice(0,3);if(!list.length)return;try{if(window.cvStatsPush)cvStatsPush({t:'k',k:'prenda_no_disponible',l:slug.split('--')[0].slice(0,40)});}catch(e){}
+  var d=document.createElement('div');d.className='cv-gone';d.innerHTML='<div class="cv-gone-b"><button type="button" class="x" aria-label="Cerrar">×</button><b>Esa prenda ya no está disponible</b><p>Mira estas que te pueden gustar ✨</p><div class="r">'+list.map(function(p){return '<button type="button" data-i="'+P.indexOf(p)+'"><img src="'+escAttr(window.cvImg?cvImg(p.imagen,300):p.imagen)+'" alt=""><span>'+escHtml(p.nombre)+'</span><small>'+escHtml(p.precio||'')+'</small></button>';}).join('')+'</div></div>';
+  document.body.appendChild(d);d.addEventListener('click',function(e){var b=e.target.closest('[data-i]');if(b){d.remove();openProductModal(+b.dataset.i);return;}if(e.target===d||e.target.closest('.x'))d.remove();});}catch(e){}}
+(function(){var c=document.createElement('style');c.textContent='.cv-opening{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);z-index:3000;background:rgba(5,5,5,.88);color:#f7f7f4;border:1px solid rgba(247,247,244,.25);border-radius:999px;padding:.8rem 1.3rem;font:500 .8rem Inter,sans-serif;letter-spacing:.08em;white-space:nowrap;display:flex;align-items:center;gap:10px;opacity:0;transition:opacity .3s;pointer-events:none}.cv-opening.on{opacity:1}.cv-opening i{width:14px;height:14px;border:2px solid rgba(247,247,244,.3);border-top-color:#f7f7f4;border-radius:50%;animation:cvspin .8s linear infinite}@keyframes cvspin{to{transform:rotate(360deg)}}'+
+  '.cv-gone{position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center}.cv-gone-b{position:relative;width:min(520px,100%);background:#0b0b0b;color:#f7f7f4;border:1px solid rgba(247,247,244,.18);border-radius:20px 20px 0 0;padding:20px 16px calc(18px + env(safe-area-inset-bottom));font-family:Inter,sans-serif}.cv-gone-b b{font-size:1rem}.cv-gone-b p{margin:4px 0 12px;font-size:.82rem;color:rgba(247,247,244,.65)}.cv-gone-b .x{position:absolute;top:8px;right:10px;background:none;border:0;color:#f7f7f4;font-size:1.4rem;cursor:pointer}'+
+  '.cv-gone-b .r{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.cv-gone-b .r button{background:none;border:0;padding:0;color:#f7f7f4;text-align:left;cursor:pointer;font-family:inherit;min-width:0}.cv-gone-b img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:10px;background:#151515;display:block}.cv-gone-b span{display:block;font-size:.72rem;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cv-gone-b small{font-size:.68rem;color:rgba(247,247,244,.6)}';document.head.appendChild(c);
+  if(/[?&]p=/.test(location.search)){if(document.body)cvOpening(true);else document.addEventListener('DOMContentLoaded',function(){cvOpening(true);});}})();
+setTimeout(function(){openSharedProduct(true);if(window.CV_LIVE)SHARED_DONE=true;},4000);
 function closeProductModal(){
   var modal=document.getElementById('pmodal');
   modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.classList.remove('product-open');

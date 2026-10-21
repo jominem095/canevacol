@@ -98,7 +98,9 @@ h1{font-family:"Cormorant Garamond",Georgia,serif;font-weight:400;font-size:30px
 
   var app=document.getElementById('app'),P=null,sel='',city='',promo=null;
   function render(list){
-    var want=slug.split('--')[0];
+    // v70: garments renamed after the ad was made (same list as the store)
+    var ALIAS={'vestido-princesa':'vestido-coquette'};
+    var want=slug.split('--')[0];want=ALIAS[want]||want;
     P=list.find(function(p){return slugOf(p)===slug;})||list.find(function(p){return f(p.nombre)===want;});
     if(!P){gone(list);return;}
     var ph=photos(P),zs=sizes(P),inv=P.inv&&typeof P.inv==='object'?P.inv:null;

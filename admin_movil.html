@@ -53,6 +53,7 @@ main{padding:14px 16px 120px}
 .oseg{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 0 10px;padding-bottom:2px}.oseg::-webkit-scrollbar{display:none}.oseg button{flex:none;background:none;border:1px solid var(--b);border-radius:999px;padding:8px 12px;font-size:12px;white-space:nowrap}.oseg button.on{background:var(--w);color:var(--k);border-color:var(--w);font-weight:600}.oseg i{font-style:normal;opacity:.65;margin-left:4px}
 .ohint{font-size:12.5px;color:var(--dim);line-height:1.5;margin:0 0 12px}.ohint b{color:var(--w)}
 .okpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:0 0 12px}.okpi{border:1px solid var(--b);border-radius:12px;padding:10px;background:var(--k2)}.okpi span{display:block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}.okpi b{font-size:17px}.okpi.g b{color:var(--ok)}
+.obold{margin:8px 0 2px;padding:8px 10px;border:1px dashed var(--b);border-radius:10px;font-size:12px;line-height:1.45}.obold.ok{border-color:#7fd99a;color:#9de08f}.obold.bad{border-color:#ffb4a8;color:#ffb4a8}.obold.wait{border-color:#e6cf9f;color:#e6cf9f}.obold button{margin-left:8px;background:none;border:1px solid var(--b);color:var(--w);border-radius:999px;padding:3px 10px;font-size:11px;cursor:pointer}.oboldq{display:flex;gap:8px;margin:0 0 12px}.oboldq input{flex:1;min-width:0;background:#111;border:1px solid var(--b);border-radius:12px;color:var(--w);padding:10px 12px;font-size:13px;text-transform:uppercase}.oboldq button{border:1px solid var(--w);background:var(--w);color:#050505;border-radius:12px;padding:0 14px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}#oboldOut{margin:-4px 0 12px}
 .obadge{display:inline-block;font-size:11px;border-radius:999px;padding:2px 9px;margin:6px 6px 0 0;border:1px solid var(--b)}.obadge.pas{border-color:#e6cf9f;color:#e6cf9f}.obadge.ok{border-color:var(--ok);color:var(--ok)}.obadge.bad{border-color:var(--bad);color:var(--bad)}
 .ocost{margin-top:8px;padding:8px 10px;border:1px dashed rgba(230,207,159,.4);border-radius:10px;background:rgba(230,207,159,.05);font-size:12.5px;color:#e6cf9f;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.ocost b{color:var(--w)}.ocost .g{color:var(--ok)}.ocost .g.neg{color:var(--bad)}.ocost button{margin-left:auto;background:none;border:1px solid rgba(230,207,159,.5);color:#e6cf9f;border-radius:999px;padding:5px 10px;font-size:12px}
 .paysheet{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.72);display:flex;align-items:flex-end;justify-content:center}.paysheet .bx{width:min(520px,100%);background:var(--k2);border:1px solid var(--b);border-radius:20px 20px 0 0;padding:18px 16px 24px}.paysheet h3{margin:0 0 4px;font-size:17px}.paysheet p{margin:0 0 12px;font-size:13px;color:var(--dim)}
@@ -1097,8 +1098,32 @@ function paintOrders(){
   } else if((ordStatus==="por_cobrar"||ordStatus==="pagando")&&l.length){
     k=`<div class="okpis"><div class="okpi"><span>Por cobrar</span><b>${money(sum(l))}</b></div><div class="okpi"><span>Pedidos</span><b>${l.length}</b></div></div>`;
   }
-  $("ordKpis").innerHTML=k;
+  $("ordKpis").innerHTML=`<div class="oboldq"><input id="oboldRef" placeholder="Ref. del pedido (ej. UMBENZZBBVBM)" maxlength="16" autocomplete="off"><button type="button" id="oboldGo">🔎 Ver en Bold</button></div><div id="oboldOut"></div>`+k;
+  autoBold();
   $("ordersList").innerHTML=l.length?l.map(orderCard).join(""):`<div class="empty">No hay pedidos aquí ✨</div>`;
+}
+// v70: asks Bold (through the Worker, the same check the store does) how a payment is going.
+// If Bold says APPROVED the Worker marks the order paid by itself (receipt, points, inventory, Telegram notice).
+const BOLD_ST={}; let BOLD_AUTO=0;
+const BOLD_LBL={APPROVED:["ok","✅ Aprobado: ya pagó. El pedido quedó como pagado."],PENDING:["wait","⏳ Pendiente: el banco no ha respondido (PSE puede tardar). Consulta en un rato."],PROCESSING:["wait","⏳ En proceso: el banco no ha respondido. Consulta en un rato."],
+  REJECTED:["bad","❌ Rechazado por el banco. Escríbele para que intente otra vez o pague por Nequi/transferencia."],FAILED:["bad","❌ Falló el pago. Escríbele para ayudarla."],VOIDED:["bad","↩ Anulado en Bold."],
+  NO_TRANSACTION_FOUND:["bad","🛒 No pagó: abrió Bold pero no hizo el pago. Escríbele, todavía puedes cerrar la venta."]};
+function boldTxt(st){const l=BOLD_LBL[st]||["","❔ "+st];return `<b>${esc(l[1])}</b>`;}
+async function boldCheck(id){
+  id=String(id||"").trim().toLowerCase().replace(/^ref\.?\s*/,"");
+  if(!/^[a-z0-9]{8,16}$/.test(id)) throw new Error("Esa referencia no es válida");
+  const r=await fetch(API_BASE+"/pay/bold/status?id="+encodeURIComponent(id),{cache:"no-store"}); const d=await r.json().catch(()=>({}));
+  if(!r.ok||!d.ok) throw new Error(d.error||("Error "+r.status));
+  BOLD_ST[id]=d.status; return d;
+}
+function boldPaint(id,d){const box=document.getElementById("bs-"+id); if(!box) return; const l=BOLD_LBL[d.status]||[""]; box.className="obold "+l[0]; box.innerHTML=`💳 Bold: ${boldTxt(d.status)}${d.method?` · ${esc(d.method)}`:""}<button type="button" data-bold="${id}">🔎 Consultar otra vez</button>`;}
+// When she opens "Pagando en línea" or "Abandonados", ask Bold for each unpaid Bold order once (max 8), so nobody has to type refs
+async function autoBold(){
+  if(ordStatus!=="pagando"&&ordStatus!=="abandonado") return;
+  const l=ORD.filter(o=>o.bucket===ordStatus&&o.status==="pendiente"&&(o.delivery||{}).pay==="bold"&&!BOLD_ST[o.id]).slice(0,8);
+  if(!l.length||BOLD_AUTO++>20) return; let paid=0;
+  for(const o of l){ try{ const d=await boldCheck(o.id); boldPaint(o.id,d); if(d.status==="APPROVED") paid++; }catch(e){} }
+  if(paid){ toast("✅ Bold aprobó "+paid+" pago"+(paid>1?"s":"")+". Ya quedaron como pagados."); setTimeout(loadOrders,1200); }
 }
 function orderCard(o){
   const u=o.user;
@@ -1124,7 +1149,8 @@ function orderCard(o){
   const C=o.cost;
   const cst=o.status==="pagado"&&C?`<div class="ocost">🔒 Costo <b>${money(C.cost)}</b> · <span class="g${C.profit<0?" neg":""}">ganancia ${money(C.profit)}${C.margin!=null?" ("+C.margin+"%)":""}</span>${C.missing?` · <span style="color:var(--bad)">⚠ ${C.missing} sin costo</span>`:""}<button type="button" data-cost="${o.id}">${C.missing?"Poner costo":"Editar"}</button></div>`
     :o.status==="pagado"?`<div class="ocost">🔒 Costo y ganancia: pega la Worker v61 para verlos</div>`:"";
-  return `<div class="ocard"><div class="ohead"><span>Ref. <b>${esc(ref)}</b></span><span>${esc(when(o.createdAt))}</span></div><div>${via}</div><div class="ocli">${cli}</div>${dlv}${paid}${items}<div class="otot"><span>Total</span><span>${money(o.total)}</span></div>${cst}${acts}</div>`;
+  const bq=o.status==="pendiente"&&dv0.pay==="bold"?`<div class="obold" id="bs-${o.id}">💳 Bold: ${BOLD_ST[o.id]?boldTxt(BOLD_ST[o.id]):"sin consultar"}<button type="button" data-bold="${o.id}">🔎 Consultar Bold</button></div>`:"";
+  return `<div class="ocard"><div class="ohead"><span>Ref. <b>${esc(ref)}</b></span><span>${esc(when(o.createdAt))}</span></div><div>${via}</div>${bq}<div class="ocli">${cli}</div>${dlv}${paid}${items}<div class="otot"><span>Total</span><span>${money(o.total)}</span></div>${cst}${acts}</div>`;
 }
 // Asks how she paid (and the e-mail for the receipt when she has no Club account)
 function paySheet(hasUser,mail){
@@ -1382,6 +1408,9 @@ $("portadaInfo").onclick=openPortada;
 $("tabs").onclick=e=>{ const b=e.target.closest("button[data-tab]"); if(b) showTab(b.dataset.tab); };
 $("ordSeg").onclick=e=>{ const b=e.target.closest("button[data-st]"); if(!b) return; ordStatus=b.dataset.st; paintOrders(); };
 $("ordKpis").onclick=e=>{ if(e.target.closest("[data-archive-all]")) archiveAll(); };
+$("ordersList").addEventListener("click",async e=>{ const b=e.target.closest("[data-bold]"); if(!b) return; e.stopPropagation(); b.disabled=true; b.textContent="Consultando…"; try{ const d=await boldCheck(b.dataset.bold); boldPaint(b.dataset.bold,d); if(d.status==="APPROVED"){ toast("✅ Bold aprobó el pago. Quedó como pagado."); setTimeout(loadOrders,1200);} }catch(x){ b.disabled=false; b.textContent="🔎 Consultar Bold"; toast(x.message,{err:true});} },true);
+$("ordKpis").addEventListener("click",async e=>{ if(!e.target.closest("#oboldGo")) return; const inp=$("oboldRef"), out=$("oboldOut"), id=String(inp.value||"").trim(); out.innerHTML=`<div class="obold">Consultando a Bold…</div>`; try{ const d=await boldCheck(id); const l=BOLD_LBL[d.status]||[""]; const o=ORD.find(x=>x.id===id.toLowerCase()); out.innerHTML=`<div class="obold ${l[0]}">Ref. <b>${esc(id.toUpperCase())}</b>${d.total?` · ${money(d.total)}`:""}${d.method?` · ${esc(d.method)}`:""}<br>${boldTxt(d.status)}${o?"":"<br><span style=\"color:var(--dim)\">Ese pedido no está en esta lista (puede estar en otra pestaña).</span>"}</div>`; if(d.status==="APPROVED") setTimeout(loadOrders,1500); }catch(x){ out.innerHTML=`<div class="obold bad">${esc(x.message)}</div>`; } });
+$("ordKpis").addEventListener("keydown",e=>{ if(e.key==="Enter"&&e.target.id==="oboldRef"){ e.preventDefault(); $("oboldGo").click(); } });
 $("ordersList").onclick=e=>{ const k=e.target.closest("[data-cost]"); if(k){ const o=ORD.find(x=>x.id===k.dataset.cost); if(o&&window.CanevaVentas&&CanevaVentas.editCost) CanevaVentas.editCost(o,()=>loadOrders(),{api:API_BASE,token:token}); return; } const r=e.target.closest("[data-resend]"); if(r) return resendReceipt(r.dataset.resend, r.dataset.mail); const p=e.target.closest("[data-pay]"); if(p) return payOrder(p.dataset.pay, p.dataset.hasUser==="1", p.dataset.mail); const vd=e.target.closest("[data-void]"); if(vd) return voidOrder(vd.dataset.void); const c=e.target.closest("[data-cancel]"); if(c) cancelOrder(c.dataset.cancel); };
 $("gfSeg").onclick=e=>{ const b=e.target.closest("button[data-gf]"); if(!b) return; gfStatus=b.dataset.gf; document.querySelectorAll("#gfSeg button").forEach(x=>x.classList.toggle("on",x===b)); loadGifts(); };
 $("gfCheck").onclick=gfCheck;
