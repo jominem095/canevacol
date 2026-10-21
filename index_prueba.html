@@ -2725,7 +2725,8 @@ function cvAbout(cfg){
   if(eb)eb.textContent=a&&a.eyebrow?a.eyebrow:ABOUT_DEF.eyebrow;
   if(h)h.innerHTML=a&&a.title?escHtml(a.title):ABOUT_DEF.title;
   if(body)body.innerHTML=(a?escHtml(a.text):ABOUT_DEF.text).split(/\n\s*\n/).map(function(t){return t.replace(/\n/g,'<br>');}).join('<br><br>');
-  if(!document.getElementById('nosQuote')&&body){var q=document.createElement('blockquote');q.id='nosQuote';q.className='nos-quote';q.innerHTML='“Un diamante es carbón que nunca se rindió.”<span>Así nació CΛNEVΛ 💎</span>';body.parentNode.insertBefore(q,body.nextSibling);}
+  if(!document.getElementById('nosQuote')&&body){var q=document.createElement('blockquote');q.id='nosQuote';q.className='nos-quote';q.innerHTML='<i class="nq-gem">💎</i><p>“Un diamante<br>es carbón que<br>nunca se rindió.”</p><span>CΛNEVΛ · Hecho para brillar</span><small>@caneva.col · canevacol.com</small>';body.parentNode.insertBefore(q,body.nextSibling);
+    var sb=document.createElement('button');sb.type='button';sb.className='nq-share';sb.innerHTML='📸 Llévatela a tu historia';q.parentNode.insertBefore(sb,q.nextSibling);sb.addEventListener('click',cvQuoteShare);}
   if(!document.getElementById('nosClub')){var c=document.createElement('div');c.id='nosClub';c.className='nos-club';
     var pts=(window.clubInfo&&clubInfo().welcome)||100;
     c.innerHTML='<div class="nc-ico">👑</div><div class="nc-t"><b>Club Caneva</b><span>Únete gratis y recibe <em>'+pts+' puntos</em> de bienvenida. Sumas en cada compra y los cambias por descuentos y sorpresas.</span></div><button type="button">Quiero ser parte</button>';
@@ -2741,6 +2742,37 @@ function cvAbout(cfg){
     '<g clip-path="url(#ngC)"><rect class="ng-shine" x="-80" y="0" width="40" height="180" fill="#ffffff" opacity=".85" transform="skewX(-20)"/></g></svg>'+
     '<div class="ng-spark s1">✦</div><div class="ng-spark s2">✧</div><div class="ng-spark s3">✦</div><div class="ng-word">CΛNEVΛ</div><div class="ng-tag">Hecho para brillar</div>';
     r.insertBefore(g,r.firstChild);}
+}
+// v71: the diamond quote as a 1080x1920 story image (share sheet on phones, download elsewhere)
+function cvQuoteShare(){
+  var btn=document.querySelector('.nq-share');if(btn){btn.disabled=true;btn.textContent='Creando tu imagen…';}
+  try{if(window.cvStatsPush)cvStatsPush({t:'k',k:'compartir_historia',l:'frase diamante'});}catch(e){}
+  var ready=(document.fonts&&document.fonts.load)?Promise.all([document.fonts.load('italic 300 90px "Cormorant Garamond"'),document.fonts.load('300 40px Montserrat'),document.fonts.load('500 30px Inter')]).catch(function(){}):Promise.resolve();
+  ready.then(function(){
+    var W=1080,H=1920,c=document.createElement('canvas');c.width=W;c.height=H;var x=c.getContext('2d');
+    var g=x.createRadialGradient(W/2,640,40,W/2,760,1100);g.addColorStop(0,'#1b2430');g.addColorStop(.45,'#0a0b0e');g.addColorStop(1,'#030304');x.fillStyle=g;x.fillRect(0,0,W,H);
+    // sparkles
+    x.fillStyle='rgba(255,255,255,.85)';[[170,330,5],[910,420,7],[90,880,4],[995,1200,5],[140,1500,3],[950,1640,4],[540,190,3]].forEach(function(p){x.beginPath();x.arc(p[0],p[1],p[2],0,7);x.fill();});
+    // diamond (same drawing as the page, scaled)
+    x.save();x.translate(W/2-300,330);x.scale(3,3);x.shadowColor='rgba(170,215,255,.6)';x.shadowBlur=30;
+    var d=new Path2D('M40 40H160L190 75L100 170L10 75Z'),gg=x.createLinearGradient(0,0,200,180);gg.addColorStop(0,'#ffffff');gg.addColorStop(.45,'#d9ecff');gg.addColorStop(1,'#8fb6d6');x.fillStyle=gg;x.fill(d);x.shadowBlur=0;
+    x.fillStyle='rgba(255,255,255,.5)';x.fill(new Path2D('M10 75L40 40L70 75Z M70 75L100 40L130 75Z M130 75L160 40L190 75Z'));
+    x.fillStyle='rgba(111,148,179,.45)';x.fill(new Path2D('M10 75H190L100 170Z'));x.fillStyle='rgba(255,255,255,.3)';x.fill(new Path2D('M70 75L100 170L130 75Z'));
+    x.strokeStyle='rgba(255,255,255,.8)';x.lineWidth=1.1;x.lineJoin='round';x.stroke(new Path2D('M40 40H160L190 75L100 170L10 75Z M10 75H190 M40 40L70 75L100 40L130 75L160 40 M70 75L100 170 M130 75L100 170 M10 75L100 170 M190 75L100 170'));x.restore();
+    x.textAlign='center';x.fillStyle='#f4f8ff';
+    x.font='italic 300 96px "Cormorant Garamond", Georgia, serif';['“Un diamante','es carbón que','nunca se rindió.”'].forEach(function(t,i){x.fillText(t,W/2,1020+i*118);});
+    x.fillStyle='rgba(207,230,255,.6)';x.fillRect(W/2-90,1410,180,2);
+    x.fillStyle='#f4f8ff';x.font='300 46px Montserrat, Inter, sans-serif';x.letterSpacing='22px';x.fillText('CΛNEVΛ',W/2+11,1500);x.letterSpacing='0px';
+    x.fillStyle='rgba(244,248,255,.72)';x.font='italic 400 44px "Cormorant Garamond", Georgia, serif';x.fillText('Hecho para brillar',W/2,1570);
+    x.fillStyle='rgba(244,248,255,.6)';x.font='500 32px Inter, sans-serif';x.fillText('@caneva.col  ·  canevacol.com',W/2,1760);
+    c.toBlob(function(blob){
+      var done=function(){if(btn){btn.disabled=false;btn.innerHTML='📸 Llévatela a tu historia';}};
+      if(!blob){done();return;}
+      var file=new File([blob],'caneva-diamante.png',{type:'image/png'});
+      if(navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({files:[file],text:'💎 Un diamante es carbón que nunca se rindió. @caneva.col canevacol.com'}).catch(function(){}).then(done);}
+      else{var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='caneva-diamante.png';document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1500);done();if(typeof toastCart==='function')toastCart('Imagen guardada 💎 súbela a tu historia');}
+    },'image/png');
+  });
 }
 cvAbout(null);
 
@@ -5801,7 +5833,6 @@ body.cv-has-pbar .ann-bar{display:none!important}
 #nosotros .nos-l{text-align:center!important;padding-left:22px!important;padding-right:22px!important;align-items:center}
 #nosotros .nos-l .eyebrow{justify-content:center;text-align:center}
 #nosotros .nos-l h2,#nosotros .nos-body{text-align:center!important;margin-left:auto!important;margin-right:auto!important}
-#nosotros .nos-quote{border-left:0;border-top:1px solid rgba(207,230,255,.5);border-bottom:1px solid rgba(207,230,255,.2);background:radial-gradient(circle at 50% 0,rgba(207,230,255,.08),transparent 70%);text-align:center}
 #nosotros .nos-items{display:flex;flex-direction:column;align-items:center}
 #nosotros .nos-item{justify-content:center;text-align:center;padding-left:0!important}
 #nosotros .nos-item::before{display:none!important}
@@ -5818,8 +5849,15 @@ body.cv-has-pbar .ann-bar{display:none!important}
 @keyframes ngTw{0%,100%{opacity:.15;transform:scale(.6)}50%{opacity:1;transform:scale(1.15)}}
 .ng-word{margin-top:22px;font-family:'Montserrat','Inter',sans-serif;font-weight:300;letter-spacing:.55em;font-size:1.25rem;color:#f4f8ff;padding-left:.55em}
 .ng-tag{margin-top:8px;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.05rem;color:rgba(244,248,255,.7)}
-.nos-quote{margin:18px 0 6px;padding:14px 18px;border-left:2px solid #cfe6ff;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.35rem;line-height:1.35;color:#f4f8ff;background:linear-gradient(90deg,rgba(207,230,255,.06),transparent)}
-.nos-quote span{display:block;margin-top:6px;font-family:'Inter',sans-serif;font-style:normal;font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(244,248,255,.6)}
+.nos-quote{position:relative;overflow:hidden;margin:26px 0 10px;padding:30px 24px 24px;border-radius:22px;text-align:center;border:1px solid rgba(207,230,255,.35);background:radial-gradient(circle at 50% 0%,rgba(159,211,255,.18),transparent 60%),linear-gradient(160deg,#0d1117,#050506);box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 40px rgba(159,211,255,.08)}
+.nos-quote::after{content:'';position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.12),transparent);transform:skewX(-20deg);animation:nqSweep 5s ease-in-out infinite}
+@keyframes nqSweep{0%{left:-60%}50%,100%{left:130%}}
+.nos-quote .nq-gem{display:block;font-style:normal;font-size:2rem;filter:drop-shadow(0 0 12px rgba(170,215,255,.7));margin-bottom:6px}
+.nos-quote p{margin:0;font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:300;font-size:clamp(1.9rem,6vw,2.6rem);line-height:1.15;color:#f4f8ff;text-shadow:0 0 24px rgba(170,215,255,.25)}
+.nos-quote span{display:block;margin-top:16px;font-family:'Montserrat','Inter',sans-serif;font-weight:300;font-size:.7rem;letter-spacing:.3em;text-transform:uppercase;color:#f4f8ff}
+.nos-quote small{display:block;margin-top:8px;font-family:'Inter',sans-serif;font-size:.66rem;letter-spacing:.06em;color:rgba(244,248,255,.5)}
+.nq-share{display:block;margin:4px auto 6px;border:1px solid rgba(207,230,255,.4);background:rgba(207,230,255,.06);color:#f4f8ff;border-radius:999px;padding:.7rem 1.2rem;font:600 .72rem 'Inter',sans-serif;letter-spacing:.06em;cursor:pointer}
+.nq-share:disabled{opacity:.6;cursor:wait}
 .nos-club{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:22px;padding:16px;border-radius:18px;border:1px solid rgba(207,230,255,.3);background:linear-gradient(135deg,rgba(159,211,255,.08),rgba(201,167,255,.08))}
 .nos-club .nc-ico{font-size:1.8rem}.nos-club .nc-t{flex:1;min-width:200px;font-family:'Inter',sans-serif}
 .nos-club .nc-t b{display:block;font-size:.9rem;letter-spacing:.08em;text-transform:uppercase;color:#f4f8ff}.nos-club .nc-t span{font-size:.82rem;line-height:1.5;color:rgba(244,248,255,.75)}.nos-club em{font-style:normal;color:#8ef0c8;font-weight:700}
