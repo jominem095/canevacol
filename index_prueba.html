@@ -5771,6 +5771,11 @@ body.cv-has-pbar .ann-bar{display:none!important}
 })();
 </script>
 <style id="cvbreb-css">
+/* v71: the cart scrolls as one piece (items + payment options), so nothing is squeezed on phones */
+.cart-drawer{display:flex!important;flex-direction:column!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.cart-drawer .cart-items{flex:0 0 auto!important;overflow:visible!important;max-height:none!important;min-height:90px}
+.cart-drawer .cart-foot{flex:0 0 auto!important}
+.cart-drawer .cart-head{position:sticky!important;top:0;z-index:5;background:rgba(10,9,8,.97)}
 #cartBreb.cv-breb-btn{position:relative;overflow:hidden;display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:3px;width:100%;margin:.2rem 0 .7rem;padding:1.05rem 1.2rem .95rem;border:0!important;border-radius:999px;cursor:pointer;color:#050505!important;font-family:'Inter',sans-serif;background:linear-gradient(120deg,#cfd6db 0%,#ffffff 28%,#e8eef2 50%,#ffffff 72%,#c3ccd2 100%)!important;background-size:220% 100%!important;animation:bbShine 5s ease-in-out infinite;box-shadow:0 0 0 1px rgba(255,255,255,.55),0 12px 34px rgba(190,225,255,.22),inset 0 1px 0 #fff}
 #cartBreb.cv-breb-btn::after{content:'';position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.95),transparent);transform:skewX(-20deg);animation:bbSweep 3.2s ease-in-out infinite;pointer-events:none}
 #cartBreb .bb-main{font-size:.74rem;letter-spacing:.2em;text-transform:uppercase;font-weight:800}
