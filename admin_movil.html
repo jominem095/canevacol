@@ -1111,7 +1111,7 @@ const BOLD_LBL={APPROVED:["ok","✅ Aprobado: ya pagó. El pedido quedó como pa
 function boldTxt(st){const l=BOLD_LBL[st]||["","❔ "+st];return `<b>${esc(l[1])}</b>`;}
 async function boldCheck(id){
   id=String(id||"").trim().toLowerCase().replace(/^ref\.?\s*/,"");
-  if(!/^[a-z0-9]{8,16}$/.test(id)) throw new Error("Esa referencia no es válida");
+  if(!/^[a-z0-9]{8,16}$/.test(id)) throw new Error("Esa no es la Ref. de un pedido de la tienda (son 10 a 12 letras y números, como UMBENZZBBVBM). Si en Bold la venta no tiene esa referencia, se pagó con un link o datáfono de Bold: regístrala en 💵 Ventas con pago \"Link Bold\".");
   const r=await fetch(API_BASE+"/pay/bold/status?id="+encodeURIComponent(id),{cache:"no-store"}); const d=await r.json().catch(()=>({}));
   if(!r.ok||!d.ok) throw new Error(d.error||("Error "+r.status));
   BOLD_ST[id]=d.status; return d;
@@ -1119,8 +1119,8 @@ async function boldCheck(id){
 function boldPaint(id,d){const box=document.getElementById("bs-"+id); if(!box) return; const l=BOLD_LBL[d.status]||[""]; box.className="obold "+l[0]; box.innerHTML=`💳 Bold: ${boldTxt(d.status)}${d.method?` · ${esc(d.method)}`:""}<button type="button" data-bold="${id}">🔎 Consultar otra vez</button>`;}
 // When she opens "Pagando en línea" or "Abandonados", ask Bold for each unpaid Bold order once (max 8), so nobody has to type refs
 async function autoBold(){
-  if(ordStatus!=="pagando"&&ordStatus!=="abandonado") return;
-  const l=ORD.filter(o=>o.bucket===ordStatus&&o.status==="pendiente"&&(o.delivery||{}).pay==="bold"&&!BOLD_ST[o.id]).slice(0,8);
+  if(ordStatus!=="pagando"&&ordStatus!=="abandonado"&&ordStatus!=="cancelado") return;
+  const l=ORD.filter(o=>o.bucket===ordStatus&&(o.status==="pendiente"||o.status==="cancelado")&&(o.delivery||{}).pay==="bold"&&!BOLD_ST[o.id]).slice(0,8);
   if(!l.length||BOLD_AUTO++>20) return; let paid=0;
   for(const o of l){ try{ const d=await boldCheck(o.id); boldPaint(o.id,d); if(d.status==="APPROVED") paid++; }catch(e){} }
   if(paid){ toast("✅ Bold aprobó "+paid+" pago"+(paid>1?"s":"")+". Ya quedaron como pagados."); setTimeout(loadOrders,1200); }
@@ -1149,7 +1149,7 @@ function orderCard(o){
   const C=o.cost;
   const cst=o.status==="pagado"&&C?`<div class="ocost">🔒 Costo <b>${money(C.cost)}</b> · <span class="g${C.profit<0?" neg":""}">ganancia ${money(C.profit)}${C.margin!=null?" ("+C.margin+"%)":""}</span>${C.missing?` · <span style="color:var(--bad)">⚠ ${C.missing} sin costo</span>`:""}<button type="button" data-cost="${o.id}">${C.missing?"Poner costo":"Editar"}</button></div>`
     :o.status==="pagado"?`<div class="ocost">🔒 Costo y ganancia: pega la Worker v61 para verlos</div>`:"";
-  const bq=o.status==="pendiente"&&dv0.pay==="bold"?`<div class="obold" id="bs-${o.id}">💳 Bold: ${BOLD_ST[o.id]?boldTxt(BOLD_ST[o.id]):"sin consultar"}<button type="button" data-bold="${o.id}">🔎 Consultar Bold</button></div>`:"";
+  const bq=(o.status==="pendiente"||o.status==="cancelado")&&dv0.pay==="bold"?`<div class="obold" id="bs-${o.id}">💳 Bold: ${BOLD_ST[o.id]?boldTxt(BOLD_ST[o.id]):"sin consultar"}<button type="button" data-bold="${o.id}">🔎 Consultar Bold</button></div>`:"";
   return `<div class="ocard"><div class="ohead"><span>Ref. <b>${esc(ref)}</b></span><span>${esc(when(o.createdAt))}</span></div><div>${via}</div>${bq}<div class="ocli">${cli}</div>${dlv}${paid}${items}<div class="otot"><span>Total</span><span>${money(o.total)}</span></div>${cst}${acts}</div>`;
 }
 // Asks how she paid (and the e-mail for the receipt when she has no Club account)
