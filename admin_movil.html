@@ -218,6 +218,52 @@ main{padding:14px 16px 120px}
 .delbox{position:fixed;left:16px;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:25;max-width:440px;margin:0 auto;background:var(--k);border:1px solid var(--b);border-radius:20px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.7)}
 .delimg{width:72px;height:92px;border-radius:10px;overflow:hidden;background:var(--k3)}.delimg img{width:100%;height:100%;object-fit:cover}
 .btn.danger.solid{background:var(--bad);color:var(--k);border:0}
+
+/* v71 tabs with icons + "Hoy" with Caneva AI */
+.tabs button{border-radius:999px!important;padding:9px 14px!important;font-weight:500;letter-spacing:.01em;white-space:nowrap;transition:all .2s}
+.tabs button.on{background:linear-gradient(120deg,#ffffff,#e6edf3)!important;color:#050505!important;box-shadow:0 6px 20px rgba(207,230,255,.18)}
+.tabs .t-hoy{position:relative;border:1px solid transparent!important;background:linear-gradient(#0b0b0d,#0b0b0d) padding-box,conic-gradient(from var(--hang,0deg),#9fd3ff,#c9a7ff,#ffffff,#8ef0c8,#9fd3ff) border-box!important;animation:hSpin 5s linear infinite}
+.tabs .t-hoy.on{background:linear-gradient(120deg,#ffffff,#e6edf3) padding-box,conic-gradient(from var(--hang,0deg),#9fd3ff,#c9a7ff,#ffffff,#8ef0c8,#9fd3ff) border-box!important}
+@property --hang{syntax:'<angle>';initial-value:0deg;inherits:false}
+@keyframes hSpin{to{--hang:360deg}}
+.hy{max-width:980px;margin:0 auto;padding:4px 0 90px}
+.hy-hero{position:relative;overflow:hidden;border-radius:22px;padding:22px 18px;margin:6px 0 12px;background:radial-gradient(circle at 85% 0%,rgba(159,211,255,.18),transparent 55%),radial-gradient(circle at 0% 100%,rgba(201,167,255,.14),transparent 50%),#08090b;border:1px solid rgba(207,230,255,.22)}
+.hy-hero small{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#cfe6ff}
+.hy-hero h1{margin:6px 0 2px;font-family:"Cormorant Garamond",Georgia,serif;font-weight:400;font-size:34px;line-height:1.05}
+.hy-hero h1 b{font-weight:600;background:linear-gradient(120deg,#fff,#cfe6ff,#e6dcff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hy-hero p{margin:0;color:var(--dim);font-size:13px}
+.hy-gem{position:absolute;right:18px;top:16px;font-size:30px;filter:drop-shadow(0 0 14px rgba(170,215,255,.8));animation:hyF 5s ease-in-out infinite}
+@keyframes hyF{50%{transform:translateY(-6px) rotate(6deg)}}
+.hy-kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}
+@media(min-width:760px){.hy-kpis{grid-template-columns:repeat(4,1fr)}}
+.hy-k{border:1px solid var(--b);border-radius:16px;padding:12px 14px;background:var(--k2)}
+.hy-k span{display:block;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+.hy-k b{display:block;font-size:22px;font-weight:700;margin-top:3px}
+.hy-k small{display:block;font-size:11px;color:var(--dim);margin-top:2px}
+.hy-k.g b{color:#8ef0c8}
+.hy-bar{height:6px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:7px}.hy-bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#8ef0c8,#cfe6ff)}
+.hy-ai{position:relative;border-radius:22px;padding:1.5px;margin-bottom:12px;background:conic-gradient(from var(--hang,0deg),#9fd3ff,#c9a7ff,#ffffff,#8ef0c8,#9fd3ff);animation:hSpin 6s linear infinite}
+.hy-ai-in{border-radius:21px;padding:16px;background:radial-gradient(circle at 90% 0%,rgba(159,211,255,.12),transparent 50%),#07080a}
+.hy-ai-h{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.hy-ai-h i{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-style:normal;font-weight:700;font-size:12px;color:#050505;background:linear-gradient(135deg,#fff,#cfe6ff,#e6dcff);box-shadow:0 0 18px rgba(170,215,255,.45)}
+.hy-ai-h b{font-size:14px;letter-spacing:.06em}.hy-ai-h small{display:block;font-size:11px;color:#8ef0c8}
+.hy-ai-h button{margin-left:auto;background:none;border:1px solid var(--b);border-radius:999px;color:var(--w);font-size:11px;padding:5px 10px}
+.hy-log{display:flex;flex-direction:column;gap:8px;max-height:420px;overflow:auto;margin-bottom:10px}
+.hy-m{max-width:92%;padding:10px 12px;border-radius:16px 16px 16px 4px;background:rgba(255,255,255,.05);border:1px solid rgba(207,230,255,.16);font-size:14px;line-height:1.5;white-space:pre-wrap}
+.hy-m.me{align-self:flex-end;border-radius:16px 16px 4px 16px;background:linear-gradient(120deg,#f4f8ff,#dfe9f5);color:#050505;border:0}
+.hy-m .cp{display:inline-block;margin-top:6px;font-size:11px;border:1px solid var(--b);border-radius:999px;padding:3px 9px;background:none;color:var(--w)}
+.hy-typ{display:inline-flex;gap:4px}.hy-typ i{width:6px;height:6px;border-radius:50%;background:#cfe6ff;animation:hyT 1s infinite}.hy-typ i:nth-child(2){animation-delay:.15s}.hy-typ i:nth-child(3){animation-delay:.3s}
+@keyframes hyT{50%{opacity:1;transform:translateY(-3px)}0%,100%{opacity:.3}}
+.hy-chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-bottom:10px}.hy-chips::-webkit-scrollbar{display:none}
+.hy-chips button{flex:0 0 auto;border:1px solid rgba(207,230,255,.28);background:rgba(207,230,255,.06);color:var(--w);border-radius:999px;padding:7px 11px;font-size:12px}
+.hy-in{display:flex;gap:8px}.hy-in input{flex:1;min-width:0;background:#111;border:1px solid rgba(207,230,255,.25);border-radius:999px;padding:11px 14px;color:var(--w);font-size:15px}
+.hy-in button{border:0;border-radius:999px;padding:0 16px;font-weight:700;background:linear-gradient(120deg,#cfd6db,#fff,#c3ccd2);color:#050505}
+.hy-todo h3{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);font-weight:500;margin:4px 0 8px}
+.hy-t{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:1px solid var(--b);border-radius:14px;padding:12px;margin-bottom:8px;background:var(--k2);color:var(--w)}
+.hy-t i{font-style:normal;font-size:20px}.hy-t span{flex:1}.hy-t span b{display:block;font-size:14px}.hy-t span small{color:var(--dim);font-size:12px}
+.hy-t em{font-style:normal;font-weight:800;font-size:15px;background:#fff;color:#050505;border-radius:999px;min-width:28px;text-align:center;padding:3px 8px}
+.hy-t.hot{border-color:rgba(142,240,200,.5);background:linear-gradient(120deg,rgba(142,240,200,.08),transparent)}
+.hy-ok{border:1px dashed var(--b);border-radius:14px;padding:14px;text-align:center;color:var(--dim);font-size:13px}
 </style>
 </head>
 <body>
@@ -248,17 +294,18 @@ main{padding:14px 16px 120px}
       </div>
     </div>
     <div class="tabs" id="tabs">
+      <button type="button" data-tab="hoy" class="t-hoy">✨ Hoy</button>
+      <button type="button" data-tab="pedidos">📦 Pedidos<b id="pendCount"></b></button>
+      <button type="button" data-tab="ventas">💵 Ventas</button>
+      <button type="button" data-tab="productos" class="on">👗 Productos</button>
+      <button type="button" data-tab="club">👑 Club</button>
       <button type="button" data-tab="control">⚡ Control</button>
+      <button type="button" data-tab="reportes">📈 Reportes</button>
+      <button type="button" data-tab="inventario">📊 Inventario<b id="invCount"></b></button>
+      <button type="button" data-tab="apartados">⏳ Apartados<b id="apCount"></b></button>
+      <button type="button" data-tab="regalos">🎁 Regalos<b id="gfCount"></b></button>
       <button type="button" data-tab="colores">🎨 Colores</button>
       <button type="button" data-tab="enlaces">🔗 Enlaces</button>
-      <button type="button" data-tab="productos" class="on">Productos</button>
-      <button type="button" data-tab="pedidos">Pedidos<b id="pendCount"></b></button>
-      <button type="button" data-tab="apartados">Apartados<b id="apCount"></b></button>
-      <button type="button" data-tab="regalos">Regalos<b id="gfCount"></b></button>
-      <button type="button" data-tab="ventas">💵 Ventas</button>
-      <button type="button" data-tab="inventario">Inventario<b id="invCount"></b></button>
-      <button type="button" data-tab="reportes">Reportes</button>
-      <button type="button" data-tab="club">Club</button>
     </div>
     <div id="prodTools">
       <input id="search" class="search" type="search" placeholder="Buscar producto…">
@@ -286,6 +333,7 @@ main{padding:14px 16px 120px}
     <div id="clubView" class="hidden"></div>
     <div id="invView" class="hidden"><div id="invBody" style="--cp-top:var(--hdr,118px)"></div></div>
     <div id="repView" class="hidden"><div id="repBody"></div></div>
+    <div id="hoyView" class="hidden"></div>
     <div id="ctlView" class="hidden"><div id="ctlBody"></div></div>
     <div id="colView" class="hidden"><div id="colBody"></div></div>
     <div id="lnkView" class="hidden"><div id="lnkBody"></div></div>
@@ -1064,11 +1112,80 @@ function invTag(p){ const t=invTotal(p), low=(siteConfig&&siteConfig.inventory&&
 // Inventario y Reportes live in admin_pro.js (shared with admin.html)
 function proOpts(){ return {api:API_BASE, token:token, onChange:()=>fetchCatalog().then(x=>{products=x;renderAll();updateInvCount();}).catch(()=>{})}; }
 
+
+// ---------- v71 "✨ Hoy": greeting, the day's numbers, Caneva AI as her business partner, and today's to-do ----------
+let HOY={chat:[],facts:null,loading:false,lastPaid:null};
+function hoyHello(){const h=new Date(Date.now()-5*36e5).getUTCHours();return h<12?"Buenos días":h<19?"Buenas tardes":"Buenas noches";}
+function hoyPaint(){
+  const f=HOY.facts, v=$("hoyView"); if(!v) return;
+  const m=f&&f.mes||{}, t=f&&f.ventas_hoy||{}, y=f&&f.ventas_ayer||{}, g=f&&f.ganancia_mes, p=f&&f.pendientes||{};
+  const fecha=new Date().toLocaleDateString("es-CO",{timeZone:"America/Bogota",weekday:"long",day:"numeric",month:"long"});
+  const pace=m.daysInMonth&&m.dayOfMonth?Math.round((m.revenue||0)/m.dayOfMonth*m.daysInMonth):0;
+  const goalPct=m.goal?Math.min(100,Math.round((m.revenue||0)/m.goal*100)):0;
+  const todo=[
+    ["💎",p.breb_por_confirmar,"Pagos Bre-B por confirmar",(p.breb_dijeron_pague?p.breb_dijeron_pague+" ya dijeron que pagaron · ":"")+"revisa tu Bancolombia","breb",true],
+    ["💬",p.pedidos_sin_pagar,"Pedidos sin pagar","escríbeles una vez más","abandonado",false],
+    ["🛍",p.bolsas_para_rescatar,"Bolsas para rescatar","dejaron prendas en el carrito","control",false],
+    ["⏳",p.apartados_por_vencer,"Apartados por vencer","recuérdales el saldo","apartados",false],
+    ["🎁",p.regalos_por_atender,"Tarjetas regalo por atender","","regalos",false],
+    ["🎂",(p.cumpleanos||[]).length,"Cumpleañeras","felicítalas y regálales puntos","club",false],
+    ["📦",p.agotadas,"Prendas agotadas","repón o ocúltalas","inventario",false]
+  ].filter(x=>x[1]);
+  v.innerHTML=`<div class="hy">
+    <div class="hy-hero"><span class="hy-gem">💎</span><small>CΛNEVΛ · tu tienda hoy</small><h1>${hoyHello()}, <b>Mayra</b></h1><p>${esc(fecha.charAt(0).toUpperCase()+fecha.slice(1))}</p></div>
+    <div class="hy-kpis">
+      <div class="hy-k"><span>Vendido hoy</span><b>${f?money(t.revenue||0):"…"}</b><small>${f?(t.orders||0)+" venta"+((t.orders||0)===1?"":"s")+" · ayer "+money(y.revenue||0):""}</small></div>
+      <div class="hy-k"><span>Este mes</span><b>${f?money(m.revenue||0):"…"}</b><small>${f?(m.goal?goalPct+"% de tu meta "+money(m.goal):"a este ritmo cierras en "+money(pace)):""}</small>${m.goal?`<div class="hy-bar"><i style="width:${goalPct}%"></i></div>`:""}</div>
+      <div class="hy-k g"><span>🔒 Ganancia del mes</span><b>${g?money(g.ganancia):"…"}</b><small>${g&&g.ventas_sin_costo?"⚠ "+g.ventas_sin_costo+" venta(s) sin costo":g?"después de costos":""}</small></div>
+      <div class="hy-k"><span>Visitantes hoy</span><b>${f?(t.visitors||0):"…"}</b><small>${f?(t.carts||0)+" al carrito · "+(t.whatsapp||0)+" WhatsApp":""}</small></div>
+    </div>
+    <div class="hy-ai"><div class="hy-ai-in">
+      <div class="hy-ai-h"><i>CΛ</i><div><b>Caneva AI</b><small>● tu socia · conoce tus números de hoy</small></div><button type="button" id="hyNew">↺ Nueva</button></div>
+      <div class="hy-log" id="hyLog"></div>
+      <div class="hy-chips" id="hyChips">${["📈 ¿Cómo voy este mes?","🔥 ¿Qué prenda promociono hoy?","📸 Escríbeme un post para Instagram","💬 ¿A quién le escribo hoy?","💡 Dame 3 ideas para vender más esta semana","🎂 Mensaje para una cumpleañera"].map(c=>`<button type="button">${c}</button>`).join("")}</div>
+      <div class="hy-in"><input id="hyIn" placeholder="Pregúntale lo que quieras de tu tienda…" enterkeyhint="send"><button type="button" id="hySend">Enviar</button></div>
+    </div></div>
+    <div class="hy-todo"><h3>Hoy te toca</h3>${todo.length?todo.map(x=>`<button type="button" class="hy-t${x[5]?" hot":""}" data-go="${x[4]}"><i>${x[0]}</i><span><b>${x[2]}</b><small>${esc(x[3])}</small></span><em>${x[1]}</em></button>`).join(""):`<div class="hy-ok">${f?"Todo al día ✨ Nada pendiente por ahora.":"Cargando…"}</div>`}</div>
+  </div>`;
+  hoyLog();
+  $("hyNew").onclick=()=>{HOY.chat=[];hoyLog();};
+  $("hySend").onclick=()=>hoyAsk($("hyIn").value);
+  $("hyIn").onkeydown=e=>{if(e.key==="Enter")hoyAsk($("hyIn").value);};
+  $("hyChips").onclick=e=>{const b=e.target.closest("button");if(b)hoyAsk(b.textContent.replace(/^\S+\s/,""));};
+  v.querySelector(".hy-todo").onclick=e=>{const b=e.target.closest("[data-go]");if(!b)return;const go=b.dataset.go;
+    if(go==="breb"||go==="abandonado"){ordStatus=go;showTab("pedidos");loadOrders();}else showTab(go);};
+}
+function hoyLog(){const l=$("hyLog");if(!l)return;
+  const items=HOY.chat.length?HOY.chat:[{r:"a",t:HOY.brief||"",typing:!HOY.brief}];
+  l.innerHTML=items.map((m,i)=>m.typing?`<div class="hy-m"><span class="hy-typ"><i></i><i></i><i></i></span></div>`:`<div class="hy-m${m.r==="u"?" me":""}">${esc(m.t)}${m.r==="a"&&m.t.length>140?`<br><button type="button" class="cp" data-cp="${i}">Copiar</button>`:""}</div>`).join("");
+  l.onclick=e=>{const b=e.target.closest("[data-cp]");if(!b)return;const m=items[+b.dataset.cp];try{navigator.clipboard.writeText(m.t);b.textContent="✓ Copiado";}catch(x){}};
+  l.scrollTop=l.scrollHeight;}
+async function hoyAsk(q){q=String(q||"").trim();if(!q||HOY.loading)return;$("hyIn").value="";
+  if(!HOY.chat.length&&HOY.brief)HOY.chat.push({r:"a",t:HOY.brief});
+  HOY.chat.push({r:"u",t:q});HOY.chat.push({r:"a",t:"",typing:true});HOY.loading=true;hoyLog();
+  const history=HOY.chat.filter(m=>!m.typing).slice(0,-1).slice(-10).map(m=>({role:m.r==="u"?"user":"model",text:m.t}));
+  try{const d=await adminFetch("/admin/ai",{method:"POST",body:{message:q,history}});HOY.chat.pop();HOY.chat.push({r:"a",t:d.reply});if(d.facts)HOY.facts=d.facts;}
+  catch(e){HOY.chat.pop();HOY.chat.push({r:"a",t:/Worker/.test(e.message)?"Para hablar conmigo falta pegar el Worker v71 en Cloudflare 💎":e.message});}
+  HOY.loading=false;hoyLog();}
+async function loadHoy(fresh){
+  hoyPaint();
+  try{const d=await adminFetch("/admin/ai",{method:"POST",body:{brief:true,fresh:!!fresh}});HOY.facts=d.facts;HOY.brief=d.reply||"Aquí tienes tus números de hoy 💎 Pregúntame lo que quieras.";
+    const m=d.facts&&d.facts.mes;if(m&&m.goal&&m.revenue>=m.goal){const k="cv_goal_party_"+String(d.facts.hoy).slice(0,7);try{if(!localStorage.getItem(k)){localStorage.setItem(k,"1");hoyConfetti();toast("🎉 ¡Lo lograste! Llegaste a tu meta del mes",{ms:7000});}}catch(x){}}
+    const paid=(d.facts&&d.facts.ventas_hoy&&d.facts.ventas_hoy.orders)||0;if(HOY.lastPaid!==null&&paid>HOY.lastPaid){hoyCash();hoyConfetti();toast("💰 ¡Nueva venta!",{ms:5000});}HOY.lastPaid=paid;
+  }catch(e){HOY.brief=/Worker/.test(e.message)?"Para ver tu resumen con Caneva AI falta pegar el Worker v71 en Cloudflare 💎":e.message;}
+  if(currentTab==="hoy")hoyPaint();}
+// celebrate: confetti and a soft "cha-ching" (no files, made with the browser's audio)
+function hoyConfetti(){const c=document.createElement("canvas");c.style.cssText="position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:9999";document.body.appendChild(c);
+  const x=c.getContext("2d"),W=c.width=innerWidth,H=c.height=innerHeight,cols=["#ffffff","#cfe6ff","#e6dcff","#8ef0c8","#9fd3ff"],ps=Array.from({length:140},()=>({x:W/2,y:H/3,vx:(Math.random()-.5)*14,vy:Math.random()*-12-4,s:4+Math.random()*5,c:cols[Math.floor(Math.random()*cols.length)],r:Math.random()*6}));
+  let f=0;(function tick(){x.clearRect(0,0,W,H);ps.forEach(p=>{p.vy+=.35;p.x+=p.vx;p.y+=p.vy;p.r+=.1;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.fillStyle=p.c;x.fillRect(-p.s/2,-p.s/2,p.s,p.s*.6);x.restore();});if(++f<150)requestAnimationFrame(tick);else c.remove();})();}
+function hoyCash(){try{const a=new (window.AudioContext||window.webkitAudioContext)();[[1318,0],[1760,.09]].forEach(([fq,t])=>{const o=a.createOscillator(),g=a.createGain();o.type="triangle";o.frequency.value=fq;g.gain.setValueAtTime(.0001,a.currentTime+t);g.gain.exponentialRampToValueAtTime(.25,a.currentTime+t+.02);g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+t+.35);o.connect(g).connect(a.destination);o.start(a.currentTime+t);o.stop(a.currentTime+t+.4);});}catch(e){}}
+setInterval(()=>{if(currentTab==="hoy"&&!document.hidden&&!HOY.loading)loadHoy();},300000);
 function showTab(t){
   currentTab=t;
   document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("on",b.dataset.tab===t));
   $("prodTools").classList.toggle("hidden",t!=="productos"); $("prodView").classList.toggle("hidden",t!=="productos");
   $("newBtn").classList.toggle("hidden",t!=="productos");
+  $("hoyView").classList.toggle("hidden",t!=="hoy"); if(t==="hoy") loadHoy();
   $("ordersView").classList.toggle("hidden",t!=="pedidos"); $("clubView").classList.toggle("hidden",t!=="club");
   $("apView").classList.toggle("hidden",t!=="apartados"); $("gfView").classList.toggle("hidden",t!=="regalos"); if(t==="regalos") loadGifts();
   $("invView").classList.toggle("hidden",t!=="inventario"); $("repView").classList.toggle("hidden",t!=="reportes"); $("ctlView").classList.toggle("hidden",t!=="control"); $("colView").classList.toggle("hidden",t!=="colores"); $("lnkView").classList.toggle("hidden",t!=="enlaces"); $("venView").classList.toggle("hidden",t!=="ventas");
@@ -1469,11 +1586,11 @@ async function loadList(){
   refreshPendingCount();
 }
 function showLogin(){ $("loginView").classList.remove("hidden"); $("listView").classList.add("hidden"); }
-function showList(){ $("loginView").classList.add("hidden"); $("listView").classList.remove("hidden"); loadList(); }
+function showList(){ $("loginView").classList.add("hidden"); $("listView").classList.remove("hidden"); loadList(); showTab("hoy"); }
 
 $("loginBtn").onclick=()=>{ const t=$("tokenInput").value.trim(); if(!t){ toast("Pega el token.",{err:true}); return; } setLS(TOKEN_KEY,t); showList(); };
 $("logoutBtn").onclick=()=>{ if(confirm("¿Cerrar sesión y borrar el token de este celular?")){ delLS(TOKEN_KEY); showLogin(); } };
-$("reloadBtn").onclick=()=>{ if(currentTab==="pedidos") loadOrders(); else if(currentTab==="club") loadClub(); else if(currentTab==="inventario"||currentTab==="reportes"||currentTab==="control") showTab(currentTab); else loadList(); };
+$("reloadBtn").onclick=()=>{ if(currentTab==="hoy"){ loadHoy(true); return; } if(currentTab==="pedidos") loadOrders(); else if(currentTab==="club") loadClub(); else if(currentTab==="inventario"||currentTab==="reportes"||currentTab==="control") showTab(currentTab); else loadList(); };
 $("fInvBtn").onclick=()=>{ const pid=$("fInvBtn").dataset.pid; closeEditor(); currentTab="inventario";
   document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("on",b.dataset.tab==="inventario"));
   ["prodTools","prodView","newBtn","ordersView","clubView","apView","gfView","repView"].forEach(id=>$(id).classList.add("hidden")); $("invView").classList.remove("hidden");
