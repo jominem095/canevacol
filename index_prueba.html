@@ -4619,6 +4619,10 @@ body.cv-fast .bw-logo-wrap{transform:scale(.82);transform-origin:center top;marg
     d.innerHTML='<div class="cv-strip-h"><b><i>●</i>Lo más nuevo</b><span>Desliza →</span></div><div class="cv-strip-row">'+list.map(function(p,i){var idx=P.indexOf(p);
       return '<button type="button" class="cv-si" style="--i:'+i+'" data-cvsi="'+idx+'"><span><img src="'+esc(cvImg(p.imagen,360))+'" alt="" loading="'+(i<4?'eager':'lazy')+'" decoding="async">'+(i<3?'<em>NUEVO</em>':'')+'</span><b>'+esc(p.nombre)+'</b><small>'+esc(p.precio)+'</small></button>';}).join('')+
       '<button type="button" class="cv-si all" data-cvall>Ver todo<br>→</button></div>';
+    // v71: a Club Caneva tile as the 3rd card for guests
+    try{var ci=window.clubInfo&&clubInfo();if(ci&&ci.active&&!ci.user){var row=d.querySelector('.cv-strip-row'),ref=row.children[2]||null,t=document.createElement('button');t.type='button';t.className='cv-si cv-si-club';
+      t.innerHTML='<span><i class="g">💎</i><i class="k">👑 Club Caneva</i><i class="c"><i class="w">CΛNEVΛ</i><i class="p">'+(ci.welcome||100)+'<small>pts</small></i></i><i class="u">Unirme →</i></span><b>Club Caneva</b><small>🎁 '+(ci.welcome||100)+' puntos de regalo</small>';
+      t.addEventListener('click',function(ev){ev.stopPropagation();try{if(window.cvStatsPush)cvStatsPush({t:'k',k:'club',l:'lo mas nuevo'});}catch(x){}if(window.openClub)openClub();});row.insertBefore(t,ref);}}catch(x){}
     // for ad visitors the garments go first; for everyone else, right after the category cards
     if(fromAd)vit.parentNode.insertBefore(d,vit);else vit.appendChild(d);
     d.addEventListener('click',function(e){var b=e.target.closest('[data-cvsi]');if(b){var bn=(b.querySelector('b')||{}).textContent||'',bi=P.findIndex(function(x){return x.nombre===bn;});openProductModal(bi>=0?bi:parseInt(b.dataset.cvsi,10));return;}if(e.target.closest('[data-cvall]')&&window.cvSetCat)cvSetCat('Nuevo');});
@@ -4708,6 +4712,8 @@ body.cv-fast .bw-logo-wrap{transform:scale(.82);transform-origin:center top;marg
     all.forEach(function(p){var k=catKey(p.categoria);if(!seen[k]&&out.length<7){seen[k]=1;out.push(p);}});
     // few categories: fill with the next newest garments
     for(var i=0;i<all.length&&out.length<6;i++){if(out.indexOf(all[i])<0)out.push(all[i]);}
+    // v71: guests get a Club Caneva slide as the 2nd story
+    try{var ci=window.clubInfo&&clubInfo();if(ci&&ci.active&&!ci.user&&out.length>=2)out.splice(1,0,{__club:true,welcome:ci.welcome||100});}catch(e){}
     return out;
   }
   var DUR=4200,cur=-1,timer=null,paused=false,held=false,list=[],slides=[],bars=[],builtFrom=null;
@@ -4719,7 +4725,8 @@ body.cv-fast .bw-logo-wrap{transform:scale(.82);transform-origin:center top;marg
     list=l;builtFrom=P;cur=-1;clearTimeout(timer);endShown=false;
     r.innerHTML='<div class="cv-rbars">'+list.map(function(){return '<i><b></b></i>';}).join('')+'</div>'+
       '<div class="cv-rtop"><span class="wm">CΛNEVΛ</span><span class="tg"></span></div>'+
-      list.map(function(p,i){return '<div class="cv-rs"><img alt="'+esc(p.nombre)+'" decoding="async"'+(i===0?' fetchpriority="high" src="'+esc(cvImg(p.imagen,900))+'"':' data-src="'+esc(cvImg(p.imagen,900))+'"')+'></div>';}).join('')+
+      list.map(function(p,i){if(p.__club)return '<div class="cv-rs cv-rs-club"><div class="rcb"><div class="rcb-glow"></div><div class="rcb-k">👑 Club Caneva</div><div class="rcb-card"><span class="gem">💎</span><span class="w">CΛNEVΛ</span><span class="cl">CLUB · MEMBER</span><span class="chip"></span><span class="nm">Tu nombre aquí</span><span class="pt"><b>'+p.welcome+'</b><small>puntos</small></span></div><div class="rcb-perks"><span>🎁 '+p.welcome+' pts al unirte</span><span>💎 Puntos en cada compra</span><span>🏷️ Descuentos y sorpresas</span></div></div></div>';
+        return '<div class="cv-rs"><img alt="'+esc(p.nombre)+'" decoding="async"'+(i===0?' fetchpriority="high" src="'+esc(cvImg(p.imagen,900))+'"':' data-src="'+esc(cvImg(p.imagen,900))+'"')+'></div>';}).join('')+
       '<div class="cv-rinfo"><small></small><h2><span></span></h2><div class="pr"><b></b><button type="button" data-rgo>Ver prenda →</button></div></div><div class="cv-rtap"><i></i>Toca la foto para verla</div><div class="cv-rend"></div>';
     slides=r.querySelectorAll('.cv-rs');bars=r.querySelectorAll('.cv-rbars i');
     sm=r.querySelector('.cv-rinfo small');h2=r.querySelector('.cv-rinfo h2 span');pr=r.querySelector('.cv-rinfo .pr b');tag=r.querySelector('.cv-rtop .tg');
@@ -4730,7 +4737,7 @@ body.cv-fast .bw-logo-wrap{transform:scale(.82);transform-origin:center top;marg
   function endCard(){
     endShown=true;clearTimeout(timer);bars.forEach(function(b){b.classList.add('done');b.classList.remove('run');});
     var pool=(typeof catalogProducts==='function'?catalogProducts():P).filter(function(p){return p&&p.imagen&&String(p.imagen).indexOf('http')===0;});
-    var four=pool.filter(function(p){return list.indexOf(p)<0;}).slice(0,4);if(four.length<4)four=list.slice(0,4);
+    var four=pool.filter(function(p){return list.indexOf(p)<0;}).slice(0,4);if(four.length<4)four=list.filter(function(p){return !p.__club;}).slice(0,4);
     var e=r.querySelector('.cv-rend');if(!e)return;
     e.innerHTML='<h3>¿Cuál te llevas? ✨</h3><p>Toca una para ver tallas y fotos · '+pool.length+' prendas en la tienda</p><div class="g">'+
       four.map(function(p){return '<button type="button" data-rp="'+esc(p.nombre)+'"><img src="'+esc(cvImg(p.imagen,420))+'" alt=""><span><b>'+esc(p.nombre)+'</b>'+esc(p.precio||'')+'</span></button>';}).join('')+
@@ -4753,8 +4760,10 @@ body.cv-fast .bw-logo-wrap{transform:scale(.82);transform-origin:center top;marg
     setTimeout(function(){if(slides[prev])slides[prev].classList.remove('out');},1000);
     bars.forEach(function(b,k){b.classList.toggle('done',k<i);b.classList.remove('run');});void r.offsetWidth;bars[i].classList.add('run');
     var p=list[i];r.classList.remove('go');void r.offsetWidth;
-    sm.textContent=String(p.categoria||'').replace(' / ',' · ');h2.textContent=p.nombre;pr.textContent=p.precio||'';
-    tag.textContent=(window.cvIsNew&&cvIsNew(p))?'Nuevo':'Colección';
+    var go=r.querySelector('[data-rgo]');
+    if(p.__club){sm.textContent='Club Caneva · gratis';h2.textContent=p.welcome+' puntos de regalo';pr.textContent='Únete en 10 s';tag.textContent='👑 Club';if(go)go.textContent='Unirme →';push({t:'k',k:'club_visto',l:'pasarela'});}
+    else{sm.textContent=String(p.categoria||'').replace(' / ',' · ');h2.textContent=p.nombre;pr.textContent=p.precio||'';
+    tag.textContent=(window.cvIsNew&&cvIsNew(p))?'Nuevo':'Colección';if(go)go.textContent='Ver prenda →';}
     requestAnimationFrame(function(){r.classList.add('go');});
     load(i+1);load(i+2);
     clearTimeout(timer);if(!paused)timer=setTimeout(function(){show(cur+1);},DUR);
@@ -4763,6 +4772,7 @@ body.cv-fast .bw-logo-wrap{transform:scale(.82);transform-origin:center top;marg
     if(!on&&list.length&&!r.querySelector('.cv-rend.on')){var b=bars[cur]&&bars[cur].querySelector('b'),left=DUR;try{left=Math.max(300,DUR*(1-b.getBoundingClientRect().width/b.parentNode.getBoundingClientRect().width));}catch(e){}timer=setTimeout(function(){show(cur+1);},left);}}
   function openCur(){
     var p=list[cur];if(!p)return;
+    if(p.__club){pause(true);push({t:'k',k:'club',l:'pasarela'});if(window.openClub)openClub();return;}
     var idx=P.indexOf(p);
     if(idx<0)idx=P.findIndex(function(x){return x.nombre===p.nombre&&catKey(x.categoria)===catKey(p.categoria);});
     if(idx<0)idx=P.findIndex(function(x){return x.nombre===p.nombre;});
@@ -5899,6 +5909,29 @@ body.cv-has-pbar .ann-bar{display:none!important}
 })();
 </script>
 <style id="cvbreb-css">
+/* v71 Club slide in the runway and Club tile in "Lo más nuevo" */
+.cv-rs-club{background:radial-gradient(circle at 70% 20%,rgba(159,211,255,.22),transparent 55%),radial-gradient(circle at 20% 80%,rgba(201,167,255,.18),transparent 50%),#060709}
+.cv-rs-club .rcb{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:12px;padding:58px 22px 200px}
+.cv-reel:has(.cv-rs-club.on) .cv-rtap{display:none}
+.cv-rs-club .rcb-k{font:600 .62rem 'Inter',sans-serif;letter-spacing:.26em;text-transform:uppercase;color:#cfe6ff}
+.cv-rs-club .rcb-card{position:relative;overflow:hidden;width:100%;max-width:280px;aspect-ratio:1.7/1;border-radius:16px;background:linear-gradient(135deg,#1a1d22,#0b0c0f 45%,#1d2128);border:1px solid rgba(255,255,255,.2);box-shadow:0 22px 50px rgba(0,0,0,.65),0 0 40px rgba(159,211,255,.15);animation:chTilt 6s ease-in-out infinite;color:#f4f8ff;font-family:'Inter',sans-serif}
+.cv-rs-club .rcb-card::after{content:'';position:absolute;top:-20%;left:-70%;width:45%;height:140%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.25),transparent);transform:skewX(-18deg);animation:chGleam 3.4s ease-in-out infinite}
+.cv-rs-club .w{position:absolute;left:16px;top:14px;font-family:'Montserrat','Inter',sans-serif;font-weight:300;letter-spacing:.42em;font-size:.82rem}
+.cv-rs-club .cl{position:absolute;left:16px;top:34px;font-size:.5rem;letter-spacing:.32em;color:#cfe6ff}
+.cv-rs-club .gem{position:absolute;top:12px;right:14px;font-size:1.4rem;filter:drop-shadow(0 0 10px rgba(170,215,255,.8))}
+.cv-rs-club .chip{position:absolute;left:16px;top:46%;width:34px;height:26px;border-radius:5px;background:linear-gradient(135deg,#e9eef2,#9aa6b0);opacity:.85}
+.cv-rs-club .nm{position:absolute;left:16px;bottom:14px;font-size:.74rem;letter-spacing:.16em;text-transform:uppercase}
+.cv-rs-club .pt{position:absolute;right:16px;bottom:12px;text-align:right}.cv-rs-club .pt b{display:block;font-size:1.4rem;font-weight:800;line-height:1}.cv-rs-club .pt small{font-size:.5rem;letter-spacing:.2em;text-transform:uppercase;color:#cfe6ff}
+.cv-rs-club .rcb-perks{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
+.cv-rs-club .rcb-perks span{border:1px solid rgba(207,230,255,.25);background:rgba(255,255,255,.05);border-radius:999px;padding:.35rem .65rem;font:500 .66rem 'Inter',sans-serif;color:#f4f8ff}
+.cv-si-club>span{background:radial-gradient(circle at 70% 15%,rgba(159,211,255,.25),transparent 60%),linear-gradient(160deg,#0d1117,#050506)!important;border:1px solid rgba(207,230,255,.35);display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+.cv-si-club i{font-style:normal}
+.cv-si-club .g{position:absolute;top:8px;right:8px;font-size:1rem;filter:drop-shadow(0 0 8px rgba(170,215,255,.8))}
+.cv-si-club .k{font:600 .5rem 'Inter',sans-serif;letter-spacing:.18em;text-transform:uppercase;color:#cfe6ff}
+.cv-si-club .c{position:relative;width:80%;aspect-ratio:1.6/1;border-radius:8px;background:linear-gradient(135deg,#1d2128,#0b0c0f);border:1px solid rgba(255,255,255,.22);box-shadow:0 8px 20px rgba(0,0,0,.6);animation:chTilt 6s ease-in-out infinite}
+.cv-si-club .c .w{position:absolute;left:8px;top:7px;font:300 .5rem 'Montserrat','Inter',sans-serif;letter-spacing:.3em;color:#f4f8ff}
+.cv-si-club .c .p{position:absolute;right:8px;bottom:6px;font:800 .9rem 'Inter',sans-serif;color:#fff}.cv-si-club .c .p small{font-size:.45rem;font-weight:600;margin-left:2px;color:#cfe6ff}
+.cv-si-club .u{font:800 .58rem 'Inter',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#050505;background:linear-gradient(120deg,#cfd6db,#ffffff,#c3ccd2);border-radius:999px;padding:.4rem .7rem}
 /* v71 Nosotros: living diamond, quote and Club card */
 .nos-r.nos-dia{background:radial-gradient(circle at 50% 40%,rgba(159,211,255,.16),transparent 55%),radial-gradient(circle at 70% 75%,rgba(201,167,255,.12),transparent 50%),#050506;display:flex;align-items:center;justify-content:center}
 .nos-r.nos-dia .nos-ov{display:none}
