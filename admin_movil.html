@@ -1195,6 +1195,18 @@ function hoyPaint(){
   $("hyChips").onclick=e=>{const b=e.target.closest("button");if(b)hoyAsk(b.textContent.replace(/^\S+\s/,""));};
   v.querySelector(".hy-todo").onclick=e=>{const b=e.target.closest("[data-go]");if(!b)return;const go=b.dataset.go;
     if(go==="breb"||go==="abandonado"){ordStatus=go;showTab("pedidos");loadOrders();}else showTab(go);};
+  hoyNotifyCard(v);
+}
+// v73: notices on Mayra's phone (WhatsApp via CallMeBot and/or Telegram) with a test button
+async function hoyNotifyCard(v){
+  let c=document.getElementById("hyNotify"); if(!c){c=document.createElement("div");c.id="hyNotify";c.style.cssText="margin:16px 0 8px;padding:14px;border-radius:16px;border:1px solid rgba(37,211,102,.35);background:rgba(37,211,102,.06)";}
+  v.appendChild(c);
+  let st=null; try{st=await adminFetch("/admin/notify-status");}catch(e){}
+  const wa=st&&st.whatsapp&&st.whatsapp.length, tg=st&&st.telegram;
+  c.innerHTML=`<div style="display:flex;align-items:center;gap:10px"><span style="font-size:22px">📲</span><div style="flex:1"><b>Avisos a tu celular</b><div style="font-size:12px;opacity:.8">${!st?"Actualiza el Worker para verlos":wa?`✅ WhatsApp activo (${st.whatsapp.join(", ")})`:"WhatsApp sin activar"}${tg?` · ✅ Telegram (${tg})`:""}</div></div><button type="button" id="hyNotifyTest" style="border:0;border-radius:999px;padding:9px 14px;background:#25d366;color:#04140a;font-weight:700">Probar</button></div>
+  <div style="font-size:12px;opacity:.75;margin-top:8px">Te llega un mensaje con cada pedido nuevo, cuando alguien dice "Ya pagué" por Bre-B, pagos de Bold y tarjetas regalo.</div><div id="hyNotifyMsg" style="font-size:12px;margin-top:6px"></div>`;
+  $("hyNotifyTest").onclick=async()=>{const m=$("hyNotifyMsg");m.textContent="Enviando prueba…";
+    try{const d=await adminFetch("/admin/notify-test",{method:"POST",body:{}});m.textContent=d.skipped?("⚠️ "+d.skipped):((d.sent||[]).join(" · ")||"Enviado");}catch(e){m.textContent="⚠️ "+e.message;}};
 }
 function hoyLog(){const l=$("hyLog");if(!l)return;
   const items=HOY.chat.length?HOY.chat:[{r:"a",t:HOY.brief||"",typing:!HOY.brief}];
