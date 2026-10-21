@@ -5910,6 +5910,80 @@ body.cv-has-pbar .ann-bar{display:none!important}
   setInterval(render,4000);
 })();
 </script>
+<style id="cvaidemo-css">
+/* v71 Caneva AI showcase: live demo with real garments, never cut on phones */
+.ai-showcase>*{min-width:0}
+.ai-phone{max-width:100%;box-sizing:border-box;cursor:pointer;border:0!important;padding:1.5px;background:conic-gradient(from var(--cvang,0deg),#9fd3ff,#c9a7ff,#ffffff,#8ef0c8,#9fd3ff)!important;animation:cvAiSpin 6s linear infinite,cvAiGlow 3s ease-in-out infinite;border-radius:22px;overflow:hidden}
+.ai-phone::before{display:none!important}
+.ai-phone>.ai-phone-in{border-radius:21px;overflow:hidden;background:radial-gradient(circle at 80% 0%,rgba(159,211,255,.14),transparent 50%),linear-gradient(160deg,#0c0d10,#050506)}
+.ai-phone .ai-badge{background:#8ef0c8!important;color:#050505!important;border:0!important;border-radius:999px;padding:.25rem .55rem;font-weight:800;animation:cvAiGlow 1.6s infinite}
+.ai-demo-body{min-height:380px;padding:14px!important;display:flex;flex-direction:column;gap:10px}
+.cvd-msg{display:flex;gap:8px;align-items:flex-end;opacity:0;transform:translateY(8px);transition:all .45s cubic-bezier(.16,1,.3,1)}
+.cvd-msg.in{opacity:1;transform:none}
+.cvd-msg.me{justify-content:flex-end}
+.cvd-av{flex:0 0 28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:600 .55rem 'Inter',sans-serif;color:#050505;background:linear-gradient(135deg,#ffffff,#cfe6ff,#e6dcff)}
+.cvd-b{max-width:82%;padding:.65rem .8rem;border-radius:16px 16px 16px 4px;font:400 .82rem/1.45 'Inter',sans-serif;color:#f4f8ff;background:rgba(255,255,255,.06);border:1px solid rgba(207,230,255,.16)}
+.cvd-msg.me .cvd-b{border-radius:16px 16px 4px 16px;background:linear-gradient(120deg,#f4f8ff,#dfe9f5);color:#050505;border:0}
+.cvd-typ{display:inline-flex;gap:4px}.cvd-typ i{width:6px;height:6px;border-radius:50%;background:#cfe6ff;animation:cvdT 1s infinite}.cvd-typ i:nth-child(2){animation-delay:.15s}.cvd-typ i:nth-child(3){animation-delay:.3s}
+@keyframes cvdT{0%,100%{opacity:.25;transform:translateY(0)}50%{opacity:1;transform:translateY(-3px)}}
+.cvd-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;opacity:0;transform:translateY(10px);transition:all .5s .1s}
+.cvd-row.in{opacity:1;transform:none}
+.cvd-card{border-radius:12px;overflow:hidden;background:#111;border:1px solid rgba(207,230,255,.18);min-width:0}
+.cvd-card img{display:block;width:100%;aspect-ratio:3/4;object-fit:cover;background:#1a1a1a}
+.cvd-card b{display:block;padding:6px 7px 0;font:600 .66rem 'Inter',sans-serif;color:#f4f8ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cvd-card span{display:block;padding:0 7px 7px;font:500 .62rem 'Inter',sans-serif;color:#8ef0c8}
+.cvd-bar{display:flex;align-items:center;gap:8px;margin:auto 0 0;padding:8px 8px 8px 14px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(207,230,255,.22);font:400 .78rem 'Inter',sans-serif;color:rgba(244,248,255,.55)}
+.cvd-bar span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cvd-bar b{flex:0 0 auto;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#f4f8ff;color:#050505;font-size:.85rem}
+.cvd-chips{display:flex;gap:6px;flex-wrap:wrap}
+.cvd-chips button{border:1px solid rgba(207,230,255,.3);background:rgba(207,230,255,.06);color:#f4f8ff;border-radius:999px;padding:.4rem .7rem;font:500 .68rem 'Inter',sans-serif;cursor:pointer}
+@media(max-width:760px){.ai-preview{min-height:0!important;padding:0 2px}.ai-demo-body{min-height:400px}}
+</style>
+<script id="cvaidemo">
+// v71: the AI showcase plays real conversations with real garments from the catalog; tapping it opens the real Caneva AI with that question
+(function(){
+  var ph=document.querySelector('.ai-preview .ai-phone');if(!ph)return;
+  if(!ph.querySelector('.ai-phone-in')){var w=document.createElement('div');w.className='ai-phone-in';while(ph.firstChild)w.appendChild(ph.firstChild);ph.appendChild(w);}
+  var prev=ph.closest('.ai-preview');if(prev)prev.removeAttribute('aria-hidden');
+  var body=ph.querySelector('.ai-demo-body');if(!body)return;
+  function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function num(v){return parseInt(String(v||'').replace(/[^\d]/g,''),10)||0;}
+  var SC=[
+    {q:'Tengo $150.000 para salir de noche 🌙',a:'¡Me encanta! Te armé 3 opciones dentro de tu presupuesto: una elegante, una atrevida y una cómoda para bailar.',max:150000,re:/vestido|set|enterizo|top|body/i},
+    {q:'Necesito algo para la oficina, talla M',a:'Para la oficina te propongo piezas limpias y elegantes. Todas tienen talla M disponible.',max:200000,re:/pants|pantal|camisa|jean|set/i},
+    {q:'Me voy a Cartagena el fin de semana ☀️',a:'¡Qué plan! Para el calor de Cartagena: telas frescas, shorts y algo lindo para la noche.',max:180000,re:/short|falda|lino|bermuda|vestido|top/i}
+  ],k=0,timer=[];
+  function pick(sc){var list=(typeof catalogProducts==='function'?catalogProducts():(window.P||[])).filter(function(p){return p&&p.imagen&&String(p.imagen).indexOf('http')===0&&num(p.precio)>0&&num(p.precio)<=sc.max;});
+    var a=list.filter(function(p){return sc.re.test((p.nombre||'')+' '+(p.categoria||''));}),out=[],seen={};
+    a.concat(list).forEach(function(p){if(out.length<3&&!seen[p.nombre]){seen[p.nombre]=1;out.push(p);}});return out;}
+  function later(fn,ms){timer.push(setTimeout(fn,ms));}
+  function play(){
+    timer.forEach(clearTimeout);timer=[];var sc=SC[k%SC.length];k++;var items=pick(sc);
+    body.innerHTML='<div class="cvd-msg in"><div class="cvd-av">CΛ</div><div class="cvd-b">Hola ✨ Soy Caneva AI. Dime tu plan, tu talla o tu presupuesto y te armo el look.</div></div>'+
+      '<div class="cvd-msg me" data-s="q"><div class="cvd-b">'+esc(sc.q)+'</div></div>'+
+      '<div class="cvd-msg" data-s="t"><div class="cvd-av">CΛ</div><div class="cvd-b"><span class="cvd-typ"><i></i><i></i><i></i></span></div></div>'+
+      '<div class="cvd-row" data-s="r">'+items.map(function(p){return '<div class="cvd-card"><img alt="" loading="lazy" src="'+esc(window.cvImg?cvImg(p.imagen,260):p.imagen)+'"><b>'+esc(p.nombre)+'</b><span>'+esc(p.precio)+'</span></div>';}).join('')+'</div>'+
+      '<div class="cvd-chips" data-s="c" style="opacity:0;transition:opacity .4s"><button type="button">Ver más así</button><button type="button">¿Qué talla soy?</button><button type="button">Combínalo</button></div>'+
+      '<div class="cvd-bar"><span>Escríbele a Caneva AI…</span><b>🎙️</b></div>';
+    var g=function(s){return body.querySelector('[data-s="'+s+'"]');};
+    later(function(){g('q').classList.add('in');},700);
+    later(function(){g('t').classList.add('in');},1500);
+    later(function(){g('t').querySelector('.cvd-b').textContent=sc.a;},3100);
+    later(function(){if(items.length)g('r').classList.add('in');},3600);
+    later(function(){g('c').style.opacity='1';},4400);
+    later(play,11000);
+  }
+  // play only when visible
+  var started=false;
+  if(window.IntersectionObserver)new IntersectionObserver(function(es){if(es[0].isIntersecting&&!started){started=true;play();}},{threshold:.25}).observe(ph);else play();
+  ph.addEventListener('click',function(e){
+    var sc=SC[(k-1+SC.length)%SC.length],b=e.target.closest('.cvd-chips button');
+    var q=b?(b.textContent==='¿Qué talla soy?'?'¿Qué talla soy? Te digo mi estatura y peso.':b.textContent==='Combínalo'?'Ármame un look completo para: '+sc.q:'Muéstrame más opciones para: '+sc.q):sc.q;
+    try{if(window.cvStatsPush)cvStatsPush({t:'k',k:'caneva_ai',l:'vitrina'});}catch(x){}
+    if(window.cvAsk)cvAsk(q,null,'vitrina');else if(window.openAI)openAI(true);
+  });
+})();
+</script>
 <style id="cvbreb-css">
 /* v71 Club slide in the runway and Club tile in "Lo más nuevo" */
 .cv-rs-club{background:radial-gradient(circle at 70% 20%,rgba(159,211,255,.22),transparent 55%),radial-gradient(circle at 20% 80%,rgba(201,167,255,.18),transparent 50%),#060709}
