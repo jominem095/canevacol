@@ -263,6 +263,27 @@ main{padding:14px 16px 120px}
 .hy-t i{font-style:normal;font-size:20px}.hy-t span{flex:1}.hy-t span b{display:block;font-size:14px}.hy-t span small{color:var(--dim);font-size:12px}
 .hy-t em{font-style:normal;font-weight:800;font-size:15px;background:#fff;color:#050505;border-radius:999px;min-width:28px;text-align:center;padding:3px 8px}
 .hy-t.hot{border-color:rgba(142,240,200,.5);background:linear-gradient(120deg,rgba(142,240,200,.08),transparent)}
+
+.hy-ch{border:1px solid var(--b);border-radius:18px;padding:14px;margin-bottom:12px;background:var(--k2)}
+.hy-ch-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}.hy-ch-h b{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);font-weight:500}.hy-ch-h span{font-weight:700}
+.hy-ch-b{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;height:130px;align-items:end}
+.hy-ch-c{position:relative;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center}
+.hy-ch-c i{display:block;width:70%;max-width:34px;border-radius:8px 8px 3px 3px;background:linear-gradient(180deg,#cfe6ff,rgba(207,230,255,.25));animation:hyUp .9s cubic-bezier(.16,1,.3,1) both}
+.hy-ch-c.on i{background:linear-gradient(180deg,#8ef0c8,rgba(142,240,200,.3));box-shadow:0 0 18px rgba(142,240,200,.35)}
+.hy-ch-c em{font-style:normal;font-size:10px;color:var(--dim);margin-bottom:3px}.hy-ch-c small{font-size:10px;color:var(--dim);margin-top:5px;text-transform:capitalize}
+@keyframes hyUp{from{transform:scaleY(0);transform-origin:bottom}to{transform:scaleY(1);transform-origin:bottom}}
+.hy-stars h3,.hy-msgs h3{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);font-weight:500;margin:6px 0 8px}.hy-stars h3 small,.hy-msgs h3 small{letter-spacing:0;text-transform:none}
+.hy-sr{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;padding-bottom:6px;margin-bottom:10px}.hy-sr::-webkit-scrollbar{display:none}
+.hy-sc{flex:0 0 150px;border:1px solid var(--b);border-radius:16px;overflow:hidden;background:var(--k2)}
+.hy-sc .ph{position:relative;aspect-ratio:3/4;background:#151515}.hy-sc .ph img{width:100%;height:100%;object-fit:cover}
+.hy-sc .ph span{position:absolute;left:6px;bottom:6px;font-size:10px;background:rgba(0,0,0,.7);border-radius:999px;padding:3px 7px}
+.hy-sc b{display:block;padding:8px 10px 0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hy-sc small{display:block;padding:0 10px;color:var(--dim);font-size:12px}
+.hy-sc .ac{display:flex;gap:6px;padding:8px 10px 10px}.hy-sc .ac button{flex:1;border:1px solid rgba(207,230,255,.28);background:rgba(207,230,255,.06);color:var(--w);border-radius:999px;padding:6px 0;font-size:11px}
+.hy-mg{display:flex;gap:10px;align-items:center;border:1px solid var(--b);border-radius:14px;padding:12px;margin-bottom:8px;background:var(--k2)}
+.hy-mg>div{flex:1;min-width:0}.hy-mg span{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#cfe6ff}.hy-mg b{display:block;font-size:14px;margin:2px 0}.hy-mg p{margin:0;font-size:12px;color:var(--dim);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.hy-mg a{flex:0 0 auto;text-decoration:none;font-weight:700;font-size:12px;color:#050505;background:linear-gradient(120deg,#8ef0c8,#b9ffd9);border-radius:999px;padding:9px 12px}
+.hy-mic{border:1px solid rgba(207,230,255,.3)!important;background:rgba(207,230,255,.06)!important;color:var(--w)!important;width:44px;padding:0!important}
+.hy-mic.rec{background:#ff4d6d!important}
 .hy-ok{border:1px dashed var(--b);border-radius:14px;padding:14px;text-align:center;color:var(--dim);font-size:13px}
 </style>
 </head>
@@ -1139,16 +1160,23 @@ function hoyPaint(){
       <div class="hy-k g"><span>🔒 Ganancia del mes</span><b>${g?money(g.ganancia):"…"}</b><small>${g&&g.ventas_sin_costo?"⚠ "+g.ventas_sin_costo+" venta(s) sin costo":g?"después de costos":""}</small></div>
       <div class="hy-k"><span>Visitantes hoy</span><b>${f?(t.visitors||0):"…"}</b><small>${f?(t.carts||0)+" al carrito · "+(t.whatsapp||0)+" WhatsApp":""}</small></div>
     </div>
+    ${hoyChart()}
     <div class="hy-ai"><div class="hy-ai-in">
-      <div class="hy-ai-h"><i>CΛ</i><div><b>Caneva AI</b><small>● tu socia · conoce tus números de hoy</small></div><button type="button" id="hyNew">↺ Nueva</button></div>
+      <div class="hy-ai-h"><i>CΛ</i><div><b>Caneva AI</b><small>● tu socia · conoce tus números de hoy</small></div><button type="button" id="hySpeak" title="Escuchar">🔊</button><button type="button" id="hyNew" style="margin-left:6px">↺</button></div>
       <div class="hy-log" id="hyLog"></div>
-      <div class="hy-chips" id="hyChips">${["📈 ¿Cómo voy este mes?","🔥 ¿Qué prenda promociono hoy?","📸 Escríbeme un post para Instagram","💬 ¿A quién le escribo hoy?","💡 Dame 3 ideas para vender más esta semana","🎂 Mensaje para una cumpleañera"].map(c=>`<button type="button">${c}</button>`).join("")}</div>
-      <div class="hy-in"><input id="hyIn" placeholder="Pregúntale lo que quieras de tu tienda…" enterkeyhint="send"><button type="button" id="hySend">Enviar</button></div>
+      <div class="hy-chips" id="hyChips">${["📈 ¿Cómo voy este mes?","🔥 ¿Qué prenda promociono hoy?","📸 Escríbeme un post para Instagram","💬 ¿A quién le escribo hoy?","💡 Dame 3 ideas para vender más esta semana","🎂 Mensaje para una cumpleañera","🗓️ Plan de contenido para esta semana","🏷️ ¿Qué promo hago este fin de semana?"].map(c=>`<button type="button">${c}</button>`).join("")}</div>
+      <div class="hy-in"><button type="button" id="hyMic" class="hy-mic" title="Hablar" hidden>🎙️</button><input id="hyIn" placeholder="Pregúntale lo que quieras de tu tienda…" enterkeyhint="send"><button type="button" id="hySend">Enviar</button></div>
     </div></div>
+    ${hoyStars()}
+    ${hoyMsgs()}
     <div class="hy-todo"><h3>Hoy te toca</h3>${todo.length?todo.map(x=>`<button type="button" class="hy-t${x[5]?" hot":""}" data-go="${x[4]}"><i>${x[0]}</i><span><b>${x[2]}</b><small>${esc(x[3])}</small></span><em>${x[1]}</em></button>`).join(""):`<div class="hy-ok">${f?"Todo al día ✨ Nada pendiente por ahora.":"Cargando…"}</div>`}</div>
   </div>`;
   hoyLog();
   $("hyNew").onclick=()=>{HOY.chat=[];hoyLog();};
+  $("hySpeak").onclick=()=>hoySay();
+  hoyMicSetup();
+  const st=v.querySelector(".hy-stars");if(st)st.onclick=e=>{const b=e.target.closest("[data-story],[data-post]");if(!b)return;
+    if(b.dataset.story)hoyStory(b.dataset.story,b);else hoyAsk("Escríbeme un post para Instagram (texto + hashtags) para la prenda \""+b.dataset.post+"\" de CΛNEVΛ. Dame también una idea de foto o video.");};
   $("hySend").onclick=()=>hoyAsk($("hyIn").value);
   $("hyIn").onkeydown=e=>{if(e.key==="Enter")hoyAsk($("hyIn").value);};
   $("hyChips").onclick=e=>{const b=e.target.closest("button");if(b)hoyAsk(b.textContent.replace(/^\S+\s/,""));};
@@ -1169,11 +1197,58 @@ async function hoyAsk(q){q=String(q||"").trim();if(!q||HOY.loading)return;$("hyI
   HOY.loading=false;hoyLog();}
 async function loadHoy(fresh){
   hoyPaint();
-  try{const d=await adminFetch("/admin/ai",{method:"POST",body:{brief:true,fresh:!!fresh}});HOY.facts=d.facts;HOY.brief=d.reply||"Aquí tienes tus números de hoy 💎 Pregúntame lo que quieras.";
+  try{const d=await adminFetch("/admin/ai",{method:"POST",body:{brief:true,fresh:!!fresh}});HOY.facts=d.facts;if(d.ui)HOY.ui=d.ui;HOY.brief=d.reply||"Aquí tienes tus números de hoy 💎 Pregúntame lo que quieras.";
     const m=d.facts&&d.facts.mes;if(m&&m.goal&&m.revenue>=m.goal){const k="cv_goal_party_"+String(d.facts.hoy).slice(0,7);try{if(!localStorage.getItem(k)){localStorage.setItem(k,"1");hoyConfetti();toast("🎉 ¡Lo lograste! Llegaste a tu meta del mes",{ms:7000});}}catch(x){}}
     const paid=(d.facts&&d.facts.ventas_hoy&&d.facts.ventas_hoy.orders)||0;if(HOY.lastPaid!==null&&paid>HOY.lastPaid){hoyCash();hoyConfetti();toast("💰 ¡Nueva venta!",{ms:5000});}HOY.lastPaid=paid;
   }catch(e){HOY.brief=/Worker/.test(e.message)?"Para ver tu resumen con Caneva AI falta pegar el Worker v71 en Cloudflare 💎":e.message;}
   if(currentTab==="hoy")hoyPaint();}
+
+// ---------- v71b "Hoy" boosters: 7-day chart, star garments with story maker, ready WhatsApp messages, voice ----------
+function hoyChart(){const se=HOY.ui&&HOY.ui.series;if(!se||!se.length)return"";const max=Math.max(1,...se.map(x=>x.revenue)),tot=se.reduce((a,x)=>a+x.revenue,0);
+  const dn=d=>new Date(d+"T12:00:00Z").toLocaleDateString("es-CO",{timeZone:"UTC",weekday:"short"}).replace(".","");
+  return `<div class="hy-ch"><div class="hy-ch-h"><b>Tus últimos 7 días</b><span>${money(tot)}</span></div><div class="hy-ch-b">${se.map((x,i)=>`<div class="hy-ch-c${i===se.length-1?" on":""}" title="${esc(x.day)}: ${money(x.revenue)} · ${x.orders} venta(s)"><em>${x.revenue?(x.revenue>=1e6?(x.revenue/1e6).toFixed(1).replace(".",",")+"M":Math.round(x.revenue/1000)+"k"):""}</em><i style="height:${Math.max(4,Math.round(x.revenue/max*100))}%"></i><small>${esc(dn(x.day))}</small></div>`).join("")}</div></div>`;}
+function hoyProd(name){return (products||[]).find(p=>p.nombre===name)||(products||[]).find(p=>String(p.nombre||"").toLowerCase()===String(name||"").toLowerCase());}
+function hoyStars(){const b=HOY.ui&&HOY.ui.best;if(!b||!b.length)return"";
+  return `<div class="hy-stars"><h3>🔥 Tus prendas estrella <small>· más vistas esta semana</small></h3><div class="hy-sr">${b.map(x=>{const p=hoyProd(x.name)||{};const img=x.img||p.imagen||"";
+    return `<div class="hy-sc"><div class="ph">${img?`<img src="https://wsrv.nl/?url=${encodeURIComponent(img)}&w=300&output=webp" alt="" loading="lazy">`:""}<span>👁 ${x.views} · 🛍 ${x.carts||0}</span></div><b>${esc(x.name)}</b><small>${esc(p.precio||"")}</small><div class="ac"><button type="button" data-story="${esc(x.name)}">📸 Historia</button><button type="button" data-post="${esc(x.name)}">✍️ Post</button></div></div>`;}).join("")}</div></div>`;}
+function hoyMsgTxt(c){const f=String(c.name||"").split(" ")[0]||"";const m=c.amount?money(c.amount):"";
+  if(c.kind==="breb")return c.claimed?`Hola ${f} 💎 Recibimos tu aviso del pago Bre-B por ${m}. Ya lo estamos confirmando y te avisamos apenas despachemos tu pedido. ¡Gracias por comprar en CΛNEVΛ! 🖤`:`Hola ${f} ✨ Vimos tu pedido por ${m} con Bre-B a la llave @caneva119. ¿Pudiste hacer el pago? Si necesitas ayuda te guío paso a paso 💎`;
+  if(c.kind==="pedido")return `Hola ${f} ✨ te escribimos de CΛNEVΛ. Tu pedido de ${m} te lo tenemos guardado 💛 ¿Te ayudo a terminar la compra?`;
+  if(c.kind==="apartado")return `Hola ${f} 💎 Te recordamos que tu apartado${c.item?" de "+c.item:""} tiene un saldo de ${m}. ¿Te paso los datos para pagarlo? 🖤`;
+  if(c.kind==="cumple")return `¡${c.inDays?"Se acerca tu cumpleaños":"Feliz cumpleaños"}, ${f}! 🎂💎 En CΛNEVΛ queremos consentirte: escríbenos y te contamos el regalo que tienes en tu Club Caneva.`;
+  if(c.kind==="bolsa"){const it=(c.bag||[]).map(x=>typeof x==="string"?x:(x&&x.nombre)||"").filter(Boolean)[0]||"tus prendas";return `Hola ✨ te escribimos de CΛNEVΛ. Vimos que dejaste ${it} en tu carrito 🛍 ¡Todavía lo tenemos! ¿Te lo aparto?`;}
+  return "";}
+function hoyMsgs(){const cs=HOY.ui&&HOY.ui.contacts;if(!cs||!cs.length)return"";const L={breb:"💎 Bre-B",pedido:"💬 Pedido sin pagar",apartado:"⏳ Apartado",cumple:"🎂 Cumpleaños",bolsa:"🛍 Carrito"};
+  return `<div class="hy-msgs"><h3>💬 Mensajes listos para enviar <small>· un toque y se abre WhatsApp</small></h3>${cs.slice(0,10).map(c=>{const ph=String(c.phone||"").replace(/[^\d]/g,""),n=ph.length===10?"57"+ph:ph;
+    return `<div class="hy-mg"><div><span>${L[c.kind]||""}</span><b>${esc(c.name||"Clienta")}</b><p>${esc(hoyMsgTxt(c))}</p></div><a target="_blank" rel="noopener" href="https://wa.me/${n}?text=${encodeURIComponent(hoyMsgTxt(c))}">Enviar ↗</a></div>`;}).join("")}</div>`;}
+// story image for Instagram: the garment photo, name, price and the brand (1080x1920)
+async function hoyStory(name,btn){const p=hoyProd(name);if(!p||!isUrl(p.imagen)){toast("No encontré la foto de esa prenda",{err:true});return;}
+  const old=btn.textContent;btn.textContent="Creando…";btn.disabled=true;
+  try{const img=await new Promise((ok,ko)=>{const i=new Image();i.crossOrigin="anonymous";i.onload=()=>ok(i);i.onerror=ko;i.src="https://wsrv.nl/?url="+encodeURIComponent(p.imagen)+"&w=1080&h=1350&fit=cover&a=attention&output=jpg";});
+    try{await document.fonts.load('italic 300 80px "Cormorant Garamond"');}catch(e){}
+    const W=1080,H=1920,c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");
+    const g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,"#0b0c0f");g.addColorStop(1,"#030304");x.fillStyle=g;x.fillRect(0,0,W,H);
+    x.drawImage(img,0,170,W,1350);const sh=x.createLinearGradient(0,1150,0,1520);sh.addColorStop(0,"rgba(3,3,4,0)");sh.addColorStop(1,"rgba(3,3,4,1)");x.fillStyle=sh;x.fillRect(0,1150,W,370);
+    x.textAlign="center";x.fillStyle="#f4f8ff";x.font='300 44px Montserrat, Inter, sans-serif';try{x.letterSpacing="22px";}catch(e){}x.fillText("CΛNEVΛ",W/2+11,105);try{x.letterSpacing="0px";}catch(e){}
+    x.font='italic 300 92px "Cormorant Garamond", Georgia, serif';x.fillText(p.nombre,W/2,1560);
+    x.font='700 64px Inter, sans-serif';x.fillText(p.precio||"",W/2,1660);
+    x.fillStyle="#050505";const bw=620,bx=(W-bw)/2;x.beginPath();x.roundRect?x.roundRect(bx,1715,bw,96,48):x.rect(bx,1715,bw,96);const bg=x.createLinearGradient(bx,0,bx+bw,0);bg.addColorStop(0,"#cfd6db");bg.addColorStop(.5,"#ffffff");bg.addColorStop(1,"#c3ccd2");x.fillStyle=bg;x.fill();
+    x.fillStyle="#050505";x.font='800 34px Inter, sans-serif';x.fillText("Pídela en canevacol.com",W/2,1775);
+    x.fillStyle="rgba(244,248,255,.6)";x.font='500 30px Inter, sans-serif';x.fillText("@caneva.col · Envíos a toda Colombia",W/2,1870);
+    const blob=await new Promise(r=>c.toBlob(r,"image/jpeg",.92));const file=new File([blob],"caneva-"+String(p.nombre).toLowerCase().replace(/[^a-z0-9]+/g,"-")+".jpg",{type:"image/jpeg"});
+    if(navigator.canShare&&navigator.canShare({files:[file]}))await navigator.share({files:[file],text:p.nombre+" · "+(p.precio||"")+" en canevacol.com 💎"}).catch(()=>{});
+    else{const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=file.name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);toast("📸 Historia descargada · súbela a Instagram");}
+  }catch(e){toast("No pude crear la imagen. Intenta otra vez.",{err:true});}
+  btn.textContent=old;btn.disabled=false;}
+// voice: talk to Caneva AI and listen to her summary
+function hoyMicSetup(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition,b=$("hyMic");if(!SR||!b)return;b.hidden=false;let rec=null;
+  b.onclick=()=>{if(rec){try{rec.stop();}catch(e){}return;}rec=new SR();rec.lang="es-CO";rec.interimResults=true;b.classList.add("rec");$("hyIn").placeholder="Te escucho… 🎙️";
+    rec.onresult=ev=>{let t="";for(const r of ev.results)t+=r[0].transcript;$("hyIn").value=t;if(ev.results[ev.results.length-1].isFinal)setTimeout(()=>hoyAsk(t),300);};
+    rec.onend=rec.onerror=()=>{b.classList.remove("rec");rec=null;$("hyIn").placeholder="Pregúntale lo que quieras de tu tienda…";};try{rec.start();}catch(e){rec=null;b.classList.remove("rec");}};}
+function hoySay(){if(!window.speechSynthesis){toast("Tu navegador no puede leer en voz alta",{err:true});return;}
+  if(speechSynthesis.speaking){speechSynthesis.cancel();return;}
+  const last=[...HOY.chat].reverse().find(m=>m.r==="a"&&m.t)||{t:HOY.brief||""};const u=new SpeechSynthesisUtterance(String(last.t).replace(/[\u{1F300}-\u{1FAFF}☀-➿]/gu,""));u.lang="es-CO";u.rate=1.02;
+  const v=speechSynthesis.getVoices().find(v=>/es[-_](CO|MX|US|419)/i.test(v.lang)&&/female|mujer|paulina|sabina|helena|google/i.test(v.name))||speechSynthesis.getVoices().find(v=>/^es/i.test(v.lang));if(v)u.voice=v;speechSynthesis.speak(u);}
 // celebrate: confetti and a soft "cha-ching" (no files, made with the browser's audio)
 function hoyConfetti(){const c=document.createElement("canvas");c.style.cssText="position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:9999";document.body.appendChild(c);
   const x=c.getContext("2d"),W=c.width=innerWidth,H=c.height=innerHeight,cols=["#ffffff","#cfe6ff","#e6dcff","#8ef0c8","#9fd3ff"],ps=Array.from({length:140},()=>({x:W/2,y:H/3,vx:(Math.random()-.5)*14,vy:Math.random()*-12-4,s:4+Math.random()*5,c:cols[Math.floor(Math.random()*cols.length)],r:Math.random()*6}));
