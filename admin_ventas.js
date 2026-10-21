@@ -192,7 +192,7 @@
     var T=D.totals;
     k.innerHTML='<div class="vt-kpi"><span>Vendido '+(S.days===1?"hoy":"en "+S.days+" días")+'</span><b>'+money(T.revenue)+'</b></div><div class="vt-kpi"><span>Recibido</span><b>'+money(T.collected!=null?T.collected:T.revenue)+'</b></div>'+
       (T.owed?'<div class="vt-kpi warn"><span>Quedó por cobrar</span><b>'+money(T.owed)+'</b></div>':'')+'<div class="vt-kpi"><span>Ventas</span><b>'+T.count+'</b></div>'+
-      (T.profit!=null?'<div class="vt-kpi good"><span>🔒 Ganancia</span><b>'+money(T.profit)+'</b>'+(T.uncosted||T.excludedCount?'<small>'+[T.uncosted?T.uncosted+' sin costo':'',T.excludedCount?T.excludedCount+' no cuenta'+(T.excludedCount>1?'n':''):''].filter(Boolean).join(' · ')+'</small>':'')+'</div>':'');
+      (T.profit!=null?'<div class="vt-kpi good"><span>🔒 Ganancia · solo manuales</span><b>'+money(T.profit)+'</b>'+(T.uncosted||T.excludedCount||1?'<small>'+['de estas '+(S.days===1?'ventas de hoy':S.days+' días'),T.uncosted?T.uncosted+' sin costo':'',T.excludedCount?T.excludedCount+' no cuenta'+(T.excludedCount>1?'n':''):''].filter(Boolean).join(' · ')+'</small>':'')+'</div>':'');
     list.innerHTML=D.list.length?D.list.map(rowHtml).join(""):'<div class="vt-empty">No hay ventas manuales en este periodo.</div>';
   }
   function rowHtml(v){

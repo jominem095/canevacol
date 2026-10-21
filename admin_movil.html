@@ -249,7 +249,10 @@ main{padding:14px 16px 120px}
 .hy-ai-h b{font-size:14px;letter-spacing:.06em}.hy-ai-h small{display:block;font-size:11px;color:#8ef0c8}
 .hy-ai-h button{margin-left:auto;background:none;border:1px solid var(--b);border-radius:999px;color:var(--w);font-size:11px;padding:5px 10px}
 .hy-log{display:flex;flex-direction:column;gap:8px;max-height:420px;overflow:auto;margin-bottom:10px}
-.hy-m{max-width:92%;padding:10px 12px;border-radius:16px 16px 16px 4px;background:rgba(255,255,255,.05);border:1px solid rgba(207,230,255,.16);font-size:14px;line-height:1.5;white-space:pre-wrap}
+.hy-ideas{display:grid;gap:6px;margin:0 0 10px}.hy-ideas>b{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#cfe6ff;font-weight:600;margin:2px 0}
+.hy-ideas button{display:flex;align-items:center;gap:10px;text-align:left;border:1px solid rgba(207,230,255,.22);border-radius:14px;padding:10px 12px;background:linear-gradient(120deg,rgba(159,211,255,.07),rgba(201,167,255,.06));color:var(--w);font-size:13px}
+.hy-ideas button span{flex:1}.hy-ideas button em{flex:0 0 auto;font-style:normal;font-size:11px;font-weight:700;color:#050505;background:#f4f8ff;border-radius:999px;padding:5px 9px}
+.hy-m{max-width:100%;padding:10px 12px;border-radius:16px 16px 16px 4px;background:rgba(255,255,255,.05);border:1px solid rgba(207,230,255,.16);font-size:14px;line-height:1.5;white-space:pre-wrap}
 .hy-m.me{align-self:flex-end;border-radius:16px 16px 4px 16px;background:linear-gradient(120deg,#f4f8ff,#dfe9f5);color:#050505;border:0}
 .hy-m .cp{display:inline-block;margin-top:6px;font-size:11px;border:1px solid var(--b);border-radius:999px;padding:3px 9px;background:none;color:var(--w)}
 .hy-typ{display:inline-flex;gap:4px}.hy-typ i{width:6px;height:6px;border-radius:50%;background:#cfe6ff;animation:hyT 1s infinite}.hy-typ i:nth-child(2){animation-delay:.15s}.hy-typ i:nth-child(3){animation-delay:.3s}
@@ -1164,6 +1167,7 @@ function hoyPaint(){
     <div class="hy-ai"><div class="hy-ai-in">
       <div class="hy-ai-h"><i>CΛ</i><div><b>Caneva AI</b><small>● tu socia · conoce tus números de hoy</small></div><button type="button" id="hySpeak" title="Escuchar">🔊</button><button type="button" id="hyNew" style="margin-left:6px">↺</button></div>
       <div class="hy-log" id="hyLog"></div>
+      ${(HOY.ideas||[]).length?`<div class="hy-ideas" id="hyIdeas"><b>💡 Caneva AI te sugiere</b>${HOY.ideas.map((x,i)=>`<button type="button" data-idea="${i}"><span>${esc(x.t)}</span><em>Hazlo conmigo →</em></button>`).join("")}</div>`:""}
       <div class="hy-chips" id="hyChips">${["📈 ¿Cómo voy este mes?","🔥 ¿Qué prenda promociono hoy?","📸 Escríbeme un post para Instagram","💬 ¿A quién le escribo hoy?","💡 Dame 3 ideas para vender más esta semana","🎂 Mensaje para una cumpleañera","🗓️ Plan de contenido para esta semana","🏷️ ¿Qué promo hago este fin de semana?"].map(c=>`<button type="button">${c}</button>`).join("")}</div>
       <div class="hy-in"><button type="button" id="hyMic" class="hy-mic" title="Hablar" hidden>🎙️</button><input id="hyIn" placeholder="Pregúntale lo que quieras de tu tienda…" enterkeyhint="send"><button type="button" id="hySend">Enviar</button></div>
     </div></div>
@@ -1174,6 +1178,7 @@ function hoyPaint(){
   hoyLog();
   $("hyNew").onclick=()=>{HOY.chat=[];hoyLog();};
   $("hySpeak").onclick=()=>hoySay();
+  const ii=$("hyIdeas");if(ii)ii.onclick=e=>{const b=e.target.closest("[data-idea]");if(b){const x=HOY.ideas[+b.dataset.idea];if(x)hoyAsk(x.q);}};
   hoyMicSetup();
   const st=v.querySelector(".hy-stars");if(st)st.onclick=e=>{const b=e.target.closest("[data-story],[data-post]");if(!b)return;
     if(b.dataset.story)hoyStory(b.dataset.story,b);else hoyAsk("Escríbeme un post para Instagram (texto + hashtags) para la prenda \""+b.dataset.post+"\" de CΛNEVΛ. Dame también una idea de foto o video.");};
@@ -1185,7 +1190,7 @@ function hoyPaint(){
 }
 function hoyLog(){const l=$("hyLog");if(!l)return;
   const items=HOY.chat.length?HOY.chat:[{r:"a",t:HOY.brief||"",typing:!HOY.brief}];
-  l.innerHTML=items.map((m,i)=>m.typing?`<div class="hy-m"><span class="hy-typ"><i></i><i></i><i></i></span></div>`:`<div class="hy-m${m.r==="u"?" me":""}">${esc(m.t)}${m.r==="a"&&m.t.length>140?`<br><button type="button" class="cp" data-cp="${i}">Copiar</button>`:""}</div>`).join("");
+  l.innerHTML=items.map((m,i)=>m.typing?`<div class="hy-m"><span class="hy-typ"><i></i><i></i><i></i></span></div>`:`<div class="hy-m${m.r==="u"?" me":""}">${esc(m.t).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/^\s*[*-]\s+/gm,"• ")}${m.r==="a"&&m.t.length>140?`<br><button type="button" class="cp" data-cp="${i}">Copiar</button>`:""}</div>`).join("");
   l.onclick=e=>{const b=e.target.closest("[data-cp]");if(!b)return;const m=items[+b.dataset.cp];try{navigator.clipboard.writeText(m.t);b.textContent="✓ Copiado";}catch(x){}};
   l.scrollTop=l.scrollHeight;}
 async function hoyAsk(q){q=String(q||"").trim();if(!q||HOY.loading)return;$("hyIn").value="";
@@ -1197,7 +1202,7 @@ async function hoyAsk(q){q=String(q||"").trim();if(!q||HOY.loading)return;$("hyI
   HOY.loading=false;hoyLog();}
 async function loadHoy(fresh){
   hoyPaint();
-  try{const d=await adminFetch("/admin/ai",{method:"POST",body:{brief:true,fresh:!!fresh}});HOY.facts=d.facts;if(d.ui)HOY.ui=d.ui;HOY.brief=d.reply||"Aquí tienes tus números de hoy 💎 Pregúntame lo que quieras.";
+  try{const d=await adminFetch("/admin/ai",{method:"POST",body:{brief:true,fresh:!!fresh}});HOY.facts=d.facts;if(d.ui)HOY.ui=d.ui;HOY.brief=d.reply||"Aquí tienes tus números de hoy 💎 Pregúntame lo que quieras.";HOY.ideas=d.ideas||[];
     const m=d.facts&&d.facts.mes;if(m&&m.goal&&m.revenue>=m.goal){const k="cv_goal_party_"+String(d.facts.hoy).slice(0,7);try{if(!localStorage.getItem(k)){localStorage.setItem(k,"1");hoyConfetti();toast("🎉 ¡Lo lograste! Llegaste a tu meta del mes",{ms:7000});}}catch(x){}}
     const paid=(d.facts&&d.facts.ventas_hoy&&d.facts.ventas_hoy.orders)||0;if(HOY.lastPaid!==null&&paid>HOY.lastPaid){hoyCash();hoyConfetti();toast("💰 ¡Nueva venta!",{ms:5000});}HOY.lastPaid=paid;
   }catch(e){HOY.brief=/Worker/.test(e.message)?"Para ver tu resumen con Caneva AI falta pegar el Worker v71 en Cloudflare 💎":e.message;}
