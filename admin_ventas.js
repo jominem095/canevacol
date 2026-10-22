@@ -215,7 +215,7 @@
   }
   function webRowHtml(v){
     var it=(v.items||[]).map(function(x){return esc(x.nombre)+(x.size?" ("+esc(x.size)+")":"")+(x.qty>1?" ×"+x.qty:"");}).join(" · ");
-    return '<div class="vt-row"><div><div class="t">'+esc(v.ticket||"")+' · '+esc(when(v.paidAt))+(v.name?' · '+esc(v.name):'')+'</div><div class="it">'+it+'</div>'+
+    return '<div class="vt-row"><div><div class="t">'+esc(v.ticket||"")+' · '+esc(when(v.paidAt))+(v.name?' · '+esc(v.name):'')+waChip(v.phone,v.name)+'</div><div class="it">'+it+'</div>'+
       '<span class="tag gold">🌐 Página web</span>'+(v.viaLabel?'<span class="tag">'+esc(v.viaLabel)+'</span>':'')+(v.excluded?'<span class="tag">🚫 No cuenta en la ganancia</span>':'')+
       '<div class="pr">🔒 Costo '+money(v.cost)+' · <span class="g'+(v.profit<0?" neg":"")+'">ganancia '+money(v.profit)+'</span>'+(v.missing?' · <span style="color:#ffb4a8">⚠ falta costo</span>':'')+'</div></div>'+
       '<div class="r"><b>'+money(v.total)+'</b><button type="button" class="vt-mail" data-cost="'+esc(v.id)+'">🔒 Costo</button></div></div>';
@@ -223,7 +223,7 @@
   function rowHtml(v){
     var it=v.items.map(function(x){return esc(x.nombre)+(x.size?" ("+esc(x.size)+")":"")+(x.qty>1?" ×"+x.qty:"");}).join(" · ");
     var live=v.status==="pagado";
-    return '<div class="vt-row'+(live?"":" void")+'"><div><div class="t">'+esc(v.ticket)+' · '+esc(when(v.paidAt))+(v.name?' · '+esc(v.name):'')+'</div><div class="it">'+it+'</div>'+
+    return '<div class="vt-row'+(live?"":" void")+'"><div><div class="t">'+esc(v.ticket)+' · '+esc(when(v.paidAt))+(v.name?' · '+esc(v.name):'')+waChip(v.phone,v.name)+'</div><div class="it">'+it+'</div>'+
       '<span class="tag">'+esc(v.channelLabel||"")+'</span><span class="tag">'+esc(v.payLabel||"")+'</span>'+
       (v.plan&&v.plan!=="contado"?'<span class="tag">'+esc(PLAN_NAME[v.plan]||v.plan)+'</span>':'')+(live&&v.balance>0?'<span class="tag owe">Debe '+money(v.balance)+(v.dueAt?' · vence '+esc(shortDate(v.dueAt)):'')+'</span>':'')+(live&&v.payments&&v.payments.length>1&&!v.balance?'<span class="tag ok">Pagada con abonos</span>':'')+
       (v.doc?'<span class="tag">'+esc(v.docLabel||"Doc")+' '+esc(v.doc)+'</span>':'')+(v.points?'<span class="tag">+'+v.points+' pts Club</span>':'')+(v.note?'<span class="tag">'+esc(v.note)+'</span>':'')+(live?'':'<span class="tag">Anulada</span>')+(live&&v.cost?'<div class="pr">'+(v.excluded?'<span class="dim">🚫 No cuenta en la ganancia · </span>':'')+'🔒 Costo '+money(v.cost.cost)+' · <span class="g'+(v.cost.profit<0?" neg":"")+'">ganancia '+money(v.cost.profit)+'</span>'+(v.cost.missing?' · <span style="color:#ffb4a8">⚠ falta costo</span>':'')+'</div>':'')+'</div>'+
@@ -241,7 +241,7 @@
       var it=v.items.map(function(x){return esc(x.nombre)+(x.size?" ("+esc(x.size)+")":"");}).join(" · ");
       var hist=(v.payments||[]).map(function(p){return when(p.at,false)+": "+money(p.amount)+" "+esc(PAY[p.pay]||p.pay||"");}).join(" · ");
       var d=daysAgo(v.paidAt),wa=v.phone?'https://wa.me/57'+String(v.phone).replace(/^57/,"")+'?text='+encodeURIComponent("Hola "+(v.name||"")+" 🖤 te escribimos de CANEVA. Te recordamos el saldo pendiente de tu compra "+v.ticket+": "+money(v.balance)+(v.dueAt?" (fecha límite "+shortDate(v.dueAt)+")":"")+". ¡Gracias!"):"";
-      return '<div class="vt-row"><div><div class="t">'+esc(v.name||"Sin nombre")+(v.phone?' · '+esc(v.phone):'')+'</div>'+
+      return '<div class="vt-row"><div><div class="t">'+esc(v.name||"Sin nombre")+(wa?' · <a href="'+wa+'" target="_blank" rel="noopener" style="color:#25d366;font-weight:700;text-decoration:none">💬 '+esc(v.phone)+'</a>':(v.phone?' · '+esc(v.phone):''))+'</div>'+
         '<div class="it">'+esc(v.ticket)+' · '+esc(when(v.paidAt,false))+' · hace '+d+' día'+(d===1?'':'s')+' · '+it+'</div>'+
         '<span class="tag">'+esc(PLAN_NAME[v.plan]||"Abono")+'</span>'+(v.dueAt?(v.overdue?'<span class="tag owe">⚠ Vencida hace '+Math.abs(v.daysLeft)+' día'+(Math.abs(v.daysLeft)===1?'':'s')+' ('+esc(shortDate(v.dueAt))+')</span>':'<span class="tag">Vence '+esc(shortDate(v.dueAt))+(v.daysLeft<=2?' · en '+v.daysLeft+' día'+(v.daysLeft===1?'':'s'):'')+'</span>'):'')+
         (v.doc?'<span class="tag">'+esc(v.docLabel||"Doc")+' '+esc(v.doc)+'</span>':'')+(v.address?'<span class="tag">📍 '+esc(v.address)+'</span>':'')+
@@ -379,6 +379,9 @@
 
   // ---------------- receipt to WhatsApp (text) and as an image to share ----------------
   function waNum(p){var d=String(p||"").replace(/[^\d]/g,"");if(d.length===10&&d[0]==="3")d="57"+d;return d.length>=11?d:"";}
+  // v75: the customer's phone as a green WhatsApp link (one tap opens the chat with a greeting)
+  function waChip(phone,name){var n=waNum(phone);if(!n)return phone?' · '+esc(phone):'';
+    return ' · <a class="vt-wa" href="https://wa.me/'+n+'?text='+encodeURIComponent("Hola"+(name?" "+String(name).split(" ")[0]:"")+" ✨ Te escribimos de CΛNEVΛ 🖤 ")+'" target="_blank" rel="noopener" style="color:#25d366;font-weight:700;text-decoration:none">💬 '+esc(phone)+'</a>';}
   function receiptText(v){
     var L=["🖤 *CΛNEVΛ* · Recibo "+v.ticket,when(v.paidAt)+(v.channelLabel?" · "+v.channelLabel:""),""];
     var sub=0;

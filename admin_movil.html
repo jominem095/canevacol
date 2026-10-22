@@ -553,7 +553,7 @@ main{padding:14px 16px 120px}
 
 <script src="admin_pro.js?v=52"></script>
 <script src="admin_colores.js?v=2"></script>
-<script src="admin_ventas.js?v=13"></script>
+<script src="admin_ventas.js?v=14"></script>
 <script>
 // Mobile admin for Caneva: edits the live catalog (Worker /catalog) and republishes via /admin/catalog.
 // Uses the same Worker endpoints and product shape as admin.html, so no Worker changes are needed.
@@ -1510,14 +1510,19 @@ async function loadGifts(){
 function gfCard(g){
   const dark=g.design==="noir";
   const card=`<div style="background:${GF_BG[g.design]||GF_BG.noir};color:${dark?"#f7f7f4":"#050505"};border:1px solid #c9b38a;border-radius:12px;padding:12px 14px;margin:8px 0"><div style="display:flex;justify-content:space-between;font-size:11px;letter-spacing:3px"><span>CΛNEVΛ</span><span>REGALO</span></div><div style="font-size:26px;margin:8px 0 2px">${money(g.status==="solicitada"?g.amount:g.balance)}${g.status!=="solicitada"&&g.balance!==g.amount?` <small style="font-size:12px;opacity:.7">de ${money(g.amount)}</small>`:""}</div><div style="font-size:12px;opacity:.85">Para <b>${esc(g.toName)}</b>${g.fromName?" · De "+esc(g.fromName):""}</div>${g.code?`<div style="font-family:monospace;font-size:14px;margin-top:6px;letter-spacing:1px">${esc(g.code)}</div>`:""}</div>`;
-  const info=[g.toEmail?`✉ ${esc(g.toEmail)}`:"Sin correo de destino (le llega a quien compró)", `Compró: ${esc(g.buyerEmail)}`, g.sendAt?`📅 Entrega: ${esc(new Date(g.sendAt).toLocaleDateString("es-CO",{day:"numeric",month:"short"}))}${g.sentAt?" ✓ enviada":""}`:(g.sentAt?"✓ Enviada por correo":""), g.expiresAt?`Vence: ${esc(new Date(g.expiresAt).toLocaleDateString("es-CO",{day:"numeric",month:"short",year:"numeric"}))}`:"", g.message?`💌 “${esc(g.message)}”`:""].filter(Boolean).join("<br>");
+  // v75: buyer's WhatsApp (if she wrote it) -> one tap opens the chat with a ready message
+  const gph=String(g.buyerPhone||"").replace(/[^\d]/g,""), gnum=gph.length===10&&gph[0]==="3"?"57"+gph:gph;
+  const gwtxt=`Hola ${String(g.fromName||"").split(" ")[0]||""} ✨ Te escribimos de CΛNEVΛ por tu Tarjeta Regalo de ${money(g.amount)} para ${g.toName} (ref. ${g.ref}). `+(g.status==="solicitada"?"¿Ya pudiste hacer el pago? Apenas lo confirmemos, la activamos 🖤":"¡Ya está activa! 🎁 Código: "+(g.code||""));
+  const gwa=gnum.length>=11?`https://wa.me/${gnum}?text=${encodeURIComponent(gwtxt)}`:"";
+  const info=[g.toEmail?`✉ ${esc(g.toEmail)}`:"Sin correo de destino (le llega a quien compró)", `Compró: ${esc(g.buyerEmail)}`+(gwa?` · <a href="${gwa}" target="_blank" rel="noopener" style="color:#25d366;font-weight:700">📱 ${esc(g.buyerPhone)}</a>`:""), g.sendAt?`📅 Entrega: ${esc(new Date(g.sendAt).toLocaleDateString("es-CO",{day:"numeric",month:"short"}))}${g.sentAt?" ✓ enviada":""}`:(g.sentAt?"✓ Enviada por correo":""), g.expiresAt?`Vence: ${esc(new Date(g.expiresAt).toLocaleDateString("es-CO",{day:"numeric",month:"short",year:"numeric"}))}`:"", g.message?`💌 “${esc(g.message)}”`:""].filter(Boolean).join("<br>");
   const reds=(g.redemptions||[]).map(r=>`−${money(r.amount)} <small>${esc(when(r.created_at))}${r.note?" · "+esc(r.note):""}</small>`).join("<br>");
   const status={solicitada:"Por pagar",activa:"Activa",agotada:"Usada completa",vencida:"Vencida",cancelada:"Cancelada"}[g.status]||g.status;
   // v72: how she said she'd pay (Bre-B / Bold / WhatsApp) and whether she tapped "Ya pagué"
   const py=g.pay||null;
   const payTag=g.status!=="solicitada"||!py?"":`<div style="display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 2px">${py.via==="breb"?`<span class="tag" style="background:linear-gradient(120deg,#cfd6db,#fff,#c3ccd2);color:#050505">💎 Bre-B · ${money(g.amount)}</span>`:py.via==="bold"?`<span class="tag">💳 Bold${py.boldStatus?" · "+esc(py.boldStatus==="REJECTED"?"rechazado":py.boldStatus):" · se activa sola al aprobarse"}</span>`:`<span class="tag">💬 WhatsApp</span>`}${py.claimedAt?`<span class="tag" style="background:#25d366;color:#04140a">📲 Dijo que ya pagó · ${esc(when(py.claimedAt))}</span>`:""}</div>`;
-  const acts=g.status==="solicitada"?`<div class="oact"><button class="pay" data-gfact="${g.id}">Recibí el pago ✓ Activar</button><button class="cancel" data-gfcancel="${g.id}">Cancelar</button></div>`
-    :g.status==="activa"?`<div class="oact"><button class="pay" data-gfuse="${g.id}">Descontar</button><button class="ext" data-gfresend="${g.id}">Reenviar correo</button></div>`:"";
+  const waBtn=gwa?`<a class="ext" style="background:#25d366;color:#04140a;border-color:#25d366;text-align:center;text-decoration:none" href="${gwa}" target="_blank" rel="noopener">💬 WhatsApp</a>`:"";
+  const acts=g.status==="solicitada"?`<div class="oact"><button class="pay" data-gfact="${g.id}">Recibí el pago ✓ Activar</button>${waBtn}<button class="cancel" data-gfcancel="${g.id}">Cancelar</button></div>`
+    :g.status==="activa"?`<div class="oact"><button class="pay" data-gfuse="${g.id}">Descontar</button>${waBtn}<button class="ext" data-gfresend="${g.id}">Reenviar correo</button></div>`:(waBtn?`<div class="oact">${waBtn}</div>`:"");
   return `<div class="ocard"><div class="ohead"><span>Ref. <b>${esc(g.ref)}</b> <span class="tag">${status}</span></span><span>${esc(when(g.createdAt))}</span></div>${card}${payTag}<div class="apinfo">${info}${reds?`<br><small>Usos:</small><br>${reds}`:""}</div>${acts}</div>`;
 }
 async function gfActivate(id){
