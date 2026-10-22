@@ -5768,7 +5768,7 @@ body.cv-has-pbar .ann-bar{display:none!important}
   // v77: international shipping: country first; outside Colombia the city/state and postal code are free text
   var CTRY=[['CO','Colombia'],['US','Estados Unidos'],['ES','España'],['PA','Panamá'],['MX','México'],['CA','Canadá'],['CL','Chile'],['PE','Perú'],['EC','Ecuador'],['VE','Venezuela'],['CR','Costa Rica'],['SV','El Salvador'],['GT','Guatemala'],['HN','Honduras'],['NI','Nicaragua'],['DO','República Dominicana'],['PR','Puerto Rico'],['AR','Argentina'],['BR','Brasil'],['UY','Uruguay'],['PY','Paraguay'],['BO','Bolivia'],['AW','Aruba'],['CW','Curazao'],['CU','Cuba'],['JM','Jamaica'],['IT','Italia'],['FR','Francia'],['DE','Alemania'],['GB','Reino Unido'],['PT','Portugal'],['NL','Países Bajos'],['BE','Bélgica'],['CH','Suiza'],['IE','Irlanda'],['AT','Austria'],['SE','Suecia'],['NO','Noruega'],['DK','Dinamarca'],['FI','Finlandia'],['PL','Polonia'],['GR','Grecia'],['LU','Luxemburgo'],['CZ','Chequia'],['RO','Rumania'],['HR','Croacia'],['AU','Australia']];
   function cname(c){for(var i=0;i<CTRY.length;i++)if(CTRY[i][0]===c)return CTRY[i][1];return c;}
-  var IC='CO';
+  var IC='CO',CAR='';
   var FIELDS=[['name','Nombre y apellido','text','name'],['doc','Cédula','tel','off'],['phone','Celular (WhatsApp)','tel','tel'],['email','Correo','email','email'],['dept','Departamento','select','address-level1'],['city','Ciudad / municipio','select','address-level2'],['address','Dirección','text','street-address'],['barrio','Barrio (opcional)','text','off'],['notes','Indicaciones (opcional)','text','off']];
   function valid(k,v){v=String(v||'').trim();
     if(k==='name')return v.length>=4&&/\s/.test(v);
@@ -5795,7 +5795,7 @@ body.cv-has-pbar .ann-bar{display:none!important}
     var s=sheet('<div class="cv-shh"><b>📦 Datos de entrega</b><button type="button" data-sh="x" aria-label="Cerrar">×</button></div><form class="cv-form" novalidate><h3>¿A quién se lo enviamos?</h3><p class="cv-sub">'+(cu?'👑 Hola '+esc(cu.firstName||String(cu.name||'').split(' ')[0]||'')+', usamos los datos de tu Club Caneva: revísalos y listo. Esta compra suma puntos.':'Con estos datos armamos tu envío'+(bold?' y tu recibo de pago':'')+'. Solo los ve Caneva.')+'</p>'+
       cvMadeHtml(cvMade(window.CART||[]))+
       '<label class="cv-f" data-fk="country"><span>País de entrega</span><select name="country" autocomplete="country">'+CTRY.map(function(c){return '<option value="'+c[0]+'"'+(c[0]===IC?' selected':'')+'>'+esc(c[1])+'</option>';}).join('')+'</select></label>'+
-      '<div class="cv-intlsum" hidden></div>'+
+      '<div class="cv-intlsum" hidden></div><div class="cv-carriers" hidden></div>'+
       f(FIELDS[0])+'<div class="cv-row2">'+f(FIELDS[1])+f(FIELDS[2])+'</div>'+f(FIELDS[3])+'<div class="cv-row2 cv-corow">'+f(FIELDS[4])+f(FIELDS[5])+'</div>'+
       '<div class="cv-row2 cv-intlrow" hidden><label class="cv-f" data-fk="icity"><span>Ciudad y estado / provincia</span><input name="icity" type="text" autocomplete="address-level2" value="'+esc(b.icity||'')+'"><em>¿En qué ciudad?</em></label><label class="cv-f" data-fk="zip"><span>Código postal</span><input name="zip" type="text" autocomplete="postal-code" value="'+esc(b.zip||'')+'"><em>Escribe el código postal</em></label></div>'+
       f(FIELDS[6])+f(FIELDS[7])+f(FIELDS[8])+'<input type="text" name="hp" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">'+
@@ -5812,9 +5812,13 @@ body.cv-has-pbar .ann-bar{display:none!important}
       if(dl)dl.textContent=intl?'Documento o pasaporte':'Cédula';if(pl)pl.textContent=intl?'Celular con código de país':'Celular (WhatsApp)';if(bl)bl.textContent=intl?'Apto / referencia (opcional)':'Barrio (opcional)';
       form.elements.doc.setAttribute('inputmode',intl?'text':'numeric');form.elements.phone.setAttribute('placeholder',intl?'+1 305 555 1234':'');
       form.querySelectorAll('.cv-f.bad').forEach(function(x){x.classList.remove('bad');});
-      var sm=form.querySelector('.cv-intlsum');if(sm){sm.hidden=!intl;if(intl&&window.cvIntlSummary)sm.innerHTML=cvIntlSummary(c);}
+      var cr=form.querySelector('.cv-carriers');if(cr){var html=intl&&window.cvCarrierOpts?cvCarrierOpts(c,CAR):'';cr.innerHTML=html;cr.hidden=!html;var ck=cr.querySelector('input:checked');CAR=ck?ck.value:'';}
+      var sm=form.querySelector('.cv-intlsum');if(sm){sm.hidden=!intl;if(intl&&window.cvIntlSummary)sm.innerHTML=cvIntlSummary(c,CAR);}
       push({t:'k',k:'checkout_pais',l:c});if(window.cvSetCountry&&window.cvCountry&&cvCountry()!==c)cvSetCountry(c);}
     form.elements.country.addEventListener('change',function(){setCountry(this.value);});
+    // v80: carrier picked -> summary updates (DHL, FedEx, UPS with price and days)
+    form.addEventListener('change',function(e){if(e.target.name!=='carrier')return;CAR=e.target.value;form.querySelectorAll('.cv-car').forEach(function(l){l.classList.toggle('on',l.contains(e.target));});
+      var sm=form.querySelector('.cv-intlsum');if(sm&&window.cvIntlSummary)sm.innerHTML=cvIntlSummary(IC,CAR);push({t:'k',k:'checkout_envio',l:CAR});});
     setCountry(IC);
     form.addEventListener('input',function(e){var l=e.target.closest('.cv-f');if(l&&l.classList.contains('bad')&&valid(l.dataset.fk,e.target.value))l.classList.remove('bad');});
     form.addEventListener('submit',function(e){
@@ -5825,7 +5829,7 @@ body.cv-has-pbar .ann-bar{display:none!important}
       if(IC!=='CO'){[['icity',function(v){return v.length>=3;}],['zip',function(v){return v.length>=3;}]].forEach(function(q){var el=form.elements[q[0]],v=String(el.value||'').trim(),ok=q[1](v);el.closest('.cv-f').classList.toggle('bad',!ok);if(!ok&&!first)first=el;data[q[0]]=v;});}
       if(first){first.focus();return;}
       if(form.elements.hp&&form.elements.hp.value){closeSheet();return;}
-      if(IC!=='CO'){data.country=IC;data.city=data.icity+', '+cname(IC);data.phone='+'+data.phone;delete data.dept;}
+      if(IC!=='CO'){data.country=IC;data.city=data.icity+', '+cname(IC);data.phone='+'+data.phone;data.carrier=CAR;delete data.dept;}
       else{data.city=data.city+', '+data.dept;delete data.dept;delete data.zip;delete data.icity;}
       try{if(form.elements.keep.checked)localStorage.setItem(BKEY,JSON.stringify(data));else localStorage.removeItem(BKEY);}catch(x){}
       CURRENT=data;closeSheet();push({t:'k',k:'checkout_datos_ok'});
@@ -5842,7 +5846,7 @@ body.cv-has-pbar .ann-bar{display:none!important}
     e.preventDefault();e.stopImmediatePropagation();openForm(t.id);
   },true);
   // ---- send the details with the order ----
-  function block(b){return '📦 Datos de entrega:\n'+['Nombre: '+b.name,(b.country?'Documento: ':'Cédula: ')+b.doc,'Celular: '+b.phone,b.country?'🌎 País: '+cname(b.country)+(b.zip?' · CP '+b.zip:''):'','Correo: '+b.email,'Dirección: '+b.address+(b.barrio?', '+b.barrio:'')+', '+b.city,b.notes?'Indicaciones: '+b.notes:''].filter(Boolean).join('\n');}
+  function block(b){return '📦 Datos de entrega:\n'+['Nombre: '+b.name,(b.country?'Documento: ':'Cédula: ')+b.doc,'Celular: '+b.phone,b.country?'🌎 País: '+cname(b.country)+(b.zip?' · CP '+b.zip:''):'',b.country&&b.carrier&&window.CV_INTL&&CV_INTL.carriers&&CV_INTL.carriers[b.carrier]?'🚚 Envío: '+CV_INTL.carriers[b.carrier].name+' ('+CV_INTL.carriers[b.carrier].days+')':'','Correo: '+b.email,'Dirección: '+b.address+(b.barrio?', '+b.barrio:'')+', '+b.city,b.notes?'Indicaciones: '+b.notes:''].filter(Boolean).join('\n');}
   if(typeof cartWhatsText==='function'){var oTxt=cartWhatsText;cartWhatsText=function(){var t=oTxt.apply(this,arguments);try{if(!CURRENT)return t;var k=t.lastIndexOf('\n¿Me confirmas');var add='\n'+block(CURRENT)+'\n';return k>=0?t.slice(0,k)+add+t.slice(k):t+add;}catch(e){}return t;};}
   if(typeof postOrder==='function'){postOrder=function(id,items){try{fetch(API_BASE+'/order',{method:'POST',headers:{'Content-Type':'text/plain;charset=UTF-8'},body:JSON.stringify({id:id,items:items,token:(window.clubToken&&clubToken())||undefined,email:(CURRENT&&CURRENT.email)||(window.clubGuestEmail&&clubGuestEmail())||undefined,buyer:CURRENT||undefined}),keepalive:true}).catch(function(){});}catch(e){}};}
 })();
@@ -7053,6 +7057,13 @@ body.product-open .cv-wel{display:none!important}
 </script>
 <style id="cvintl-css">
 .cv-fx{white-space:nowrap}
+.cv-carriers[hidden]{display:none!important}.cv-carriers{margin:0 0 12px}
+.cv-carh{font:600 .62rem 'Inter',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:rgba(250,249,246,.6);margin:0 0 6px}
+.cv-car{display:flex;align-items:center;gap:10px;padding:11px 12px;margin:6px 0;border-radius:14px;border:1px solid rgba(250,249,246,.18);background:#101012;cursor:pointer}
+.cv-car.on{border-color:#cfe6ff;box-shadow:0 0 0 3px rgba(207,230,255,.12);background:#151519}
+.cv-car input{width:18px;height:18px;accent-color:#cfe6ff;flex:0 0 auto}
+.cv-car .n{flex:1;min-width:0}.cv-car .n b{display:block;font-size:.84rem;color:#faf9f6}.cv-car .n small,.cv-car .p small{display:block;font-size:.66rem;color:rgba(250,249,246,.6)}
+.cv-car .p{text-align:right;font-weight:700;font-size:.8rem;color:#faf9f6;white-space:nowrap}
 .cv-flag{display:inline-block;width:20px;height:15px;object-fit:cover;border-radius:3px;vertical-align:-2px;box-shadow:0 0 0 1px rgba(255,255,255,.18)}.cv-hello .f .cv-flag{width:40px;height:30px;border-radius:5px}
 .cv-hello{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 76px);transform:translateX(-50%);z-index:960;width:min(440px,calc(100vw - 24px));display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:20px;background:rgba(10,10,12,.96);border:1px solid rgba(207,230,255,.35);box-shadow:0 24px 70px rgba(0,0,0,.6),0 0 40px rgba(159,211,255,.12);color:#faf9f6;font-family:'Inter',sans-serif;animation:cvHelloIn .5s cubic-bezier(.2,.9,.3,1.2)}
 .cv-hello.out{opacity:0;transform:translate(-50%,-14px);transition:all .4s}
@@ -7105,16 +7116,26 @@ body.product-open .cv-wel{display:none!important}
   function show(cop){var p=intlPrice(cop);return MODE==='cop'?copFmt(p):locFmt(p);}
   function abroad(){return !!(I&&I.enabled&&C!=='CO');}
   window.cvCountry=function(){return C;};
+  // v80: carriers (DHL, FedEx, UPS) with price per zone and days; cheapest first
+  function carriers(c){var z=zone(c),out=[];var C0=(I&&I.carriers)||{};for(var k in C0){var x=C0[k];if(x&&x.enabled&&Number(x[z])>0)out.push({key:k,name:x.name,days:x.days,price:Number(x[z])});}return out.sort(function(a,b){return a.price-b.price;});}
+  function shipFor(c,key){var l=carriers(c),p=null;for(var i=0;i<l.length;i++)if(l[i].key===key)p=l[i];p=p||l[0];return p||{key:'',name:'',days:'',price:Number((I.ship||{})[zone(c)])||0};}
+  function qty(){return (window.CART||[]).reduce(function(a,x){return a+(Number(x.qty)||1);},0);}
+  window.cvCarrierOpts=function(c,sel){
+    if(!I||!I.enabled)return '';var l=carriers(c);if(!l.length)return '';var pick=shipFor(c,sel).key;
+    return '<div class="cv-carh">🚚 Método de envío</div>'+l.map(function(x,i){return '<label class="cv-car'+(x.key===pick?' on':'')+'"><input type="radio" name="carrier" value="'+x.key+'"'+(x.key===pick?' checked':'')+'><span class="n"><b>'+x.name+'</b><small>'+x.days+(i===0?' · más económico':'')+'</small></span><span class="p">'+copFmt(x.price)+(cur()!=='COP'?'<small>≈ '+locFmt(x.price)+'</small>':'')+'</span></label>';}).join('');
+  };
   // ---- summary inside the delivery form (country chosen there) ----
-  window.cvIntlSummary=function(c){
+  window.cvIntlSummary=function(c,carrier){
     if(!I||!I.enabled)return '<b>Por ahora no hacemos envíos fuera de Colombia.</b> Escríbenos por WhatsApp.';
-    var base=typeof cartTotal==='function'?cartTotal():0,extra=Math.round(base*(I.markupPct||0)/100),ship=Number((I.ship||{})[zone(c)])||0,tot=base+extra+ship;
+    var base=typeof cartTotal==='function'?cartTotal():0,extra=Math.round(base*(I.markupPct||0)/100),sh=shipFor(c,carrier),ship=sh.price,n=qty(),mp=n>=2?(I.multiPct||0):0,multi=Math.round((base+extra)*mp/100),tot=base+extra-multi+ship;
     var keep=C;C=c;var loc=cur()!=='COP'?' <small>≈ '+(function(){var v=tot*rate();try{return new Intl.NumberFormat('es-CO',{style:'currency',currency:cur(),maximumFractionDigits:v>=1000?0:2}).format(v);}catch(e){return '';}})()+' · tu banco hace la conversión</small>':'';C=keep;
     return '<b>🌎 Envío internacional a '+flag(c)+' '+names(c)+'</b>'+
       '<div class="r"><span>Prendas</span><span>'+copFmt(base)+'</span></div>'+
       '<div class="r"><span>Precio internacional (+'+(I.markupPct||0)+'%)</span><span>'+copFmt(extra)+'</span></div>'+
-      '<div class="r"><span>Envío internacional</span><span>'+copFmt(ship)+'</span></div>'+
+      (multi?'<div class="r" style="color:#8ef0c8"><span>Descuento por '+n+' prendas (−'+mp+'%)</span><span>−'+copFmt(multi)+'</span></div>':'')+
+      '<div class="r"><span>Envío '+(sh.name?sh.name+' · '+sh.days:'internacional')+'</span><span>'+copFmt(ship)+'</span></div>'+
       '<div class="r t"><span>Total</span><span>'+copFmt(tot)+'</span></div>'+loc+
+      (!multi&&(I.multiPct||0)>0?'<small style="color:#8ef0c8">💎 Lleva 2 prendas o más y tienes '+I.multiPct+'% de descuento en las prendas.</small>':'')+
       '<small>Se cobra en pesos colombianos con tu tarjeta (Bold). Te enviamos la guía por WhatsApp. Impuestos o aranceles de tu país los paga quien recibe.'+(I.note?' '+String(I.note).replace(/[<>]/g,''):'')+'</small>';
   };
   // ---- prices on the page ----
@@ -7138,8 +7159,10 @@ body.product-open .cv-wel{display:none!important}
     if(!abroad()){if(n)n.remove();return;}
     var foot=document.querySelector('.cart-foot .cart-row');if(!foot)return;
     if(!n){n=document.createElement('div');n.id='cvIntlCart';n.className='cv-intlnote';foot.parentNode.insertBefore(n,foot.nextSibling);}
-    var ship=Number((I.ship||{})[zone(C)])||0;
-    var h='🌎 <b>Envío internacional a '+flag(C)+' '+names(C)+'</b>: precio internacional + envío '+(MODE==='cop'?copFmt(ship):'≈ '+locFmt(ship))+'. Pagas con tarjeta (Bold) en pesos colombianos y tu banco hace la conversión. <a href="#" data-cvpais>¿Lo envías a Colombia? Cambia a 🇨🇴</a>';
+    var l=carriers(C),ship=l.length?l[0].price:(Number((I.ship||{})[zone(C)])||0),nq=qty();
+    var h='🌎 <b>Envío internacional a '+flag(C)+' '+names(C)+'</b>: desde '+(MODE==='cop'?copFmt(ship):locFmt(ship))+(l.length?' con '+l.map(function(x){return x.name;}).join(', ')+' ('+l[0].days+' el más económico)':'')+'. '+
+      ((I.multiPct||0)>0?(nq>=2?'<b style="color:#8ef0c8">💎 Tienes '+I.multiPct+'% de descuento por llevar '+nq+' prendas.</b> ':'<b style="color:#8ef0c8">💎 Lleva 2 prendas y te damos '+I.multiPct+'% de descuento.</b> '):'')+
+      'El envío gratis por 2 prendas aplica solo en Colombia. Pagas con tarjeta (Bold) en pesos colombianos y tu banco convierte. <a href="#" data-cvpais>¿Lo envías a Colombia? Cambia a 🇨🇴</a>';
     if(n.dataset.h!==h){n.dataset.h=h;n.innerHTML=h;}
   }
   function pill(){
@@ -7205,7 +7228,7 @@ body.product-open .cv-wel{display:none!important}
     try{var qp=(new URLSearchParams(location.search).get('pais')||'').toUpperCase();if(qp&&LIST.indexOf(qp)>=0){saved=qp;if(qp===I.country)sessionStorage.removeItem('cv_country');else sessionStorage.setItem('cv_country',qp);}}catch(e){}
     C=(saved&&LIST.indexOf(saved)>=0)?saved:(I.country||'CO');
     if(abroad())try{if(window.cvStatsPush)cvStatsPush({t:'k',k:'visita_internacional',l:C});}catch(e){}
-    apply();if(abroad())setTimeout(hello,2600);
+    try{apply();}catch(e){}if(abroad())setTimeout(hello,2600);
     if(window.MutationObserver)new MutationObserver(function(ms){if(!abroad())return;for(var i=0;i<ms.length;i++){if(ms[i].addedNodes.length||ms[i].type==='characterData'){soon();return;}}}).observe(document.body,{childList:true,subtree:true,characterData:true});
   }).catch(function(){});
 })();

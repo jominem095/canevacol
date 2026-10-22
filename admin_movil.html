@@ -504,10 +504,10 @@ main{padding:14px 16px 120px}
   <p class="muted" style="font-size:13px;margin:0">Quien compra desde afuera ve los precios en la moneda de su país. Paga con tarjeta (Bold) en pesos colombianos y su banco convierte. Si elige enviar a Colombia, paga el precio nacional.</p>
   <label class="checkrow"><input type="checkbox" id="iEnabled"><span><b>Vender fuera de Colombia.</b></span></label>
   <div class="field"><label>% extra sobre cada prenda (precio internacional)</label><input id="iPct" type="number" inputmode="numeric" min="0" max="300" step="1"></div>
-  <div class="field"><label>Envío internacional por pedido (en pesos colombianos)</label>
-    <div class="row2"><div class="field"><label>🇺🇸 EE. UU. y Canadá</label><input id="iNA" type="number" inputmode="numeric"></div><div class="field"><label>🌴 México, Centroamérica y Caribe</label><input id="iCA" type="number" inputmode="numeric"></div></div>
-    <div class="row2"><div class="field"><label>🌎 Suramérica</label><input id="iSA" type="number" inputmode="numeric"></div><div class="field"><label>🇪🇺 Europa</label><input id="iEU" type="number" inputmode="numeric"></div></div>
-    <div class="field"><label>🌐 Otros (Australia)</label><input id="iOT" type="number" inputmode="numeric"></div></div>
+  <div class="field"><label>💎 Descuento en las prendas al llevar 2 o más (solo exterior, %)</label><input id="iMulti" type="number" inputmode="numeric" min="0" max="90" step="1"></div>
+  <p class="muted" style="font-size:12px;margin:4px 0 8px">El envío gratis por 2 prendas sigue siendo solo para Colombia.</p>
+  <div class="sect" style="margin:8px 0 4px;border:0;padding:0">🚚 Empresas de envío · precio por pedido (COP)</div>
+  <div id="iCarriers"></div>
   <div class="field"><label>Nota para la clienta (opcional)</label><input id="iNote" type="text" maxlength="200" placeholder="Ej: Enviamos con DHL en 5 a 8 días hábiles."></div>
   <div id="iPreview" class="obold" style="margin:6px 0 10px"></div>
   <button class="btn" id="iSave">Guardar</button>
@@ -758,20 +758,36 @@ function paintAboutPhoto(){ const src=about.preview||about.image;
     `<button type="button" class="iconbtn" id="aPick">${src?"Cambiar foto":"Subir foto"}</button>${src?`<button type="button" class="iconbtn" id="aDrop">Quitar foto</button>`:""}`;
   $("aPick").onclick=()=>$("aFile").click(); const d=$("aDrop"); if(d) d.onclick=()=>{about.image="";about.file=null;about.preview="";paintAboutPhoto();}; }
 // v77: international sales settings (markup % + shipping per zone)
-const INTL_DEF={markupPct:40,ship:{NA:160000,CA:150000,SA:140000,EU:200000,OT:250000}};
-function intlPreview(){const pct=+$("iPct").value||0,base=150000,extra=Math.round(base*pct/100),ship=+$("iNA").value||0;
-  $("iPreview").innerHTML=`Ejemplo · una prenda de <b>${money(base)}</b> a Miami: ${money(base)} + ${pct}% (${money(extra)}) + envío ${money(ship)} = <b>${money(base+extra+ship)}</b><br><small>Ganas ${money(extra)} extra por prenda para cubrir la comisión de tarjeta internacional, empaque, el viaje a la transportadora y el riesgo del cambio.</small>`;}
+const INTL_DEF={markupPct:40,multiPct:10,ship:{NA:160000,CA:150000,SA:140000,EU:200000,OT:250000},
+  carriers:{dhl:{name:"DHL Express",days:"2 a 4 días hábiles",enabled:true,NA:190000,CA:180000,SA:170000,EU:230000,OT:280000},
+    fedex:{name:"FedEx",days:"3 a 5 días hábiles",enabled:true,NA:180000,CA:175000,SA:165000,EU:220000,OT:270000},
+    ups:{name:"UPS",days:"3 a 6 días hábiles",enabled:true,NA:175000,CA:170000,SA:160000,EU:215000,OT:265000}}};
+const INTL_Z=[["NA","🇺🇸 EE. UU. y Canadá"],["CA","🌴 México, Centroamérica y Caribe"],["SA","🌎 Suramérica"],["EU","🇪🇺 Europa"],["OT","🌐 Otros"]];
+function intlCarriersForm(cs){
+  $("iCarriers").innerHTML=Object.keys(INTL_DEF.carriers).map(k=>{const c={...INTL_DEF.carriers[k],...(cs[k]||{})},d=INTL_DEF.carriers[k];
+    return `<div class="ocard" style="margin:8px 0;padding:12px"><label class="checkrow" style="margin:0 0 6px"><input type="checkbox" id="ic_${k}_on"${c.enabled?" checked":""}><span><b>${d.name}</b></span></label>
+      <div class="field"><label>Días de entrega</label><input id="ic_${k}_days" type="text" value="${esc(c.days||d.days)}"></div>
+      <div class="row2">${INTL_Z.map(([z,l])=>`<div class="field"><label>${l}</label><input id="ic_${k}_${z}" type="number" inputmode="numeric" value="${Number.isFinite(c[z])?c[z]:d[z]}"></div>`).join("")}</div></div>`;}).join("");
+  $("iCarriers").oninput=intlPreview;
+}
+function intlPreview(){const pct=+$("iPct").value||0,mp=+$("iMulti").value||0,base=150000,extra=Math.round(base*pct/100);
+  const opts=Object.keys(INTL_DEF.carriers).filter(k=>$("ic_"+k+"_on")&&$("ic_"+k+"_on").checked).map(k=>({n:INTL_DEF.carriers[k].name,p:+$("ic_"+k+"_NA").value||0})).sort((a,b)=>a.p-b.p);
+  const ship=opts.length?opts[0].p:0, two=Math.round((2*base+2*extra)*mp/100);
+  $("iPreview").innerHTML=`Ejemplo a Miami · 1 prenda de <b>${money(base)}</b>: ${money(base)} + ${pct}% (${money(extra)}) + envío ${opts.length?opts[0].n:""} ${money(ship)} = <b>${money(base+extra+ship)}</b>`+
+    `<br>2 prendas: ${money(2*base+2*extra)} − ${mp}% (${money(two)}) + envío ${money(ship)} = <b>${money(2*base+2*extra-two+ship)}</b>`+
+    `<br><small>El ${pct}% cubre la comisión de tarjeta internacional, empaque, el viaje a la transportadora y el riesgo del cambio. Los precios de envío de fábrica son estimados: pon los que te coticen.</small>`;}
 async function openIntl(){
   busy(true,"Cargando…"); try{ siteConfig=await fetchConfig(); }catch(e){ busy(false); toast(e.message,{err:true,ms:9000}); return; } busy(false);
-  const i=siteConfig.intl||{}, sh={...INTL_DEF.ship,...(i.ship||{})};
+  const i=siteConfig.intl||{};
   $("iEnabled").checked=i.enabled!==false; $("iPct").value=Number.isFinite(i.markupPct)?i.markupPct:INTL_DEF.markupPct;
-  ["NA","CA","SA","EU","OT"].forEach(z=>$("i"+z).value=sh[z]); $("iNote").value=i.note||"";
+  $("iMulti").value=Number.isFinite(i.multiPct)?i.multiPct:INTL_DEF.multiPct; intlCarriersForm(i.carriers||{}); $("iNote").value=i.note||"";
   intlPreview(); $("iSheet").classList.remove("hidden"); $("iSheetBg").classList.remove("hidden");
 }
 function closeIntl(){ $("iSheet").classList.add("hidden"); $("iSheetBg").classList.add("hidden"); }
 async function saveIntl(){
-  const ship={}; ["NA","CA","SA","EU","OT"].forEach(z=>ship[z]=Math.max(0,parseInt($("i"+z).value,10)||0));
-  const cfg={...(siteConfig||{}), intl:{enabled:$("iEnabled").checked, markupPct:Math.max(0,Math.min(300,parseInt($("iPct").value,10)||0)), ship, note:$("iNote").value.trim()}};
+  const carriers={}; Object.keys(INTL_DEF.carriers).forEach(k=>{const c={enabled:$("ic_"+k+"_on").checked,days:$("ic_"+k+"_days").value.trim()};INTL_Z.forEach(([z])=>c[z]=Math.max(0,parseInt($("ic_"+k+"_"+z).value,10)||0));carriers[k]=c;});
+  const old=(siteConfig&&siteConfig.intl)||{};
+  const cfg={...(siteConfig||{}), intl:{enabled:$("iEnabled").checked, markupPct:Math.max(0,Math.min(300,parseInt($("iPct").value,10)||0)), multiPct:Math.max(0,Math.min(90,parseInt($("iMulti").value,10)||0)), ship:old.ship||INTL_DEF.ship, carriers, note:$("iNote").value.trim()}};
   busy(true,"Guardando…");
   try{ const d=await adminFetch("/admin/config",{method:"POST",body:cfg}); siteConfig=d.config||cfg; busy(false); closeIntl(); toast(cfg.intl.enabled?`🌎 Ventas internacionales: +${cfg.intl.markupPct}% ✓`:"Ventas internacionales apagadas"); }
   catch(e){ busy(false); toast("Error: "+e.message,{err:true,ms:9000}); }
@@ -1782,7 +1798,7 @@ $("fInvBtn").onclick=()=>{ const pid=$("fInvBtn").dataset.pid; closeEditor(); cu
   CanevaPro.mount($("invBody"),"inventario",proOpts()).then(()=>CanevaPro.openItem(pid)); };
 $("renameCatBtn").onclick=renameCategory;
 $("portadaInfo").onclick=openPortada;
-$("intlInfo").onclick=openIntl; $("iCancel").onclick=closeIntl; $("iSheetBg").onclick=closeIntl; $("iSave").onclick=saveIntl; ["iPct","iNA"].forEach(id=>$(id).oninput=intlPreview);
+$("intlInfo").onclick=openIntl; $("iCancel").onclick=closeIntl; $("iSheetBg").onclick=closeIntl; $("iSave").onclick=saveIntl; ["iPct","iMulti"].forEach(id=>$(id).oninput=intlPreview);
 $("aboutInfo").onclick=openAbout; $("aCancel").onclick=closeAbout; $("aSheetBg").onclick=closeAbout; $("aSave").onclick=saveAbout;
 $("aFile").onchange=e=>{ const f=e.target.files&&e.target.files[0]; if(!f) return; about.file=new File([f],"nosotros-"+Date.now()+"."+((f.name.split(".").pop()||"jpg").toLowerCase()),{type:f.type}); about.preview=URL.createObjectURL(f); paintAboutPhoto(); e.target.value=""; };
 $("tabs").onclick=e=>{ const b=e.target.closest("button[data-tab]"); if(b) showTab(b.dataset.tab); };
