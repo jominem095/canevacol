@@ -29,6 +29,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://wsrv.nl" crossorigin>
 <link rel="preconnect" href="https://wsrv.nl">
+<link rel="preconnect" href="https://flagcdn.com">
 <link rel="preconnect" href="https://caneva-ai.canevacol.workers.dev" crossorigin>
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@200;300;400;500;600&family=Montserrat:wght@200;300;400&display=swap">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@200;300;400;500;600&family=Montserrat:wght@200;300;400&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
@@ -7052,6 +7053,7 @@ body.product-open .cv-wel{display:none!important}
 </script>
 <style id="cvintl-css">
 .cv-fx{white-space:nowrap}
+.cv-flag{display:inline-block;width:20px;height:15px;object-fit:cover;border-radius:3px;vertical-align:-2px;box-shadow:0 0 0 1px rgba(255,255,255,.18)}.cv-hello .f .cv-flag{width:40px;height:30px;border-radius:5px}
 .cv-hello{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 76px);transform:translateX(-50%);z-index:960;width:min(440px,calc(100vw - 24px));display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:20px;background:rgba(10,10,12,.96);border:1px solid rgba(207,230,255,.35);box-shadow:0 24px 70px rgba(0,0,0,.6),0 0 40px rgba(159,211,255,.12);color:#faf9f6;font-family:'Inter',sans-serif;animation:cvHelloIn .5s cubic-bezier(.2,.9,.3,1.2)}
 .cv-hello.out{opacity:0;transform:translate(-50%,-14px);transition:all .4s}
 @keyframes cvHelloIn{from{opacity:0;transform:translate(-50%,-20px) scale(.96)}}
@@ -7093,7 +7095,8 @@ body.product-open .cv-wel{display:none!important}
   var LIST=['CO','US','ES','PA','MX','CA','CL','PE','EC','VE','CR','SV','GT','HN','NI','DO','PR','AR','BR','UY','PY','BO','AW','CW','CU','JM','IT','FR','DE','GB','PT','NL','BE','CH','IE','AT','SE','NO','DK','FI','PL','GR','LU','CZ','RO','HR','AU'];
   var I=null,C='CO',MODE='local';try{MODE=localStorage.getItem('cv_cur')||'local';}catch(e){}
   function names(c){try{return new Intl.DisplayNames(['es'],{type:'region'}).of(c);}catch(e){return c;}}
-  function flag(c){return /^[A-Z]{2}$/.test(c)?String.fromCodePoint.apply(null,c.split('').map(function(x){return 127397+x.charCodeAt(0);})):'🌎';}
+  // v79d: flag as a small image (Windows does not draw flag emojis, it shows the letters)
+  function flag(c){return /^[A-Z]{2}$/.test(c)?'<img class="cv-flag" src="https://flagcdn.com/w40/'+c.toLowerCase()+'.png" srcset="https://flagcdn.com/w80/'+c.toLowerCase()+'.png 2x" width="20" height="15" alt="'+c+'" loading="lazy">':'🌎';}
   function cur(){var c=CUR[C]||'USD';return I&&I.rates&&I.rates[c]?c:'USD';}
   function rate(){var c=cur();return (I&&I.rates&&I.rates[c])||(I&&c===I.currency?I.rate:0)||(I&&I.rates&&I.rates.USD)||0.00025;}
   function copFmt(n){return '$'+Math.round(n).toLocaleString('es-CO')+' COP';}

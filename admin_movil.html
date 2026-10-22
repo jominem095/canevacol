@@ -1236,7 +1236,7 @@ function hoyPaint(){
   hoyNotifyCard(v); hoyShieldCard(v);
 }
 // v76: Escudo CANEVA status (blocked attempts by country)
-const CC_FLAG=c=>/^[A-Z]{2}$/.test(c)?String.fromCodePoint(...[...c].map(x=>127397+x.charCodeAt(0))):"🌐";
+const CC_FLAG=c=>/^[A-Z]{2}$/.test(c)?`<img src="https://flagcdn.com/w40/${c.toLowerCase()}.png" width="18" height="13" alt="${c}" style="border-radius:2px;vertical-align:-1px">`:"🌐";
 async function hoyShieldCard(v){
   let c=document.getElementById("hyShield"); if(!c){c=document.createElement("div");c.id="hyShield";c.style.cssText="margin:10px 0 8px;padding:14px;border-radius:16px;border:1px solid rgba(207,230,255,.3);background:linear-gradient(135deg,rgba(159,211,255,.06),rgba(201,167,255,.06))";}
   v.appendChild(c);
