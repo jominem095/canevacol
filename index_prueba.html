@@ -7166,7 +7166,7 @@ body.product-open .cv-wel{display:none!important}
   }
   function setCountry(c,byUser){
     if(!c||c===C){apply();return;}
-    C=c;try{if(I&&c===I.country)localStorage.removeItem('cv_country');else localStorage.setItem('cv_country',c);}catch(e){}
+    C=c;try{if(I&&c===I.country)sessionStorage.removeItem('cv_country');else sessionStorage.setItem('cv_country',c);}catch(e){}
     if(byUser)try{if(window.cvStatsPush)cvStatsPush({t:'k',k:'cambiar_pais',l:c});}catch(e){}
     apply();
   }
@@ -7192,9 +7192,11 @@ body.product-open .cv-wel{display:none!important}
   fetch(API_BASE+'/hola',{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){
     if(d&&d.ship&&!window.CV_SHIP)window.CV_SHIP=d.ship;
     I=d&&d.intl;window.CV_INTL=I;if(!I)return;
-    var saved='';try{saved=localStorage.getItem('cv_country')||'';}catch(e){}
+    // v79b: a country picked by hand (or with ?pais=) lasts only for this visit; the next visit starts again from where she really is
+    try{localStorage.removeItem('cv_country');}catch(e){}
+    var saved='';try{saved=sessionStorage.getItem('cv_country')||'';}catch(e){}
     // ?pais=US opens the store in that country's mode (to test or to share a link); ?pais=CO goes back to Colombia
-    try{var qp=(new URLSearchParams(location.search).get('pais')||'').toUpperCase();if(qp&&LIST.indexOf(qp)>=0){saved=qp;if(qp===I.country)localStorage.removeItem('cv_country');else localStorage.setItem('cv_country',qp);}}catch(e){}
+    try{var qp=(new URLSearchParams(location.search).get('pais')||'').toUpperCase();if(qp&&LIST.indexOf(qp)>=0){saved=qp;if(qp===I.country)sessionStorage.removeItem('cv_country');else sessionStorage.setItem('cv_country',qp);}}catch(e){}
     C=(saved&&LIST.indexOf(saved)>=0)?saved:(I.country||'CO');
     if(abroad())try{if(window.cvStatsPush)cvStatsPush({t:'k',k:'visita_internacional',l:C});}catch(e){}
     apply();if(abroad())setTimeout(hello,2600);
