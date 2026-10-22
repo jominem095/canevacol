@@ -7068,6 +7068,7 @@ body.product-open .cv-wel{display:none!important}
 .cv-corow[hidden],.cv-intlrow[hidden],.cv-intlsum[hidden]{display:none!important}
 .cv-fxpill{position:fixed;left:14px;bottom:calc(var(--mobile-dock-h,0px) + 14px);z-index:900;display:flex;align-items:center;gap:6px;border:1px solid rgba(250,249,246,.25);background:rgba(8,8,10,.9);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#faf9f6;border-radius:999px;padding:.5rem .8rem;font:600 .68rem 'Inter',sans-serif;letter-spacing:.04em;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,.4)}
 .cv-fxpill b{font-weight:800}.cv-fxpill small{opacity:.6;font-weight:500}
+.cv-fxpill.co{padding:.38rem .6rem;font-size:.6rem;opacity:.78;background:rgba(8,8,10,.75)}.cv-fxpill.co:hover{opacity:1}
 .cv-intlnote{margin:.4rem 0 .6rem;padding:.65rem .8rem;border-radius:14px;border:1px solid rgba(159,211,255,.3);background:linear-gradient(135deg,rgba(159,211,255,.07),rgba(201,167,255,.07));font:400 .7rem/1.5 'Inter',sans-serif;color:rgba(250,249,246,.85)}
 .cv-intlnote b{color:#faf9f6}
 .cv-intlsum{margin:0 0 12px;padding:12px;border-radius:14px;border:1px solid rgba(159,211,255,.35);background:linear-gradient(135deg,rgba(159,211,255,.08),rgba(201,167,255,.08));font:400 .74rem/1.55 'Inter',sans-serif;color:rgba(250,249,246,.88)}
@@ -7140,10 +7141,12 @@ body.product-open .cv-wel{display:none!important}
   }
   function pill(){
     var p=document.querySelector('.cv-fxpill');
-    // in Colombia (detected and chosen) nothing new is shown
-    if(!I||!I.enabled||(C==='CO'&&I.country==='CO')){if(p)p.remove();return;}
+    // v79c: everyone sees it (small in Colombia) so anyone can switch country and currency
+    if(!I||!I.enabled){if(p)p.remove();return;}
     if(!p){p=document.createElement('button');p.type='button';p.className='cv-fxpill';p.setAttribute('aria-label','Cambiar país y moneda');document.body.appendChild(p);p.onclick=menu;}
-    p.innerHTML=flag(C)+' '+(C==='CO'?'Colombia · <b>COP</b>':'<b>'+(MODE==='cop'?'COP':cur())+'</b>')+' <small>· cambiar</small>';
+    p.classList.toggle('co',C==='CO');
+    p.innerHTML=flag(C)+' <b>'+(C==='CO'||MODE==='cop'?'COP':cur())+'</b>'+(C==='CO'?'':' <small>· cambiar</small>');
+    p.title=C==='CO'?'Cambiar país y moneda':'Precios para '+names(C)+' · cambiar';
   }
   function menu(){
     var old=document.querySelector('.cv-fxmenu');if(old){old.remove();return;}
