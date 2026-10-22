@@ -6977,5 +6977,32 @@ body.product-open .cv-wel{display:none!important}
 </script>
 
 
+<style id="cvgiftcart-css">
+.cv-gcart{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin:.7rem 0 0;padding:.75rem .9rem;border:1px dashed rgba(250,249,246,.3);border-radius:999px;background:rgba(250,249,246,.03);color:#faf9f6;font:500 .74rem 'Inter',sans-serif;letter-spacing:.02em;cursor:pointer;transition:all .2s}
+.cv-gcart:hover{border-color:#faf9f6;background:rgba(250,249,246,.07)}.cv-gcart b{font-weight:700}
+.cart-empty .cv-gcart{margin-top:1.1rem;width:auto;padding:.75rem 1.1rem}
+.cv-gcart b,.cart-empty .cv-gcart b{display:inline!important;font:700 .74rem 'Inter',sans-serif!important;color:inherit!important;margin:0!important;letter-spacing:.02em!important;text-transform:none!important}
+</style>
+<script id="cvgiftcart">
+// v72: link from the cart to the Gift Card window (the gift is paid there, not in the cart)
+(function(){
+  function on(){var n=document.getElementById('navGift')||document.getElementById('mobileGift');return !!(window.openGift&&n&&!n.hidden);}
+  function btn(empty){var b=document.createElement('button');b.type='button';b.className='cv-gcart';b.setAttribute('data-gcart',empty?'empty':'foot');
+    b.innerHTML=empty?'🎁 <span>¿Es para alguien? <b>Regala una Tarjeta Regalo</b></span>':'🎁 <span>¿No sabes su talla? <b>Regala una Tarjeta Regalo</b></span>';return b;}
+  function paint(){
+    var ok=on();
+    var foot=document.querySelector('.cart-foot .cart-mini-note'),f=document.querySelector('[data-gcart="foot"]');
+    if(ok&&foot&&!f)foot.parentNode.insertBefore(btn(false),foot.nextSibling);else if(!ok&&f)f.remove();
+    var em=document.querySelector('#cartItems .cart-empty > div'),e=document.querySelector('[data-gcart="empty"]');
+    if(ok&&em&&!e)em.appendChild(btn(true));
+  }
+  document.addEventListener('click',function(ev){var t=ev.target.closest&&ev.target.closest('[data-gcart]');if(!t)return;
+    try{if(window.cvStatsPush)cvStatsPush({t:'k',k:'regalo_desde_carrito',l:t.getAttribute('data-gcart')});}catch(e){}
+    try{if(typeof closeCart==='function')closeCart();}catch(e){}setTimeout(function(){window.openGift('buy');},250);});
+  var it=document.getElementById('cartItems');if(it&&window.MutationObserver)new MutationObserver(paint).observe(it,{childList:true});
+  ['navGift','mobileGift'].forEach(function(id){var n=document.getElementById(id);if(n&&window.MutationObserver)new MutationObserver(paint).observe(n,{attributes:true,attributeFilter:['hidden']});});
+  paint();setTimeout(paint,2500);
+})();
+</script>
 </body>
 </html>
