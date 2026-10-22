@@ -1196,7 +1196,18 @@ function hoyPaint(){
   $("hyChips").onclick=e=>{const b=e.target.closest("button");if(b)hoyAsk(b.textContent.replace(/^\S+\s/,""));};
   v.querySelector(".hy-todo").onclick=e=>{const b=e.target.closest("[data-go]");if(!b)return;const go=b.dataset.go;
     if(go==="breb"||go==="abandonado"){ordStatus=go;showTab("pedidos");loadOrders();}else showTab(go);};
-  hoyNotifyCard(v);
+  hoyNotifyCard(v); hoyShieldCard(v);
+}
+// v76: Escudo CANEVA status (blocked attempts by country)
+const CC_FLAG=c=>/^[A-Z]{2}$/.test(c)?String.fromCodePoint(...[...c].map(x=>127397+x.charCodeAt(0))):"🌐";
+async function hoyShieldCard(v){
+  let c=document.getElementById("hyShield"); if(!c){c=document.createElement("div");c.id="hyShield";c.style.cssText="margin:10px 0 8px;padding:14px;border-radius:16px;border:1px solid rgba(207,230,255,.3);background:linear-gradient(135deg,rgba(159,211,255,.06),rgba(201,167,255,.06))";}
+  v.appendChild(c);
+  let d=null; try{d=await adminFetch("/admin/shield");}catch(e){ c.innerHTML=`<b>🛡️ Escudo CANEVA</b><div style="font-size:12px;opacity:.75;margin-top:4px">Actualiza el Worker a la v76 para activarlo.</div>`; return; }
+  const top=Object.entries(d.byCountry||{}).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([k,n])=>`<span class="tag">${CC_FLAG(k)} ${esc(k==="T1"?"Tor":k)} · ${n}</span>`).join(" ");
+  const last=(d.list||[]).slice(0,4).map(x=>`<div style="font-size:12px;opacity:.8;margin-top:3px">${CC_FLAG(x.country||"")} ${esc(x.city||x.country||"")} · ${esc(x.why||"")} · <small>${esc(when(x.at))}</small></div>`).join("");
+  c.innerHTML=`<div style="display:flex;align-items:center;gap:10px"><span style="font-size:22px">🛡️</span><div style="flex:1"><b>Escudo CANEVA ${d.on?"activo":"apagado"}</b><div style="font-size:12px;opacity:.8">${d.total?`<b>${d.total}</b> intentos bloqueados`:"Sin intentos bloqueados todavía"} · comprar, pagar y la IA solo desde Colombia y ${Math.max(0,(d.countries||[]).length-1)} países más</div></div></div>${top?`<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px">${top}</div>`:""}${last}
+  <div style="font-size:11px;opacity:.6;margin-top:8px">Ver la tienda sigue abierto para todos (Google, Meta). El admin se bloquea 1 hora tras 8 claves incorrectas y te avisa.</div>`;
 }
 // v73: notices on Mayra's phone (WhatsApp via CallMeBot and/or Telegram) with a test button
 async function hoyNotifyCard(v){
