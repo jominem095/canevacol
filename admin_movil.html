@@ -368,6 +368,7 @@ main{padding:14px 16px 120px}
     <div id="venView" class="hidden"><div id="venBody"></div></div>
     <div id="prodView">
     <button id="portadaInfo" class="promo" type="button"></button>
+    <button id="intlInfo" class="promo" type="button">🌎 <b>Ventas internacionales</b> — % extra y envío por zona<span class="go">Editar ›</span></button>
     <button id="aboutInfo" class="promo" type="button">📖 <b>Nosotros</b> — la historia de CΛNEVΛ en la tienda<span class="go">Editar ›</span></button>
     <div class="hrow" style="margin:0 0 10px">
       <p id="countLine" class="muted" style="font-size:12px;margin:0"></p>
@@ -494,6 +495,23 @@ main{padding:14px 16px 120px}
     <input id="aFile" type="file" accept="image/*" class="hidden"></div>
   <button class="btn" id="aSave">Guardar Nosotros</button>
   <button class="btn ghost" id="aCancel">Cancelar</button>
+</section>
+
+<div id="iSheetBg" class="sheet-bg hidden"></div>
+<section id="iSheet" class="sheet hidden">
+  <div class="grab"></div>
+  <h2 class="ptitle">🌎 Ventas internacionales</h2>
+  <p class="muted" style="font-size:13px;margin:0">Quien compra desde afuera ve los precios en la moneda de su país. Paga con tarjeta (Bold) en pesos colombianos y su banco convierte. Si elige enviar a Colombia, paga el precio nacional.</p>
+  <label class="checkrow"><input type="checkbox" id="iEnabled"><span><b>Vender fuera de Colombia.</b></span></label>
+  <div class="field"><label>% extra sobre cada prenda (precio internacional)</label><input id="iPct" type="number" inputmode="numeric" min="0" max="300" step="1"></div>
+  <div class="field"><label>Envío internacional por pedido (en pesos colombianos)</label>
+    <div class="row2"><div class="field"><label>🇺🇸 EE. UU. y Canadá</label><input id="iNA" type="number" inputmode="numeric"></div><div class="field"><label>🌴 México, Centroamérica y Caribe</label><input id="iCA" type="number" inputmode="numeric"></div></div>
+    <div class="row2"><div class="field"><label>🌎 Suramérica</label><input id="iSA" type="number" inputmode="numeric"></div><div class="field"><label>🇪🇺 Europa</label><input id="iEU" type="number" inputmode="numeric"></div></div>
+    <div class="field"><label>🌐 Otros (Australia)</label><input id="iOT" type="number" inputmode="numeric"></div></div>
+  <div class="field"><label>Nota para la clienta (opcional)</label><input id="iNote" type="text" maxlength="200" placeholder="Ej: Enviamos con DHL en 5 a 8 días hábiles."></div>
+  <div id="iPreview" class="obold" style="margin:6px 0 10px"></div>
+  <button class="btn" id="iSave">Guardar</button>
+  <button class="btn ghost" id="iCancel">Cancelar</button>
 </section>
 
 <!-- Home lookbook editor -->
@@ -739,6 +757,25 @@ function paintAboutPhoto(){ const src=about.preview||about.image;
   $("aPhoto").innerHTML=(src?`<img src="${esc(src)}" alt="" style="width:90px;height:110px;object-fit:cover;border-radius:10px;border:1px solid var(--b)">`:`<div style="width:90px;height:110px;border-radius:10px;border:1px dashed var(--b);display:flex;align-items:center;justify-content:center;font-size:30px">💎</div>`)+
     `<button type="button" class="iconbtn" id="aPick">${src?"Cambiar foto":"Subir foto"}</button>${src?`<button type="button" class="iconbtn" id="aDrop">Quitar foto</button>`:""}`;
   $("aPick").onclick=()=>$("aFile").click(); const d=$("aDrop"); if(d) d.onclick=()=>{about.image="";about.file=null;about.preview="";paintAboutPhoto();}; }
+// v77: international sales settings (markup % + shipping per zone)
+const INTL_DEF={markupPct:40,ship:{NA:160000,CA:150000,SA:140000,EU:200000,OT:250000}};
+function intlPreview(){const pct=+$("iPct").value||0,base=150000,extra=Math.round(base*pct/100),ship=+$("iNA").value||0;
+  $("iPreview").innerHTML=`Ejemplo · una prenda de <b>${money(base)}</b> a Miami: ${money(base)} + ${pct}% (${money(extra)}) + envío ${money(ship)} = <b>${money(base+extra+ship)}</b><br><small>Ganas ${money(extra)} extra por prenda para cubrir la comisión de tarjeta internacional, empaque, el viaje a la transportadora y el riesgo del cambio.</small>`;}
+async function openIntl(){
+  busy(true,"Cargando…"); try{ siteConfig=await fetchConfig(); }catch(e){ busy(false); toast(e.message,{err:true,ms:9000}); return; } busy(false);
+  const i=siteConfig.intl||{}, sh={...INTL_DEF.ship,...(i.ship||{})};
+  $("iEnabled").checked=i.enabled!==false; $("iPct").value=Number.isFinite(i.markupPct)?i.markupPct:INTL_DEF.markupPct;
+  ["NA","CA","SA","EU","OT"].forEach(z=>$("i"+z).value=sh[z]); $("iNote").value=i.note||"";
+  intlPreview(); $("iSheet").classList.remove("hidden"); $("iSheetBg").classList.remove("hidden");
+}
+function closeIntl(){ $("iSheet").classList.add("hidden"); $("iSheetBg").classList.add("hidden"); }
+async function saveIntl(){
+  const ship={}; ["NA","CA","SA","EU","OT"].forEach(z=>ship[z]=Math.max(0,parseInt($("i"+z).value,10)||0));
+  const cfg={...(siteConfig||{}), intl:{enabled:$("iEnabled").checked, markupPct:Math.max(0,Math.min(300,parseInt($("iPct").value,10)||0)), ship, note:$("iNote").value.trim()}};
+  busy(true,"Guardando…");
+  try{ const d=await adminFetch("/admin/config",{method:"POST",body:cfg}); siteConfig=d.config||cfg; busy(false); closeIntl(); toast(cfg.intl.enabled?`🌎 Ventas internacionales: +${cfg.intl.markupPct}% ✓`:"Ventas internacionales apagadas"); }
+  catch(e){ busy(false); toast("Error: "+e.message,{err:true,ms:9000}); }
+}
 async function openAbout(){
   busy(true,"Cargando…"); try{ siteConfig=await fetchConfig(); }catch(e){ busy(false); toast(e.message,{err:true,ms:9000}); return; } busy(false);
   const a=siteConfig.about||{};
@@ -1447,7 +1484,7 @@ function orderCard(o){
   const paid=o.status==="pagado"?`<div class="ocli">🧾 Recibo <b>${esc(o.ticket)}</b>${o.points?(u?` · +${o.points} pts`:` · ${o.points} pts guardados`):""} · ${o.emailSentAt?"correo enviado ✓":(o.receiptEmail?"correo no enviado":"sin correo")}</div>`:"";
   // Delivery details typed at checkout (name, ID, phone, e-mail, address)
   const dv=o.delivery||null, dph=dv&&dv.phone?String(dv.phone).replace(/[^\d]/g,""):"";
-  const dlv=dv&&(dv.name||dv.address)?`<div class="ocli" style="line-height:1.55">📦 <b>${esc(dv.name||"")}</b>${dv.doc?` · CC ${esc(dv.doc)}`:""}${dph?` · <a href="https://wa.me/${dph.length===10?"57"+dph:dph}" target="_blank" rel="noopener">${esc(dv.phone)}</a>`:""}${dv.email?` · ${esc(dv.email)}`:""}<br>📍 ${esc([dv.address,dv.barrio,dv.city].filter(Boolean).join(", "))}${dv.notes?`<br>📝 ${esc(dv.notes)}`:""}</div>`:"";
+  const dlv=dv&&(dv.name||dv.address)?`<div class="ocli" style="line-height:1.55">📦 <b>${esc(dv.name||"")}</b>${dv.doc?` · ${dv.country?"Doc.":"CC"} ${esc(dv.doc)}`:""}${dph?` · <a href="https://wa.me/${dph.length===10?"57"+dph:dph}" target="_blank" rel="noopener">${esc(dv.phone)}</a>`:""}${dv.email?` · ${esc(dv.email)}`:""}<br>📍 ${esc([dv.address,dv.barrio,dv.city].filter(Boolean).join(", "))}${dv.zip?` · CP ${esc(dv.zip)}`:""}${dv.notes?`<br>📝 ${esc(dv.notes)}`:""}${dv.intl?`<br><span class="tag" style="background:linear-gradient(120deg,#cfe6ff,#fff,#e6dcff);color:#050505">🌎 Internacional · ${esc(dv.intl.country||dv.country||"")}</span> <small>+${dv.intl.markupPct}% (${money(dv.intl.extra)}) · envío ${money(dv.intl.ship)} · total ${money(dv.intl.total)}</small>`:""}</div>`:"";
   const age=Math.floor((Date.now()-Date.parse(o.createdAt))/36e5);
   const via=o.bucket==="pasarela"?`<span class="obadge pas">💳 Pagado en línea con Bold</span>`
     :o.bucket==="otro_medio"?`<span class="obadge ok">✅ Pagó por ${esc(o.paidViaLabel||VIA[o.paidVia]||"otro medio")}</span>`
@@ -1745,6 +1782,7 @@ $("fInvBtn").onclick=()=>{ const pid=$("fInvBtn").dataset.pid; closeEditor(); cu
   CanevaPro.mount($("invBody"),"inventario",proOpts()).then(()=>CanevaPro.openItem(pid)); };
 $("renameCatBtn").onclick=renameCategory;
 $("portadaInfo").onclick=openPortada;
+$("intlInfo").onclick=openIntl; $("iCancel").onclick=closeIntl; $("iSheetBg").onclick=closeIntl; $("iSave").onclick=saveIntl; ["iPct","iNA"].forEach(id=>$(id).oninput=intlPreview);
 $("aboutInfo").onclick=openAbout; $("aCancel").onclick=closeAbout; $("aSheetBg").onclick=closeAbout; $("aSave").onclick=saveAbout;
 $("aFile").onchange=e=>{ const f=e.target.files&&e.target.files[0]; if(!f) return; about.file=new File([f],"nosotros-"+Date.now()+"."+((f.name.split(".").pop()||"jpg").toLowerCase()),{type:f.type}); about.preview=URL.createObjectURL(f); paintAboutPhoto(); e.target.value=""; };
 $("tabs").onclick=e=>{ const b=e.target.closest("button[data-tab]"); if(b) showTab(b.dataset.tab); };
