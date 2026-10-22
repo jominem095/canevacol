@@ -1203,9 +1203,10 @@ async function hoyNotifyCard(v){
   v.appendChild(c);
   let st=null; try{st=await adminFetch("/admin/notify-status");}catch(e){}
   const wa=st&&st.whatsapp&&st.whatsapp.length, tg=st&&st.telegram;
-  c.innerHTML=`<div style="display:flex;align-items:center;gap:10px"><span style="font-size:22px">📲</span><div style="flex:1"><b>Avisos a tu celular</b><div style="font-size:12px;opacity:.8">${!st?"Actualiza el Worker para verlos":[st.push?"✅ Notificaciones push (ntfy)":"",wa?`✅ WhatsApp (${st.whatsapp.join(", ")})`:"",tg?`✅ Telegram (${tg})`:""].filter(Boolean).join(" · ")||"⚠️ Aún no hay avisos activos"}</div></div><button type="button" id="hyNotifyTest" style="border:0;border-radius:999px;padding:9px 14px;background:#25d366;color:#04140a;font-weight:700">Probar</button></div>
+  c.innerHTML=`<div style="display:flex;align-items:center;gap:10px"><span style="font-size:22px">📲</span><div style="flex:1"><b>Avisos a tu celular</b><div style="font-size:12px;opacity:.8">${!st?"Actualiza el Worker para verlos":[st.app&&st.app.length?`✅ Caneva Admin (${st.app.length===1?st.app[0]:st.app.length+" celulares"})`:"",st.push?"✅ ntfy":"",wa?`✅ WhatsApp (${st.whatsapp.join(", ")})`:"",tg?`✅ Telegram (${tg})`:""].filter(Boolean).join(" · ")||"⚠️ Aún no hay avisos activos"}</div></div><button type="button" id="hyNotifyTest" style="border:0;border-radius:999px;padding:9px 14px;background:#25d366;color:#04140a;font-weight:700">Probar</button></div>
   <div style="font-size:12px;opacity:.75;margin-top:8px">Te llega un mensaje con cada pedido nuevo, cuando alguien dice "Ya pagué" por Bre-B, pagos de Bold y tarjetas regalo.</div><div id="hyNotifyMsg" style="font-size:12px;margin-top:6px"></div>${window.cvBadgeRow?cvBadgeRow():""}`;
-  $("hyNotifyTest").onclick=async()=>{const m=$("hyNotifyMsg");m.textContent="Enviando prueba…";
+  const tb=c.querySelector("#hyNotifyTest"); if(!tb) return;
+  tb.onclick=async()=>{const m=c.querySelector("#hyNotifyMsg");m.textContent="Enviando prueba…";
     try{const d=await adminFetch("/admin/notify-test",{method:"POST",body:{}});m.textContent=d.skipped?("⚠️ "+d.skipped):((d.sent||[]).join(" · ")||"Enviado");}catch(e){m.textContent="⚠️ "+e.message;}};
 }
 function hoyLog(){const l=$("hyLog");if(!l)return;
@@ -1804,16 +1805,42 @@ token()?showList():showLogin();
   setInterval(()=>{if(!document.hidden)refresh();},120000);
   document.addEventListener("visibilitychange",()=>{if(!document.hidden)refresh();});
   setTimeout(apply,4000);
-  // switch inside the "Avisos a tu celular" card (Hoy tab)
-  window.cvBadgeRow=function(){
-    if(!can())return `<div style="font-size:12px;opacity:.75;margin-top:8px">🔴 El número en el ícono funciona con la app instalada en la pantalla de inicio (iPhone con iOS 16.4 o más nuevo).</div>`;
-    const ok=window.Notification&&Notification.permission==="granted";
-    return ok?`<div style="font-size:12px;margin-top:8px">🔴 Número en el ícono: <b>activo</b> (${total()||0} pendientes)</div>`
-      :`<button type="button" id="cvBadgeOn" style="margin-top:10px;width:100%;border:1px solid rgba(255,59,48,.6);border-radius:999px;padding:10px;background:rgba(255,59,48,.12);color:#fff;font-weight:700">🔴 Activar el número en el ícono de la app</button>`;
-  };
-  document.addEventListener("click",async e=>{const b=e.target.closest&&e.target.closest("#cvBadgeOn");if(!b)return;
-    try{const r=await Notification.requestPermission();if(r==="granted"){last=-1;apply();b.outerHTML=`<div style="font-size:12px;margin-top:8px">🔴 Número en el ícono: <b>activo</b> (${total()||0} pendientes). Ciérrala y mira el ícono.</div>`;}
-      else b.textContent="No se dio el permiso. Actívalo en Ajustes → Notificaciones → Caneva Admin";}catch(err){b.textContent="Este celular no lo permite";}});
+  // v74: notifications of the Caneva Admin app itself (Web Push) + the red number, inside the "Avisos a tu celular" card
+  const swOk="serviceWorker" in navigator&&"PushManager" in window&&"Notification" in window;
+  const swReg=swOk?navigator.serviceWorker.register("admin-sw.js",{scope:"admin_movil.html"}).catch(()=>null):Promise.resolve(null);
+  if("serviceWorker" in navigator)navigator.serviceWorker.addEventListener("message",e=>{if(e.data&&e.data.cv==="refresh"){refresh();try{if(currentTab==="hoy")loadHoy(true);}catch(x){}}});
+  const keyU8=k=>{const t=k.replace(/-/g,"+").replace(/_/g,"/");const b=atob(t+"===".slice((t.length+3)%4));return Uint8Array.from(b,c=>c.charCodeAt(0));};
+  const dev=()=>/iphone/i.test(navigator.userAgent)?"iPhone":/ipad/i.test(navigator.userAgent)?"iPad":/android/i.test(navigator.userAgent)?"Android":"Computador";
+  const okRow=()=>`<div style="font-size:12px;margin-top:10px;line-height:1.6">🔔 Notificaciones de Caneva Admin: <b>activas en este ${dev()}</b><br>🔴 Número en el ícono: <b>activo</b> (${total()||0} pendientes)</div>`;
+  async function subscribe(){
+    const reg=await swReg; if(!reg) throw new Error("No se pudo preparar la app. Ábrela desde el ícono de inicio.");
+    await navigator.serviceWorker.ready;
+    const k=await adminFetch("/admin/push/key");
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub) sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:keyU8(k.publicKey)});
+    await adminFetch("/admin/push/subscribe",{method:"POST",body:{sub:sub.toJSON(),device:dev()}});
+    return sub;
+  }
+  async function fill(){
+    const el=document.getElementById("cvPushRow"); if(!el) return;
+    if(!swOk){el.innerHTML=`<div style="font-size:12px;opacity:.8;margin-top:10px">🔔 Para recibir notificaciones, abre <b>Caneva Admin</b> desde el ícono de la pantalla de inicio (iPhone con iOS 16.4 o más nuevo).</div>`;return;}
+    let sub=null; try{const reg=await swReg; sub=reg&&await reg.pushManager.getSubscription();}catch(e){}
+    if(sub&&Notification.permission==="granted"){el.innerHTML=okRow();try{await adminFetch("/admin/push/subscribe",{method:"POST",body:{sub:sub.toJSON(),device:dev()}});}catch(e){}return;}
+    el.innerHTML=Notification.permission==="denied"
+      ?`<div style="font-size:12px;margin-top:10px">🔕 Las notificaciones están bloqueadas. Actívalas en <b>Ajustes → Notificaciones → Caneva Admin</b> y vuelve a abrir la app.</div>`
+      :`<button type="button" id="cvPushOn" style="margin-top:10px;width:100%;border:0;border-radius:999px;padding:12px;background:linear-gradient(120deg,#cfd6db,#ffffff 45%,#e8eef2 60%,#c3ccd2);color:#050505;font-weight:800">🔔 Activar notificaciones de Caneva Admin</button><div style="font-size:11px;opacity:.7;margin-top:6px;text-align:center">Te suena con cada pedido y pone el número rojo en el ícono, aunque la app esté cerrada.</div>`;
+  }
+  window.cvBadgeRow=function(){setTimeout(fill,0);return `<div id="cvPushRow"></div>`;};
+  document.addEventListener("click",async e=>{const b=e.target.closest&&e.target.closest("#cvPushOn");if(!b)return;
+    b.disabled=true;b.textContent="Activando…";
+    try{
+      const r=await Notification.requestPermission(); // first, while the tap is fresh (iPhone requires it)
+      if(r!=="granted"){b.disabled=false;b.textContent="No se dio el permiso. Toca de nuevo o revisa Ajustes → Notificaciones";return;}
+      await subscribe(); last=-1; apply();
+      const v=document.getElementById("hoyView"); if(v&&typeof hoyNotifyCard==="function") await hoyNotifyCard(v);
+      const el=document.getElementById("cvPushRow"); if(el) setTimeout(()=>{el.insertAdjacentHTML("beforeend",`<div style="font-size:12px;margin-top:6px">Toca <b>Probar</b> para ver cómo te llega 👆</div>`);},600);
+    }catch(err){b.disabled=false;b.textContent="⚠️ "+(err&&err.message||"No se pudo activar")+" · Toca para reintentar";}
+  });
 })();
 </script>
 </body>
