@@ -323,6 +323,7 @@ main{padding:14px 16px 120px}
     </div>
     <div class="tabs" id="tabs">
       <button type="button" data-tab="hoy" class="t-hoy">✨ Hoy</button>
+      <button type="button" data-tab="respuestas">💬 Respuestas</button>
       <button type="button" data-tab="pedidos">📦 Pedidos<b id="pendCount"></b></button>
       <button type="button" data-tab="ventas">💵 Ventas</button>
       <button type="button" data-tab="productos" class="on">👗 Productos</button>
@@ -366,6 +367,7 @@ main{padding:14px 16px 120px}
     <div id="colView" class="hidden"><div id="colBody"></div></div>
     <div id="lnkView" class="hidden"><div id="lnkBody"></div></div>
     <div id="venView" class="hidden"><div id="venBody"></div></div>
+    <div id="rsView" class="hidden"><div id="rsBody"></div></div>
     <div id="prodView">
     <button id="portadaInfo" class="promo" type="button"></button>
     <button id="intlInfo" class="promo" type="button">🌎 <b>Ventas internacionales</b> — % extra y envío por zona<span class="go">Editar ›</span></button>
@@ -573,6 +575,7 @@ main{padding:14px 16px 120px}
 <script src="admin_colores.js?v=2"></script>
 <script src="admin_ventas.js?v=14"></script>
 <script src="admin_wa.js?v=1"></script>
+<script src="admin_respuestas.js?v=1"></script>
 <script>
 // Mobile admin for Caneva: edits the live catalog (Worker /catalog) and republishes via /admin/catalog.
 // Uses the same Worker endpoints and product shape as admin.html, so no Worker changes are needed.
@@ -1386,6 +1389,7 @@ function showTab(t){
   if(t==="colores") CanevaColores.mount($("colBody"),{api:API_BASE,token:token});
   if(t==="enlaces") CanevaPro.mount($("lnkBody"),"enlaces",proOpts());
   if(t==="ventas") CanevaVentas.mount($("venBody"),{api:API_BASE,token:token});
+  $("rsView").classList.toggle("hidden",t!=="respuestas"); if(t==="respuestas"&&window.CanevaRespuestas&&!$("rsBody").firstChild) CanevaRespuestas.mount($("rsBody"),{api:API_BASE,token:token,products:()=>products});
   if(t==="inventario") CanevaPro.mount($("invBody"),"inventario",proOpts());
   if(t==="reportes") CanevaPro.mount($("repBody"),"reportes",proOpts());
   requestAnimationFrame(()=>document.documentElement.style.setProperty("--hdr",document.querySelector("#listView header").offsetHeight+"px"));
