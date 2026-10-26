@@ -7571,5 +7571,66 @@ body.product-open .cv-wel{display:none!important}
   document.addEventListener('click',function(){setTimeout(fixCart,30);},true);
 })();
 </script>
+<style id="cvseo-css">
+/* v91: catalog index and questions in the footer (real links Google can follow) */
+.cvseo{max-width:1100px;margin:3.2rem auto 0;padding-top:2rem;border-top:1px solid rgba(247,247,244,.08);color:rgba(247,247,244,.55);font-size:.78rem;line-height:1.7}
+.cvseo h2{font:500 .72rem/1 'Montserrat',sans-serif;letter-spacing:.24em;text-transform:uppercase;color:rgba(247,247,244,.75);margin:0 0 1rem}
+.cvseo-cols{columns:4 180px;column-gap:2rem}.cvseo-cat{break-inside:avoid;margin:0 0 1.1rem}.cvseo-cat b{display:block;color:#e6cf9f;font-weight:600;font-size:.74rem;letter-spacing:.08em;margin-bottom:.3rem}
+.cvseo a{display:block;color:rgba(247,247,244,.55);text-decoration:none}.cvseo a:hover{color:#f7f7f4}
+.cvseo details{border-bottom:1px solid rgba(247,247,244,.07);padding:.65rem 0}.cvseo summary{cursor:pointer;color:rgba(247,247,244,.8);list-style:none}.cvseo summary::-webkit-details-marker{display:none}.cvseo summary:before{content:'+ ';color:#e6cf9f}.cvseo details[open] summary:before{content:'– '}.cvseo details p{margin:.4rem 0 0}
+.cvseo-faq{margin-top:1.6rem}
+</style>
+<script id="cvseo">
+// v91: the page explains itself to search engines (no Google account needed)
+// - each garment gets its own title, description, canonical address and Product data (price, stock, photos) when it opens
+// - the home page lists the catalog (ItemList) and real questions (FAQPage)
+// - the footer has a real link to every garment, so crawlers can reach all of them
+(function(){
+  var SITE='https://canevacol.com';
+  function q(s){return document.querySelector(s);}
+  function meta(sel,attr,name){var m=q(sel);if(!m){m=document.createElement(name==='link'?'link':'meta');if(name==='link')m.rel='canonical';else m.setAttribute(attr,sel.match(/"(.+)"/)[1]);document.head.appendChild(m);}return m;}
+  var M={d:meta('meta[name="description"]','name'),c:meta('link[rel="canonical"]','rel','link'),ot:meta('meta[property="og:title"]','property'),od:meta('meta[property="og:description"]','property'),oi:meta('meta[property="og:image"]','property'),ou:meta('meta[property="og:url"]','property')};
+  var BASE={t:document.title,d:M.d.content,c:M.c.href||SITE+'/',ot:M.ot.content,od:M.od.content,oi:M.oi.content,ou:M.ou.content||SITE+'/'};
+  function ld(id,obj){var s=document.getElementById(id);if(!obj){if(s)s.remove();return;}if(!s){s=document.createElement('script');s.type='application/ld+json';s.id=id;document.head.appendChild(s);}s.textContent=JSON.stringify(obj);}
+  function slug(p){return typeof productSlug==='function'?productSlug(p):'';}
+  function url(p){return SITE+'/?p='+encodeURIComponent(slug(p));}
+  function price(p){return String(p.precio||'').replace(/[^\d]/g,'');}
+  function cat(p){return String(p.categoria||'').replace(' / ',' · ');}
+  function imgs(p){return [p.imagen].concat(String(p.imagenesExtra||'').split(/[,\n]/)).map(function(x){return String(x||'').trim();}).filter(function(x){return x.indexOf('http')===0;}).slice(0,6);}
+  function stockOut(p){try{return typeof invTotalSite==='function'&&invTotalSite(p)===0;}catch(e){return false;}}
+  function desc(p){var d=String(p.descripcion||'').trim();if(!d||d===p.tallas||!/[a-záéíóúñ]{4,}/i.test(d))d='';
+    return (d?d.replace(/[.!¡?\s]+$/,'')+'. ':'')+p.nombre+' de CΛNEVΛ, moda femenina en Barranquilla. '+(p.precio?'Precio '+p.precio+'. ':'')+(p.tallas?'Tallas '+p.tallas+'. ':'')+'Envíos a toda Colombia y al exterior.';}
+  function setP(p){
+    var t=p.nombre+' · '+cat(p)+(p.precio?' · '+p.precio:'')+' | CΛNEVΛ Barranquilla',d=desc(p).slice(0,300),u=url(p),im=imgs(p);
+    document.title=t;M.d.content=d;M.c.href=u;M.ot.content=t;M.od.content=d;M.ou.content=u;if(im[0])M.oi.content=im[0];
+    var pr=price(p);
+    ld('cvLdProduct',{"@context":"https://schema.org","@type":"Product",name:p.nombre,description:d,image:im,sku:p.id||slug(p),category:p.categoria,brand:{"@type":"Brand",name:"CΛNEVΛ"},url:u,
+      offers:pr?{"@type":"Offer",url:u,priceCurrency:"COP",price:pr,itemCondition:"https://schema.org/NewCondition",availability:"https://schema.org/"+(stockOut(p)?"OutOfStock":"InStock"),seller:{"@type":"Organization",name:"CΛNEVΛ"}}:undefined});}
+  function reset(){document.title=BASE.t;M.d.content=BASE.d;M.c.href=BASE.c;M.ot.content=BASE.ot;M.od.content=BASE.od;M.oi.content=BASE.oi;M.ou.content=BASE.ou;ld('cvLdProduct',null);}
+  if(typeof openProductModal==='function'){var oOpen=openProductModal;window.openProductModal=openProductModal=function(i){var r=oOpen.apply(this,arguments);try{if(P[i])setP(P[i]);}catch(e){}return r;};}
+  if(typeof closeProductModal==='function'){var oClose=closeProductModal;window.closeProductModal=closeProductModal=function(){var r=oClose.apply(this,arguments);try{reset();}catch(e){}return r;};}
+  var FAQ=[
+    ['¿Hacen envíos a toda Colombia?','Sí. Enviamos a toda Colombia y también al exterior (Estados Unidos, Centroamérica, el Caribe, Suramérica y Europa). Al pedir eliges tu ciudad o país y ves el envío.'],
+    ['¿Tienen pago contraentrega?','Sí, en Barranquilla puedes pagar al recibir. Para otras ciudades el pago se hace antes, con Bre-B (llave @caneva119), Bold (tarjeta, PSE o Nequi) o transferencia.'],
+    ['¿Cómo sé mi talla?','Cada prenda muestra sus tallas disponibles. Si tienes dudas, Caneva AI o nuestro WhatsApp te asesoran según tus medidas.'],
+    ['¿Puedo cambiar la talla si no me queda?','Sí. Si la talla no te queda, te la cambiamos. Escríbenos por WhatsApp.'],
+    ['¿Dónde está CΛNEVΛ?','Somos una marca de moda femenina de Barranquilla, Atlántico. Compras por la página o por WhatsApp al +57 305 763 7089.']];
+  function home(){
+    var L=(typeof catalogProducts==='function'?catalogProducts():P).filter(function(p){return p&&p.nombre;});
+    ld('cvLdList',{"@context":"https://schema.org","@type":"ItemList",name:"Catálogo CΛNEVΛ",numberOfItems:L.length,itemListElement:L.slice(0,80).map(function(p,i){return {"@type":"ListItem",position:i+1,url:url(p),name:p.nombre};})});
+    ld('cvLdFaq',{"@context":"https://schema.org","@type":"FAQPage",mainEntity:FAQ.map(function(f){return {"@type":"Question",name:f[0],acceptedAnswer:{"@type":"Answer",text:f[1]}};})});
+    var foot=document.getElementById('contacto');if(!foot)return;var box=document.getElementById('cvSeo');
+    if(!box){box=document.createElement('div');box.setAttribute('role','navigation');box.id='cvSeo';box.className='cvseo';box.setAttribute('aria-label','Catálogo y preguntas');var fb=foot.querySelector('.fbot');foot.insertBefore(box,fb||null);}
+    var by={};L.forEach(function(p){var c=cat(p)||'Colección';(by[c]=by[c]||[]).push(p);});
+    box.innerHTML='<h2>Catálogo CΛNEVΛ · Barranquilla</h2><div class="cvseo-cols">'+Object.keys(by).map(function(c){return '<div class="cvseo-cat"><b>'+esc(c)+'</b>'+by[c].map(function(p){return '<a href="/?p='+esc(encodeURIComponent(slug(p)))+'" data-cvseo="'+esc(p.nombre)+'">'+esc(p.nombre)+(p.precio?' · '+esc(p.precio):'')+'</a>';}).join('')+'</div>';}).join('')+'</div>'+
+      '<div class="cvseo-faq"><h2>Preguntas frecuentes</h2>'+FAQ.map(function(f){return '<details><summary>'+esc(f[0])+'</summary><p>'+esc(f[1])+'</p></details>';}).join('')+'</div>';
+  }
+  function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  // a click on a footer link opens the garment right here (the link is for search engines and for opening in a new tab)
+  document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('[data-cvseo]');if(!a||e.ctrlKey||e.metaKey||e.shiftKey)return;var i=P.findIndex(function(p){return p.nombre===a.dataset.cvseo;});if(i<0)return;e.preventDefault();openProductModal(i);});
+  try{home();}catch(e){}
+  addEventListener('cv:catalog',function(){try{home();}catch(e){}});
+})();
+</script>
 </body>
 </html>
