@@ -4292,7 +4292,7 @@ body.cv-on .bw-inner{min-width:0;max-width:100%}body.cv-on .bw-inner>*{min-width
     var ci=window.clubInfo&&clubInfo();if(!ci||!ci.active||ci.user||window.clubToken&&clubToken())return false;
     return Date.now()>(parseInt(lsGet(WK),10)||0);
   }
-  function busy(){var b=document.body;return b.classList.contains('cart-open')||b.classList.contains('product-open')||document.documentElement.classList.contains('cv-intro-on')||document.querySelector('.pmodal.open,.club-ov.open,.ai-dock.open,#mm.o');}
+  function busy(){var b=document.body;return b.classList.contains('cart-open')||b.classList.contains('product-open')||document.documentElement.classList.contains('cv-intro-on')||document.querySelector('.pmodal.open,.club-ov.open,.ai-dock.open,#mm.o,#cvSave,#cvSheet,.cv-exit,#cvBPay,#cvqsOv');}
   function maybeWelcome(force){
     if(shown||!canWelcome())return;
     if(!force&&seen<1)return;
@@ -6651,7 +6651,7 @@ body.product-open .cv-wel{display:none!important}
       btn=bar.querySelector('button');pr=bar.querySelector('b');sm=bar.querySelector('small');
       btn.addEventListener('click',function(){
         var p=prod();if(!p)return;
-        if(needsSize(p)){var w=el('pmSizeWrap');if(w){w.classList.add('need');w.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(function(){w.classList.remove('need');},1600);}
+        if(needsSize(p)){var w=el('pmSizeWrap');if(w){w.classList.add('need');if(window.cvJumpTo)cvJumpTo(w);else w.scrollIntoView({block:'start'});setTimeout(function(){w.classList.remove('need');},1600);}
           push('buybar_talla');return;}
         push('buybar_agregar');var a=el('pmAddCart');if(a)a.click();setTimeout(paint,250);
       });
@@ -7295,6 +7295,173 @@ body.product-open .cv-wel{display:none!important}
     try{apply();}catch(e){}if(abroad())setTimeout(hello,2600);
     if(window.MutationObserver)new MutationObserver(function(ms){if(!abroad())return;for(var i=0;i<ms.length;i++){if(ms[i].addedNodes.length||ms[i].type==='characterData'){soon();return;}}}).observe(document.body,{childList:true,subtree:true,characterData:true});
   }).catch(function(){});
+})();
+</script>
+
+<style id="cvux-css">
+/* v88 CΛNEVΛ UX: quick add from the catalog, one invitation at a time, product photo that shrinks while reading,
+   "Elegir talla" that always lands on the sizes, compact currency pill. Honest copy only (no fake urgency). */
+.cvqa{position:absolute;right:8px;bottom:8px;z-index:4;width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.55);cursor:pointer;
+  background:radial-gradient(circle at 30% 25%,#fff,#e9edf0 45%,#c9d0d5);color:#050505;font:300 26px/1 'Cormorant Garamond',Georgia,serif;display:grid;place-items:center;
+  box-shadow:0 8px 22px rgba(0,0,0,.45),0 0 0 0 rgba(255,255,255,.5);transition:transform .2s;animation:cvqaPulse 3.2s ease-in-out infinite}
+.cvqa:hover{transform:scale(1.08)}.cvqa:active{transform:scale(.92)}
+.cvqa::after{content:"";position:absolute;inset:-1px;border-radius:50%;background:conic-gradient(from var(--qa,0deg),transparent 0 70%,rgba(255,255,255,.9) 80%,transparent 90%);-webkit-mask:radial-gradient(circle,transparent 62%,#000 64%);mask:radial-gradient(circle,transparent 62%,#000 64%);animation:cvqaSpin 4s linear infinite;pointer-events:none}
+@property --qa{syntax:'<angle>';initial-value:0deg;inherits:false}@keyframes cvqaSpin{to{--qa:360deg}}
+@keyframes cvqaPulse{0%,100%{box-shadow:0 8px 22px rgba(0,0,0,.45),0 0 0 0 rgba(255,255,255,.35)}50%{box-shadow:0 8px 22px rgba(0,0,0,.45),0 0 0 7px rgba(255,255,255,0)}}
+.cvqa.ok{background:#8ef0c8}
+@media(min-width:641px){.cvqa{bottom:auto;top:58px;width:38px;height:38px}}
+.cvqs-ov{position:fixed;inset:0;z-index:100020;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:flex-end;justify-content:center;animation:cvqsF .2s}
+@keyframes cvqsF{from{opacity:0}}
+.cvqs{width:min(480px,100%);border-radius:26px 26px 0 0;padding:16px 16px calc(18px + env(safe-area-inset-bottom));background:radial-gradient(500px 200px at 0% 0%,rgba(230,207,159,.14),transparent 60%),linear-gradient(180deg,#121110,#060504);border:1px solid rgba(230,207,159,.38);color:#f7f7f4;font-family:Inter,system-ui,sans-serif;animation:cvqsU .28s cubic-bezier(.2,.9,.3,1.2)}
+@media(min-width:760px){.cvqs-ov{align-items:center}.cvqs{border-radius:26px}}
+@keyframes cvqsU{from{transform:translateY(40px);opacity:.4}}
+.cvqs .hd{display:flex;gap:12px;align-items:center}.cvqs .hd img{width:68px;height:86px;border-radius:14px;object-fit:cover;background:#1b1b1f}.cvqs .hd b{display:block;font-family:'Cormorant Garamond',Georgia,serif;font-weight:400;font-size:24px;line-height:1.05}
+.cvqs .hd span{font-size:15px;font-weight:600;color:#e6cf9f}.cvqs .x{margin-left:auto;align-self:flex-start;width:34px;height:34px;border-radius:50%;border:1px solid rgba(247,247,244,.25);background:none;color:#fff;font-size:18px;cursor:pointer}
+.cvqs .lb{font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:rgba(247,247,244,.6);margin:16px 0 8px}
+.cvqs .sz{display:flex;flex-wrap:wrap;gap:8px}.cvqs .sz button{position:relative;min-width:58px;height:50px;padding:0 14px;border-radius:14px;border:1px solid rgba(247,247,244,.28);background:#0b0a09;color:#fff;font:700 15px Inter,sans-serif;cursor:pointer;transition:all .15s}
+.cvqs .sz button:hover{border-color:#e6cf9f}.cvqs .sz button:active{transform:scale(.94)}.cvqs .sz button.out{opacity:.35;text-decoration:line-through;cursor:not-allowed}
+.cvqs .sz button em{position:absolute;left:50%;bottom:-8px;transform:translateX(-50%);font-style:normal;font-size:9px;font-weight:800;white-space:nowrap;background:#e6cf9f;color:#050505;border-radius:999px;padding:1px 6px}
+.cvqs .alt{display:flex;gap:8px;margin-top:16px}.cvqs .alt button{flex:1;border-radius:999px;padding:12px;font:700 12.5px Inter,sans-serif;cursor:pointer;border:1px solid rgba(247,247,244,.25);background:none;color:#f7f7f4}
+.cvqs .alt .p{background:linear-gradient(120deg,#cfd6db,#fff 45%,#e8eef2);color:#050505;border:0}
+.cvqs .done{text-align:center;padding:6px 0 2px}.cvqs .done .ck{width:58px;height:58px;margin:4px auto 8px;border-radius:50%;display:grid;place-items:center;font-size:28px;background:#8ef0c8;color:#04140a;animation:cvqsPop .45s cubic-bezier(.2,.9,.3,1.4)}
+@keyframes cvqsPop{from{transform:scale(.3)}}
+.cvqs .done h4{margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-weight:400;font-size:26px}.cvqs .done p{margin:4px 0 0;font-size:13px;color:rgba(247,247,244,.75)}.cvqs .gift{margin-top:10px;padding:10px 12px;border-radius:14px;background:rgba(230,207,159,.12);border:1px solid rgba(230,207,159,.35);font-size:12.5px;color:#f4ead7}
+/* one invitation at a time: an invitation the shopper scrolled past becomes a small pill */
+.cvux-hide{display:none!important}
+#cvuxPill{position:fixed;left:12px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:1190;display:flex;align-items:center;gap:6px;border-radius:999px;padding:8px 13px 8px 9px;border:1px solid rgba(230,207,159,.55);
+  background:linear-gradient(120deg,rgba(18,16,12,.95),rgba(40,33,22,.95));color:#f4ead7;font:700 12px Inter,sans-serif;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,.5);animation:cvqsU .3s}
+#cvuxPill i{font-style:normal;font-size:16px;animation:cvclBob 2.4s ease-in-out infinite}
+@media(min-width:900px){#cvuxPill{bottom:24px}}
+/* currency pill: flag only once she scrolls (tap still opens the country menu) */
+.cvux-sc .cv-fxpill{font-size:0!important;padding:5px!important;gap:0!important;min-width:0!important}
+.cvux-sc .cv-fxpill img{margin:0!important}
+.cvux-sr{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+#pmSizeWrap.cvux-flash{animation:cvuxFlash 1.2s ease}
+@keyframes cvuxFlash{0%,100%{box-shadow:none}30%{box-shadow:0 0 0 2px #e6cf9f,0 0 30px rgba(230,207,159,.45)}}
+</style>
+<script id="cvux">
+(function(){
+  if(typeof P==='undefined'||typeof addToCartByIndex!=='function')return;
+  function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function push(k,l){try{if(window.cvStatsPush)cvStatsPush({t:'k',k:k,l:l||''});}catch(e){}}
+  var mobile=function(){return window.matchMedia('(max-width:640px)').matches;};
+
+  // ---------- 1. SEO: one real H1 (screen-reader only, design untouched) ----------
+  try{if(!document.querySelector('h1')){var h=document.createElement('h1');h.className='cvux-sr';h.textContent='CΛNEVΛ · Ropa para mujer en Barranquilla con envíos a toda Colombia';var s=document.getElementById('inicio')||document.body;s.insertBefore(h,s.firstChild);}}catch(e){}
+
+  // ---------- 2. "Elegir talla" always lands on the sizes (no smooth-scroll that can stall) ----------
+  window.cvJumpTo=function(el){
+    var sc=el.parentElement;while(sc&&!(sc.scrollHeight>sc.clientHeight+5&&/auto|scroll/.test(getComputedStyle(sc).overflowY)))sc=sc.parentElement;
+    if(sc){sc.scrollTop+=el.getBoundingClientRect().top-sc.getBoundingClientRect().top-12;}else el.scrollIntoView({block:'start'});
+    el.classList.remove('cvux-flash');void el.offsetWidth;el.classList.add('cvux-flash');
+    try{if(navigator.vibrate)navigator.vibrate(12);}catch(e){}
+  };
+
+  // ---------- 3. Product sheet on the phone: buy first, then the rest; the photo shrinks while she reads ----------
+  var ORDER=['pmColorWrap','pmSizeWrap','cvQty','.pm-actions','pmApartarNote','pmTryon','pmCartState','pmDesc','pmFabric','pmTags','cvAiPm','cvClubPdp','cvTrust2'];
+  function arrange(){
+    if(!mobile())return;var c=document.querySelector('#pmodal .pm-content');if(!c)return;
+    var anchor=document.getElementById('cvPPill')||document.getElementById('pmPrice');if(!anchor||anchor.parentNode!==c)return;
+    var ref=anchor;
+    ORDER.forEach(function(k){var n=k.charAt(0)==='.'?c.querySelector(k):document.getElementById(k);if(!n||n.parentNode!==c)return;if(ref.nextSibling!==n)c.insertBefore(n,ref.nextSibling);ref=n;});
+  }
+  var media=null,h0=0,raf=0;
+  function shrink(){raf=0;var c=document.querySelector('#pmodal .pm-content');if(!c||!media||!h0)return;
+    var h=Math.max(Math.round(h0*.42),Math.round(h0-c.scrollTop*.9));
+    media.style.setProperty('height',h+'px','important');media.style.setProperty('max-height',h+'px','important');media.style.setProperty('min-height','0px','important');
+    var sh=c.parentElement;if(sh){c.style.setProperty('height',(sh.clientHeight-h)+'px','important');}}
+  function setupShrink(){
+    media=document.getElementById('pmMedia');var c=document.querySelector('#pmodal .pm-content');if(!media||!c)return;
+    ['height','max-height','min-height'].forEach(function(p){media.style.removeProperty(p);});c.style.removeProperty('height');
+    if(!mobile()){h0=0;return;}
+    h0=media.getBoundingClientRect().height;media.style.transition='none';
+    if(!c.__cvux){c.__cvux=1;c.addEventListener('scroll',function(){if(!raf)raf=requestAnimationFrame(shrink);},{passive:true});}
+  }
+  var _o=window.openProductModal;
+  if(typeof _o==='function'){
+    window.openProductModal=openProductModal=function(){var r=_o.apply(this,arguments);
+      try{var c=document.querySelector('#pmodal .pm-content');if(c)c.scrollTop=0;setupShrink();arrange();setTimeout(arrange,160);setTimeout(arrange,700);setTimeout(arrange,1600);}catch(e){}return r;};
+  }
+
+  // ---------- 4. Quick add from the catalog card ----------
+  function sizeLeft(p,z){try{return typeof invQty==='function'?invQty(p,z):Infinity;}catch(e){return Infinity;}}
+  function low(){try{return typeof invCfg==='function'?invCfg().low:2;}catch(e){return 2;}}
+  function needsColor(p){try{return window.cvColorsOf&&cvColorsOf(p).length>=2;}catch(e){return false;}}
+  function freeShipText(){var b=document.getElementById('cvPBar');var t=b?b.textContent:'';return /2 prendas/i.test(t)&&/gratis/i.test(t);}
+  function bagQty(){return (window.CART||[]).reduce(function(a,x){return a+(Number(x.qty)||1);},0);}
+  function closeQS(){var o=document.getElementById('cvqsOv');if(o)o.remove();}
+  function quick(idx,btn){
+    var p=P[idx];if(!p)return;
+    if(needsColor(p)){push('quick_color');openProductModal(idx);return;}
+    var sizes=[];try{sizes=productSizes(p)||[];}catch(e){}
+    if(!sizes.length){add(idx,'',btn);return;}
+    closeQS();var ov=document.createElement('div');ov.className='cvqs-ov';ov.id='cvqsOv';
+    var img=p.imagen&&p.imagen.indexOf('http')===0?(window.cvImg?cvImg(p.imagen,240):p.imagen):'';
+    ov.innerHTML='<div class="cvqs" role="dialog" aria-label="Elegir talla"><div class="hd">'+(img?'<img src="'+esc(img)+'" alt="'+esc(p.nombre)+'">':'')+'<div><b>'+esc(p.nombre)+'</b><span>'+esc(p.precio||'')+'</span></div><button type="button" class="x" aria-label="Cerrar">×</button></div>'+
+      '<div class="lb">Elige tu talla</div><div class="sz">'+sizes.map(function(z){var q=sizeLeft(p,z),out=q<=0,few=!out&&q!==Infinity&&q<=low();return '<button type="button" data-z="'+esc(z)+'"'+(out?' class="out" disabled aria-disabled="true" title="Agotada"':'')+'>'+esc(z)+(few?'<em>'+(q===1?'Última':'Quedan '+q)+'</em>':'')+'</button>';}).join('')+'</div>'+
+      '<div class="alt"><button type="button" data-more>Ver detalles y fotos</button><button type="button" data-ask>¿Qué talla soy?</button></div></div>';
+    document.body.appendChild(ov);push('quick_open',p.nombre);
+    ov.addEventListener('click',function(e){
+      if(e.target===ov||e.target.closest('.x')){closeQS();return;}
+      var z=e.target.closest('[data-z]');if(z&&!z.disabled){add(idx,z.dataset.z,btn,ov);return;}
+      if(e.target.closest('[data-more]')){closeQS();openProductModal(idx);return;}
+      if(e.target.closest('[data-ask]')){closeQS();openProductModal(idx);setTimeout(function(){var a=document.querySelector('#cvAiPm button,#pmAsk');if(a)a.click();},500);return;}
+    });
+  }
+  function add(idx,size,btn,ov){
+    var before=bagQty();addToCartByIndex(idx,false,size);var added=bagQty()>before;
+    if(btn&&added){btn.classList.add('ok');btn.textContent='✓';setTimeout(function(){btn.classList.remove('ok');btn.textContent='+';},1800);}
+    if(!ov){return;}
+    if(!added){return;} // out of stock message already shown by the store
+    push('quick_add',P[idx]&&P[idx].nombre);
+    try{var r=ov.querySelector('.hd img');if(r&&window.cvBurst){var b=r.getBoundingClientRect();cvBurst(b.left+b.width/2,b.top+b.height/2,40,3,1.1);}}catch(e){}
+    try{if(navigator.vibrate)navigator.vibrate([15,30,15]);}catch(e){}
+    var n=bagQty();
+    ov.querySelector('.cvqs').innerHTML='<div class="done"><div class="ck">✓</div><h4>¡Agregada a tu carrito!</h4><p>'+esc(P[idx].nombre)+(size?' · talla '+esc(size):'')+'</p>'+
+      (freeShipText()&&n===1?'<div class="gift">🎁 Agrega una prenda más y tu envío en Colombia es gratis.</div>':'')+'</div>'+
+      '<div class="alt"><button type="button" data-keep>Seguir viendo</button><button type="button" class="p" data-cart>Ver mi carrito ('+n+')</button></div>';
+    ov.querySelector('[data-keep]').onclick=closeQS;
+    ov.querySelector('[data-cart]').onclick=function(){closeQS();try{openCart();}catch(e){}};
+  }
+  function decorate(){
+    document.querySelectorAll('#pgrid .pc').forEach(function(c){
+      var im=c.querySelector('.pimg');if(!im||im.querySelector('.cvqa'))return;var idx=parseInt(c.dataset.pid,10),p=P[idx];if(!p)return;
+      var b=document.createElement('button');b.type='button';b.className='cvqa';b.setAttribute('aria-label','Agregar '+p.nombre+' al carrito');b.textContent='+';
+      b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();quick(idx,b);});
+      im.appendChild(b);
+      var i=im.querySelector('img');if(i&&!i.alt)i.alt=p.nombre+' · CΛNEVΛ';
+    });
+    document.querySelectorAll('img:not([alt])').forEach(function(i){i.alt='';});
+  }
+  var g=document.getElementById('pgrid');
+  if(g){decorate();new MutationObserver(function(){decorate();}).observe(g,{childList:true});}
+
+  // ---------- 5. One invitation at a time; scrolled past = small pill she can reopen ----------
+  var PIL=null,H=[];
+  function lab(el){return el.classList.contains('cv-wel')?'Tu regalo del Club':'Guardar mis prendas';}
+  function renderPill(){
+    H=H.filter(function(e){return document.body.contains(e);});
+    if(!H.length){if(PIL){PIL.remove();PIL=null;}return;}
+    if(!PIL){PIL=document.createElement('button');PIL.type='button';PIL.id='cvuxPill';
+      PIL.onclick=function(){var el=H.pop();if(!el)return;visible().forEach(hide);el.classList.remove('cvux-hide');el.__cvuxAt=window.scrollY;el.__cvuxPin=Date.now();push('invite_reopen',lab(el));renderPill();};
+      document.body.appendChild(PIL);}
+    PIL.innerHTML='<i>💎</i>'+esc(lab(H[H.length-1]))+(H.length>1?' · +1':'');
+  }
+  function hide(el){if(H.indexOf(el)<0)H.push(el);el.classList.add('cvux-hide');renderPill();}
+  function visible(){return [document.querySelector('.cv-wel.show'),document.getElementById('cvSave')].filter(function(e){return e&&!e.classList.contains('cvux-hide');});}
+  function watch(){
+    var v=visible();
+    // two at once: keep the one she reopened last (default: the cart reminder, she already chose something)
+    if(v.length>1){v.sort(function(a,b){return (b.__cvuxPin||(b.id==='cvSave'?1:0))-(a.__cvuxPin||(a.id==='cvSave'?1:0));});v.slice(1).forEach(hide);v=v.slice(0,1);}
+    v.forEach(function(el){if(el.__cvuxAt===undefined)el.__cvuxAt=window.scrollY;if(Math.abs(window.scrollY-el.__cvuxAt)>650)hide(el);});
+    renderPill();
+  }
+  var tk=0;
+  window.addEventListener('scroll',function(){
+    document.documentElement.classList.toggle('cvux-sc',window.scrollY>320);
+    if(!tk)tk=setTimeout(function(){tk=0;try{watch();}catch(e){}},180);
+  },{passive:true});
+  new MutationObserver(function(){try{watch();}catch(e){}}).observe(document.body,{childList:true});
 })();
 </script>
 
