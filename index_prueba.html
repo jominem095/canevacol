@@ -5851,6 +5851,70 @@ body.cv-has-pbar .ann-bar{display:none!important}
   if(typeof postOrder==='function'){postOrder=function(id,items){try{fetch(API_BASE+'/order',{method:'POST',headers:{'Content-Type':'text/plain;charset=UTF-8'},body:JSON.stringify({id:id,items:items,token:(window.clubToken&&clubToken())||undefined,email:(CURRENT&&CURRENT.email)||(window.clubGuestEmail&&clubGuestEmail())||undefined,buyer:CURRENT||undefined}),keepalive:true}).catch(function(){});}catch(e){}};}
 })();
 </script>
+<style id="cvstock-css">
+.cv-stk-ov{position:fixed;inset:0;z-index:100001;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:16px}
+.cv-stk{width:min(420px,100%);border-radius:24px;padding:22px 20px;background:linear-gradient(180deg,#121215,#070708);border:1px solid rgba(207,230,255,.35);color:#f6f7f8;font-family:Inter,system-ui,sans-serif;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.cv-stk h3{margin:6px 0 6px;font-family:'Cormorant Garamond',Georgia,serif;font-weight:400;font-size:27px}.cv-stk p{font-size:13.5px;line-height:1.5;color:rgba(246,247,248,.78);margin:0 0 12px}
+.cv-stk ul{list-style:none;padding:0;margin:0 0 14px;text-align:left}.cv-stk li{padding:9px 12px;border-radius:12px;background:rgba(255,255,255,.05);margin:6px 0;font-size:13.5px}.cv-stk li small{display:block;color:#ffc478;font-size:12px;margin-top:2px}
+.cv-stk button{width:100%;border:0;border-radius:999px;padding:13px;font:800 14px Inter,sans-serif;cursor:pointer;background:linear-gradient(120deg,#cfd6db,#fff 45%,#e8eef2);color:#050505;margin-top:6px}.cv-stk button.gh{background:none;color:#f6f7f8;border:1px solid rgba(246,247,248,.3)}
+.cv-checking{opacity:.65;pointer-events:none}
+</style>
+<script id="cvstock">
+// v86: before sending the order (WhatsApp, Bold or Bre-B) the store asks the Worker whether every counted garment is
+// still available (another shopper may have bought the last one since the cart was filled). If something ran out
+// the cart is adjusted and the shopper sees what changed. A slow or failed check never blocks the sale.
+(function(){
+  var OK={sig:'',at:0};
+  function cart(){return window.CART||[];}
+  function sig(){return JSON.stringify(cart().map(function(i){return [i.pid||i.nombre,i.size||'',i.qty];}));}
+  function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function up(z){return String(z||'').toUpperCase().replace(/^TALLA\s*/,'').trim()||'ÚNICA';}
+  function same(a,b){a=up(a);b=up(b);return a===b||(/^[UÚ]NICA$/.test(a)&&/^[UÚ]NICA$/.test(b));}
+  function fix(problems){
+    var rows=[];
+    (problems||[]).forEach(function(pb){
+      var left=Math.max(0,pb.available|0);
+      cart().filter(function(it){return (it.pid&&it.pid===pb.pid||(!it.pid&&it.nombre===pb.nombre))&&(!pb.size||pb.size==='Única'||same(it.size,pb.size));}).forEach(function(it){
+        var take=Math.min(it.qty,left);left-=take;
+        rows.push('<li><b>'+esc(it.nombre)+'</b>'+(it.size?' · talla '+esc(it.size):'')+'<small>'+(take?'Solo '+(take===1?'queda 1':'quedan '+take)+': ajustamos tu cantidad a '+take:'Se agotó: la quitamos de tu carrito')+'</small></li>');
+        it.qty=take;
+      });
+      // the store page also learns the real count so the size shows crossed out
+      try{var p=(window.P||[]).find(function(x){return x.id===pb.pid;});if(p&&p.inv&&pb.size){var k=Object.keys(p.inv).find(function(z){return same(z,pb.size);});if(k)p.inv[k]=Math.max(0,pb.available|0)+(pb.held|0);}}catch(e){}
+    });
+    window.CART=CART=cart().filter(function(it){return it.qty>0;});
+    try{saveCart();}catch(e){}
+    var ov=document.createElement('div');ov.className='cv-stk-ov';
+    ov.innerHTML='<div class="cv-stk"><div style="font-size:34px">💎</div><h3>¡Se movieron rápido!</h3><p>Mientras armabas tu pedido, otra clienta se llevó algunas prendas. Ya ajustamos tu carrito:</p><ul>'+rows.join('')+'</ul>'+
+      (cart().length?'<button type="button" data-k="go">Ver mi carrito</button>':'<button type="button" data-k="shop">Seguir viendo prendas</button>')+
+      '<button type="button" class="gh" data-k="wa">Preguntar por WhatsApp si llega más</button></div>';
+    document.body.appendChild(ov);
+    ov.addEventListener('click',function(e){var b=e.target.closest('[data-k]');if(e.target!==ov&&!b)return;ov.remove();
+      if(b&&b.dataset.k==='go'){try{openCart();}catch(x){}}
+      if(b&&b.dataset.k==='shop'){try{closeCart();}catch(x){}}
+      if(b&&b.dataset.k==='wa'){var names=(problems||[]).map(function(x){return x.nombre+(x.size&&x.size!=='Única'?' talla '+x.size:'');}).join(', ');window.open('https://wa.me/'+(window.WA_PHONE||'573057637089')+'?text='+encodeURIComponent('Hola Caneva ✨ quería '+names+' pero salió agotada. ¿Les llega más?'),'_blank','noopener');}
+    });
+    try{if(window.cvTrack)cvTrack('stock_ajustado');}catch(e){}
+  }
+  // Window capture runs before the delivery-details sheet (document capture), so the check happens first
+  window.addEventListener('click',function(e){
+    var t=e.target&&e.target.closest&&e.target.closest('#cartWhats,#cartBold,#cartBreb');if(!t)return;
+    if(!cart().length)return;
+    if(OK.sig===sig()&&Date.now()-OK.at<10*60000)return;
+    e.preventDefault();e.stopImmediatePropagation();
+    t.classList.add('cv-checking');
+    var done=false,go=function(){if(done)return;done=true;t.classList.remove('cv-checking');OK={sig:sig(),at:Date.now()};t.click();};
+    var timer=setTimeout(go,4500);
+    var items=cart().map(function(i){return {pid:i.pid||'',nombre:i.nombre,categoria:i.categoria||'',precio:i.precio||'',qty:i.qty||1,size:i.size||''};});
+    var buyer=null;try{buyer=window.cvBuyer?cvBuyer():null;}catch(x){}
+    fetch(API_BASE+'/stock/check',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items:items,buyer:buyer||undefined})})
+      .then(function(r){return r.json();}).then(function(d){clearTimeout(timer);if(done)return;
+        if(!d||!d.ok||d.available!==false){go();return;}
+        done=true;t.classList.remove('cv-checking');fix(d.problems);
+      }).catch(function(){clearTimeout(timer);go();});
+  },true);
+})();
+</script>
 
 <style id="cvai2-css">
 /* v71 Caneva AI al frente: buscador con IA en la portada (texto o voz), IA dentro de cada prenda, orbe y botón AI vivos */

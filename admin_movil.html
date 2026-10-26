@@ -577,14 +577,15 @@ main{padding:14px 16px 120px}
 <div id="toast" class="toast hidden"></div>
 <div id="busy" class="busy hidden"><div class="spin"></div><div id="busyMsg">Publicando…</div></div>
 
-<script src="admin_pro.js?v=52"></script>
+<script src="admin_pro.js?v=53"></script>
 <script src="admin_colores.js?v=2"></script>
-<script src="admin_ventas.js?v=15"></script>
+<script src="admin_ventas.js?v=16"></script>
 <script src="admin_wa.js?v=1"></script>
 <script src="admin_respuestas.js?v=1"></script>
 <script src="admin_made.js?v=3"></script>
 <script src="admin_proveedores.js?v=1"></script>
 <script src="admin_ia.js?v=1"></script>
+<script src="admin_stock.js?v=1"></script>
 <script>
 // Mobile admin for Caneva: edits the live catalog (Worker /catalog) and republishes via /admin/catalog.
 // Uses the same Worker endpoints and product shape as admin.html, so no Worker changes are needed.
@@ -1261,6 +1262,7 @@ function hoyPaint(){
   $("hyChips").onclick=e=>{const b=e.target.closest("button");if(b)hoyAsk(b.textContent.replace(/^\S+\s/,""));};
   v.querySelector(".hy-todo").onclick=e=>{const b=e.target.closest("[data-go]");if(!b)return;const go=b.dataset.go;
     if(go==="breb"||go==="abandonado"){ordStatus=go;showTab("pedidos");loadOrders();}else showTab(go);};
+  if(window.CanevaStock) CanevaStock.card(v);
   hoyNotifyCard(v); hoyShieldCard(v);
 }
 // v76: Escudo CANEVA status (blocked attempts by country)
@@ -1537,7 +1539,7 @@ function orderCard(o){
   const cst=o.status==="pagado"&&C?`<div class="ocost">🔒 Costo <b>${money(C.cost)}</b> · <span class="g${C.profit<0?" neg":""}">ganancia ${money(C.profit)}${C.margin!=null?" ("+C.margin+"%)":""}</span>${C.missing?` · <span style="color:var(--bad)">⚠ ${C.missing} sin costo</span>`:""}<button type="button" data-cost="${o.id}">${C.missing?"Poner costo":"Editar"}</button></div>`
     :o.status==="pagado"?`<div class="ocost">🔒 Costo y ganancia: pega la Worker v61 para verlos</div>`:"";
   const bq=(o.status==="pendiente"||o.status==="cancelado")&&dv0.pay==="bold"?`<div class="obold" id="bs-${o.id}">💳 Bold: ${BOLD_ST[o.id]?boldTxt(BOLD_ST[o.id]):"sin consultar"}<button type="button" data-bold="${o.id}">🔎 Consultar Bold</button></div>`:"";
-  return `<div class="ocard"><div class="ohead"><span>Ref. <b>${esc(ref)}</b></span><span>${esc(when(o.createdAt))}</span></div><div>${via}</div>${bq}<div class="ocli">${cli}</div>${dlv}${paid}${items}<div class="otot"><span>Total</span><span>${money(o.total)}</span></div>${cst}${acts}</div>`;
+  return `<div class="ocard"><div class="ohead"><span>Ref. <b>${esc(ref)}</b></span><span>${esc(when(o.createdAt))}</span></div><div>${via}${dv&&dv.stockWarn&&o.status!=="pagado"?`<span class="obadge bad">⚠️ Sin stock cuando pidió: ${esc(dv.stockWarn)}. Confírmale otra talla o prenda.</span>`:""}</div>${bq}<div class="ocli">${cli}</div>${dlv}${paid}${items}<div class="otot"><span>Total</span><span>${money(o.total)}</span></div>${cst}${acts}</div>`;
 }
 // Asks how she paid (and the e-mail for the receipt when she has no Club account)
 function paySheet(hasUser,mail){

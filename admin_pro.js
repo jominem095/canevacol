@@ -91,8 +91,10 @@
     var r=D.report||{};
     var top=(r.top||[]).map(function(t,i){return '<div class="cp-top"><span>'+(i+1)+'</span><b>'+esc(t.name)+'</b><em>'+t.units+' und · '+money(t.revenue)+'</em></div>';}).join("");
     I.el.innerHTML=
-    '<div class="cp-head"><div><div class="cp-eyeb">Control de mercancía</div><h2 class="cp-h">Inventario</h2></div><div class="cp-actions"><button type="button" class="cp-btn ghost" data-a="moves">🧾 Movimientos</button><button type="button" class="cp-btn ghost" data-a="csv">⇩ Exportar</button></div></div>'+
+    '<div class="cp-head"><div><div class="cp-eyeb">Control de mercancía</div><h2 class="cp-h">Inventario</h2></div><div class="cp-actions"><button type="button" class="cp-btn" data-a="quick">⚡ Conteo rápido</button><button type="button" class="cp-btn ghost" data-a="moves">🧾 Movimientos</button><button type="button" class="cp-btn ghost" data-a="csv">⇩ Exportar</button></div></div>'+
     catChips(D.products,I.cat,"icat")+
+    (function(){var sin=inCat.filter(function(p){return !p.managed&&!p.hidden&&!/atelier|deportiv|bajo.?pedido|encargo/i.test(p.categoria||"");}).length;
+      return sin?'<div class="cp-note" style="border-color:rgba(255,196,120,.5);background:rgba(255,196,120,.08);display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span style="flex:1;min-width:200px">⚠️ <b>'+sin+' prenda'+(sin===1?'':'s')+' sin contar.</b> Sus ventas no se descuentan y la tienda las deja comprar sin límite.</span><button type="button" class="cp-btn" data-a="quick">⚡ Contarlas ya</button></div>':"";})()+
     '<div class="cp-kpis k4">'+
       '<div class="cp-kpi hero"><span>En bodega'+(I.cat!=="Todas"?" · "+esc(I.cat):"")+'</span><b>'+num(units)+'</b><small>unidades · '+man.length+' prendas</small></div>'+
       '<div class="cp-kpi"><span>Vale a precio de venta</span><b>'+short(vSale)+'</b><small>'+money(vSale)+'</small></div>'+
@@ -246,7 +248,7 @@
     if((b=e.target.closest("[data-icat]"))){I.cat=b.dataset.icat;return invRender();}
     if((b=e.target.closest("[data-if]"))){I.flt=(b.classList.contains("cp-alert")&&I.flt===b.dataset.if)?"todas":b.dataset.if;return invRender();}
     if((b=e.target.closest("[data-days]"))){I.days=Number(b.dataset.days);return invLoad();}
-    if((b=e.target.closest("[data-a]"))){if(b.dataset.a==="moves")return invMoves("");if(b.dataset.a==="csv")return invCsv();}
+    if((b=e.target.closest("[data-a]"))){if(b.dataset.a==="quick"){if(window.CanevaStock)CanevaStock.open({onDone:invLoad});else toast("Recarga el admin para usar el conteo rápido",true);return;}if(b.dataset.a==="moves")return invMoves("");if(b.dataset.a==="csv")return invCsv();}
     if((b=e.target.closest("[data-ipid]")))invOpen(b.dataset.ipid);
   }
 
