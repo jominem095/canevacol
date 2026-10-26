@@ -579,13 +579,14 @@ main{padding:14px 16px 120px}
 
 <script src="admin_pro.js?v=53"></script>
 <script src="admin_colores.js?v=2"></script>
-<script src="admin_ventas.js?v=16"></script>
+<script src="admin_ventas.js?v=17"></script>
 <script src="admin_wa.js?v=1"></script>
 <script src="admin_respuestas.js?v=1"></script>
-<script src="admin_made.js?v=3"></script>
+<script src="admin_made.js?v=4"></script>
+<script src="admin_foto.js?v=1"></script>
 <script src="admin_proveedores.js?v=1"></script>
 <script src="admin_ia.js?v=1"></script>
-<script src="admin_stock.js?v=2"></script>
+<script src="admin_stock.js?v=3"></script>
 <script>
 // Mobile admin for Caneva: edits the live catalog (Worker /catalog) and republishes via /admin/catalog.
 // Uses the same Worker endpoints and product shape as admin.html, so no Worker changes are needed.
@@ -1409,7 +1410,7 @@ function showTab(t){
   if(t==="colores") CanevaColores.mount($("colBody"),{api:API_BASE,token:token});
   if(t==="enlaces") CanevaPro.mount($("lnkBody"),"enlaces",proOpts());
   if(t==="ventas") CanevaVentas.mount($("venBody"),{api:API_BASE,token:token});
-  $("mkView").classList.toggle("hidden",t!=="bajopedido"); if(t==="bajopedido"&&window.CanevaMade){ if(!$("mkBody").firstChild) CanevaMade.mount($("mkBody"),{api:API_BASE,token:token,goPedidos:()=>{showTab("pedidos");loadOrders();}}); else CanevaMade.reload(); }
+  $("mkView").classList.toggle("hidden",t!=="bajopedido"); if(t==="bajopedido"&&window.CanevaMade){ if(!$("mkBody").firstChild) CanevaMade.mount($("mkBody"),{api:API_BASE,token:token,products:()=>products,goPedidos:()=>{showTab("pedidos");loadOrders();}}); else CanevaMade.reload(); }
   $("lbView").classList.toggle("hidden",t!=="libretas"); if(t==="libretas"&&window.CanevaLibretas){ if(!$("lbBody").firstChild) CanevaLibretas.mount($("lbBody")); else CanevaLibretas.reload(); }
   $("pvView").classList.toggle("hidden",t!=="proveedores"); if(t==="proveedores"&&window.CanevaProveedores){ if(!$("pvBody").firstChild) CanevaProveedores.mount($("pvBody"),{api:API_BASE,token:token,goTaller:()=>showTab("bajopedido")}); else CanevaProveedores.reload(); }
   $("rsView").classList.toggle("hidden",t!=="respuestas"); if(t==="respuestas"&&window.CanevaRespuestas&&!$("rsBody").firstChild) CanevaRespuestas.mount($("rsBody"),{api:API_BASE,token:token,products:()=>products});
@@ -1517,7 +1518,10 @@ function orderCard(o){
   const u=o.user;
   const phone=u&&u.phone?String(u.phone).replace(/[^\d]/g,""):"";
   const cli=u?`👤 <b>${esc(u.name)}</b> · ${esc(u.email)}${u.phone?` · <a href="https://wa.me/${phone.length===10?"57"+phone:phone}" target="_blank" rel="noopener">${esc(u.phone)}</a>`:""}<span class="tag">${u.points} pts</span>`:(o.receiptEmail?`✉ <b>${esc(o.receiptEmail)}</b> <span style="color:var(--dim)">· sin cuenta (sus puntos quedan guardados)</span>`:`<span style="color:var(--dim)">Sin cuenta del Club</span>`);
-  const items=o.items.map(it=>`<div class="oitem">${it.imagen?`<img src="${esc(it.imagen)}" alt="" loading="lazy">`:"<img alt=''>"}<span>${esc(it.nombre)}${it.size?` · Talla ${esc(it.size)}`:""}</span><b>×${it.qty}</b></div>`).join("");
+  const dvx=o.delivery||{}, ophone=dvx.phone||(o.user&&o.user.phone)||"";
+  // v87: what she asked for: photo (the color she chose when it has its own photo), color, size; tap = all photos + store link
+  const items=window.CanevaFoto?CanevaFoto.items(o.items,{catalog:products,phone:ophone,orderUrl:API_BASE+"/o/"+o.id,sub:(dvx.name||(o.user&&o.user.name)||"")+(o.ticket?" · "+o.ticket:""),price:true})
+    :o.items.map(it=>`<div class="oitem">${it.imagen?`<img src="${esc(it.imagen)}" alt="" loading="lazy">`:"<img alt=''>"}<span>${esc(it.nombre)}${it.size?` · Talla ${esc(it.size)}`:""}</span><b>×${it.qty}</b></div>`).join("");
   const ref=o.id.toUpperCase();
   const dv0=o.delivery||{}, wph=String(dv0.phone||(u&&u.phone)||"").replace(/[^\d]/g,""), wnum=wph.length===10?"57"+wph:wph;
   const wtxt=o.bucket==="abandonado"?`Hola ${(dv0.name||(u&&u.name)||"").split(" ")[0]} ✨ te escribimos de CΛNEVΛ. Vimos tu pedido de ${o.items.map(i=>i.nombre).slice(0,2).join(" y ")} y todavía te lo tenemos guardado 💛 ¿Te ayudamos a terminar la compra?`:`Hola ${(dv0.name||(u&&u.name)||"").split(" ")[0]} ✨ te escribimos de CΛNEVΛ por tu pedido (${money(o.total)}). ¿Te enviamos los datos para pagar? 💛`;
