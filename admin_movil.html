@@ -582,10 +582,10 @@ main{padding:14px 16px 120px}
 <script src="admin_ventas.js?v=17"></script>
 <script src="admin_wa.js?v=1"></script>
 <script src="admin_respuestas.js?v=1"></script>
-<script src="admin_made.js?v=4"></script>
+<script src="admin_made.js?v=5"></script>
 <script src="admin_foto.js?v=1"></script>
 <script src="admin_proveedores.js?v=1"></script>
-<script src="admin_ia.js?v=3"></script>
+<script src="admin_ia.js?v=4"></script>
 <script src="admin_stock.js?v=4"></script>
 <script>
 // Mobile admin for Caneva: edits the live catalog (Worker /catalog) and republishes via /admin/catalog.
@@ -1945,6 +1945,49 @@ token()?showList():showLogin();
       const el=document.getElementById("cvPushRow"); if(el) setTimeout(()=>{el.insertAdjacentHTML("beforeend",`<div style="font-size:12px;margin-top:6px">Toca <b>Probar</b> para ver cómo te llega 👆</div>`);},600);
     }catch(err){b.disabled=false;b.textContent="⚠️ "+(err&&err.message||"No se pudo activar")+" · Toca para reintentar";}
   });
+})();
+</script>
+<style id="cvtabs">
+/* v5: tab bar you can drag with the mouse, scroll with the wheel, with soft edges and arrows */
+.cvtw{position:relative;margin-top:10px}
+.cvtw .tabs{margin-top:0;scroll-behavior:auto;cursor:grab;padding:2px 2px 4px;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 var(--fl,0px),#000 calc(100% - var(--fr,0px)),transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 var(--fl,0px),#000 calc(100% - var(--fr,0px)),transparent 100%);transition:--fl .2s}
+.cvtw .tabs.drag{cursor:grabbing;user-select:none}.cvtw .tabs.drag button{pointer-events:none}
+.cvtw.l .tabs{--fl:56px}.cvtw.r .tabs{--fr:56px}
+.cvta{position:absolute;top:50%;z-index:2;width:34px;height:34px;margin-top:-17px;border-radius:50%;border:1px solid rgba(255,231,168,.45);background:radial-gradient(circle at 30% 25%,#2a2a2e,#0b0b0d 70%);color:#ffe7a8;font:700 17px/1 Inter,sans-serif;display:grid;place-items:center;cursor:pointer;opacity:0;pointer-events:none;transform:scale(.8);transition:opacity .2s,transform .2s,box-shadow .2s;box-shadow:0 6px 18px rgba(0,0,0,.55)}
+.cvta:hover{box-shadow:0 0 0 3px rgba(255,231,168,.15),0 6px 18px rgba(0,0,0,.55)}
+.cvta.pl{left:-4px}.cvta.pr{right:-4px}.cvtw.l .cvta.pl,.cvtw.r .cvta.pr{opacity:1;pointer-events:auto;transform:none}
+.cvtdots{display:flex;justify-content:center;gap:4px;height:3px;margin-top:5px}.cvtdots i{display:block;height:3px;border-radius:3px;background:rgba(246,247,248,.12);flex:0 0 auto;position:relative;overflow:hidden;width:120px}.cvtdots i b{position:absolute;top:0;bottom:0;border-radius:3px;background:linear-gradient(90deg,#cfe6ff,#ffe7a8)}
+@media (hover:none){.cvta{display:none}}
+</style>
+<script id="cvtabs-js">
+// v5: tabs bar: mouse drag, wheel, arrows, soft edges, progress line and the active tab always in view
+(function(){
+  var t=document.getElementById("tabs");if(!t||t.parentNode.classList.contains("cvtw"))return;
+  var w=document.createElement("div");w.className="cvtw";t.parentNode.insertBefore(w,t);w.appendChild(t);
+  var pl=document.createElement("button"),pr=document.createElement("button");pl.type=pr.type="button";pl.className="cvta pl";pr.className="cvta pr";pl.innerHTML="‹";pr.innerHTML="›";pl.setAttribute("aria-label","Ver módulos anteriores");pr.setAttribute("aria-label","Ver más módulos");
+  w.appendChild(pl);w.appendChild(pr);
+  var dots=document.createElement("div");dots.className="cvtdots";dots.innerHTML="<i><b></b></i>";w.appendChild(dots);var bar=dots.querySelector("b");
+  function glide(to){var from=t.scrollLeft,d=to-from,t0=performance.now(),D=320;if(Math.abs(d)<2)return;
+    (function step(n){var k=Math.min(1,(n-t0)/D),e=1-Math.pow(1-k,3);t.scrollLeft=from+d*e;if(k<1)requestAnimationFrame(step);else upd();})(t0);}
+  function upd(){var max=t.scrollWidth-t.clientWidth;w.classList.toggle("l",t.scrollLeft>4);w.classList.toggle("r",t.scrollLeft<max-4);
+    dots.style.visibility=max>4?"visible":"hidden";var vis=t.clientWidth/t.scrollWidth;bar.style.width=(vis*100)+"%";bar.style.left=(max>0?t.scrollLeft/max*(1-vis)*100:0)+"%";}
+  pl.onclick=function(){glide(Math.max(0,t.scrollLeft-t.clientWidth*.7));};
+  pr.onclick=function(){glide(Math.min(t.scrollWidth-t.clientWidth,t.scrollLeft+t.clientWidth*.7));};
+  t.addEventListener("scroll",upd,{passive:true});window.addEventListener("resize",upd);
+  // mouse wheel: up/down moves the bar sideways
+  t.addEventListener("wheel",function(e){if(t.scrollWidth<=t.clientWidth)return;var d=Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY;if(!d)return;e.preventDefault();t.scrollLeft+=d;},{passive:false});
+  // drag with the mouse (touch already scrolls natively); a drag does not open a tab
+  var down=false,sx=0,sl=0,moved=false,vx=0,lx=0,lt=0;
+  t.addEventListener("pointerdown",function(e){if(e.pointerType!=="mouse"||e.button!==0)return;down=true;moved=false;sx=lx=e.clientX;sl=t.scrollLeft;lt=performance.now();vx=0;});
+  window.addEventListener("pointermove",function(e){if(!down)return;var dx=e.clientX-sx;if(!moved&&Math.abs(dx)>5){moved=true;t.classList.add("drag");}
+    if(moved){t.scrollLeft=sl-dx;var n=performance.now();vx=(e.clientX-lx)/Math.max(1,n-lt);lx=e.clientX;lt=n;}});
+  window.addEventListener("pointerup",function(){if(!down)return;down=false;if(!moved)return;t.classList.remove("drag");
+    var v=-vx*16;(function coast(){if(Math.abs(v)<.5){upd();return;}t.scrollLeft+=v;v*=.92;requestAnimationFrame(coast);})();});
+  t.addEventListener("click",function(e){if(moved){e.preventDefault();e.stopPropagation();moved=false;}},true);
+  // keep the active tab visible (also when opened from ?tab= or a notification)
+  function center(){var b=t.querySelector("button.on");if(!b)return;var to=b.offsetLeft-(t.clientWidth-b.offsetWidth)/2;glide(Math.max(0,Math.min(t.scrollWidth-t.clientWidth,to)));}
+  new MutationObserver(function(ms){if(!ms.some(function(m){return m.target!==t&&m.target.classList&&m.target.classList.contains("on");}))return;clearTimeout(center.k);center.k=setTimeout(center,30);}).observe(t,{subtree:true,attributes:true,attributeFilter:["class"]});
+  upd();setTimeout(function(){upd();center();},300);
 })();
 </script>
 </body>

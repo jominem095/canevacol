@@ -1,4 +1,4 @@
-/* CANEVA admin · Bajo pedido (v4: fotos de lo que pidió la clienta, color, fotos de referencia, galería)
+/* CANEVA admin · Bajo pedido (v5: color por prenda con Guardar y "Aplicar a todas"; v4: fotos de lo que pidió la clienta, color, fotos de referencia, galería)
    Workshop board for made-to-order garments (Deportivo, Atelier, categories with more than 1 day of delivery):
    - list or Kanban view (tap the arrows to move between Pedido / En confección / Lista / Entregada)
    - 7-day delivery strip, progress ring per order (time used vs. promised date), celebration when it is ready
@@ -26,7 +26,7 @@
   function kindIcon(k){return k==="Deportivo"?"🏃‍♀️":k==="Atelier"?"🪡":"🧵";}
   function toast(t){var d=document.createElement("div");d.className="mk-toast";d.textContent=t;document.body.appendChild(d);setTimeout(function(){d.remove();},2600);}
   // v4: photos and color of what the client asked for
-  function lookItems(x){return x.items.map(function(i){return Object.assign({},i,{look:{base:i.base||i.nombre,color:x.color||i.color||"",imagen:i.imagen||"",fotos:i.fotos||[],link:i.link||"",colors:i.colors||[]}});});}
+  function lookItems(x){return x.items.map(function(i){return Object.assign({},i,{look:{base:i.base||i.nombre,color:i.color||x.color||"",imagen:i.imagen||"",fotos:i.fotos||[],link:i.link||"",colors:i.colors||[]}});});}
   function allPhotos(x){var f=(x.refs||[]).slice();x.items.forEach(function(i){(i.fotos||[]).forEach(function(u){if(f.indexOf(u)<0)f.push(u);});});return f;}
   function mainPhoto(x){return (x.refs&&x.refs[0])||((x.items[0]||{}).imagen)||"";}
   function colorsFor(x){var c=[];x.items.forEach(function(i){(i.colors||[]).forEach(function(n){if(c.indexOf(n)<0)c.push(n);});});return c;}
@@ -36,6 +36,9 @@
   // ---------- styles ----------
   function css(){if(document.getElementById("mk-css"))return;var s=document.createElement("style");s.id="mk-css";s.textContent=
     ".mk-col2{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0}.mk-col2 input{flex:1;min-width:120px;background:#050505;border:1px solid rgba(246,247,248,.18);border-radius:10px;color:#fff;padding:8px 10px;font:13px Inter,sans-serif}.mk-col2 .lb{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:rgba(246,247,248,.55)}"+
+    ".mk-cols{display:flex;flex-direction:column;gap:8px;margin:6px 0 4px}.mk-ic{padding:8px 10px;border-radius:14px;background:rgba(255,255,255,.03);border:1px solid rgba(246,247,248,.09)}.mk-ic.all{border-style:dashed;border-color:rgba(255,231,168,.35);background:rgba(255,231,168,.04)}.mk-ic.saved{animation:mkOk 1.2s}@keyframes mkOk{0%{border-color:#8ef0c8;box-shadow:0 0 0 3px rgba(142,240,200,.25)}}"+
+    ".mk-ich{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:6px;font-size:12.5px}.mk-ich img{width:26px;height:32px;border-radius:7px;object-fit:cover}.mk-ich small{color:rgba(246,247,248,.55)}.mk-ich small.no{color:#ffc478}.mk-ic .mk-col2{margin:6px 0 0}"+
+    ".mk-sv{flex:0 0 auto;border:1px solid rgba(246,247,248,.25);background:none;color:rgba(246,247,248,.6);border-radius:999px;padding:8px 13px;font:800 12px Inter,sans-serif;cursor:pointer;transition:all .2s}.mk-sv.on{background:linear-gradient(120deg,#ffe7a8,#fff 45%,#f3dca0);color:#050505;border-color:transparent}"+
     ".mk-chips{display:flex;gap:5px;flex-wrap:wrap}.mk-chips button{border:0;background:none;padding:0;cursor:pointer}.mk-chips button.on .cvf-sw{border-color:#ffe7a8;background:rgba(255,231,168,.14)}"+
     ".mk-refs{display:flex;gap:7px;overflow-x:auto;padding:4px 0 6px;scrollbar-width:none}.mk-ref{position:relative;flex:0 0 auto;width:62px;height:78px;border-radius:12px;overflow:hidden;background:#1b1b1f;cursor:pointer;border:1px solid rgba(255,255,255,.12)}.mk-ref img{width:100%;height:100%;object-fit:cover}.mk-ref .rm{position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;border:0;background:rgba(0,0,0,.7);color:#fff;font-size:11px;cursor:pointer}"+
     ".mk-addph{flex:0 0 auto;width:62px;height:78px;border-radius:12px;border:1.5px dashed rgba(255,231,168,.55);background:rgba(255,231,168,.06);color:#ffe7a8;font-size:11px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;line-height:1.1;text-align:center}.mk-addph b{font-size:20px}.mk-lbl{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:rgba(246,247,248,.5);margin-top:6px}"+
@@ -179,9 +182,16 @@
       '<div class="mk-pay"><input type="number" inputmode="numeric" placeholder="Abono $" data-amt><select data-pm><option value="efectivo">Efectivo</option><option value="breb">Bre-B</option><option value="transferencia">Transferencia</option><option value="nequi">Nequi</option><option value="datafono">Datáfono</option></select><button type="button" data-paygo style="border:0;border-radius:10px;padding:0 12px;font-weight:800;background:#8ef0c8;color:#04140a">OK</button></div>'+
     '</div>';
   }
-  function colorRow(x){var cs=colorsFor(x);
-    return '<div class="mk-lbl">🎨 Color que pidió</div>'+(cs.length?'<div class="mk-chips">'+cs.map(function(n){return '<button type="button" data-pickc="'+esc(n)+'"'+(x.color&&x.color.toLowerCase()===n.toLowerCase()?' class="on"':'')+'>'+sw(n)+'</button>';}).join("")+'</div>':'')+
-      '<div class="mk-col2"><input data-color list="mkCl" value="'+esc(x.color||"")+'" placeholder="'+(cs.length?'U otro color (escríbelo)':'Escribe el color (ej: Rojo vino, Nude)')+'">'+(x.color?sw(x.color):'')+'</div>';}
+  // v5: one color editor per garment (chips save at once, written color saves with Guardar / Enter) + "Aplicar a todas"
+  function colorRow(x){var many=x.items.length>1,h='<div class="mk-lbl">🎨 Color que pidió'+(many?' · por prenda':'')+'</div><div class="mk-cols">';
+    x.items.forEach(function(i,n){var cs=i.colors||[],cur=i.color||"";
+      h+='<div class="mk-ic" data-i="'+n+'">'+(many?'<div class="mk-ich">'+(i.imagen?'<img src="'+esc(i.imagen)+'" alt="">':'<span>👗</span>')+'<b>'+esc(i.base||i.nombre)+'</b>'+(i.size?'<small>Talla '+esc(i.size)+'</small>':'')+(cur?sw(cur):'<small class="no">sin color</small>')+'</div>':'')+
+        (cs.length?'<div class="mk-chips">'+cs.map(function(c){return '<button type="button" data-icpick="'+esc(c)+'"'+(cur.toLowerCase()===c.toLowerCase()?' class="on"':'')+'>'+sw(c)+'</button>';}).join("")+'</div>':'')+
+        '<div class="mk-col2"><input data-icol list="mkCl" value="'+esc(cur)+'" data-was="'+esc(cur)+'" placeholder="'+(cs.length?'U otro color (escríbelo)':'Escribe el color (ej: Rojo vino, Nude)')+'"><button type="button" class="mk-sv" data-icsave>Guardar</button></div></div>';});
+    if(many){var all=colorsFor(x);
+      h+='<div class="mk-ic all"><div class="mk-ich"><span>✨</span><b>Mismo color para todas</b></div>'+(all.length?'<div class="mk-chips">'+all.map(function(c){return '<button type="button" data-allpick="'+esc(c)+'">'+sw(c)+'</button>';}).join("")+'</div>':'')+
+        '<div class="mk-col2"><input data-allcol list="mkCl" placeholder="Color para todas las prendas"><button type="button" class="mk-sv on" data-allsave>Aplicar a todas</button></div></div>';}
+    return h+'</div>';}
   function refsRow(x){var r=x.refs||[],all=allPhotos(x);
     return '<div class="mk-lbl">📷 Fotos de referencia <span style="text-transform:none;letter-spacing:0">(lo que te mandó la clienta, la tela, la prenda terminada)</span></div><div class="mk-refs">'+
       r.map(function(u){return '<div class="mk-ref" data-cvfoto="'+esc(JSON.stringify({f:all,i:all.indexOf(u),t:"Referencia · "+(x.name||""),c:x.color||"",p:x.phone||""}))+'"><img src="'+esc(u)+'" alt="" loading="lazy"><button type="button" class="rm" data-rmref="'+esc(u)+'" title="Quitar">✕</button></div>';}).join("")+
@@ -189,8 +199,8 @@
   // v3: workshop / supplier in charge + "Contactar proveedor" (sends the workshop order by WhatsApp)
   function prodNames(){var L=[];try{L=(S.o&&S.o.products&&S.o.products())||[];}catch(e){}return L.filter(function(p){return /atelier|deportiv|pedido|encargo/i.test(p.categoria||"");}).map(function(p){return p.nombre;}).slice(0,200);}
   function supOf(x){for(var i=0;i<S.sups.length;i++)if(S.sups[i].id===x.supplier)return S.sups[i];return null;}
-  function supMsg(x){var it=x.items.map(function(i){return "• "+(i.base||i.nombre)+(i.size?" · Talla "+i.size:"")+((i.qty||1)>1?" x"+i.qty:"");}).join("\n"),ph=allPhotos(x).slice(0,3);
-    return "Hola 🧵 Te escribe CΛNEVΛ. Pedido para "+(first(x.name)||"una clienta")+(x.ticket?" ("+x.ticket+")":"")+":\n"+it+(x.color?"\n🎨 Color: "+x.color:"")+"\n📅 Entrega: "+fdate(x.dueAt,true)+(x.measures?"\n📏 Medidas: "+x.measures:"")+(x.notes?"\n📝 Notas: "+x.notes:"")+(ph.length?"\n📷 Fotos:\n"+ph.join("\n"):"")+"\n¿Me confirmas que lo tienes listo para esa fecha? 🙏";}
+  function supMsg(x){var it=x.items.map(function(i){return "• "+(i.base||i.nombre)+(i.color?" · 🎨 "+i.color:"")+(i.size?" · Talla "+i.size:"")+((i.qty||1)>1?" x"+i.qty:"");}).join("\n"),ph=allPhotos(x).slice(0,3);
+    return "Hola 🧵 Te escribe CΛNEVΛ. Pedido para "+(first(x.name)||"una clienta")+(x.ticket?" ("+x.ticket+")":"")+":\n"+it+"\n📅 Entrega: "+fdate(x.dueAt,true)+(x.measures?"\n📏 Medidas: "+x.measures:"")+(x.notes?"\n📝 Notas: "+x.notes:"")+(ph.length?"\n📷 Fotos:\n"+ph.join("\n"):"")+"\n¿Me confirmas que lo tienes listo para esa fecha? 🙏";}
   function supRow(x){
     if(!S.sups.length)return '<div class="mk-sup"><span>🤝</span><span class="mk-note" style="margin:0">Agrega tus proveedores en <b>🤝 Proveedores</b> para asignarle quién lo confecciona.</span></div>';
     var sp=supOf(x),k=sp&&waNum(sp.phone);
@@ -218,6 +228,14 @@
     for(var i=0;i<70;i++){var p=document.createElement("i");p.style.left=Math.random()*100+"%";p.style.background=col[i%col.length];p.style.animationDelay=(Math.random()*.5)+"s";p.style.transform="rotate("+Math.random()*360+"deg)";c.appendChild(p);}
     document.body.appendChild(c);setTimeout(function(){c.remove();},2600);try{if(navigator.vibrate)navigator.vibrate([30,40,30]);}catch(e){}}
   function upd(key,patch,msg){return api("/admin/made/update",{method:"POST",body:Object.assign({key:key},patch)}).then(function(d){var x=find(key);if(x&&d.state){if(d.state.status)x.status=d.state.status;if(d.state.dueAt)x.dueAt=d.state.dueAt;if(d.state.notes!==undefined)x.notes=d.state.notes;if(d.state.measures!==undefined)x.measures=d.state.measures;}if(msg)toast(msg);return d;}).catch(function(e){toast("⚠️ "+e.message);throw e;});}
+  function saveColor(x,patch,v,box,all){var bs=box.querySelectorAll("button");bs.forEach(function(b){b.disabled=true;});
+    upd(x.key,patch,null).then(function(d){
+      if(patch.itemColor&&!(d.state&&Array.isArray(d.state.colors))){toast("⚠️ Falta pegar el Worker v89 en Cloudflare para guardar el color por prenda");bs.forEach(function(b){b.disabled=false;});return;}
+      toast(v?(all?"🎨 "+v+" para todas las prendas":"🎨 Color guardado: "+v):"Color borrado");return reloadKeep(x.key,patch.itemColor?patch.itemColor.i:-1);})
+    .catch(function(){bs.forEach(function(b){b.disabled=false;});});}
+  // reload the board and flash the garment that was just saved
+  function reloadKeep(key,i){return api("/admin/made").then(function(d){S.list=d.list||[];S.hidden=d.hidden||[];S.sups=d.suppliers||[];paint();
+    var c=S.el.querySelector('.mk-c[data-key="'+key.replace(/"/g,"")+'"]');if(!c)return;(i>=0?[c.querySelector('.mk-ic[data-i="'+i+'"]')]:[].slice.call(c.querySelectorAll(".mk-ic"))).forEach(function(b){if(b)b.classList.add("saved");});});}
   function setStatus(key,s){upd(key,{status:s},ST[s][0]+" "+ST[s][1]).then(function(){if(s==="listo"||s==="entregado")confetti();paint();}).catch(function(){});}
   function ask(o){ // styled "¿Seguro?" dialog
     return new Promise(function(res){var ov=document.createElement("div");ov.className="mk-ov";
@@ -246,8 +264,7 @@
     var y=270,line=function(lb,val,big){g.fillStyle="rgba(246,247,248,.55)";g.font="600 22px Inter,sans-serif";g.fillText(lb.toUpperCase(),80,y);y+=big?58:46;g.fillStyle="#fff";g.font=(big?"500 46px":"400 34px")+" Inter,sans-serif";wrap(String(val||"—"),80,y-(big?10:6),im&&y<PY+PH+20?W-160-PW-30:W-160,big?52:42);y+=24;};
     function wrap(t,x0,y0,mw,lh){var w=t.split(" "),l="";for(var i=0;i<w.length;i++){var tt=l+w[i]+" ";if(g.measureText(tt).width>mw&&l){g.fillText(l,x0,y0);l=w[i]+" ";y0+=lh;y+=lh;}else l=tt;}g.fillText(l,x0,y0);}
     line("Clienta",x.name||"",true);
-    line("Prenda",x.items.map(function(i){return (i.base||i.nombre)+(i.size?" · Talla "+i.size:"")+((i.qty||1)>1?" · x"+i.qty:"");}).join("  |  "),true);
-    if(x.color)line("Color",x.color);
+    line("Prenda",x.items.map(function(i){return (i.base||i.nombre)+(i.color?" · "+i.color:"")+(i.size?" · Talla "+i.size:"")+((i.qty||1)>1?" · x"+i.qty:"");}).join("  |  "),true);
     line("Tipo",x.items.map(function(i){return i.kind;}).filter(function(v,i,a){return a.indexOf(v)===i;}).join(", "));
     line("Entrega",fdate(x.dueAt,true));
     line("Medidas",x.measures||"Sin medidas");
@@ -285,7 +302,8 @@
       if(b.dataset.st){setStatus(key,b.dataset.st);return;}
       if(b.dataset.mv){var i=STEPS.indexOf(x.status)+Number(b.dataset.mv);if(i>=0&&i<4)setStatus(key,STEPS[i]);return;}
       if(b.hasAttribute("data-ticket")){ticket(x);return;}
-      if(b.dataset.pickc){upd(key,{color:b.dataset.pickc},"🎨 Color: "+b.dataset.pickc).then(function(){x.color=b.dataset.pickc;paint();}).catch(function(){});return;}
+      if(b.dataset.icpick!==undefined||b.hasAttribute("data-icsave")){var ic=b.closest(".mk-ic"),v=b.dataset.icpick!==undefined?b.dataset.icpick:ic.querySelector("[data-icol]").value.trim();saveColor(x,{itemColor:{i:+ic.dataset.i,color:v}},v,ic);return;}
+      if(b.dataset.allpick!==undefined||b.hasAttribute("data-allsave")){var ia=b.closest(".mk-ic"),va=b.dataset.allpick!==undefined?b.dataset.allpick:ia.querySelector("[data-allcol]").value.trim();if(!va){toast("Escribe o elige el color");return;}saveColor(x,{color:va,all:true},va,ia,true);return;}
       if(b.hasAttribute("data-addref")){var fi=document.createElement("input");fi.type="file";fi.accept="image/*";fi.onchange=function(){var f=fi.files&&fi.files[0];if(!f||!window.CanevaFoto)return;S.up=key;paint();
         CanevaFoto.resize(f,1400).then(function(data){return api("/admin/made/photo",{method:"POST",body:{key:key,data:data}});}).then(function(d){x.refs=d.photos;S.up="";paint();toast("📷 Foto guardada en el pedido");})
           .catch(function(err){S.up="";paint();toast("⚠️ "+err.message);});};fi.click();return;}
@@ -298,11 +316,12 @@
         b.disabled=true;api(path,{method:"POST",body:body}).then(function(){toast("💰 Abono de "+money(amt)+" registrado");if(amt>=x.balance)confetti();load();}).catch(function(err){b.disabled=false;toast("⚠️ "+err.message);});return;}
       if(b.hasAttribute("data-goped")&&S.o.goPedidos){S.o.goPedidos();return;}
     });
+    el.addEventListener("input",function(e){var t=e.target;if(!t.hasAttribute||!t.hasAttribute("data-icol"))return;var sv=t.parentNode.querySelector("[data-icsave]");if(sv)sv.classList.toggle("on",t.value.trim()!==(t.dataset.was||""));});
+    el.addEventListener("keydown",function(e){var t=e.target;if(e.key!=="Enter"||!t.hasAttribute||!(t.hasAttribute("data-icol")||t.hasAttribute("data-allcol")))return;e.preventDefault();var bt=t.parentNode.querySelector("button");if(bt)bt.click();});
     el.addEventListener("change",function(e){var t=e.target,c=t.closest&&t.closest(".mk-c");if(!c)return;
       if(t.hasAttribute("data-due")&&t.value){upd(c.dataset.key,{dueAt:t.value+"T12:00:00Z"},"📅 Fecha de entrega guardada").then(function(){paint();}).catch(function(){});return;}
       if(t.hasAttribute("data-m")||t.hasAttribute("data-mrest")){upd(c.dataset.key,{measures:joinMeas(c)},"📏 Medidas guardadas").catch(function(){});return;}
       if(t.hasAttribute("data-sup")){upd(c.dataset.key,{supplier:t.value},"🤝 Proveedor asignado").then(function(){var x=find(c.dataset.key);if(x){x.supplier=t.value;}paint();}).catch(function(){});return;}
-      if(t.hasAttribute("data-color")){var cx=find(c.dataset.key),v=t.value.trim();upd(c.dataset.key,{color:v},v?"🎨 Color: "+v:"Color borrado").then(function(){if(cx)cx.color=v;paint();}).catch(function(){});return;}
       if(t.hasAttribute("data-nt"))upd(c.dataset.key,{notes:t.value},"📝 Notas guardadas").catch(function(){});});
   }
   function load(){if(!S.el)return;if(!S.list.length)S.el.innerHTML='<div class="mk-empty">🧵 Cargando el taller…</div>';

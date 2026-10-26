@@ -133,10 +133,19 @@
   function send(text){
     text=String(text||"").trim();if(!text||S.busy)return;S.busy=true;var out=document.getElementById("iaOut");out.innerHTML='<div class="ia-rep">✨ Entendiendo…</div>';
     api("/admin/ai/act",{method:"POST",body:{message:text,history:S.hist}}).then(function(d){
-      S.hist=S.hist.concat([{role:"user",text:text},{role:"model",text:d.reply||""}]).slice(-6);S.acts=d.actions||[];S.sups=d.suppliers||[];
+      S.hist=S.hist.concat([{role:"user",text:text},{role:"model",text:d.reply||""}]).slice(-6);S.acts=d.actions||[];S.sups=d.suppliers||[];S.text=text;
+      // v4: a reminder the AI missed still becomes a card (never "listo" without something to save)
+      var rep=d.reply||"";if(!S.acts.some(function(a){return a&&a.type==="record";})){var rf=remLocal(text);if(rf){S.acts.push(rf);rep="🔔 Te dejo listo el recordatorio. Revisa la fecha y la hora y toca 🔔 Guardar recordatorio.";}}
+      if(!S.acts.length&&/^\s*(¡?listo|aqu[ií] tienes|cre[eé]|anot[eé]|guard[eé])/i.test(rep))rep="No alcancé a armarlo 🙈 ¿Me lo dices de otra forma? Ej: \"recuérdame mañana a las 3 pm llamar a Laura\".";
+      d.reply=rep;
       out.innerHTML='<div class="ia-rep">'+esc(d.reply||"Esto es lo que entendí:")+'</div>'+S.acts.map(cardHtml).join("")+(S.acts.length>1?'<button type="button" class="ia-all" data-all>✓ Registrar todo ('+S.acts.length+')</button>':'');
     }).catch(function(e){out.innerHTML='<div class="ia-rep">⚠️ '+esc(e.message)+(/404|Ruta|actualizar/i.test(e.message)?'<br>Pega el Worker v88 en Cloudflare.':'')+'</div>';}).then(function(){S.busy=false;});
   }
+  function remLocal(text){var t=" "+fl(text).replace(/[.,!?¡¿]/g," ").replace(/\s+/g," ")+" ";
+    if(!/ (recordar|recuerdame|recuerdeme|recordarme|recordatorio|avisame|aviseme|avisar|no olvidar|no olvides|tengo que|hay que) /.test(t)||!parseWhen(text))return null;
+    var task=String(text).replace(/^\s*(recordar(me)?|recu[eé]rd[ae]me|recordatorio|av[ií]s[ae]me|avisar|no olvidar|no olvides|tengo que|hay que)\s*(de|que|:)?\s*/i,"")
+      .replace(/\b(pasado\s+)?ma[ñn]ana\b|\bhoy\b|\besta\s+(tarde|noche)\b|\b(el|este|pr[oó]ximo|para el)\s+(lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo)\b|\b(a\s+las?\s+|tipo\s+)?\d{1,2}([:h]\d{2})?\s*(a\.?\s?m\.?|p\.?\s?m\.?|de la (ma[ñn]ana|tarde|noche))?(?=\s|$)|\bal?\s+mediod[ií]a\b/gi," ").replace(/\s+/g," ").trim()||text;
+    return {type:"record",summary:"Recordatorio",data:{collection:"Recordatorios",icon:"🔔",fields:{Tarea:task.charAt(0).toUpperCase()+task.slice(1)}}};}
   function fieldsOf(a){var d=a.data||{};if(a.type==="record"){return [["collection",d.collection||""],["icon",d.icon||"📒"]].concat(Object.keys(d.fields||{}).map(function(k){return ["f:"+k,d.fields[k]];}));}
     return Object.keys(d).map(function(k){var v=d[k];return [k,Array.isArray(v)?v.join(", "):v];});}
   function pad(n){return String(n).padStart(2,"0");}
@@ -147,7 +156,7 @@
     return '<div class="ia-card" data-i="'+i+'"><div class="ia-ch">'+t[0]+' '+t[1]+(a.summary?' <small>· '+esc(a.summary)+'</small>':'')+'</div><div class="ia-f">'+fieldsOf(a).map(function(f){var k=f[0],lab=k.indexOf("f:")===0?k.slice(2):(LABEL[k]||k),long=/text|notes|measures|descripcion|desc/.test(k)||String(f[1]||"").length>40;
       return '<div class="'+(long?'w':'')+'"><label>'+esc(lab)+'</label>'+(long?'<textarea data-k="'+esc(k)+'" rows="2">'+esc(f[1]==null?"":f[1])+'</textarea>':'<input data-k="'+esc(k)+'" value="'+esc(f[1]==null?"":f[1])+'">')+'</div>';}).join("")+
       (a.type==="record"?'<label class="ia-due"><span>⏰ Avisarme al celular</span><input type="datetime-local" data-due value="'+esc(due)+'"></label>':'')+'</div>'+
-      '<div class="ia-act"><button type="button" class="ia-ok" data-ok="'+i+'">✓ Registrar</button><button type="button" class="ia-no" data-no="'+i+'">Descartar</button></div></div>';}
+      '<div class="ia-act"><button type="button" class="ia-ok" data-ok="'+i+'">'+(due?'🔔 Guardar recordatorio':'✓ Registrar')+'</button><button type="button" class="ia-no" data-no="'+i+'">Descartar</button></div></div>';}
   function readCard(i){var c=document.querySelector('.ia-card[data-i="'+i+'"]'),a=S.acts[i];if(!c||!a)return null;var d={},fields={};
     c.querySelectorAll("[data-k]").forEach(function(el){var k=el.dataset.k,v=el.value.trim();if(k.indexOf("f:")===0){if(v)fields[k.slice(2)]=/^\d+$/.test(v)?Number(v):v;}else d[k]=v;});
     if(a.type==="record"){d.fields=fields;var du=c.querySelector("[data-due]");d.due=du&&du.value?new Date(du.value).toISOString():"";}return {type:a.type,data:d,el:c};}
