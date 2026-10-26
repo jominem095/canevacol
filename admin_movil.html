@@ -585,7 +585,7 @@ main{padding:14px 16px 120px}
 <script src="admin_made.js?v=4"></script>
 <script src="admin_foto.js?v=1"></script>
 <script src="admin_proveedores.js?v=1"></script>
-<script src="admin_ia.js?v=1"></script>
+<script src="admin_ia.js?v=2"></script>
 <script src="admin_stock.js?v=4"></script>
 <script>
 // Mobile admin for Caneva: edits the live catalog (Worker /catalog) and republishes via /admin/catalog.
@@ -1910,7 +1910,9 @@ token()?showList():showLogin();
   // v74: notifications of the Caneva Admin app itself (Web Push) + the red number, inside the "Avisos a tu celular" card
   const swOk="serviceWorker" in navigator&&"PushManager" in window&&"Notification" in window;
   const swReg=swOk?navigator.serviceWorker.register("admin-sw.js",{scope:"admin_movil.html"}).catch(()=>null):Promise.resolve(null);
-  if("serviceWorker" in navigator)navigator.serviceWorker.addEventListener("message",e=>{if(e.data&&e.data.cv==="refresh"){refresh();try{if(currentTab==="hoy")loadHoy(true);}catch(x){}}});
+  if("serviceWorker" in navigator)navigator.serviceWorker.addEventListener("message",e=>{if(e.data&&e.data.cv==="refresh"){refresh();try{if(e.data.tab){showTab(e.data.tab);}else if(currentTab==="hoy")loadHoy(true);}catch(x){}}});
+  // v88: a reminder notice opens Libretas (admin_movil.html?tab=libretas)
+  (function(){const t=new URLSearchParams(location.search).get("tab");if(!t)return;let n=0;const go=()=>{n++;try{if(token()&&typeof showTab==="function"&&document.querySelector('#tabs button[data-tab="'+t+'"]')){showTab(t);return;}}catch(x){}if(n<20)setTimeout(go,400);};setTimeout(go,600);})();
   const keyU8=k=>{const t=k.replace(/-/g,"+").replace(/_/g,"/");const b=atob(t+"===".slice((t.length+3)%4));return Uint8Array.from(b,c=>c.charCodeAt(0));};
   const dev=()=>/iphone/i.test(navigator.userAgent)?"iPhone":/ipad/i.test(navigator.userAgent)?"iPad":/android/i.test(navigator.userAgent)?"Android":"Computador";
   const okRow=()=>`<div style="font-size:12px;margin-top:10px;line-height:1.6">🔔 Notificaciones de Caneva Admin: <b>activas en este ${dev()}</b><br>🔴 Número en el ícono: <b>activo</b> (${total()||0} pendientes)</div>`;
