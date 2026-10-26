@@ -226,7 +226,7 @@
       '<div class="lb2-next">'+(next?'<small>⏭ Tu próximo aviso</small><b>'+esc(next.c.icon||"🔔")+' '+esc(itemText(next.it))+'</b><em data-cd="'+esc(next.it.due)+'"></em>':'<small>⏭ Próximo aviso</small><b>Nada pendiente 🎉</b><span style="font-size:12px;opacity:.7">Escribe abajo: "recuérdame mañana a las 3 llamar a…"</span>')+'</div></div>'+
       '<div class="lb2-pills"><span>🔔 '+pend.length+' pendiente'+(pend.length===1?'':'s')+'</span>'+(late.length?'<span class="bad">⚠️ '+late.length+' atrasado'+(late.length===1?'':'s')+'</span>':'')+'<span>✅ '+doneToday+' hecho'+(doneToday===1?'':'s')+' hoy</span><span>📒 '+L.cols.length+' libreta'+(L.cols.length===1?'':'s')+'</span></div>'+
       '<div class="lb2-comp"><div><input id="lbIn" placeholder="✨ Escribe: recuérdame mañana a las 3 pedirle a Nay el pantalón beige…" autocomplete="off"><button type="button" class="mic" data-mic>🎤</button><button type="button" data-go>Anotar</button></div></div><div class="ia-live" id="lbLive"></div>'+
-      '<div class="lb2-push">'+(perm==="granted"?'🔔 Los avisos llegan a este celular a la hora exacta, con botones <b>✓ Hecho</b> y <b>⏰ +1 hora</b>.':perm==="denied"?'🔕 Las notificaciones están bloqueadas: actívalas en Ajustes → Notificaciones → Caneva Admin.':perm==="na"?'📲 Para recibir los avisos, abre Caneva Admin desde el ícono de la pantalla de inicio.':'<button type="button" id="cvPushOn">🔔 Activar avisos en este celular</button>')+'</div></div>'+
+      '<div class="lb2-push" id="lbPush">Revisando los avisos de este dispositivo…</div></div>'+
       (L.cols.length?L.cols.map(function(c){
         var rem=isRem(c),items=c.items||[];
         var head='<div class="lb2-h"><span class="ic">'+esc(c.icon||"📒")+'</span><div><b>'+esc(c.name)+'</b><small>'+items.length+' registro'+(items.length===1?'':'s')+(rem?' · '+items.filter(function(i){return i.due&&!i.done;}).length+' con aviso':'')+'</small></div><div class="r"><button type="button" data-add>✨ Anotar</button><button type="button" data-csv>⬇ Excel</button><button type="button" data-delc>🗑</button></div></div>';
@@ -238,8 +238,18 @@
         return '<div class="lb2-c" data-c="'+esc(c.name)+'">'+head+(vk?'<div class="lb2-sum">Total '+esc(vk.toLowerCase())+': <b>'+money(sum)+'</b></div>':'')+'<div class="lg" style="margin-top:10px">'+items.slice(0,60).map(function(it){return genHtml(c,it);}).join("")+'</div></div>';}).join("")
        :'<div class="lb2-c" style="text-align:center;padding:30px">📒 Aún no hay libretas. Escribe arriba, por ejemplo: <b>"recuérdame el lunes a las 10 pagar la pauta"</b> o <b>"anota gasto: bolsas 45 mil"</b>.</div>')+
       '<div class="lb2-c" id="lbPr"><div class="lb2-h"><span class="ic">🕘</span><div><b>Tus prompts</b><small>Lo que le has pedido a la IA, para repetirlo en un toque. ⭐ = fijado arriba</small></div></div><div class="lb2-pr" id="lbPrList"><div style="opacity:.6">Cargando…</div></div></div></div>';
-    tickUI();paintPrompts();bindLive();
+    tickUI();paintPrompts();bindLive();pushStatus();
   }
+  // v2.1: real state of THIS device (permission + push subscription), activation and a test notice
+  function pushStatus(){var el=document.getElementById("lbPush");if(!el)return;
+    var dev=/iphone|ipad/i.test(navigator.userAgent)?"iPhone":/android/i.test(navigator.userAgent)?"celular":"computador";
+    if(!("serviceWorker" in navigator)||!("PushManager" in window)||!("Notification" in window)){el.innerHTML='📲 Para recibir los avisos en el iPhone, abre <b>Caneva Admin</b> desde el ícono de la pantalla de inicio (no desde Safari).';return;}
+    if(Notification.permission==="denied"){el.innerHTML='🔕 Las notificaciones están bloqueadas en este '+dev+'. Actívalas en los ajustes del navegador o del celular (Notificaciones → Caneva Admin) y vuelve a abrir la app.';return;}
+    navigator.serviceWorker.getRegistration("admin_movil.html").then(function(reg){return reg?reg.pushManager.getSubscription():null;}).catch(function(){return null;}).then(function(sub){
+      if(sub&&Notification.permission==="granted"){el.innerHTML='✅ <b>Avisos activos en este '+dev+'.</b> Llegan a la hora exacta'+(dev==="iPhone"?'':', con botones <b>✓ Hecho</b> y <b>⏰ +1 hora</b>')+'.<button type="button" data-ptest style="background:linear-gradient(120deg,#cfd6db,#fff 45%,#e8eef2);color:#050505">🔔 Probar: avísame en 1 minuto</button>';return;}
+      el.innerHTML='⚠️ <b>Este '+dev+' todavía no recibe avisos.</b> Tócalo una vez y acepta el permiso:<button type="button" id="cvPushOn">🔔 Activar avisos en este '+dev+'</button>';
+      var b=el.querySelector("#cvPushOn");if(b)b.addEventListener("click",function(){setTimeout(pushStatus,2500);setTimeout(pushStatus,6000);});
+    });}
   function paintPrompts(){var box=document.getElementById("lbPrList");if(!box)return;var P=S.prompts||[];
     box.innerHTML=P.length?P.slice(0,30).map(function(p){return '<div data-pid="'+esc(p.id)+'"><button type="button" data-pin title="Fijar">'+(p.pin?'⭐':'☆')+'</button><p>'+esc(p.t)+'</p><small>'+(p.n>1?'×'+p.n+' · ':'')+esc(new Date(p.at).toLocaleDateString("es-CO",{day:"numeric",month:"short"}))+'</small><button type="button" data-use title="Usar">↩</button><button type="button" data-pdel title="Borrar">✕</button></div>';}).join(""):'<div style="opacity:.65">Aún no hay prompts guardados: se guardan solos cada vez que le escribes a la IA.</div>';}
   function bindLive(){var i=document.getElementById("lbIn"),lv=document.getElementById("lbLive");if(!i||i.__b)return;i.__b=1;
@@ -266,6 +276,8 @@
     el.addEventListener("click",function(e){var b=e.target.closest("button,[data-edit]");if(!b)return;
       if(b.hasAttribute("data-go")){var i=document.getElementById("lbIn");if(i&&i.value.trim())open(i.value,true);else open("");return;}
       if(b.hasAttribute("data-mic")){var i2=document.getElementById("lbIn");mic(b,i2);return;}
+      if(b.hasAttribute("data-ptest")){b.disabled=true;b.textContent="Programando…";var t=new Date(Date.now()+60000);
+        api("/admin/records",{method:"POST",body:{action:"add",collection:"Recordatorios",icon:"🔔",fields:{Tarea:"Prueba de avisos CΛNEVΛ ✨"},due:t.toISOString()}}).then(function(d){L.cols=d.collections||[];lbPaint();toast("🔔 Listo: te llega en 1 a 5 minutos, aunque cierres la app");}).catch(function(x){b.disabled=false;toast("⚠️ "+x.message);});return;}
       var pr=b.closest("[data-pid]");if(pr&&b.closest("#lbPrList")){var pid=pr.dataset.pid,pp=(S.prompts||[]).filter(function(x){return x.id===pid;})[0];
         if(b.hasAttribute("data-use")&&pp){open(pp.t,true);return;}
         if(b.hasAttribute("data-pin")||b.hasAttribute("data-pdel"))api("/admin/ai/prompts",{method:"POST",body:{action:b.hasAttribute("data-pin")?"pin":"delete",id:pid}}).then(function(d){S.prompts=d.prompts;paintPrompts();}).catch(function(x){toast("⚠️ "+x.message);});return;}
