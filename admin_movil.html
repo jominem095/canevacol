@@ -328,6 +328,7 @@ main{padding:14px 16px 120px}
       <button type="button" data-tab="ventas">💵 Ventas</button>
       <button type="button" data-tab="bajopedido">🧵 Bajo pedido</button>
       <button type="button" data-tab="proveedores">🤝 Proveedores</button>
+      <button type="button" data-tab="libretas">📒 Libretas</button>
       <button type="button" data-tab="productos" class="on">👗 Productos</button>
       <button type="button" data-tab="club">👑 Club</button>
       <button type="button" data-tab="control">⚡ Control</button>
@@ -372,6 +373,7 @@ main{padding:14px 16px 120px}
     <div id="rsView" class="hidden"><div id="rsBody"></div></div>
     <div id="mkView" class="hidden"><div id="mkBody"></div></div>
     <div id="pvView" class="hidden"><div id="pvBody"></div></div>
+    <div id="lbView" class="hidden"><div id="lbBody"></div></div>
     <div id="prodView">
     <button id="portadaInfo" class="promo" type="button"></button>
     <button id="intlInfo" class="promo" type="button">🌎 <b>Ventas internacionales</b> — % extra y envío por zona<span class="go">Editar ›</span></button>
@@ -582,6 +584,7 @@ main{padding:14px 16px 120px}
 <script src="admin_respuestas.js?v=1"></script>
 <script src="admin_made.js?v=3"></script>
 <script src="admin_proveedores.js?v=1"></script>
+<script src="admin_ia.js?v=1"></script>
 <script>
 // Mobile admin for Caneva: edits the live catalog (Worker /catalog) and republishes via /admin/catalog.
 // Uses the same Worker endpoints and product shape as admin.html, so no Worker changes are needed.
@@ -1382,6 +1385,15 @@ function hoyConfetti(){const c=document.createElement("canvas");c.style.cssText=
   let f=0;(function tick(){x.clearRect(0,0,W,H);ps.forEach(p=>{p.vy+=.35;p.x+=p.vx;p.y+=p.vy;p.r+=.1;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.fillStyle=p.c;x.fillRect(-p.s/2,-p.s/2,p.s,p.s*.6);x.restore();});if(++f<150)requestAnimationFrame(tick);else c.remove();})();}
 function hoyCash(){try{const a=new (window.AudioContext||window.webkitAudioContext)();[[1318,0],[1760,.09]].forEach(([fq,t])=>{const o=a.createOscillator(),g=a.createGain();o.type="triangle";o.frequency.value=fq;g.gain.setValueAtTime(.0001,a.currentTime+t);g.gain.exponentialRampToValueAtTime(.25,a.currentTime+t+.02);g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+t+.35);o.connect(g).connect(a.destination);o.start(a.currentTime+t);o.stop(a.currentTime+t+.4);});}catch(e){}}
 setInterval(()=>{if(currentTab==="hoy"&&!document.hidden&&!HOY.loading)loadHoy();},300000);
+// Caneva AI "Registrar con IA" → opens the product editor prefilled; owner adds the photo and publishes
+window.cvNewProduct=function(d){
+  d=d||{}; showTab("productos"); openEditor(-1);
+  if(d.nombre) $("fNombre").value=d.nombre;
+  let pr=parseInt(String(d.precio||"").replace(/[^\d]/g,""),10)||0; if(pr&&pr<1000&&/mil|k\b/i.test(String(d.precio))) pr*=1000; if(pr) $("fPrecio").value="$"+pr.toLocaleString("es-CO");
+  if(d.tallas) $("fTallas").value=Array.isArray(d.tallas)?d.tallas.join(", "):d.tallas;
+  if(d.descripcion) $("fDesc").value=d.descripcion; if(d.tela) $("fTela").value=d.tela;
+  if(d.categoria){ const m=categories().map(x=>x.c).find(c=>c.toLowerCase()===String(d.categoria).toLowerCase()); fillCategorySelect(m||d.categoria); }
+};
 function showTab(t){
   currentTab=t;
   document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("on",b.dataset.tab===t));
@@ -1396,6 +1408,7 @@ function showTab(t){
   if(t==="enlaces") CanevaPro.mount($("lnkBody"),"enlaces",proOpts());
   if(t==="ventas") CanevaVentas.mount($("venBody"),{api:API_BASE,token:token});
   $("mkView").classList.toggle("hidden",t!=="bajopedido"); if(t==="bajopedido"&&window.CanevaMade){ if(!$("mkBody").firstChild) CanevaMade.mount($("mkBody"),{api:API_BASE,token:token,goPedidos:()=>{showTab("pedidos");loadOrders();}}); else CanevaMade.reload(); }
+  $("lbView").classList.toggle("hidden",t!=="libretas"); if(t==="libretas"&&window.CanevaLibretas){ if(!$("lbBody").firstChild) CanevaLibretas.mount($("lbBody")); else CanevaLibretas.reload(); }
   $("pvView").classList.toggle("hidden",t!=="proveedores"); if(t==="proveedores"&&window.CanevaProveedores){ if(!$("pvBody").firstChild) CanevaProveedores.mount($("pvBody"),{api:API_BASE,token:token,goTaller:()=>showTab("bajopedido")}); else CanevaProveedores.reload(); }
   $("rsView").classList.toggle("hidden",t!=="respuestas"); if(t==="respuestas"&&window.CanevaRespuestas&&!$("rsBody").firstChild) CanevaRespuestas.mount($("rsBody"),{api:API_BASE,token:token,products:()=>products});
   if(t==="inventario") CanevaPro.mount($("invBody"),"inventario",proOpts());
