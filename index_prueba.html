@@ -7487,5 +7487,89 @@ body.product-open .cv-wel{display:none!important}
 })();
 </script>
 
+<style id="cvbuy-css">
+/* v91: fewer taps to buy: "Comprar ahora", size picked by itself when there is only one, her size remembered */
+#pmodal .pm-actions .cv-now{order:-1;flex:1 1 100%;min-height:52px;border:0;border-radius:999px;background:linear-gradient(120deg,#ffe7a8,#fff 45%,#e6cf9f);color:#070604;font:700 .78rem/1 'Montserrat',system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;box-shadow:0 10px 30px rgba(230,207,159,.25);display:flex;align-items:center;justify-content:center;gap:.5rem;transition:transform .15s}
+#pmodal .pm-actions .cv-now:active{transform:scale(.97)}
+#pmodal .pm-actions .cv-now small{font:600 .62rem/1 'Montserrat',sans-serif;letter-spacing:.08em;opacity:.65;text-transform:none}
+.pm-size-btn.cv-mine{position:relative}.pm-size-btn.cv-mine:after{content:'tu talla';position:absolute;left:50%;bottom:-15px;transform:translateX(-50%);font-size:9px;letter-spacing:.06em;color:#e6cf9f;white-space:nowrap}
+#pmSizeOptions{padding-bottom:16px}
+.cvqs .sz button.cv-mine{box-shadow:0 0 0 2px #e6cf9f}
+#cvBuyBar .bb-now{background:linear-gradient(120deg,#ffe7a8,#fff 45%,#e6cf9f)!important}
+#cvBuyBar.cv-two button:not(.bb-now){flex:.8;background:rgba(247,247,244,.1)!important;color:#f7f7f4!important;border:1px solid rgba(247,247,244,.25)!important}
+.cart-actions.cv-pulse #cartWhats,.cart-actions.cv-pulse #cartBold{animation:cvNowPulse 1.4s ease 2}
+@keyframes cvNowPulse{0%,100%{box-shadow:0 0 0 0 rgba(230,207,159,0)}50%{box-shadow:0 0 0 6px rgba(230,207,159,.35)}}
+</style>
+<script id="cvbuy">
+// v91: fast buying (phone and desktop)
+// 1) one available size -> chosen by itself; her last size is chosen when the garment has it (she can change it)
+// 2) "⚡ Comprar ahora" in the product: adds and opens the cart with the pay buttons, no extra sheets
+// 3) quick "+" on the cards: one available size -> added at once
+(function(){
+  if(typeof renderSizeSelector!=='function'||typeof openProductModal!=='function')return;
+  function push(k,l){try{if(window.cvStatsPush)cvStatsPush({t:'k',k:k,l:l||''});}catch(e){}}
+  function lsGet(k){try{return localStorage.getItem(k)||'';}catch(e){return '';}}
+  function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+  // her size, kept apart for letter sizes (S, M…) and number sizes (6, 8…)
+  function kind(z){return /^\d/.test(z)?'n':'l';}
+  function mine(z){var m={};try{m=JSON.parse(lsGet('cv_my_size')||'{}')||{};}catch(e){}
+    if(!m.l){try{var cu=window.clubUser&&clubUser();if(cu&&cu.size)m.l=String(cu.size).toUpperCase().trim();}catch(e){}}
+    return m;}
+  function remember(z){if(!z)return;var m=mine();m[kind(z)]=z;lsSet('cv_my_size',JSON.stringify(m));}
+  var auto=false;
+  var oRender=renderSizeSelector;
+  window.renderSizeSelector=renderSizeSelector=function(p){
+    var r=oRender.apply(this,arguments);
+    try{
+      var opts=document.getElementById('pmSizeOptions'),note=document.getElementById('pmSizeNote');if(!opts)return r;
+      var all=[].slice.call(opts.querySelectorAll('.pm-size-btn')),ok=all.filter(function(b){return !b.disabled;});
+      var pick=null,why='';
+      if(ok.length===1){pick=ok[0];why=all.length===1?'Talla única ✓':'Solo queda la talla '+ok[0].dataset.size+' ✓';}
+      else{var m=mine();ok.forEach(function(b){var z=b.dataset.size;if(!pick&&m[kind(z)]===z){pick=b;why='Tu talla '+z+' ✓ · toca otra si quieres cambiarla';}});}
+      if(pick){auto=true;pick.click();auto=false;pick.classList.add('cv-mine');if(note)note.textContent=why;var w=document.getElementById('pmSizeWrap');if(w)w.classList.remove('need');}
+    }catch(e){auto=false;}
+    return r;};
+  // remember the size she taps herself
+  document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('#pmSizeOptions .pm-size-btn,#cvqsOv [data-z]');if(!b||auto||!e.isTrusted||b.disabled)return;remember(b.dataset.size||b.dataset.z);},true);
+
+  // ---- 2) "Comprar ahora" ----
+  function qtyWanted(){var n=document.getElementById('cvQtyN');return Math.max(1,parseInt(n&&n.textContent,10)||1);}
+  function units(){return (window.CART||[]).reduce(function(a,x){return a+(Number(x.qty)||1);},0);}
+  function buyNow(){
+    var i=typeof currentProductIndex==='number'?currentProductIndex:-1,p=P[i];if(!p)return;
+    if(typeof requireSizeIfNeeded==='function'&&!requireSizeIfNeeded(p)){push('comprar_ahora_talla');return;}
+    var size=typeof getSelectedSize==='function'?getSelectedSize():'',key=typeof productKey==='function'?productKey(p,size):'';
+    var inCart=(window.CART||[]).some(function(x){return x.key===key;});
+    if(!inCart){var before=units();addToCartByIndex(i,false,size);if(units()<=before)return; // no stock: the store already said why
+      for(var k=1;k<qtyWanted();k++){var n0=units();changeCartQty(key,1);if(units()===n0)break;}}
+    push('comprar_ahora',p.nombre);
+    try{if(navigator.vibrate)navigator.vibrate(15);}catch(e){}
+    if(typeof closeProductModal==='function')closeProductModal();
+    setTimeout(function(){if(typeof openCart==='function')openCart();var a=document.querySelector('#cartDrawer .cart-actions');if(a){a.classList.remove('cv-pulse');void a.offsetWidth;a.classList.add('cv-pulse');try{a.scrollIntoView({block:'end'});}catch(e){}}},120);
+  }
+  function addNowBtn(){
+    var acts=document.querySelector('#pmodal .pm-actions');if(!acts||document.getElementById('pmBuyNow'))return;
+    var b=document.createElement('button');b.type='button';b.id='pmBuyNow';b.className='cv-now';b.innerHTML='⚡ Comprar ahora';
+    b.addEventListener('click',buyNow);acts.insertBefore(b,acts.firstChild);
+  }
+  addNowBtn();
+  var oOpen=openProductModal;
+  window.openProductModal=openProductModal=function(){var r=oOpen.apply(this,arguments);try{addNowBtn();}catch(e){}return r;};
+  // sticky bar on phones: a second button "Comprar"
+  setInterval(function(){var bar=document.getElementById('cvBuyBar');if(!bar||bar.querySelector('.bb-now'))return;
+    var n=document.createElement('button');n.type='button';n.className='bb-now';n.textContent='⚡ Comprar';n.addEventListener('click',function(){push('buybar_comprar');buyNow();});bar.appendChild(n);bar.classList.add('cv-two');},700);
+
+  // ---- 3) quick "+" sheet ----
+  new MutationObserver(function(){
+    var ov=document.getElementById('cvqsOv');if(!ov||ov.__cvb)return;ov.__cvb=1;
+    var bs=[].slice.call(ov.querySelectorAll('[data-z]')),ok=bs.filter(function(b){return !b.disabled;}),m=mine();
+    if(ok.length===1){auto=true;ok[0].click();auto=false;push('quick_auto_talla');fixCart();return;}
+    ok.forEach(function(b){if(m[kind(b.dataset.z)]===b.dataset.z)b.classList.add('cv-mine');});
+  }).observe(document.body,{childList:true});
+  // after a quick add, the main button goes straight to ordering
+  function fixCart(){var c=document.querySelector('#cvqsOv [data-cart]');if(c&&!c.__cvb){c.__cvb=1;c.textContent='💎 Pedir ahora ('+units()+')';}}
+  document.addEventListener('click',function(){setTimeout(fixCart,30);},true);
+})();
+</script>
 </body>
 </html>
