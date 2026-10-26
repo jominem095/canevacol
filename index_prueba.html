@@ -7632,5 +7632,96 @@ body.product-open .cv-wel{display:none!important}
   addEventListener('cv:catalog',function(){try{home();}catch(e){}});
 })();
 </script>
+<style id="cvwaq-css">
+/* v89: WhatsApp orders that never get lost: name + WhatsApp before opening the chat (skippable), size in the message,
+   and "¿Pudiste enviar tu pedido?" when she comes back from WhatsApp. */
+.cvwq-ov{position:fixed;inset:0;z-index:100030;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:flex-end;justify-content:center;animation:cvqsF .2s}
+@media(min-width:760px){.cvwq-ov{align-items:center}}
+.cvwq{width:min(440px,100%);border-radius:26px 26px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom));background:radial-gradient(420px 200px at 0% 0%,rgba(37,211,102,.16),transparent 60%),linear-gradient(180deg,#121110,#060504);border:1px solid rgba(37,211,102,.4);color:#f7f7f4;font-family:Inter,system-ui,sans-serif;animation:cvqsU .28s cubic-bezier(.2,.9,.3,1.2)}
+@media(min-width:760px){.cvwq{border-radius:26px}}
+.cvwq .hd{display:flex;align-items:center;gap:10px}.cvwq .hd i{font-style:normal;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#25d366;color:#04140a;font-size:22px;flex:0 0 auto}
+.cvwq h4{margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-weight:400;font-size:25px;line-height:1.05}.cvwq p{margin:8px 0 12px;font-size:13px;line-height:1.5;color:rgba(247,247,244,.75)}
+.cvwq .x{margin-left:auto;align-self:flex-start;width:34px;height:34px;border-radius:50%;border:1px solid rgba(247,247,244,.25);background:none;color:#fff;font-size:18px;cursor:pointer}
+.cvwq label{display:block;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:rgba(247,247,244,.6);margin:10px 0 5px}
+.cvwq input{width:100%;box-sizing:border-box;background:#050505;border:1px solid rgba(247,247,244,.22);border-radius:14px;color:#fff;padding:13px 14px;font:16px Inter,sans-serif}.cvwq input:focus{outline:none;border-color:#25d366}
+.cvwq .er{color:#ffb4a8;font-size:12px;margin-top:6px;min-height:14px}
+.cvwq .go{width:100%;margin-top:12px;border:0;border-radius:999px;padding:15px;font:800 15px Inter,sans-serif;background:#25d366;color:#04140a;cursor:pointer;box-shadow:0 10px 30px rgba(37,211,102,.25)}
+.cvwq .sk{width:100%;margin-top:8px;border:0;background:none;color:rgba(247,247,244,.6);font:600 12.5px Inter,sans-serif;padding:8px;cursor:pointer;text-decoration:underline}
+.cvwq .fine{display:block;text-align:center;font-size:11px;color:rgba(247,247,244,.45);margin-top:6px}
+.cvwq .row{display:flex;flex-direction:column;gap:8px;margin-top:6px}.cvwq .row button{border-radius:999px;padding:14px;font:800 14px Inter,sans-serif;cursor:pointer;border:1px solid rgba(247,247,244,.25);background:none;color:#f7f7f4}.cvwq .row .p{background:#25d366;border-color:#25d366;color:#04140a}
+</style>
+<script id="cvwaq">
+(function(){
+  if(typeof postOrder!=='function'||typeof createOrder!=='function')return;
+  var BKEY='caneva_buyer_v1',PASS=false,CK='cv_wa_check';
+  function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function push(k,l){try{if(window.cvStatsPush)cvStatsPush({t:'k',k:k,l:l||''});}catch(e){}}
+  function saved(){var b={};try{b=JSON.parse(localStorage.getItem(BKEY)||'{}')||{};}catch(e){}
+    try{var u=window.clubUser&&clubUser();if(u){if(!b.name&&u.name)b.name=u.name;if(!b.phone&&u.phone)b.phone=String(u.phone).replace(/\D/g,'').replace(/^57(?=\d{10}$)/,'');}}catch(e){}return b;}
+  function hasContact(){var c=null;try{c=window.cvBuyer&&cvBuyer();}catch(e){}var b=c||saved();return !!(b&&b.phone&&String(b.phone).replace(/\D/g,'').length>=7);}
+  // every order saved from now on carries her contact when we have it (the cart form or this quick form)
+  var oPost=postOrder;
+  postOrder=window.postOrder=function(id,items){
+    var cur=null;try{cur=window.cvBuyer&&cvBuyer();}catch(e){}
+    if(cur)return oPost.apply(this,arguments);
+    var b=saved();if(!b.phone&&!b.name)return oPost.apply(this,arguments);
+    try{fetch(API_BASE+'/order',{method:'POST',headers:{'Content-Type':'text/plain;charset=UTF-8'},keepalive:true,
+      body:JSON.stringify({id:id,items:items,token:(window.clubToken&&clubToken())||undefined,email:b.email||(window.clubGuestEmail&&clubGuestEmail())||undefined,buyer:{name:b.name||'',phone:b.phone||'',email:b.email||'',city:b.city||'',address:b.address||'',barrio:b.barrio||'',doc:b.doc||'',country:b.country||undefined}})}).catch(function(){});}catch(e){}
+  };
+  // the product button also sends the size she picked
+  function freshHref(a){
+    if(a.id!=='pmWhats'||typeof waLinkFor!=='function'||typeof currentProductIndex!=='number')return;
+    var p=P[currentProductIndex];if(!p)return;var href=waLinkFor(p),sz='';try{sz=typeof getSelectedSize==='function'?getSelectedSize():'';}catch(e){}
+    if(sz){var m=decodeURIComponent(href).match(/\/o\/([a-z0-9]{8,16})/);if(m&&ORDER_PENDING[m[1]])ORDER_PENDING[m[1]].forEach(function(it){it.size=sz;});
+      var k=href.indexOf('?text='),t=k>=0?decodeURIComponent(href.slice(k+6)):'';if(t){t=t.replace(/\n¿Me confirmas/,'\nTalla: '+sz+'\n¿Me confirmas');href=href.slice(0,k)+'?text='+encodeURIComponent(t);}}
+    a.href=href;
+  }
+  function isOrderLink(a){try{return /\/o\/[a-z0-9]{8,16}/.test(decodeURIComponent(a.getAttribute('href')||''));}catch(e){return false;}}
+  function close(){var o=document.getElementById('cvwqOv');if(o)o.remove();}
+  function go(a){
+    PASS=true;try{freshHref(a);a.click();}finally{PASS=false;}
+  }
+  function ask(a){
+    close();var b=saved(),ov=document.createElement('div');ov.className='cvwq-ov';ov.id='cvwqOv';
+    ov.innerHTML='<form class="cvwq" novalidate><div class="hd"><i>💬</i><h4>Te atendemos por WhatsApp</h4><button type="button" class="x" aria-label="Cerrar">×</button></div>'+
+      '<p>Déjanos tu nombre y tu WhatsApp. <b>Si el mensaje no alcanza a salir, te escribimos nosotras</b> para separarte la prenda.</p>'+
+      '<label>Tu nombre</label><input name="n" autocomplete="given-name" value="'+esc(b.name||'')+'" placeholder="Ej: Laura">'+
+      '<label>Tu WhatsApp</label><input name="p" type="tel" inputmode="tel" autocomplete="tel" value="'+esc(b.phone||'')+'" placeholder="300 123 4567">'+
+      '<div class="er"></div><button type="submit" class="go">Abrir WhatsApp ➤</button><button type="button" class="sk">Continuar sin dejar mis datos</button>'+
+      '<span class="fine">Solo lo usamos para atender tu pedido.</span></form>';
+    document.body.appendChild(ov);push('wa_datos_visto');
+    var f=ov.querySelector('form');setTimeout(function(){var i=f.elements.n.value?f.elements.p:f.elements.n;if(window.innerWidth>760)i.focus();},250);
+    ov.addEventListener('click',function(e){if(e.target===ov||e.target.closest('.x')){close();return;}if(e.target.closest('.sk')){close();push('wa_sin_datos');go(a);}});
+    f.addEventListener('submit',function(e){e.preventDefault();
+      var n=f.elements.n.value.trim(),p=f.elements.p.value.replace(/[^\d+]/g,''),d=p.replace(/\D/g,'').replace(/^57(?=3\d{9}$)/,''),er=f.querySelector('.er');
+      if(!(/^3\d{9}$/.test(d)||(p.charAt(0)==='+'&&d.length>=8))){er.textContent='Escribe tu WhatsApp (10 dígitos, empieza por 3)';f.elements.p.focus();return;}
+      var s=saved();s.name=n||s.name||'';s.phone=p.charAt(0)==='+'?p:d;try{localStorage.setItem(BKEY,JSON.stringify(s));}catch(x){}
+      push('wa_datos_ok');close();go(a);});
+  }
+  // runs before the store's own WhatsApp listeners (window capture)
+  window.addEventListener('click',function(e){
+    var a=e.target&&e.target.closest&&e.target.closest('a[href*="wa.me"]');if(!a||!isOrderLink(a))return;
+    if(PASS){try{sessionStorage.setItem(CK,JSON.stringify({t:Date.now(),h:a.href,id:a.id||''}));}catch(x){}return;}
+    if(hasContact()){freshHref(a);try{sessionStorage.setItem(CK,JSON.stringify({t:Date.now(),h:a.href,id:a.id||''}));}catch(x){}return;}
+    e.preventDefault();e.stopImmediatePropagation();ask(a);
+  },true);
+  // back from WhatsApp: did the message go out?
+  document.addEventListener('visibilitychange',function(){
+    if(document.visibilityState!=='visible')return;var c=null;try{c=JSON.parse(sessionStorage.getItem(CK)||'null');}catch(e){}
+    if(!c)return;var age=Date.now()-c.t;if(age<3000)return;try{sessionStorage.removeItem(CK);}catch(e){}if(age>30*60000)return;
+    setTimeout(function(){var bk=document.getElementById('cvBack');if(bk)bk.remove();
+      close();var ov=document.createElement('div');ov.className='cvwq-ov';ov.id='cvwqOv';
+      ov.innerHTML='<div class="cvwq"><div class="hd"><i>💎</i><h4>¿Pudiste enviar tu pedido?</h4><button type="button" class="x" aria-label="Cerrar">×</button></div>'+
+        '<p>A veces WhatsApp abre el mensaje pero no lo envía solo: hay que tocar <b>Enviar ➤</b> en el chat. Si no salió, ábrelo de nuevo.</p>'+
+        '<div class="row"><button type="button" class="p" data-again>📲 Abrir WhatsApp otra vez</button><button type="button" data-ok>✅ Sí, ya lo envié</button></div></div>';
+      document.body.appendChild(ov);push('wa_volvio');
+      ov.addEventListener('click',function(e){
+        if(e.target.closest('[data-again]')){push('wa_reabrir');close();try{sessionStorage.setItem(CK,JSON.stringify({t:Date.now(),h:c.h}));}catch(x){}window.open(c.h,'_blank','noopener');return;}
+        if(e.target.closest('[data-ok]')){push('wa_enviado');close();return;}
+        if(e.target===ov||e.target.closest('.x'))close();});
+    },500);
+  });
+})();
+</script>
 </body>
 </html>
