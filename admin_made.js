@@ -8,7 +8,7 @@
      orders written here are deleted for good
    Mounted by admin_movil.html: CanevaMade.mount(el, {api, token, goPedidos}) */
 (function(){
-  var S={el:null,o:null,list:[],hidden:[],f:"activos",kind:"Todas",q:"",view:"lista",day:""};
+  var S={el:null,o:null,list:[],hidden:[],sups:[],f:"activos",kind:"Todas",q:"",view:"lista",day:""};
   try{S.view=localStorage.getItem("cv_mk_view")||"lista";}catch(e){}
   var STEPS=["pedido","confeccion","listo","entregado"];
   var ST={pedido:["📝","Pedido","#cfe6ff"],confeccion:["🧵","En confección","#ffe7a8"],listo:["✨","Lista","#8ef0c8"],entregado:["✅","Entregada","#b9b9c4"]};
@@ -63,6 +63,8 @@
     ".mk-c textarea{width:100%;box-sizing:border-box;min-height:46px;background:#050505;border:1px solid rgba(246,247,248,.16);border-radius:10px;color:#fff;padding:8px 10px;font:13px/1.4 Inter,sans-serif;resize:vertical;margin-top:8px}"+
     ".mk-act{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.mk-act button,.mk-act a{border:0;border-radius:999px;padding:8px 12px;font:700 11.5px Inter,sans-serif;cursor:pointer;background:#f6f7f8;color:#050505;text-decoration:none}"+
     ".mk-act .wa,.mk-act a.wa.cvw-a{background:#25d366!important;color:#04140a!important}.mk-act a.wa .cvw-ic svg path:first-child{fill:#04140a}.mk-act .gh{background:none;color:#f6f7f8;border:1px solid rgba(246,247,248,.25)}.mk-act .gold{background:linear-gradient(120deg,#ffe7a8,#fff 45%,#f3dca0)}"+
+    ".mk-sup{display:flex;align-items:center;gap:8px;margin-top:10px;padding:8px 10px;border-radius:12px;background:rgba(201,167,255,.07);border:1px solid rgba(201,167,255,.25)}.mk-sup select{flex:1;min-width:0;background:#050505;border:1px solid rgba(246,247,248,.2);border-radius:8px;color:#fff;padding:6px;font:12.5px Inter,sans-serif}"+
+    ".mk-supgo,.mk-supgo.cvw-a{font-weight:700!important;color:#050505!important;}.mk-supgo,.mk-supgo.cvw-a{color:#050505!important;font-weight:700!important}.mk-supgo{flex:0 0 auto;border-radius:999px;padding:7px 10px;font:700 11px Inter,sans-serif;background:linear-gradient(120deg,#e6dcff,#fff);color:#050505!important;text-decoration:none;white-space:nowrap}"+
     ".mk-pay{display:none;gap:6px;margin-top:8px}.mk-pay.on{display:flex}.mk-pay input,.mk-pay select{flex:1;min-width:0;background:#050505;border:1px solid rgba(246,247,248,.2);border-radius:10px;color:#fff;padding:8px;font:13px Inter,sans-serif}"+
     ".mk-more summary{cursor:pointer;font-size:12px;color:rgba(246,247,248,.65);margin-top:8px;list-style:none}.mk-more summary::-webkit-details-marker{display:none}"+
     ".mk-new{border-radius:20px;padding:14px;margin:14px 0;background:#0e0e10;border:1px dashed rgba(255,214,102,.45)}.mk-new h3,.mk-hid h3{margin:0 0 8px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:rgba(246,247,248,.6)}"+
@@ -153,12 +155,23 @@
         '<div class="mk-meas">'+MEAS.map(function(k2){return '<div><label>'+k2+'</label><input data-m="'+k2+'" inputmode="decimal" value="'+esc(m[k2]||"")+'"></div>';}).join("")+'</div>'+
         '<textarea data-mrest placeholder="Otras medidas o indicaciones">'+esc(m._rest||"")+'</textarea>'+
         '<textarea data-nt placeholder="Notas de confección (tela, color, detalles)">'+esc(x.notes||"")+'</textarea></details>'+
+      supRow(x)+
       '<div class="mk-act">'+(k?'<a class="wa" target="_blank" rel="noopener" data-direct="1" href="https://wa.me/'+k+'?text='+encodeURIComponent(msg[1])+'">'+msg[0]+'</a>':'')+
         '<button type="button" class="gold" data-ticket>🧾 Orden de taller</button>'+
         (x.balance>0&&x.src!=="web"?'<button type="button" class="gh" data-paybtn>💰 Abono</button>':'')+
         (x.unpaidOrder?'<button type="button" class="gh" data-goped>Ver en Pedidos</button>':'')+'</div>'+
       '<div class="mk-pay"><input type="number" inputmode="numeric" placeholder="Abono $" data-amt><select data-pm><option value="efectivo">Efectivo</option><option value="breb">Bre-B</option><option value="transferencia">Transferencia</option><option value="nequi">Nequi</option><option value="datafono">Datáfono</option></select><button type="button" data-paygo style="border:0;border-radius:10px;padding:0 12px;font-weight:800;background:#8ef0c8;color:#04140a">OK</button></div>'+
     '</div>';
+  }
+  // v3: workshop / supplier in charge + "Contactar proveedor" (sends the workshop order by WhatsApp)
+  function supOf(x){for(var i=0;i<S.sups.length;i++)if(S.sups[i].id===x.supplier)return S.sups[i];return null;}
+  function supMsg(x){var it=x.items.map(function(i){return "• "+i.nombre+(i.size?" · Talla "+i.size:"")+((i.qty||1)>1?" x"+i.qty:"");}).join("\n");
+    return "Hola 🧵 Te escribe CΛNEVΛ. Pedido para "+(first(x.name)||"una clienta")+(x.ticket?" ("+x.ticket+")":"")+":\n"+it+"\n📅 Entrega: "+fdate(x.dueAt,true)+(x.measures?"\n📏 Medidas: "+x.measures:"")+(x.notes?"\n📝 Notas: "+x.notes:"")+"\n¿Me confirmas que lo tienes listo para esa fecha? 🙏";}
+  function supRow(x){
+    if(!S.sups.length)return '<div class="mk-sup"><span>🤝</span><span class="mk-note" style="margin:0">Agrega tus proveedores en <b>🤝 Proveedores</b> para asignarle quién lo confecciona.</span></div>';
+    var sp=supOf(x),k=sp&&waNum(sp.phone);
+    return '<div class="mk-sup"><span>🤝</span><select data-sup><option value="">Sin proveedor</option>'+S.sups.map(function(s){return '<option value="'+esc(s.id)+'"'+(s.id===x.supplier?' selected':'')+'>'+esc(s.name)+'</option>';}).join("")+'</select>'+
+      (k?'<a class="mk-supgo" target="_blank" rel="noopener" data-direct="1" href="https://wa.me/'+k+'?text='+encodeURIComponent(supMsg(x))+'">📞 Contactar proveedor</a>':'')+'</div>';
   }
   function grid(){
     var L=visible(),g=S.el.querySelector("#mkG");
@@ -244,9 +257,10 @@
     el.addEventListener("change",function(e){var t=e.target,c=t.closest&&t.closest(".mk-c");if(!c)return;
       if(t.hasAttribute("data-due")&&t.value){upd(c.dataset.key,{dueAt:t.value+"T12:00:00Z"},"📅 Fecha de entrega guardada").then(function(){paint();}).catch(function(){});return;}
       if(t.hasAttribute("data-m")||t.hasAttribute("data-mrest")){upd(c.dataset.key,{measures:joinMeas(c)},"📏 Medidas guardadas").catch(function(){});return;}
+      if(t.hasAttribute("data-sup")){upd(c.dataset.key,{supplier:t.value},"🤝 Proveedor asignado").then(function(){var x=find(c.dataset.key);if(x){x.supplier=t.value;}paint();}).catch(function(){});return;}
       if(t.hasAttribute("data-nt"))upd(c.dataset.key,{notes:t.value},"📝 Notas guardadas").catch(function(){});});
   }
   function load(){if(!S.el)return;if(!S.list.length)S.el.innerHTML='<div class="mk-empty">🧵 Cargando el taller…</div>';
-    api("/admin/made").then(function(d){S.list=d.list||[];S.hidden=d.hidden||[];paint();}).catch(function(e){S.el.innerHTML='<div class="mk-empty">⚠️ '+esc(e.message)+'<br><br>Si dice que falta actualizar, pega el Worker v83 en Cloudflare.</div>';});}
+    api("/admin/made").then(function(d){S.list=d.list||[];S.hidden=d.hidden||[];S.sups=d.suppliers||[];paint();}).catch(function(e){S.el.innerHTML='<div class="mk-empty">⚠️ '+esc(e.message)+'<br><br>Si dice que falta actualizar, pega el Worker v83 en Cloudflare.</div>';});}
   window.CanevaMade={mount:function(el,o){S.el=el;S.o=o;css();bindOnce();load();},reload:load};
 })();
