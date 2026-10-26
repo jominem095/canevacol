@@ -121,7 +121,7 @@
         '<div class="vt-priv" id="vtPriv"></div>'+
         '<div class="vt-total"><div><div class="dim">Total de la venta</div><b id="vtTotal">$0</b></div><button type="button" class="vt-btn" id="vtSave">'+(S.editing?'Guardar cambios':'Guardar venta')+'</button></div>'+
       '</div>'+
-      '<div class="vt-card"><div class="vt-head" style="margin:0 0 8px;align-items:center"><h3 style="margin:0">Ventas del periodo</h3><div class="vt-seg" id="vtSrc">'+[["","Todas"],["web","🌐 Página"],["manual","💵 Manuales"]].map(function(x){return '<button type="button" data-vsrc="'+x[0]+'" class="'+(S.vsrc===x[0]?"on":"")+'">'+x[1]+'</button>';}).join("")+'</div></div><div id="vtList"><div class="vt-empty">Cargando…</div></div></div>';
+      '<div class="vt-card"><div class="vt-head" style="margin:0 0 8px;align-items:center"><h3 style="margin:0">Ventas del periodo</h3><div class="vt-seg" id="vtSrc">'+[["","Todas"],["web","🌐 Página"],["manual","💵 Manuales"],["made","🧵 Bajo pedido"]].map(function(x){return '<button type="button" data-vsrc="'+x[0]+'" class="'+(S.vsrc===x[0]?"on":"")+'">'+x[1]+'</button>';}).join("")+'</div></div><div id="vtList"><div class="vt-empty">Cargando…</div></div></div>';
   }
   function recvHtml(){return '<div class="vt-kpis" id="vrKpis"></div><div class="vt-card"><h3>Clientas que deben</h3><div class="dim" style="margin:-4px 0 8px">Las más antiguas primero. Registra cada abono hasta que quede en $0.</div><div id="vrList"><div class="vt-empty">Cargando…</div></div></div>';}
 
@@ -208,15 +208,22 @@
   // v71: one list with web orders and manual sales (manual rows keep their edit / credit buttons)
   function paintAll(list){
     var man=(S.data&&S.data.list)||[],web=((S.all&&S.all.list)||[]).filter(function(x){return x.source!=="manual";});
-    var rows=[];if(S.vsrc!=="web")man.forEach(function(v){rows.push({at:v.paidAt,h:rowHtml(v)});});
-    if(S.vsrc!=="manual")web.forEach(function(v){rows.push({at:v.paidAt,h:webRowHtml(v)});});
+    var mo=S.vsrc==="made";
+    var rows=[];if(S.vsrc!=="web")man.forEach(function(v){if(!mo||isMade(v))rows.push({at:v.paidAt,h:rowHtml(v)});});
+    if(S.vsrc!=="manual")web.forEach(function(v){if(!mo||isMade(v))rows.push({at:v.paidAt,h:webRowHtml(v)});});
     rows.sort(function(a,b){return Date.parse(b.at||0)-Date.parse(a.at||0);});
     list.innerHTML=rows.length?rows.map(function(r){return r.h;}).join(""):'<div class="vt-empty">No hay ventas en este periodo.</div>';
   }
+  // v82: made-to-order garments (Deportivo, Atelier, categories with more than 1 day of delivery) get a tag and their own filter
+  function nk(t){return String(t||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();}
+  function madeCat(cat){var n=nk(cat);if(!n)return false;var del=(typeof siteConfig!=="undefined"&&siteConfig&&siteConfig.delivery)||{};for(var c in del){if(Number(del[c])>1&&nk(c)===n)return true;}return /atelier|deportiv|bajo pedido|encargo/.test(n);}
+  function itemCat(x){if(x.categoria)return x.categoria;var base=String(x.nombre||"").split(" · ")[0],L=S.cat||[];for(var i=0;i<L.length;i++)if(L[i].nombre===base)return L[i].categoria;return "";}
+  function isMade(v){return (v.items||[]).some(function(x){return madeCat(itemCat(x));});}
+  function madeTag(v){return isMade(v)?'<span class="tag" style="background:rgba(255,214,102,.14);border-color:rgba(255,214,102,.45);color:#ffe7a8">🧵 Bajo pedido</span>':'';}
   function webRowHtml(v){
     var it=(v.items||[]).map(function(x){return esc(x.nombre)+(x.size?" ("+esc(x.size)+")":"")+(x.qty>1?" ×"+x.qty:"");}).join(" · ");
     return '<div class="vt-row"><div><div class="t">'+esc(v.ticket||"")+' · '+esc(when(v.paidAt))+(v.name?' · '+esc(v.name):'')+waChip(v.phone,v.name)+'</div><div class="it">'+it+'</div>'+
-      '<span class="tag gold">🌐 Página web</span>'+(v.viaLabel?'<span class="tag">'+esc(v.viaLabel)+'</span>':'')+(v.excluded?'<span class="tag">🚫 No cuenta en la ganancia</span>':'')+
+      '<span class="tag gold">🌐 Página web</span>'+madeTag(v)+(v.viaLabel?'<span class="tag">'+esc(v.viaLabel)+'</span>':'')+(v.excluded?'<span class="tag">🚫 No cuenta en la ganancia</span>':'')+
       '<div class="pr">🔒 Costo '+money(v.cost)+' · <span class="g'+(v.profit<0?" neg":"")+'">ganancia '+money(v.profit)+'</span>'+(v.missing?' · <span style="color:#ffb4a8">⚠ falta costo</span>':'')+'</div></div>'+
       '<div class="r"><b>'+money(v.total)+'</b><button type="button" class="vt-mail" data-cost="'+esc(v.id)+'">🔒 Costo</button></div></div>';
   }
@@ -224,7 +231,7 @@
     var it=v.items.map(function(x){return esc(x.nombre)+(x.size?" ("+esc(x.size)+")":"")+(x.qty>1?" ×"+x.qty:"");}).join(" · ");
     var live=v.status==="pagado";
     return '<div class="vt-row'+(live?"":" void")+'"><div><div class="t">'+esc(v.ticket)+' · '+esc(when(v.paidAt))+(v.name?' · '+esc(v.name):'')+waChip(v.phone,v.name)+'</div><div class="it">'+it+'</div>'+
-      '<span class="tag">'+esc(v.channelLabel||"")+'</span><span class="tag">'+esc(v.payLabel||"")+'</span>'+
+      madeTag(v)+'<span class="tag">'+esc(v.channelLabel||"")+'</span><span class="tag">'+esc(v.payLabel||"")+'</span>'+
       (v.plan&&v.plan!=="contado"?'<span class="tag">'+esc(PLAN_NAME[v.plan]||v.plan)+'</span>':'')+(live&&v.balance>0?'<span class="tag owe">Debe '+money(v.balance)+(v.dueAt?' · vence '+esc(shortDate(v.dueAt)):'')+'</span>':'')+(live&&v.payments&&v.payments.length>1&&!v.balance?'<span class="tag ok">Pagada con abonos</span>':'')+
       (v.doc?'<span class="tag">'+esc(v.docLabel||"Doc")+' '+esc(v.doc)+'</span>':'')+(v.points?'<span class="tag">+'+v.points+' pts Club</span>':'')+(v.note?'<span class="tag">'+esc(v.note)+'</span>':'')+(live?'':'<span class="tag">Anulada</span>')+(live&&v.cost?'<div class="pr">'+(v.excluded?'<span class="dim">🚫 No cuenta en la ganancia · </span>':'')+'🔒 Costo '+money(v.cost.cost)+' · <span class="g'+(v.cost.profit<0?" neg":"")+'">ganancia '+money(v.cost.profit)+'</span>'+(v.cost.missing?' · <span style="color:#ffb4a8">⚠ falta costo</span>':'')+'</div>':'')+'</div>'+
       '<div class="r"><b>'+money(v.total)+'</b>'+(live?'<button type="button" class="vt-mail" data-edit="'+esc(v.id)+'">✏️ Editar</button> '+'<button type="button" class="vt-mail" data-cost="'+esc(v.id)+'">🔒 Costo</button> '+shareBtns(v.id)+' <button type="button" class="vt-mail" data-mail="'+esc(v.id)+'" data-to="'+esc(v.email||"")+'">📧 Correo</button><br><button type="button" class="vt-void" data-void="'+esc(v.id)+'">Anular</button>':(v.status==="anulado"?'<button type="button" class="vt-mail" data-restore="'+esc(v.id)+'" title="Vuelve a dejarla pagada, descuenta el inventario y devuelve los puntos">↩ Restaurar</button>':''))+'</div></div>';
