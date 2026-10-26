@@ -38,7 +38,8 @@
   // ---------- Hoy card ----------
   function card(v){
     css();var c=document.getElementById("hyStock");if(!c){c=document.createElement("div");c.id="hyStock";c.className="sk-card";}
-    if(v.firstChild&&v.querySelector("#hyNotify"))v.insertBefore(c,v.querySelector("#hyNotify"));else v.appendChild(c);
+    // right under the numbers of the day, before Caneva AI, so it is seen without scrolling
+    var anchor=v.querySelector(".hy-ai")||v.querySelector("#hyNotify");if(anchor&&anchor.parentNode)anchor.parentNode.insertBefore(c,anchor);else v.appendChild(c);
     c.innerHTML='<div class="t"><span style="font-size:22px">📦</span><div><b>Salud del inventario</b><small>Revisando…</small></div></div>';
     api("/admin/inventory/health").then(function(d){S.d=d;
       var bad=d.toCount.length+d.sizeIssues.length+d.notMoved;
