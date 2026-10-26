@@ -2207,6 +2207,9 @@ if(p&&p.imagen){var l=document.createElement('link');l.rel='preload';l.as='image
 var API_BASE = "https://caneva-ai.canevacol.workers.dev";
 var P_FALLBACK = JSON.parse(document.getElementById('pdata').textContent);
 var P = P_FALLBACK.filter(function(p){return !isHiddenProduct(p);});
+// v90: the last live catalog this phone saw (fresh garments and real stock from the first paint, even on slow networks)
+var CV_CAT_KEY='cv_cat_v2';
+(function(){try{var c=JSON.parse(localStorage.getItem(CV_CAT_KEY)||'null');if(c&&Array.isArray(c.list)&&c.list.length>5&&Date.now()-c.at<14*864e5){P=c.list.filter(function(p){return !isHiddenProduct(p);});window.CV_CACHED=1;}}catch(e){}})();
 // Hidden when stock is 0 or says "agotado"/"oculto" (toggled from admin_movil)
 function isHiddenProduct(p){var s=String((p&&p.stock)||'').trim().toLowerCase();return /^0+$/.test(s)||s.indexOf('agotad')===0||s.indexOf('ocult')===0;}
 // Inventory (per size) comes from the Worker: p.inv = {size: units}. Products without it behave as before.
@@ -2238,6 +2241,7 @@ function normalizeProductForSite(p){
     tela:String(p.tela||'').trim(),
     id:String(p.id||'').trim(),
     inv:(p.inv&&typeof p.inv==='object')?p.inv:null,
+    addedAt:String(p.addedAt||'').trim(),
     colores:String(p.colores||'').trim()
   };
 }
@@ -2314,12 +2318,15 @@ async function loadRemoteCatalog(){
     var list=Array.isArray(data.products)?data.products:[];
     if(list.length){
       P=list.map(normalizeProductForSite).filter(function(p){return !isHiddenProduct(p);});window.CV_LIVE=1;
+      try{localStorage.setItem(CV_CAT_KEY,JSON.stringify({at:Date.now(),list:list.map(normalizeProductForSite)}));}catch(e){}
+      try{cvClampCart();}catch(e){}
       renderFilters();
       render();
       setProductCount();
       renderLookbook();
       // v70: live catalog is in, so match by name right away (old ad links after a price/category change)
       openSharedProduct(true);
+      setTimeout(function(){try{window.dispatchEvent(new Event('cv:catalog'));}catch(e){}},60); // v90: after every section repainted
     }
   }catch(e){
     console.warn("Caneva catálogo remoto no disponible, usando fallback local.", e);
@@ -2920,8 +2927,13 @@ function saveCart(){localStorage.setItem(CART_KEY,JSON.stringify(CART));renderCa
 function cartTotal(){return CART.reduce(function(s,it){return s+(Number(it.price)||0)*(Number(it.qty)||1);},0);}
 function cartQty(){return CART.reduce(function(s,it){return s+(Number(it.qty)||1);},0);}
 function toastCart(msg){var t=document.getElementById('cartToast');if(!t)return;t.textContent=msg||'Agregado a tu carrito 💎';t.classList.add('show');setTimeout(function(){t.classList.remove('show');},1700);}
-function addToCartByIndex(idx,open,size){var p=P[idx];if(!p)return;size=size||'';var key=productKey(p,size);var it=CART.find(function(x){return x.key===key;});var max=invQty(p,size);if((it?it.qty:0)+1>max){toastCart(max<=0?'Esta talla se agotó':'Solo quedan '+max+(size?' en talla '+size:''));return;}if(it){it.qty+=1;}else{CART.push({key:key,pid:p.id||'',nombre:p.nombre,categoria:p.categoria,precio:p.precio,price:priceNum(p.precio),tallas:p.tallas||'',size:size,imagen:p.imagen||'',url:p.url||'',qty:1});}saveCart();flyToBag(p);toastCart(size?'Agregado · talla '+size:'Agregado a tu carrito');if(open)openCart();}
-function changeCartQty(key,delta){var it=CART.find(function(x){return x.key===key;});if(!it)return;if(delta>0){var cp=P.find(function(x){return (it.pid&&x.id===it.pid)||(x.nombre===it.nombre&&x.categoria===it.categoria);});var max=cp?invQty(cp,it.size):Infinity;if((Number(it.qty)||1)+delta>max){toastCart('Solo quedan '+max+(it.size?' en talla '+it.size:''));return;}}it.qty=(Number(it.qty)||1)+delta;if(it.qty<=0){CART=CART.filter(function(x){return x.key!==key;});}saveCart();}
+// v90: garments without counted inventory (or before the live stock arrives) allow only a few units per size
+function cvUnknownCap(){var c=SITE_CONFIG&&SITE_CONFIG.inventory;return c&&c.maxUnknown>0?+c.maxUnknown:3;}
+function cartMax(p,size){var q=invQty(p,size);return q===Infinity?cvUnknownCap():q;}
+function cartMaxMsg(p,size,max){return invQty(p,size)===Infinity?'Para más de '+max+' unidades escríbenos por WhatsApp 💬':(max<=0?'Esta talla se agotó':'Solo quedan '+max+(size?' en talla '+size:''));}
+function cvClampCart(){var msg=[];CART=CART.filter(function(it){var cp=P.find(function(x){return (it.pid&&x.id===it.pid)||(x.nombre===it.nombre&&x.categoria===it.categoria);});if(!cp)return true;var m=cartMax(cp,it.size);if((Number(it.qty)||1)<=m)return true;if(m<=0){msg.push(it.nombre+(it.size?' talla '+it.size:'')+' se agotó');return false;}msg.push(it.nombre+': quedan '+m);it.qty=m;return true;});if(msg.length){saveCart();toastCart('Ajustamos tu carrito · '+msg.join(' · '));}}
+function addToCartByIndex(idx,open,size){var p=P[idx];if(!p)return;size=size||'';var key=productKey(p,size);var it=CART.find(function(x){return x.key===key;});var max=cartMax(p,size);if((it?it.qty:0)+1>max){toastCart(cartMaxMsg(p,size,max));return;}if(it){it.qty+=1;}else{CART.push({key:key,pid:p.id||'',nombre:p.nombre,categoria:p.categoria,precio:p.precio,price:priceNum(p.precio),tallas:p.tallas||'',size:size,imagen:p.imagen||'',url:p.url||'',qty:1});}saveCart();flyToBag(p);toastCart(size?'Agregado · talla '+size:'Agregado a tu carrito');if(open)openCart();}
+function changeCartQty(key,delta){var it=CART.find(function(x){return x.key===key;});if(!it)return;if(delta>0){var cp=P.find(function(x){return (it.pid&&x.id===it.pid)||(x.nombre===it.nombre&&x.categoria===it.categoria);});var max=cp?cartMax(cp,it.size):cvUnknownCap();if((Number(it.qty)||1)+delta>max){toastCart(cp?cartMaxMsg(cp,it.size,max):'Para más unidades escríbenos por WhatsApp 💬');return;}}it.qty=(Number(it.qty)||1)+delta;if(it.qty<=0){CART=CART.filter(function(x){return x.key!==key;});}saveCart();}
 function removeCartItem(key){CART=CART.filter(function(x){return x.key!==key;});saveCart();}
 
 function updateCartBadges(){var q=cartQty();['cartCount','navCartCount','mobileCartCount','mobileDockCartCount'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=q;});}
@@ -4167,8 +4179,15 @@ body.cv-on .bw-inner{min-width:0;max-width:100%}body.cv-on .bw-inner>*{min-width
   function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
   function isImg(p){return p&&p.imagen&&p.imagen.indexOf('http')===0;}
   function pnum(p){return typeof priceNum==='function'?priceNum(p.precio):parseInt(String(p.precio||'').replace(/[^\d]/g,''),10)||0;}
-  function newest(){return catalogProducts().slice(0,NEW_COUNT);}
-  window.cvIsNew=function(p){return acat!=='Nuevo'&&newest().indexOf(p)>=0;};
+  // v90: newest by the real date each garment arrived (addedAt from the Worker); sold-out ones are left out
+  var NEW_DAYS=30;
+  function soldOut(p){return typeof invTotalSite==='function'&&invTotalSite(p)===0;}
+  function addedMs(p){return Date.parse(p&&p.addedAt||'')||0;}
+  function newest(){var L=catalogProducts(),dated=L.some(addedMs);
+    if(!dated)return L.slice(0,NEW_COUNT);
+    return L.map(function(p,i){return {p:p,i:i};}).filter(function(x){return !soldOut(x.p);}).sort(function(a,b){return (addedMs(b.p)-addedMs(a.p))||(a.i-b.i);}).slice(0,NEW_COUNT).map(function(x){return x.p;});}
+  window.cvNewest=newest;
+  window.cvIsNew=function(p){if(acat==='Nuevo'||newest().indexOf(p)<0)return false;var a=addedMs(p);return !a||Date.now()-a<NEW_DAYS*864e5||!catalogProducts().some(addedMs);};
   window.cvMatch=function(p){
     if(acat==='Todos')return true;
     if(acat==='Nuevo')return newest().indexOf(p)>=0;
@@ -4697,11 +4716,12 @@ body.cv-fast .bw-logo-wrap{transform:scale(.82);transform-origin:center top;marg
   function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
   function build(){
     var vit=document.getElementById('cvVit');if(!vit||document.getElementById('cvStrip'))return;
-    var list=(typeof catalogProducts==='function'?catalogProducts():P).filter(function(p){return p.imagen&&p.imagen.indexOf('http')===0;}).slice(0,10);
+    var src=window.cvNewest?cvNewest():(typeof catalogProducts==='function'?catalogProducts():P);
+    var list=src.filter(function(p){return p.imagen&&p.imagen.indexOf('http')===0;}).slice(0,10);
     if(list.length<3)return;
     var d=document.createElement('div');d.id='cvStrip';d.className='cv-strip';
     d.innerHTML='<div class="cv-strip-h"><b><i>●</i>Lo más nuevo</b><span>Desliza →</span></div><div class="cv-strip-row">'+list.map(function(p,i){var idx=P.indexOf(p);
-      return '<button type="button" class="cv-si" style="--i:'+i+'" data-cvsi="'+idx+'"><span><img src="'+esc(cvImg(p.imagen,360))+'" alt="" loading="'+(i<4?'eager':'lazy')+'" decoding="async">'+(i<3?'<em>NUEVO</em>':'')+'</span><b>'+esc(p.nombre)+'</b><small>'+esc(p.precio)+'</small></button>';}).join('')+
+      return '<button type="button" class="cv-si" style="--i:'+i+'" data-cvsi="'+idx+'"><span><img src="'+esc(cvImg(p.imagen,360))+'" alt="" loading="'+(i<4?'eager':'lazy')+'" decoding="async">'+((window.cvIsNew?cvIsNew(p):i<3)?'<em>NUEVO</em>':'')+'</span><b>'+esc(p.nombre)+'</b><small>'+esc(p.precio)+'</small></button>';}).join('')+
       '<button type="button" class="cv-si all" data-cvall>Ver todo<br>→</button></div>';
     // v71: a Club Caneva tile as the 3rd card for guests
     try{var ci=window.clubInfo&&clubInfo();if(ci&&ci.active&&!ci.user){var row=d.querySelector('.cv-strip-row'),ref=row.children[2]||null,t=document.createElement('button');t.type='button';t.className='cv-si cv-si-club';
@@ -4712,6 +4732,8 @@ body.cv-fast .bw-logo-wrap{transform:scale(.82);transform-origin:center top;marg
     d.addEventListener('click',function(e){var b=e.target.closest('[data-cvsi]');if(b){var bn=(b.querySelector('b')||{}).textContent||'',bi=P.findIndex(function(x){return x.nombre===bn;});openProductModal(bi>=0?bi:parseInt(b.dataset.cvsi,10));return;}if(e.target.closest('[data-cvall]')&&window.cvSetCat)cvSetCat('Nuevo');});
   }
   build();setTimeout(build,1500);
+  // v90: when the live catalog arrives (slow phones), rebuild the strip with the real newest garments
+  addEventListener('cv:catalog',function(){var o=document.getElementById('cvStrip'),x=o?o.querySelector('.cv-strip-row').scrollLeft:0;if(o)o.remove();try{build();}catch(e){console.error('strip',e&&e.stack);}var n=document.getElementById('cvStrip');if(n&&x)n.querySelector('.cv-strip-row').scrollLeft=x;});
   // swipe hint: only if after 7 s she hasn't scrolled nor opened anything
   var moved=false;addEventListener('scroll',function(){if(scrollY>40){moved=true;var h=document.getElementById('cvSwipe');if(h)h.remove();}},{passive:true});
   document.addEventListener('pointerdown',function(e){if(e.target.closest&&e.target.closest('[data-cvsi],.cv-vc,.pc'))moved=true;},true);
