@@ -1,4 +1,4 @@
-/* CANEVA admin · Bajo pedido (v5: color por prenda con Guardar y "Aplicar a todas"; v4: fotos de lo que pidió la clienta, color, fotos de referencia, galería)
+/* CANEVA admin · Bajo pedido (v6: color por unidad cuando la prenda va x2 o más; v5: color por prenda con Guardar y "Aplicar a todas"; v4: fotos de lo que pidió la clienta, color, fotos de referencia, galería)
    Workshop board for made-to-order garments (Deportivo, Atelier, categories with more than 1 day of delivery):
    - list or Kanban view (tap the arrows to move between Pedido / En confección / Lista / Entregada)
    - 7-day delivery strip, progress ring per order (time used vs. promised date), celebration when it is ready
@@ -37,6 +37,7 @@
   function css(){if(document.getElementById("mk-css"))return;var s=document.createElement("style");s.id="mk-css";s.textContent=
     ".mk-col2{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0}.mk-col2 input{flex:1;min-width:120px;background:#050505;border:1px solid rgba(246,247,248,.18);border-radius:10px;color:#fff;padding:8px 10px;font:13px Inter,sans-serif}.mk-col2 .lb{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:rgba(246,247,248,.55)}"+
     ".mk-cols{display:flex;flex-direction:column;gap:8px;margin:6px 0 4px}.mk-ic{padding:8px 10px;border-radius:14px;background:rgba(255,255,255,.03);border:1px solid rgba(246,247,248,.09)}.mk-ic.all{border-style:dashed;border-color:rgba(255,231,168,.35);background:rgba(255,231,168,.04)}.mk-ic.saved{animation:mkOk 1.2s}@keyframes mkOk{0%{border-color:#8ef0c8;box-shadow:0 0 0 3px rgba(142,240,200,.25)}}"+
+    ".mk-grp{padding:8px;border-radius:16px;border:1px solid rgba(207,230,255,.18);background:rgba(207,230,255,.03);display:flex;flex-direction:column;gap:6px}.mk-grp>.mk-ich{margin:2px 2px 0}.mk-ich small.q{color:#cfe6ff}.mk-ic.unit{padding:7px 9px}.mk-ich .un{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#cfe6ff;color:#050505;font-size:11px;font-weight:800}"+
     ".mk-ich{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:6px;font-size:12.5px}.mk-ich img{width:26px;height:32px;border-radius:7px;object-fit:cover}.mk-ich small{color:rgba(246,247,248,.55)}.mk-ich small.no{color:#ffc478}.mk-ic .mk-col2{margin:6px 0 0}"+
     ".mk-sv{flex:0 0 auto;border:1px solid rgba(246,247,248,.25);background:none;color:rgba(246,247,248,.6);border-radius:999px;padding:8px 13px;font:800 12px Inter,sans-serif;cursor:pointer;transition:all .2s}.mk-sv.on{background:linear-gradient(120deg,#ffe7a8,#fff 45%,#f3dca0);color:#050505;border-color:transparent}"+
     ".mk-chips{display:flex;gap:5px;flex-wrap:wrap}.mk-chips button{border:0;background:none;padding:0;cursor:pointer}.mk-chips button.on .cvf-sw{border-color:#ffe7a8;background:rgba(255,231,168,.14)}"+
@@ -183,12 +184,20 @@
     '</div>';
   }
   // v5: one color editor per garment (chips save at once, written color saves with Guardar / Enter) + "Aplicar a todas"
-  function colorRow(x){var many=x.items.length>1,h='<div class="mk-lbl">🎨 Color que pidió'+(many?' · por prenda':'')+'</div><div class="mk-cols">';
-    x.items.forEach(function(i,n){var cs=i.colors||[],cur=i.color||"";
-      h+='<div class="mk-ic" data-i="'+n+'">'+(many?'<div class="mk-ich">'+(i.imagen?'<img src="'+esc(i.imagen)+'" alt="">':'<span>👗</span>')+'<b>'+esc(i.base||i.nombre)+'</b>'+(i.size?'<small>Talla '+esc(i.size)+'</small>':'')+(cur?sw(cur):'<small class="no">sin color</small>')+'</div>':'')+
-        (cs.length?'<div class="mk-chips">'+cs.map(function(c){return '<button type="button" data-icpick="'+esc(c)+'"'+(cur.toLowerCase()===c.toLowerCase()?' class="on"':'')+'>'+sw(c)+'</button>';}).join("")+'</div>':'')+
-        '<div class="mk-col2"><input data-icol list="mkCl" value="'+esc(cur)+'" data-was="'+esc(cur)+'" placeholder="'+(cs.length?'U otro color (escríbelo)':'Escribe el color (ej: Rojo vino, Nude)')+'"><button type="button" class="mk-sv" data-icsave>Guardar</button></div></div>';});
-    if(many){var all=colorsFor(x);
+  // v5: one color editor per garment (chips save at once, written color saves with Guardar / Enter) + "Aplicar a todas"
+  // v6: a garment with qty 2+ gets one editor per unit (Unidad 1, Unidad 2…)
+  function edHtml(i,n,u,cur,label){var cs=i.colors||[];
+    return '<div class="mk-ic'+(u>=0?' unit':'')+'" data-i="'+n+'"'+(u>=0?' data-u="'+u+'"':'')+'>'+(label?'<div class="mk-ich">'+label+(cur?sw(cur):'<small class="no">sin color</small>')+'</div>':'')+
+      (cs.length?'<div class="mk-chips">'+cs.map(function(c){return '<button type="button" data-icpick="'+esc(c)+'"'+(cur.toLowerCase()===c.toLowerCase()?' class="on"':'')+'>'+sw(c)+'</button>';}).join("")+'</div>':'')+
+      '<div class="mk-col2"><input data-icol list="mkCl" value="'+esc(cur)+'" data-was="'+esc(cur)+'" placeholder="'+(cs.length?'U otro color (escríbelo)':'Escribe el color (ej: Rojo vino, Nude)')+'"><button type="button" class="mk-sv" data-icsave>Guardar</button></div></div>';}
+  function colorRow(x){var units=0,many=x.items.length>1,h;
+    x.items.forEach(function(i){if((i.qty||1)>1)units++;});
+    h='<div class="mk-lbl">🎨 Color que pidió'+(many||units?' · por prenda':'')+'</div><div class="mk-cols">';
+    x.items.forEach(function(i,n){var q=Math.min(12,i.qty||1),head=(i.imagen?'<img src="'+esc(i.imagen)+'" alt="">':'<span>👗</span>')+'<b>'+esc(i.base||i.nombre)+'</b>'+(i.size?'<small>Talla '+esc(i.size)+'</small>':'');
+      if(q>1){var us=Array.isArray(i.units)&&i.units.length===q?i.units:Array.apply(null,Array(q)).map(function(){return i.color||"";});
+        h+='<div class="mk-grp"><div class="mk-ich">'+head+'<small class="q">×'+q+' · un color para cada una</small></div>'+us.map(function(c,u){return edHtml(i,n,u,c||"",'<span class="un">'+(u+1)+'</span><b>Unidad '+(u+1)+'</b>');}).join("")+'</div>';}
+      else h+=edHtml(i,n,-1,i.color||"",many?head:"");});
+    if(many||units){var all=colorsFor(x);
       h+='<div class="mk-ic all"><div class="mk-ich"><span>✨</span><b>Mismo color para todas</b></div>'+(all.length?'<div class="mk-chips">'+all.map(function(c){return '<button type="button" data-allpick="'+esc(c)+'">'+sw(c)+'</button>';}).join("")+'</div>':'')+
         '<div class="mk-col2"><input data-allcol list="mkCl" placeholder="Color para todas las prendas"><button type="button" class="mk-sv on" data-allsave>Aplicar a todas</button></div></div>';}
     return h+'</div>';}
@@ -199,7 +208,7 @@
   // v3: workshop / supplier in charge + "Contactar proveedor" (sends the workshop order by WhatsApp)
   function prodNames(){var L=[];try{L=(S.o&&S.o.products&&S.o.products())||[];}catch(e){}return L.filter(function(p){return /atelier|deportiv|pedido|encargo/i.test(p.categoria||"");}).map(function(p){return p.nombre;}).slice(0,200);}
   function supOf(x){for(var i=0;i<S.sups.length;i++)if(S.sups[i].id===x.supplier)return S.sups[i];return null;}
-  function supMsg(x){var it=x.items.map(function(i){return "• "+(i.base||i.nombre)+(i.color?" · 🎨 "+i.color:"")+(i.size?" · Talla "+i.size:"")+((i.qty||1)>1?" x"+i.qty:"");}).join("\n"),ph=allPhotos(x).slice(0,3);
+  function supMsg(x){var it=x.items.map(function(i){return "• "+(i.base||i.nombre)+(i.color?" · 🎨 "+(Array.isArray(i.units)&&i.color.indexOf(" + ")>0?i.units.map(function(c,u){return "unidad "+(u+1)+": "+(c||"?");}).join(", "):i.color):"")+(i.size?" · Talla "+i.size:"")+((i.qty||1)>1?" x"+i.qty:"");}).join("\n"),ph=allPhotos(x).slice(0,3);
     return "Hola 🧵 Te escribe CΛNEVΛ. Pedido para "+(first(x.name)||"una clienta")+(x.ticket?" ("+x.ticket+")":"")+":\n"+it+"\n📅 Entrega: "+fdate(x.dueAt,true)+(x.measures?"\n📏 Medidas: "+x.measures:"")+(x.notes?"\n📝 Notas: "+x.notes:"")+(ph.length?"\n📷 Fotos:\n"+ph.join("\n"):"")+"\n¿Me confirmas que lo tienes listo para esa fecha? 🙏";}
   function supRow(x){
     if(!S.sups.length)return '<div class="mk-sup"><span>🤝</span><span class="mk-note" style="margin:0">Agrega tus proveedores en <b>🤝 Proveedores</b> para asignarle quién lo confecciona.</span></div>';
@@ -230,12 +239,12 @@
   function upd(key,patch,msg){return api("/admin/made/update",{method:"POST",body:Object.assign({key:key},patch)}).then(function(d){var x=find(key);if(x&&d.state){if(d.state.status)x.status=d.state.status;if(d.state.dueAt)x.dueAt=d.state.dueAt;if(d.state.notes!==undefined)x.notes=d.state.notes;if(d.state.measures!==undefined)x.measures=d.state.measures;}if(msg)toast(msg);return d;}).catch(function(e){toast("⚠️ "+e.message);throw e;});}
   function saveColor(x,patch,v,box,all){var bs=box.querySelectorAll("button");bs.forEach(function(b){b.disabled=true;});
     upd(x.key,patch,null).then(function(d){
-      if(patch.itemColor&&!(d.state&&Array.isArray(d.state.colors))){toast("⚠️ Falta pegar el Worker v89 en Cloudflare para guardar el color por prenda");bs.forEach(function(b){b.disabled=false;});return;}
-      toast(v?(all?"🎨 "+v+" para todas las prendas":"🎨 Color guardado: "+v):"Color borrado");return reloadKeep(x.key,patch.itemColor?patch.itemColor.i:-1);})
+      if(patch.itemColor&&!(d.state&&(patch.itemColor.u!==undefined?d.state.ucolors:Array.isArray(d.state.colors)))){toast("⚠️ Falta pegar el Worker v89b en Cloudflare para guardar el color "+(patch.itemColor.u!==undefined?"de cada unidad":"por prenda"));bs.forEach(function(b){b.disabled=false;});return;}
+      toast(v?(all?"🎨 "+v+" para todas las prendas":"🎨 Color guardado: "+v):"Color borrado");return reloadKeep(x.key,patch.itemColor?patch.itemColor.i:-1,patch.itemColor?patch.itemColor.u:undefined);})
     .catch(function(){bs.forEach(function(b){b.disabled=false;});});}
   // reload the board and flash the garment that was just saved
-  function reloadKeep(key,i){return api("/admin/made").then(function(d){S.list=d.list||[];S.hidden=d.hidden||[];S.sups=d.suppliers||[];paint();
-    var c=S.el.querySelector('.mk-c[data-key="'+key.replace(/"/g,"")+'"]');if(!c)return;(i>=0?[c.querySelector('.mk-ic[data-i="'+i+'"]')]:[].slice.call(c.querySelectorAll(".mk-ic"))).forEach(function(b){if(b)b.classList.add("saved");});});}
+  function reloadKeep(key,i,u){return api("/admin/made").then(function(d){S.list=d.list||[];S.hidden=d.hidden||[];S.sups=d.suppliers||[];paint();
+    var c=S.el.querySelector('.mk-c[data-key="'+key.replace(/"/g,"")+'"]');if(!c)return;(i>=0?[c.querySelector('.mk-ic[data-i="'+i+'"]'+(u!==undefined?'[data-u="'+u+'"]':''))]:[].slice.call(c.querySelectorAll(".mk-ic"))).forEach(function(b){if(b)b.classList.add("saved");});});}
   function setStatus(key,s){upd(key,{status:s},ST[s][0]+" "+ST[s][1]).then(function(){if(s==="listo"||s==="entregado")confetti();paint();}).catch(function(){});}
   function ask(o){ // styled "¿Seguro?" dialog
     return new Promise(function(res){var ov=document.createElement("div");ov.className="mk-ov";
@@ -302,7 +311,7 @@
       if(b.dataset.st){setStatus(key,b.dataset.st);return;}
       if(b.dataset.mv){var i=STEPS.indexOf(x.status)+Number(b.dataset.mv);if(i>=0&&i<4)setStatus(key,STEPS[i]);return;}
       if(b.hasAttribute("data-ticket")){ticket(x);return;}
-      if(b.dataset.icpick!==undefined||b.hasAttribute("data-icsave")){var ic=b.closest(".mk-ic"),v=b.dataset.icpick!==undefined?b.dataset.icpick:ic.querySelector("[data-icol]").value.trim();saveColor(x,{itemColor:{i:+ic.dataset.i,color:v}},v,ic);return;}
+      if(b.dataset.icpick!==undefined||b.hasAttribute("data-icsave")){var ic=b.closest(".mk-ic"),v=b.dataset.icpick!==undefined?b.dataset.icpick:ic.querySelector("[data-icol]").value.trim(),ip={i:+ic.dataset.i,color:v};if(ic.dataset.u!==undefined)ip.u=+ic.dataset.u;saveColor(x,{itemColor:ip},v,ic);return;}
       if(b.dataset.allpick!==undefined||b.hasAttribute("data-allsave")){var ia=b.closest(".mk-ic"),va=b.dataset.allpick!==undefined?b.dataset.allpick:ia.querySelector("[data-allcol]").value.trim();if(!va){toast("Escribe o elige el color");return;}saveColor(x,{color:va,all:true},va,ia,true);return;}
       if(b.hasAttribute("data-addref")){var fi=document.createElement("input");fi.type="file";fi.accept="image/*";fi.onchange=function(){var f=fi.files&&fi.files[0];if(!f||!window.CanevaFoto)return;S.up=key;paint();
         CanevaFoto.resize(f,1400).then(function(data){return api("/admin/made/photo",{method:"POST",body:{key:key,data:data}});}).then(function(d){x.refs=d.photos;S.up="";paint();toast("📷 Foto guardada en el pedido");})

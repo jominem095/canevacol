@@ -14,7 +14,8 @@
   function esc(t){return String(t==null?"":t).replace(/[&<>"']/g,function(m){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m];});}
   function flat(s){return String(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").trim();}
   function hex(n){var f=flat(n);if(HEX[f])return HEX[f];var k=Object.keys(HEX).sort(function(a,b){return b.length-a.length;}).find(function(h){return f.indexOf(h)>=0;});return k?HEX[k]:"";}
-  function swatch(n,big){if(!n)return "";var h=hex(n);return '<span class="cvf-sw'+(big?' big':'')+'" title="'+esc(n)+'"><i style="background:'+(h||"conic-gradient(#f2b4c6,#c2a6d8,#a8cfe9,#a7dcc3,#f1d13b,#f2b4c6)")+'"></i>'+esc(n)+'</span>';}
+  function swatch(n,big){if(!n)return "";if(String(n).indexOf(" + ")>0){var ps=String(n).split(" + ");return '<span class="cvf-sw'+(big?' big':'')+'" title="'+esc(n)+'">'+ps.map(function(p){var h=hex(p);return '<i style="background:'+(h||"conic-gradient(#f2b4c6,#c2a6d8,#a8cfe9,#a7dcc3,#f1d13b,#f2b4c6)")+'"></i>';}).join("")+esc(ps.join(" · "))+'</span>';} // v2: several colors (x2 garments)
+var h=hex(n);return '<span class="cvf-sw'+(big?' big':'')+'" title="'+esc(n)+'"><i style="background:'+(h||"conic-gradient(#f2b4c6,#c2a6d8,#a8cfe9,#a7dcc3,#f1d13b,#f2b4c6)")+'"></i>'+esc(n)+'</span>';}
   function isUrl(u){return /^https?:\/\//i.test(String(u||""));}
   function photosOf(p){if(!p)return [];return [p.imagen].concat(String(p.imagenesExtra||"").split(/\s*[,\n|]\s*/)).filter(isUrl).filter(function(v,i,a){return a.indexOf(v)===i;}).slice(0,8);}
   function colorsOf(p){var imgs=photosOf(p),out=[];
