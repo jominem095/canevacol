@@ -25,7 +25,7 @@
     ".sk-hd .tt{flex:1;min-width:0}.sk-hd h2{margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-weight:400;font-size:28px;line-height:1}.sk-hd small{display:block;font-size:12.5px;color:rgba(246,247,248,.68);margin-top:4px}.sk-hd .x{width:38px;height:38px;border-radius:50%;border:1px solid rgba(246,247,248,.25);background:none;color:#fff;font-size:19px;cursor:pointer}"+
     ".sk-tabs{display:flex;gap:6px;padding:6px 18px 8px;overflow-x:auto;scrollbar-width:none}.sk-tabs::-webkit-scrollbar{display:none}.sk-tabs button{flex:0 0 auto;border:1px solid rgba(246,247,248,.18);background:none;color:#f6f7f8;border-radius:999px;padding:8px 13px;font:600 12.5px Inter,sans-serif;cursor:pointer}.sk-tabs button.on{background:#f6f7f8;color:#050505;border-color:#f6f7f8}.sk-tabs b{margin-left:6px;background:rgba(255,255,255,.14);border-radius:999px;padding:1px 7px;font-size:11px}.sk-tabs button.on b{background:#050505;color:#fff}.sk-tabs .hot b{background:#ff6b5e;color:#fff}"+
     ".sk-tools{display:flex;gap:8px;padding:0 18px 8px;align-items:center}.sk-q{flex:1;min-width:0;box-sizing:border-box;background:#050505;border:1px solid rgba(246,247,248,.2);border-radius:14px;color:#fff;padding:11px 14px;font:14px Inter,sans-serif}.sk-q:focus{outline:none;border-color:#cfe6ff}"+
-    ".sk-cats{display:flex;gap:6px;overflow-x:auto;padding:0 18px 10px;scrollbar-width:none}.sk-cats::-webkit-scrollbar{display:none}.sk-cats button{flex:0 0 auto;border:1px solid rgba(246,247,248,.15);background:#121214;color:#f6f7f8;border-radius:999px;padding:7px 12px;font-size:12.5px;cursor:pointer}.sk-cats button.on{border-color:#cfe6ff;background:rgba(207,230,255,.16)}.sk-cats small{opacity:.6;margin-left:5px}"+
+    ".sk-cats{display:flex;gap:6px;overflow-x:auto;padding:0 18px 10px;scrollbar-width:none}.sk-cats::-webkit-scrollbar{display:none}.sk-cats button{flex:0 0 auto;border:1px solid rgba(246,247,248,.15);background:#121214;color:#f6f7f8;border-radius:999px;padding:7px 12px;font-size:12.5px;cursor:pointer}.sk-cats button.on{border-color:#cfe6ff;background:rgba(207,230,255,.16)}.sk-cats small{opacity:.6;margin-left:5px}.sk-cats button.zero{opacity:.45}"+
     ".sk-body{flex:1;overflow:auto;padding:4px 18px 18px}.sk-grid{display:grid;grid-template-columns:1fr;gap:10px}@media(min-width:760px){.sk-grid{grid-template-columns:1fr 1fr}}@media(min-width:1050px){.sk-grid{grid-template-columns:1fr 1fr 1fr}}"+
     ".sk-help{font-size:12.5px;color:rgba(246,247,248,.72);line-height:1.5;margin:2px 0 12px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07)}"+
     ".sk-it{position:relative;display:grid;grid-template-columns:86px 1fr;gap:12px;padding:12px;border-radius:20px;background:linear-gradient(180deg,#121215,#0b0b0d);border:1px solid rgba(246,247,248,.09);transition:border-color .2s}.sk-it.dirty{border-color:rgba(255,231,168,.65)}.sk-it.done{border-color:rgba(142,240,200,.6)}.sk-it.zero{border-color:rgba(255,120,100,.35)}"+
@@ -86,9 +86,11 @@
     var list=S.tab==="tallas"||S.tab==="ventas"?[]:all().filter(function(p){return inTab(p,S.tab);});
     var tools=document.querySelector(".sk-tools"),catsEl=document.getElementById("skCats");
     tools.style.display=catsEl.style.display=(S.tab==="tallas"||S.tab==="ventas")?"none":"";
-    if(S.tab!=="tallas"&&S.tab!=="ventas"){var cats={};list.forEach(function(p){cats[p.categoria||"Otras"]=(cats[p.categoria||"Otras"]||0)+1;});
-      if(S.cat&&!cats[S.cat])S.cat="";
-      catsEl.innerHTML='<button type="button" data-skcat="" class="'+(!S.cat?"on":"")+'">Todas<small>'+list.length+'</small></button>'+Object.keys(cats).sort().map(function(c){return '<button type="button" data-skcat="'+esc(c)+'" class="'+(S.cat===c?"on":"")+'">'+esc(c)+'<small>'+cats[c]+'</small></button>';}).join("");}
+    if(S.tab!=="tallas"&&S.tab!=="ventas"){
+      // v2.1: every category of the store is always listed; the number is how many fall in the current tab
+      var cats={},tot={};all().forEach(function(p){if(p.hidden&&!p.managed)return;var c=p.categoria||"Otras";tot[c]=(tot[c]||0)+1;if(cats[c]===undefined)cats[c]=0;});
+      list.forEach(function(p){var c=p.categoria||"Otras";cats[c]=(cats[c]||0)+1;});
+      catsEl.innerHTML='<button type="button" data-skcat="" class="'+(!S.cat?"on":"")+'">Todas<small>'+list.length+'</small></button>'+Object.keys(tot).sort(function(a,b){return (cats[b]>0)-(cats[a]>0)||a.localeCompare(b);}).map(function(c){return '<button type="button" data-skcat="'+esc(c)+'" class="'+(S.cat===c?"on":"")+(cats[c]?'':' zero')+'" title="'+cats[c]+' en esta pestaña · '+tot[c]+' en total">'+esc(c)+'<small>'+cats[c]+(cats[c]!==tot[c]?' / '+tot[c]:'')+'</small></button>';}).join("");}
     var body=document.getElementById("skBody");
     if(S.tab==="tallas")body.innerHTML=tallasHtml(d);
     else if(S.tab==="ventas")body.innerHTML=ventasHtml(d);
@@ -96,7 +98,8 @@
       var help={contar:'Escribe cuántas hay <b>hoy</b> en tu bodega de cada talla (usa + y −, o escribe y presiona Enter para pasar a la siguiente). Desde que la guardas, cada venta en tienda, WhatsApp, Bold o Bre-B se descuenta sola y la página tacha las tallas agotadas.',
         contadas:'Prendas con inventario. Si el conteo físico no coincide, corrige el número y toca Guardar.',agotadas:'Prendas en 0. Si te llegó mercancía, súmala aquí y vuelven a la venta solas.',
         made:'Atelier, Deportivo y lo que se confecciona. No necesitan conteo; cuéntalas solo si tienes unidades ya hechas para entrega inmediata.',todas:'Todo tu catálogo, de todas las categorías.'}[S.tab]||"";
-      body.innerHTML='<div class="sk-help">'+help+'</div><div class="sk-grid">'+(L.length?L.map(itemHtml).join(""):'<div class="sk-empty"><b>'+(S.tab==="contar"&&!list.length?"🎉":"🔎")+'</b>'+(S.tab==="contar"&&!list.length?"¡Todas tus prendas están contadas!":"Nada con este filtro.")+'</div>')+'</div>';}
+      var tabName={contar:"por contar",contadas:"contadas",agotadas:"agotadas",made:"bajo pedido",todas:""}[S.tab]||"";
+      body.innerHTML='<div class="sk-help">'+help+'</div><div class="sk-grid">'+(L.length?L.map(itemHtml).join(""):'<div class="sk-empty"><b>'+(S.tab==="contar"&&!list.length?"🎉":"🔎")+'</b>'+(S.tab==="contar"&&!list.length?"¡Todas tus prendas están contadas!":S.cat?'No hay prendas de <b>'+esc(S.cat)+'</b> '+tabName+'.<br><button type="button" class="sk-go" data-sktab="todas">Ver todas las de '+esc(S.cat)+'</button>':"Nada con este filtro.")+'</div>')+'</div>';}
     foot();}
   function foot(){var ids=Object.keys(S.draft).filter(function(id){var it=itemFor(id);return it&&isDirty(it.p);}),u=0;
     ids.forEach(function(id){var it=itemFor(id);it.szs.forEach(function(z){u+=val(it.p,z);});});
@@ -135,7 +138,7 @@
   function confetti(){var c=document.createElement("div");c.className="sk-conf";var col=["#8ef0c8","#cfe6ff","#ffe7a8","#d9c9ff","#fff"];for(var i=0;i<60;i++){var p=document.createElement("i");p.style.left=Math.random()*100+"%";p.style.background=col[i%5];p.style.animationDelay=Math.random()*.5+"s";c.appendChild(p);}document.body.appendChild(c);setTimeout(function(){c.remove();},2400);}
   function onClick(e){var t=e.target;
     if(t.classList.contains("sk-ov")||t.closest("[data-skx]")){close();return;}
-    var b=t.closest("[data-sktab]");if(b){S.tab=b.dataset.sktab;S.cat="";paint();document.getElementById("skBody").scrollTop=0;return;}
+    var b=t.closest("[data-sktab]");if(b){S.tab=b.dataset.sktab;paint();document.getElementById("skBody").scrollTop=0;return;}
     b=t.closest("[data-skcat]");if(b){S.cat=b.dataset.skcat;paint();return;}
     b=t.closest("[data-step]");if(b){var pid=b.closest(".sk-it").dataset.pid,z=b.dataset.z,it=itemFor(pid);if(!it)return;var v=Math.max(0,Math.min(9999,val(it.p,z)+Number(b.dataset.step)));(S.draft[pid]=S.draft[pid]||{})[z]=String(v);var inp=b.parentNode.querySelector("input");if(inp)inp.value=v;refresh(pid);return;}
     b=t.closest("[data-skzero]");if(b){var id=b.dataset.skzero,it2=itemFor(id);if(!it2)return;S.draft[id]={};it2.szs.forEach(function(z){S.draft[id][z]="0";});b.closest(".sk-it").querySelectorAll("input[data-z]").forEach(function(i){i.value="0";});refresh(id);return;}
