@@ -3197,6 +3197,7 @@ document.getElementById('csend').addEventListener('click',sendChat);
   function loadScript(src){var go=function(){var t=document.createElement('script');t.async=true;t.src=src;document.head.appendChild(t);};
     if(document.readyState==='complete')setTimeout(go,800);else addEventListener('load',function(){setTimeout(go,800);});}
   function initTracking(ads){
+    window.CV_ADS=ads; // v92: pixel ids for the Purchase script
     if(ads.metaPixel&&/^\d{6,20}$/.test(ads.metaPixel)&&!window.fbq){
       var n=window.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments);};
       if(!window._fbq)window._fbq=n;n.push=n;n.loaded=true;n.version='2.0';n.queue=[];
@@ -6281,6 +6282,75 @@ body.cv-has-pbar .ann-bar{display:none!important}
 .cv-bpay button.cv-bbback{background:none!important;border:0!important;color:rgba(250,249,246,.6)!important;text-transform:none!important;letter-spacing:0!important;font-size:.78rem!important;font-weight:500!important;padding:.6rem!important;margin-top:4px}
 .cv-bpay .cv-bb-small{font-size:.7rem;color:rgba(250,249,246,.55);margin:.7rem 0 0;line-height:1.5}
 </style>
+<script id="cvpurchase">
+// v92: Purchase on the order confirmation for every way of paying, with the same event id the Worker sends by the
+// Conversions API (Meta) and the Events API (TikTok), so each sale is counted once.
+//  - WhatsApp (contraentrega / transferencia): when the cart order with delivery details is sent
+//  - Bre-B: when she taps "Ya pagué" or the payment is confirmed;  Bold: when the payment is approved
+// Email and phone go hashed (SHA-256) for better matching. content_ids = catalog ids (same as the Meta feed).
+(function(){
+  var API=typeof API_BASE==='string'?API_BASE:'https://caneva-ai.canevacol.workers.dev',KEY='cv_px_ord';
+  function ls(k,v){try{if(v===undefined)return localStorage.getItem(k)||'';localStorage.setItem(k,v);}catch(e){return '';}}
+  function mem(){var m={};try{m=JSON.parse(ls(KEY)||'{}')||{};}catch(e){}var t=Date.now();for(var k in m)if(t-(m[k].at||0)>5*864e5)delete m[k];return m;}
+  function remember(id,o){var m=mem();m[id]=Object.assign(m[id]||{},o,{at:(m[id]&&m[id].at)||Date.now()});ls(KEY,JSON.stringify(m));}
+  function cookie(n){var m=document.cookie.match(new RegExp('(?:^|; )'+n+'=([^;]*)'));return m?decodeURIComponent(m[1]):'';}
+  // click ids from the ad (kept 90 days, like the platforms do)
+  try{var sp=new URLSearchParams(location.search),fc=sp.get('fbclid'),tc=sp.get('ttclid');
+    if(fc)ls('cv_fbc',JSON.stringify({v:'fb.1.'+Date.now()+'.'+fc,at:Date.now()}));if(tc)ls('cv_ttclid',JSON.stringify({v:tc,at:Date.now()}));}catch(e){}
+  function kept(k){try{var o=JSON.parse(ls(k)||'null');return o&&Date.now()-o.at<90*864e5?o.v:'';}catch(e){return '';}}
+  function px(){return {fbp:cookie('_fbp'),fbc:cookie('_fbc')||kept('cv_fbc'),ttp:cookie('_ttp'),ttclid:kept('cv_ttclid'),url:location.href.split('#')[0]};}
+  function hex(buf){return Array.prototype.map.call(new Uint8Array(buf),function(b){return ('0'+b.toString(16)).slice(-2);}).join('');}
+  function sha(t){t=String(t||'').trim().toLowerCase();if(!t||!(window.crypto&&crypto.subtle))return Promise.resolve('');return crypto.subtle.digest('SHA-256',new TextEncoder().encode(t)).then(hex).catch(function(){return '';});}
+  function buyer(){var b=null;try{b=window.cvBuyer&&cvBuyer();}catch(e){}if(!b){try{b=JSON.parse(localStorage.getItem('caneva_buyer_v1')||'null');}catch(e){}}return b||{};}
+  function phone(b){var d=String(b.phone||'').replace(/[^\d]/g,'');if((!b.country||b.country==='CO')&&d.length===10&&d[0]==='3')d='57'+d;return d.length>=8?d:'';}
+  function num(v){return parseInt(String(v||'').replace(/[^\d]/g,''),10)||0;}
+  function prodOf(it){var L=window.P||[];return L.find(function(p){return (it.pid&&p.id===it.pid)||(p.nombre===String(it.nombre||'').split(' · ')[0]);})||null;}
+  function idOf(it){var p=prodOf(it);if(it.pid)return String(it.pid);if(p&&p.id)return String(p.id);return String(it.nombre||'').split(' · ')[0].toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');}
+  function priceOf(it){var n=num(it.precio);if(!n){var p=prodOf(it);n=p?num(p.precio):0;}return n;}
+  function fire(id,value,items){
+    if(!id)return;var m=mem();if(m[id]&&m[id].fired)return;remember(id,{fired:1});
+    items=(items||[]).filter(function(it){return it&&it.nombre;});value=Math.round(Number(value)||0);
+    if(!value)value=items.reduce(function(a,it){return a+priceOf(it)*(Number(it.qty)||1);},0);
+    var ids=items.map(idOf),contents=items.map(function(it,k){return {id:ids[k],quantity:Number(it.qty)||1,item_price:priceOf(it)};}),ev='pur_'+id,ads=window.CV_ADS||{};
+    var b=buyer(),ph=phone(b),nm=String(b.name||'').trim().toLowerCase().split(/\s+/),city=String(b.city||'').split(',')[0].toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z]/g,'');
+    Promise.all([sha(b.email),sha(ph),sha(nm[0]),sha(nm.slice(1).join(' ')),sha(city),sha(b.country||'co'),sha(ph?'+'+ph:''),sha(ph||b.email)]).then(function(h){
+      try{if(window.fbq&&ads.metaPixel){var ud={};[['em',h[0]],['ph',h[1]],['fn',h[2]],['ln',h[3]],['ct',h[4]],['country',h[5]],['external_id',h[7]]].forEach(function(x){if(x[1])ud[x[0]]=x[1];});
+        fbq('init',ads.metaPixel,ud);
+        fbq('track','Purchase',{value:value,currency:'COP',content_ids:ids,content_type:'product',contents:contents,num_items:contents.reduce(function(a,c){return a+c.quantity;},0),order_id:id},{eventID:ev});}}catch(e){}
+      try{if(window.ttq&&ads.tiktokPixel){var tu={};if(h[0])tu.email=h[0];if(h[6])tu.phone_number=h[6];if(h[7])tu.external_id=h[7];ttq.identify(tu);
+        ttq.track('CompletePayment',{contents:contents.map(function(c){return {content_id:c.id,content_type:'product',quantity:c.quantity,price:c.item_price};}),content_type:'product',value:value,currency:'COP',order_id:id},{event_id:ev});}}catch(e){}
+      try{if(window.gtag&&ads.ga4)gtag('event','purchase',{transaction_id:id,value:value,currency:'COP',items:items.map(function(it,k){return {item_id:ids[k],item_name:String(it.nombre||'').split(' · ')[0],price:contents[k].item_price,quantity:contents[k].quantity};})});}catch(e){}
+      try{if(window.cvStatsPush)cvStatsPush({t:'k',k:'purchase_px',l:id});}catch(e){}
+    });
+  }
+  window.cvPurchase=fire;
+  // the moment she sends the cart order (submit of the delivery form or the cart button)
+  var lastCart=0;
+  addEventListener('submit',function(e){if(e.target&&e.target.closest&&e.target.closest('.cv-formbox,#cvSheet'))lastCart=Date.now();},true);
+  addEventListener('pointerdown',function(e){if(e.target&&e.target.closest&&e.target.closest('#cartWhats'))lastCart=Date.now();},true);
+  // watch the store's own calls to the Worker (no change in how they work)
+  var of=window.fetch;if(!of)return;
+  window.fetch=function(input,init){
+    var url=typeof input==='string'?input:((input&&input.url)||''),path='',body=null,purchase=false;
+    try{if(url.indexOf(API)===0){path=url.slice(API.length).split('?')[0];
+      if(init&&String(init.method||'').toUpperCase()==='POST'&&typeof init.body==='string'&&/^\/(order|pay\/bold|pay\/breb|pay\/breb\/claim)$/.test(path)){
+        body=JSON.parse(init.body);
+        if(path!=='/pay/breb/claim'){body.px=px();
+          if(path==='/order'&&body.buyer&&body.pay!=='breb'&&Date.now()-lastCart<15000&&(window.CART||[]).length&&(body.items||[]).length===(window.CART||[]).length){body.purchase=true;purchase=true;}
+          init=Object.assign({},init,{body:JSON.stringify(body)});}}}}catch(e){}
+    var p=of.call(this,input,init);
+    try{
+      if(purchase)fire(body.id,typeof cartTotal==='function'?cartTotal():0,body.items);
+      if(body&&(path==='/pay/bold'||path==='/pay/breb'))p.then(function(r){return r.clone().json();}).then(function(d){if(d&&d.ok&&d.orderId)remember(d.orderId,{value:d.amount,items:(body.items||[]).map(function(it){return {pid:it.pid,nombre:it.nombre,qty:it.qty,precio:it.precio||''};})});}).catch(function(){});
+      if(body&&path==='/pay/breb/claim'){var o=mem()[body.id]||{};fire(body.id,o.value,o.items);}
+      if(path==='/pay/breb/status'||path==='/pay/bold/status'){var id=(url.match(/[?&]id=([^&]+)/)||[])[1];id=id?decodeURIComponent(id).toLowerCase():'';
+        if(id)p.then(function(r){return r.clone().json();}).then(function(d){if(!d)return;var ok=path==='/pay/breb/status'?d.paid:(d.status==='APPROVED'&&!d.isGift);
+          if(ok){var o=mem()[id]||{};fire(id,o.value||d.total,o.items||[]);}}).catch(function(){});}
+    }catch(e){}
+    return p;
+  };
+})();
+</script>
 <script id="cvbreb">
 // v70 Pago con Bre-B (free instant transfers from any bank or wallet to the llave @caneva119 at Bancolombia).
 // There is no free API that confirms the transfer, so the order is saved as "breb" (Pedidos -> Por cobrar) and
@@ -6558,7 +6628,6 @@ body.cv-has-pbar .ann-bar{display:none!important}
           try{window.CART=[];if(typeof CART!=='undefined')CART.length=0;if(typeof saveCart==='function')saveCart();localStorage.removeItem('caneva_bold_pending');}catch(e){}
           push({t:'k',k:'pago_aprobado',l:oid});
           if(d.isGift){giftPaid(d);return;}
-          try{if(window.fbq)fbq('track','Purchase',{value:Number(d.total)||0,currency:'COP'});}catch(e){}
           showReceipt(oid,d);
         }else if(/REJECTED|FAILED|VOIDED/.test(st)){
           push({t:'k',k:'pago_rechazado',l:st});
