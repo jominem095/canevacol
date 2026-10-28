@@ -78,8 +78,15 @@ html.cv-iab .mobile-shop-dock{background:rgba(5,4,3,.97)!important}
   document.addEventListener('load',function(e){var t=e.target;if(t&&t.tagName==='IMG')t.classList.add('cv-in');},true);
   // Visitors from an ad or a link: no intro screens, the store shows up at once
   window.CV_FROM_AD=/fbclid|ttclid|gclid|utm_|[?&]ref=/.test(location.search)||/Instagram|FBAN|FBAV|FB_IAB|TikTok|musical_ly|BytedanceWebview/i.test(navigator.userAgent);
+  // v92: social / ad visitors land straight on the catalog (?home=1 shows the full home again)
+  try{if(window.CV_FROM_AD&&!/[?&]home=1/.test(location.search))document.documentElement.classList.add('cv-social');}catch(e){}
 })();
 </script>
+<style id="cvsocial-head">
+/* v92: until the catalog is moved to the top, the long home is not painted for social visitors (no flash, no black frame) */
+html.cv-social:not(.cv-social-ready) #inicio,html.cv-social:not(.cv-social-ready) .mq,html.cv-social:not(.cv-social-ready) .stats,html.cv-social:not(.cv-social-ready) #lookbook{display:none!important}
+html.cv-social #cvDust,html.cv-social #cvInk{display:none!important}
+</style>
 <style id="cvspeed-css">
 @keyframes cvShim{0%{background-position:100% 0}100%{background-position:-100% 0}}
 .pimg img:not(.cv-in),.cv-si img:not(.cv-in),.cv-ph img:not(.cv-in),.cv-vc img:not(.cv-in),.lb-item img:not(.cv-in),.cv-ri img:not(.cv-in),.pm-media img:not(.cv-in){background:linear-gradient(100deg,#111 30%,#1f1d1a 50%,#111 70%) #111;background-size:200% 100%;animation:cvShim 1.3s linear infinite}
@@ -1972,6 +1979,13 @@ if(p&&p.imagen){var l=document.createElement('link');l.rel='preload';l.as='image
   </div>
   <div class="pgrid" id="pgrid"></div>
 </section>
+<script id="cvsocial-move">
+// v92: Instagram / Facebook / TikTok / ad visitors: the catalog goes first; the home (hero, game, Club, lookbook) follows it
+(function(){var h=document.documentElement;if(!h.classList.contains('cv-social'))return;
+  var c=document.getElementById('catalogo'),i=document.getElementById('inicio');
+  if(c&&i&&i.parentNode===c.parentNode)c.parentNode.insertBefore(c,i);
+  h.classList.add('cv-social-ready');try{if('scrollRestoration' in history)history.scrollRestoration='manual';}catch(e){}window.scrollTo(0,0);})();
+</script>
 
 <div class="pmodal" id="pmodal" aria-hidden="true">
   <div class="pm-shell" role="dialog" aria-modal="true" aria-label="Detalle de producto Caneva">
@@ -7792,5 +7806,32 @@ body.product-open .cv-wel{display:none!important}
   });
 })();
 </script>
+<script id="cvsocial">
+// v92: social / ad visitors: anything other scripts add above the catalog goes after it, and the Club welcome
+// waits until she has looked at 3 garments or 45 s passed (never while she is scrolling).
+(function(){
+  var h=document.documentElement;if(!h.classList.contains('cv-social'))return;
+  var c=document.getElementById('catalogo'),t0=Date.now(),views=0,lastScroll=0;
+  try{if(window.cvStatsPush)cvStatsPush({t:'k',k:'social_catalogo',l:/Instagram/i.test(navigator.userAgent)?'instagram':/FBAN|FBAV|FB_IAB/i.test(navigator.userAgent)?'facebook':/TikTok|musical_ly|Bytedance/i.test(navigator.userAgent)?'tiktok':'anuncio'});}catch(e){}
+  var KEEP={annBar:1,cur:1,curR:1,nav:1,cvRail:1,mm:1};
+  function tidy(){var i=document.getElementById('inicio');if(!c||!i||c.parentNode!==i.parentNode)return;
+    var move=[],n=c.previousElementSibling;
+    while(n){var p=n.previousElementSibling;
+      if(!KEEP[n.id]&&!/^(SCRIPT|STYLE|LINK|NOSCRIPT)$/.test(n.tagName)){var cs=getComputedStyle(n);if(cs.position!=='fixed'&&cs.position!=='absolute'&&cs.position!=='sticky')move.unshift(n);}
+      n=p;}
+    var ref=i.nextSibling;move.forEach(function(m){i.parentNode.insertBefore(m,ref);});}
+  tidy();document.addEventListener('DOMContentLoaded',tidy);window.addEventListener('load',function(){tidy();setTimeout(tidy,1500);setTimeout(tidy,4000);});
+  new MutationObserver(function(){tidy();}).observe(document.body,{childList:true});
+  window.addEventListener('scroll',function(){lastScroll=Date.now();},{passive:true});
+  var o=window.openProductModal;if(typeof o==='function')window.openProductModal=openProductModal=function(){views++;return o.apply(this,arguments);};
+  function allowed(){return (views>=3||Date.now()-t0>45000)&&Date.now()-lastScroll>1500;}
+  function hold(){document.querySelectorAll('.cv-wel.show').forEach(function(w){if(w.__soc)return;w.__soc=1;if(allowed())return;
+    w.classList.add('cvux-hide');var iv=setInterval(function(){if(!document.body.contains(w)){clearInterval(iv);return;}if(allowed()){w.classList.remove('cvux-hide');w.__cvuxAt=window.scrollY;clearInterval(iv);}},2000);});}
+  // the welcome is added hidden and gets "show" a frame later: watch each one as it arrives
+  new MutationObserver(function(ms){ms.forEach(function(m){[].forEach.call(m.addedNodes,function(n){if(n.nodeType===1&&n.classList.contains('cv-wel'))new MutationObserver(hold).observe(n,{attributes:true,attributeFilter:['class']});});});}).observe(document.body,{childList:true});
+  setInterval(hold,1500);
+})();
+</script>
+
 </body>
 </html>
