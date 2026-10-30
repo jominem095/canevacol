@@ -5461,7 +5461,9 @@ body.cv-fast .bw-logo-wrap{transform:scale(.82);transform-origin:center top;marg
     opts.innerHTML=cs.map(function(c){return '<button class="pm-color-btn" type="button" role="radio" aria-checked="false" data-color="'+escAttr(c.n)+'" title="'+escAttr(c.n)+'" aria-label="'+escAttr(c.n)+'"><i style="'+bg(c.n)+'"></i>'+(c.u&&cs.length>1?'<span class="cv-cam" aria-hidden="true">📷</span>':'')+'</button>';}).join('');
     opts.querySelectorAll('.pm-color-btn').forEach(function(b){b.addEventListener('click',function(){pick(b.dataset.color);});});
     if(cs.length===1){help.textContent='';note.textContent='';cur=cs[0].n;curU=cs[0].u;opts.firstChild.classList.add('on');setName();return;}
-    help.textContent='Elige tu tono';note.textContent=cs.length+' colores disponibles'+(cs.some(function(c){return c.u;})?' · toca un color para verlo':'');setName();
+    // v94: the color of the photo she is looking at comes already chosen (one less step before "Agregar"); she can change it
+    var first=imgsOf(p)[0],def=cs.find(function(c){return c.u&&c.u===first;})||cs[0];pick(def.n,true);
+    help.textContent='Toca otro tono para cambiar';note.textContent=cs.length+' colores disponibles'+(cs.some(function(c){return c.u;})?' · toca un color para verlo':'');setName();
     // Swiping to a photo that belongs to a color selects that color
     var slides=document.getElementById('pmSlides');
     if(slides&&!slides.dataset.cvBound){slides.dataset.cvBound='1';var t;slides.addEventListener('scroll',function(){if(slides.dataset.cvAuto)return;clearTimeout(t);t=setTimeout(function(){var q=curP();if(!q)return;var k=Math.round(slides.scrollLeft/Math.max(1,slides.clientWidth)),u=imgsOf(q)[k],c=colorsOf(q).find(function(x){return x.u&&x.u===u;});if(c&&c.n!==cur)pick(c.n,true);},160);},{passive:true});}
