@@ -8007,5 +8007,223 @@ body.product-open .cv-wel{display:none!important}
 })();
 </script>
 
+<style id="cvatrapa-css">
+/* ===== v95 "Atrapa": my size (filter + badges) and the real customers wall ===== */
+.cvf{margin:.2rem 0 1rem;font-family:Inter,sans-serif}
+.cvf-ask{display:flex;align-items:center;gap:.8rem;width:100%;padding:.85rem 1rem;border-radius:16px;cursor:pointer;text-align:left;color:#f7f7f4;
+  background:linear-gradient(135deg,rgba(255,255,255,.07),rgba(255,255,255,.02));border:1px solid rgba(247,247,244,.16);position:relative;overflow:hidden}
+.cvf-ask::after{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.09) 50%,transparent 70%);background-size:250% 100%;animation:cvfSheen 4.5s ease-in-out infinite}
+@keyframes cvfSheen{0%{background-position:120% 0}60%,100%{background-position:-60% 0}}
+.cvf-ask .ic{flex:0 0 38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:1.05rem;background:rgba(255,255,255,.08);border:1px solid rgba(247,247,244,.2)}
+.cvf-ask b{display:block;font-weight:600;font-size:.86rem}.cvf-ask span{display:block;font-size:.7rem;color:rgba(247,247,244,.6);margin-top:2px}
+.cvf-ask i{margin-left:auto;font-style:normal;font-size:1.3rem;color:rgba(247,247,244,.5)}
+.cvf-on{display:flex;align-items:center;flex-wrap:wrap;gap:.55rem .8rem;padding:.7rem .9rem;border-radius:16px;border:1px solid rgba(247,247,244,.16);background:rgba(255,255,255,.035);color:#f7f7f4;font-size:.76rem}
+.cvf-on .me b{font-weight:700;letter-spacing:.04em}
+.cvf-sw{display:inline-flex;align-items:center;gap:.5rem;cursor:pointer;user-select:none}
+.cvf-sw input{position:absolute;opacity:0;pointer-events:none}
+.cvf-sw i{width:38px;height:22px;border-radius:999px;background:rgba(255,255,255,.18);position:relative;transition:background .25s}
+.cvf-sw i::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#f7f7f4;transition:transform .25s}
+.cvf-sw input:checked+i{background:linear-gradient(135deg,#e9edf1,#9aa5ad)}
+.cvf-sw input:checked+i::after{transform:translateX(16px);background:#050505}
+.cvf-ch{margin-left:auto;background:none;border:0;color:rgba(247,247,244,.6);font:500 .7rem Inter,sans-serif;text-decoration:underline;cursor:pointer}
+.cvf-b{position:absolute;left:8px;bottom:8px;z-index:3;font:700 .5rem Inter,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#050505;background:linear-gradient(135deg,#fff,#cfd6db);padding:.32rem .5rem;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.cvf-none{grid-column:1/-1;text-align:center;padding:2.2rem 1rem;color:rgba(247,247,244,.7);font:400 .85rem Inter,sans-serif}
+.cvf-none button{margin-top:.9rem;border:1px solid rgba(247,247,244,.3);background:none;color:#f7f7f4;border-radius:999px;padding:.7rem 1.2rem;font:600 .7rem Inter,sans-serif;letter-spacing:.12em;text-transform:uppercase;cursor:pointer}
+.cvx{position:fixed;inset:0;z-index:3300;background:rgba(0,0,0,.62);display:flex;align-items:flex-end;justify-content:center;opacity:0;transition:opacity .25s}
+.cvx.on{opacity:1}
+.cvx-b{position:relative;width:min(480px,100%);max-height:92vh;overflow:auto;background:linear-gradient(180deg,#121214,#070708);color:#f7f7f4;border:1px solid rgba(247,247,244,.18);border-bottom:0;border-radius:22px 22px 0 0;padding:22px 18px calc(18px + env(safe-area-inset-bottom));font-family:Inter,sans-serif;transform:translateY(24px);transition:transform .3s cubic-bezier(.16,1,.3,1)}
+.cvx.on .cvx-b{transform:none}
+.cvx-x{position:absolute;top:10px;right:12px;width:32px;height:32px;border-radius:50%;border:1px solid rgba(247,247,244,.2);background:transparent;color:#f7f7f4;font-size:18px;cursor:pointer}
+.cvx h3{margin:0 40px 4px 0;font-family:'Cormorant Garamond',Georgia,serif;font-weight:400;font-size:1.65rem;line-height:1.1}
+.cvx p.s{margin:0 0 14px;font-size:.78rem;color:rgba(247,247,244,.62)}
+.cvx label.t{display:block;margin:14px 0 8px;font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(247,247,244,.6)}
+.cvx .chips{display:flex;flex-wrap:wrap;gap:7px}
+.cvx .chips button{min-width:48px;padding:10px 12px;border-radius:12px;border:1px solid rgba(247,247,244,.24);background:transparent;color:#f7f7f4;font:600 .85rem Inter,sans-serif;cursor:pointer;transition:all .2s}
+.cvx .chips button.on{background:linear-gradient(135deg,#fff,#cfd6db);color:#050505;border-color:transparent;transform:translateY(-1px)}
+.cvx .go{width:100%;margin-top:18px;padding:14px;border:0;border-radius:999px;background:linear-gradient(135deg,#ffffff,#c9ccd1 55%,#f7f7f4);color:#050505;font:700 .86rem Inter,sans-serif;letter-spacing:.04em;cursor:pointer}
+.cvx .go[disabled]{opacity:.45}
+.cvx .note{margin:10px 0 0;font-size:.7rem;color:rgba(247,247,244,.5);text-align:center}
+/* real customers */
+.cvr{padding:3.2rem 0 2.6rem;color:#f7f7f4;font-family:Inter,sans-serif;max-width:1200px;margin:0 auto}
+.cvr-h{text-align:center;padding:0 18px;margin-bottom:1.3rem}
+.cvr-h small{font-size:.56rem;letter-spacing:.32em;text-transform:uppercase;color:rgba(247,247,244,.55)}
+.cvr-h h2{margin:.5rem 0 .3rem;font-family:'Cormorant Garamond',Georgia,serif;font-weight:300;font-size:clamp(2rem,8vw,3rem);line-height:1}
+.cvr-h h2 em{font-style:italic;background:linear-gradient(100deg,#fff 20%,#cfe3f5 50%,#fff 80%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.cvr-h p{margin:0;font-size:.78rem;color:rgba(247,247,244,.6)}
+.cvr-row{display:flex;gap:12px;overflow-x:auto;padding:4px 18px 8px;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.cvr-row::-webkit-scrollbar{display:none}
+.cvr-c{flex:0 0 min(64vw,250px);scroll-snap-align:start;position:relative;border-radius:18px;overflow:hidden;background:#111;border:1px solid rgba(247,247,244,.14);cursor:pointer;padding:0;color:#f7f7f4;text-align:left}
+.cvr-c img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block}
+.cvr-c .cvr-ov{position:absolute;left:0;right:0;bottom:0;padding:34px 12px 12px;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.88))}
+.cvr-c .cvr-st{color:#f3e6c4;font-size:.7rem;letter-spacing:2px}
+.cvr-c b{display:block;font-size:.8rem;margin-top:3px}.cvr-c b span{font-weight:400;color:rgba(247,247,244,.65)}
+.cvr-c q{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:.72rem;color:rgba(247,247,244,.85);margin-top:4px;quotes:"“" "”"}
+.cvr-c .cvr-tag{position:absolute;top:10px;left:10px;font:700 .48rem Inter,sans-serif;letter-spacing:.16em;text-transform:uppercase;background:rgba(5,5,5,.72);border:1px solid rgba(247,247,244,.25);padding:.3rem .5rem;border-radius:999px}
+.cvr-v{position:fixed;inset:0;z-index:3400;background:#000;display:flex;flex-direction:column;opacity:0;transition:opacity .25s;font-family:Inter,sans-serif;color:#f7f7f4}
+.cvr-v.on{opacity:1}
+.cvr-v .cvr-tp{display:flex;align-items:center;justify-content:space-between;padding:calc(12px + env(safe-area-inset-top)) 14px 8px}
+.cvr-v .cvr-tp span{font-size:.62rem;letter-spacing:.24em;text-transform:uppercase;color:rgba(247,247,244,.6)}
+.cvr-v .cvr-tp button{width:36px;height:36px;border-radius:50%;border:1px solid rgba(247,247,244,.25);background:transparent;color:#f7f7f4;font-size:18px;cursor:pointer}
+.cvr-v .cvr-im{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;position:relative}
+.cvr-v .cvr-im img{max-width:100%;max-height:100%;object-fit:contain}
+.cvr-v .cvr-nv{position:absolute;top:0;bottom:0;width:35%;background:none;border:0;cursor:pointer}
+.cvr-v .cvr-nv.l{left:0}.cvr-v .cvr-nv.r{right:0}
+.cvr-v .cvr-bt{padding:14px 18px calc(16px + env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(0,0,0,0),#000 30%)}
+.cvr-v .cvr-bt .cvr-st{color:#f3e6c4;letter-spacing:2px;font-size:.8rem}
+.cvr-v .cvr-bt b{display:block;margin-top:4px;font-size:.9rem}
+.cvr-v .cvr-bt p{margin:6px 0 0;font-size:.82rem;color:rgba(247,247,244,.82);line-height:1.45}
+.cvr-v .cvr-bt .go{display:block;width:100%;margin-top:12px;padding:13px;border:0;border-radius:999px;background:linear-gradient(135deg,#fff,#cfd6db);color:#050505;font:700 .78rem Inter,sans-serif;letter-spacing:.06em;cursor:pointer}
+.cvr-pm{margin:14px 0 4px;padding:12px;border-radius:16px;border:1px solid rgba(247,247,244,.14);background:rgba(255,255,255,.03);font-family:Inter,sans-serif}
+.cvr-pm b{display:block;font-size:.78rem;color:#f7f7f4;margin-bottom:8px}
+.cvr-pm .cvr-r{display:flex;gap:8px}
+.cvr-pm button{flex:0 0 64px;height:84px;border-radius:10px;overflow:hidden;border:1px solid rgba(247,247,244,.18);padding:0;background:#111;cursor:pointer}
+.cvr-pm img{width:100%;height:100%;object-fit:cover;display:block}
+.cvr-pm q{display:block;font-size:.72rem;color:rgba(247,247,244,.75);margin-top:8px;quotes:"“" "”"}
+</style>
+<script id="cvatrapa">
+// v95 "Atrapa" (all real data, nothing invented):
+// 1) "Mi talla": she says her size once (jeans number + tops letter); the catalog can show only what fits her
+//    (with real stock per size) and every garment in her size gets a "✓ Tu talla" badge. Saved in cv_my_size (shared with cvbuy).
+// 2) "Clientas CΛNEVΛ": real photos / messages from customers that the owner uploads in the admin (GET /reviews),
+//    as a wall after the catalog and inside each garment that has one ("Así le quedó a Laura").
+(function(){
+  if(typeof P==='undefined'||typeof productSizes!=='function')return;
+  var API=typeof API_BASE==='string'?API_BASE:'https://caneva-ai.canevacol.workers.dev';
+  function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function lg(k){try{return localStorage.getItem(k)||'';}catch(e){return '';}}
+  function ls(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+  function stat(k,l){try{if(window.cvStatsPush)cvStatsPush({t:'k',k:k,l:String(l||'').slice(0,40)});}catch(e){}}
+  function img(u,w){return window.cvImg?cvImg(u,w):u;}
+  function nk(t){return String(t||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\s+/g,' ').trim();}
+  function keyOf(p){return p.id||('n:'+nk(p.nombre));}
+  function idxOf(k){for(var i=0;i<P.length;i++){if(keyOf(P[i])===k)return i;}return -1;}
+  function sheet(html){
+    var old=document.querySelector('.cvx');if(old)old.remove();
+    var d=document.createElement('div');d.className='cvx';d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');
+    d.innerHTML='<div class="cvx-b"><button type="button" class="cvx-x" aria-label="Cerrar">×</button>'+html+'</div>';
+    document.body.appendChild(d);requestAnimationFrame(function(){d.classList.add('on');});
+    d.addEventListener('click',function(e){if(e.target===d||e.target.closest('.cvx-x'))close();});
+    function close(){d.classList.remove('on');setTimeout(function(){d.remove();},250);}
+    d.close=close;return d;
+  }
+
+  // ================= 1) MI TALLA =================
+  var NUMS=['6','8','10','12','14','16'],LETS=['XS','S','M','L','XL'];
+  function mine(){var m={};try{m=JSON.parse(lg('cv_my_size')||'{}')||{};}catch(e){}return m;}
+  function isNum(z){return /^\d+$/.test(String(z).split('/')[0]);}
+  // {known: her size can be compared, ok: the garment has her size with stock}
+  function fit(p){
+    var zs=productSizes(p);if(!zs.length)return {known:true,ok:true,z:''};
+    var m=mine(),want=zs.some(isNum)?m.n:m.l;if(!want)return {known:false,ok:true,z:''};
+    want=String(want).toUpperCase();
+    var z=zs.find(function(s){return String(s).toUpperCase().split('/').indexOf(want)>=0;});
+    if(!z)return {known:true,ok:false,z:''};
+    var q=typeof invQty==='function'?invQty(p,z):Infinity;
+    return {known:true,ok:q>0,z:z};
+  }
+  window.cvFit=fit;
+  function fitOn(){return lg('cv_fit_on')==='1'&&!!(mine().n||mine().l);}
+  var prevMatch=window.cvMatch;
+  window.cvMatch=function(p){
+    var base=prevMatch?prevMatch(p):(typeof acat==='undefined'||acat==='Todos'||p.categoria===acat);
+    if(!base||!fitOn())return base;
+    return fit(p).ok;
+  };
+  function label(){var m=mine();return [m.l,m.n].filter(Boolean).join(' · ');}
+  function paintBar(){
+    var cat=document.getElementById('catalogo'),sb=cat&&cat.querySelector('.sbar');if(!sb)return;
+    var b=document.getElementById('cvFit');
+    if(!b){b=document.createElement('div');b.id='cvFit';b.className='cvf';sb.parentNode.insertBefore(b,sb.nextSibling);
+      b.addEventListener('click',function(e){
+        if(e.target.closest('.cvf-ask')||e.target.closest('.cvf-ch')){openFit();return;}
+        var sw=e.target.closest('.cvf-sw input');if(sw){ls('cv_fit_on',sw.checked?'1':'0');stat(sw.checked?'mi_talla_on':'mi_talla_off');rerender();}
+      });}
+    var l=label();
+    b.innerHTML=l?'<div class="cvf-on"><span class="me">📏 Tu talla <b>'+esc(l)+'</b></span><label class="cvf-sw"><input type="checkbox"'+(fitOn()?' checked':'')+'><i></i>Solo lo que me queda</label><button type="button" class="cvf-ch">Cambiar</button></div>'
+      :'<button type="button" class="cvf-ask"><span class="ic">📏</span><span><b>¿Cuál es tu talla?</b><span>Dinos una vez y te mostramos solo lo que te queda</span></span><i>›</i></button>';
+  }
+  function openFit(){
+    var m=mine(),n=m.n||'',l=m.l||'';
+    var d=sheet('<h3>Tu talla en 2 toques</h3><p class="s">Así marcamos las prendas que hay en tu talla y puedes ver solo lo que te queda.</p>'+
+      '<label class="t">En jeans y pantalones</label><div class="chips" data-k="n">'+NUMS.map(function(z){return '<button type="button" data-z="'+z+'"'+(z===n?' class="on"':'')+'>'+z+'</button>';}).join('')+'</div>'+
+      '<label class="t">En blusas, vestidos y sets</label><div class="chips" data-k="l">'+LETS.map(function(z){return '<button type="button" data-z="'+z+'"'+(z===l?' class="on"':'')+'>'+z+'</button>';}).join('')+'</div>'+
+      '<button type="button" class="go"'+(n||l?'':' disabled')+'>Ver lo que me queda ✨</button><p class="note">¿No estás segura? Escríbenos y te asesoramos por WhatsApp. Tu talla queda guardada solo en este celular.</p>');
+    stat('mi_talla_abrir');
+    d.addEventListener('click',function(e){
+      var c=e.target.closest('.chips button');
+      if(c){var row=c.parentNode,k=row.dataset.k,on=c.classList.contains('on');row.querySelectorAll('button').forEach(function(x){x.classList.remove('on');});if(!on)c.classList.add('on');
+        if(k==='n')n=on?'':c.dataset.z;else l=on?'':c.dataset.z;d.querySelector('.go').disabled=!(n||l);return;}
+      if(e.target.closest('.go')){var mm=mine();if(n)mm.n=n;else delete mm.n;if(l)mm.l=l;else delete mm.l;ls('cv_my_size',JSON.stringify(mm));ls('cv_fit_on','1');
+        stat('mi_talla_ok',[l,n].filter(Boolean).join(' '));d.close();rerender();
+        var cat=document.getElementById('catalogo');if(cat)setTimeout(function(){cat.scrollIntoView({behavior:'smooth',block:'start'});},260);}
+    });
+  }
+  function rerender(){paintBar();try{if(typeof render==='function')render();}catch(e){}}
+  // badges on the cards + count + empty state (survives every re-render)
+  function decorate(){
+    var g=document.getElementById('pgrid');if(!g)return;var has=!!(mine().n||mine().l),n=0;
+    g.querySelectorAll('.pc').forEach(function(c){n++;if(c.querySelector('.cvf-b')||!has)return;var p=P[parseInt(c.dataset.pid,10)];if(!p)return;var f=fit(p);
+      if(f.known&&f.ok&&f.z){var im=c.querySelector('.pimg');if(im){var t=document.createElement('div');t.className='cvf-b';t.textContent='✓ Tu talla '+f.z;im.appendChild(t);}}});
+    if(fitOn()){var cnt=document.getElementById('cnt');if(cnt&&!/tu talla/.test(cnt.textContent))cnt.textContent=n+' en tu talla';
+      var nor=g.querySelector('.nor');if(nor&&!g.querySelector('.cvf-none')){nor.outerHTML='<div class="cvf-none">En esta sección no hay prendas en tu talla ('+esc(label())+') por ahora.<br><button type="button" data-cvf-all>Ver todas las tallas</button></div>';}}
+  }
+  document.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('[data-cvf-all]')){ls('cv_fit_on','0');rerender();}});
+  var grid=document.getElementById('pgrid');
+  if(grid&&window.MutationObserver)new MutationObserver(function(){try{decorate();}catch(e){}}).observe(grid,{childList:true});
+
+  // the garment window shows real customers who bought it
+  if(typeof openProductModal==='function'){var oOpen=openProductModal;window.openProductModal=openProductModal=function(i){var r=oOpen.apply(this,arguments);
+    try{paintModalRev(P[i]);}catch(e){}
+    return r;};}
+
+  // ================= 3) CLIENTAS CΛNEVΛ =================
+  var REV=[];
+  function stars(n){var s='';for(var i=0;i<5;i++)s+=i<(n||5)?'★':'☆';return s;}
+  function revProductIdx(r){if(r.pid){var i=P.findIndex(function(p){return p.id===r.pid;});if(i>=0)return i;}if(r.product){var n=nk(r.product);return P.findIndex(function(p){return nk(p.nombre)===n;});}return -1;}
+  function paintWall(){
+    var cat=document.getElementById('catalogo');if(!cat||!REV.length)return;var s=document.getElementById('cvRevs');
+    if(!s){s=document.createElement('section');s.id='cvRevs';s.className='cvr';cat.parentNode.insertBefore(s,cat.nextSibling);
+      s.addEventListener('click',function(e){var c=e.target.closest('[data-r]');if(c)viewer(+c.dataset.r,REV,'muro');});}
+    s.innerHTML='<div class="cvr-h"><small>Clientas reales</small><h2>Ellas ya <em>brillan</em> con CΛNEVΛ</h2><p>'+REV.length+' clienta'+(REV.length>1?'s compartieron':' compartió')+' cómo le quedó su compra</p></div>'+
+      '<div class="cvr-row">'+REV.map(function(r,k){var pi=revProductIdx(r);return '<button type="button" class="cvr-c" data-r="'+k+'"><img src="'+esc(img(r.img,520))+'" alt="Foto de clienta" loading="lazy">'+(pi>=0?'<span class="cvr-tag">'+esc(P[pi].nombre)+'</span>':'')+
+        '<div class="cvr-ov"><div class="cvr-st">'+stars(r.stars)+'</div><b>'+esc(r.name||'Clienta CΛNEVΛ')+(r.city?' <span>· '+esc(r.city)+'</span>':'')+'</b>'+(r.text?'<q>'+esc(r.text)+'</q>':'')+'</div></button>';}).join('')+'</div>';
+  }
+  function viewer(k,list,src){
+    var old=document.querySelector('.cvr-v');if(old)old.remove();
+    var v=document.createElement('div');v.className='cvr-v';v.setAttribute('role','dialog');v.setAttribute('aria-modal','true');document.body.appendChild(v);
+    function paint(){var r=list[k],pi=revProductIdx(r);
+      v.innerHTML='<div class="cvr-tp"><span>Clienta real · '+(k+1)+' / '+list.length+'</span><button type="button" data-x aria-label="Cerrar">×</button></div>'+
+        '<div class="cvr-im"><img src="'+esc(img(r.img,1100))+'" alt="Foto de clienta">'+(list.length>1?'<button type="button" class="cvr-nv l" data-n="-1" aria-label="Anterior"></button><button type="button" class="cvr-nv r" data-n="1" aria-label="Siguiente"></button>':'')+'</div>'+
+        '<div class="cvr-bt"><div class="cvr-st">'+stars(r.stars)+'</div><b>'+esc(r.name||'Clienta CΛNEVΛ')+(r.city?' · '+esc(r.city):'')+'</b>'+(r.text?'<p>“'+esc(r.text)+'”</p>':'')+
+        (pi>=0?'<button type="button" class="go" data-p="'+pi+'">Ver '+esc(P[pi].nombre)+' · '+esc(P[pi].precio||'')+'</button>':'')+'</div>';}
+    paint();requestAnimationFrame(function(){v.classList.add('on');});stat('resena_ver',src);
+    var x0=null;v.addEventListener('touchstart',function(e){x0=e.touches[0].clientX;},{passive:true});
+    v.addEventListener('touchend',function(e){if(x0===null)return;var dx=e.changedTouches[0].clientX-x0;x0=null;if(Math.abs(dx)>50&&list.length>1){k=(k+(dx<0?1:-1)+list.length)%list.length;paint();}},{passive:true});
+    v.addEventListener('click',function(e){
+      if(e.target.closest('[data-x]')){v.classList.remove('on');setTimeout(function(){v.remove();},250);return;}
+      var n=e.target.closest('[data-n]');if(n){k=(k+(+n.dataset.n)+list.length)%list.length;paint();return;}
+      var g=e.target.closest('[data-p]');if(g){var i=+g.dataset.p;v.remove();stat('resena_a_prenda',P[i]&&P[i].nombre);if(document.querySelector('.pmodal.open')&&typeof closeProductModal==='function')closeProductModal();openProductModal(i);}
+    });
+  }
+  function revsFor(p){if(!p)return [];var n=nk(p.nombre);return REV.filter(function(r){return (r.pid&&r.pid===p.id)||(r.product&&nk(r.product)===n);});}
+  function paintModalRev(p){
+    var old=document.getElementById('cvRevPm');if(old)old.remove();var rs=revsFor(p);if(!rs.length)return;
+    var anchor=document.getElementById('cvQty')||document.querySelector('#pmodal .pm-actions');if(!anchor)return;
+    var b=document.createElement('div');b.id='cvRevPm';b.className='cvr-pm';
+    b.innerHTML='<b>📸 Así le quedó a '+esc(rs[0].name||'una clienta')+(rs.length>1?' y '+(rs.length-1)+' más':'')+'</b><div class="cvr-r">'+rs.slice(0,4).map(function(r,k){return '<button type="button" data-k="'+k+'" aria-label="Ver foto de clienta"><img src="'+esc(img(r.img,200))+'" alt="" loading="lazy"></button>';}).join('')+'</div>'+(rs[0].text?'<q>'+esc(rs[0].text)+'</q>':'');
+    anchor.parentNode.insertBefore(b,anchor);
+    b.addEventListener('click',function(e){var t=e.target.closest('[data-k]');if(t)viewer(+t.dataset.k,rs,'prenda');});
+  }
+  function loadRev(){fetch(API+'/reviews').then(function(r){return r.json();}).then(function(d){REV=(d&&d.list)||[];paintWall();var cur=typeof currentProductIndex!=='undefined'?P[currentProductIndex]:null;if(cur&&document.querySelector('.pmodal.open'))paintModalRev(cur);}).catch(function(){});}
+
+  // ---- start ----
+  function start(){paintBar();decorate();}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+  // the live catalog replaces P: paint again with the real stock
+  var tries=0,iv=setInterval(function(){tries++;if(window.CV_LIVE||tries>20){clearInterval(iv);start();try{decorate();}catch(e){}}},500);
+  setTimeout(loadRev,1200);
+})();
+</script>
+
 </body>
 </html>
