@@ -8225,5 +8225,170 @@ body.product-open .cv-wel{display:none!important}
 })();
 </script>
 
+<style id="cvregalo-css">
+/* ===== v96 "Pídelo de regalo": she sends her wish list; whoever opens the link buys it in her sizes ===== */
+.cvg-btn{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;margin:.6rem 0 0;padding:.8rem 1rem;border-radius:999px;cursor:pointer;
+  border:1px solid rgba(247,247,244,.28);background:linear-gradient(135deg,rgba(255,255,255,.06),rgba(255,255,255,.015));color:#f7f7f4;font:600 .74rem Inter,sans-serif;letter-spacing:.06em}
+.cvg-btn:hover{border-color:rgba(247,247,244,.55)}
+.cvg-fav{margin:0 0 12px}
+.cvg-it{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid rgba(255,255,255,.07)}
+.cvg-it img{flex:0 0 64px;width:64px;height:84px;object-fit:cover;border-radius:10px;background:#151515}
+.cvg-it .tx{flex:1;min-width:0;font-size:.78rem}.cvg-it .tx b{display:block;font-size:.84rem}.cvg-it .tx small{color:rgba(247,247,244,.6)}
+.cvg-it .zz{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.cvg-it .zz button{min-width:36px;padding:6px 8px;border-radius:9px;border:1px solid rgba(247,247,244,.24);background:transparent;color:#f7f7f4;font:600 .7rem Inter,sans-serif;cursor:pointer}
+.cvg-it .zz button.on{background:linear-gradient(135deg,#fff,#cfd6db);color:#050505;border-color:transparent}
+.cvg-it .zz button[disabled]{opacity:.3;text-decoration:line-through;cursor:default}
+.cvg-it .x{background:none;border:0;color:rgba(247,247,244,.45);font-size:18px;cursor:pointer}
+.cvx input.cvg-in,.cvx textarea.cvg-in{width:100%;box-sizing:border-box;padding:12px 13px;border-radius:12px;border:1px solid rgba(247,247,244,.22);background:#050505;color:#f7f7f4;font:16px Inter,sans-serif;outline:none}
+.cvx textarea.cvg-in{min-height:64px;resize:none}
+.cvg-row{display:flex;gap:8px;margin-top:14px}
+.cvg-row button{flex:1;padding:13px 8px;border-radius:999px;border:0;font:700 .78rem Inter,sans-serif;cursor:pointer}
+.cvg-row .wa{background:#25d366;color:#04140a}.cvg-row .sh{background:linear-gradient(135deg,#fff,#cfd6db);color:#050505}
+.cvg-row .cp{background:transparent;color:#f7f7f4;border:1px solid rgba(247,247,244,.3)}
+/* the gift page for whoever opens the link */
+.cvg{position:fixed;inset:0;z-index:3500;overflow:auto;background:radial-gradient(900px 500px at 50% -10%,rgba(207,227,245,.14),transparent 60%),#050505;color:#f7f7f4;font-family:Inter,sans-serif;opacity:0;transition:opacity .35s}
+.cvg.on{opacity:1}
+.cvg-in{max-width:520px;margin:0 auto;padding:calc(18px + env(safe-area-inset-top)) 18px calc(120px + env(safe-area-inset-bottom))}
+.cvg-top{display:flex;justify-content:space-between;align-items:center}
+.cvg-top .wm{font-family:Montserrat,sans-serif;font-weight:300;letter-spacing:.5em;font-size:.8rem}
+.cvg-top button{width:36px;height:36px;border-radius:50%;border:1px solid rgba(247,247,244,.25);background:transparent;color:#f7f7f4;font-size:18px;cursor:pointer}
+.cvg-hd{text-align:center;margin:26px 0 18px}
+.cvg-hd .bow{font-size:2.6rem;display:inline-block;animation:cvgFloat 3s ease-in-out infinite}
+@keyframes cvgFloat{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-6px) rotate(4deg)}}
+.cvg-hd small{display:block;margin-top:8px;font-size:.58rem;letter-spacing:.3em;text-transform:uppercase;color:rgba(247,247,244,.55)}
+.cvg-hd h1{margin:.4rem 0 0;font-family:'Cormorant Garamond',Georgia,serif;font-weight:300;font-size:clamp(2.2rem,10vw,3rem);line-height:1}
+.cvg-hd h1 em{font-style:italic;background:linear-gradient(100deg,#fff 20%,#cfe3f5 50%,#fff 80%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.cvg-hd q{display:block;margin:14px auto 0;max-width:420px;font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-size:1.25rem;color:rgba(247,247,244,.85);quotes:"“" "”"}
+.cvg-card{display:flex;gap:12px;padding:12px;margin-top:10px;border-radius:18px;border:1px solid rgba(247,247,244,.14);background:rgba(255,255,255,.03);position:relative}
+.cvg-card.off{opacity:.45}
+.cvg-card img{flex:0 0 96px;width:96px;height:128px;object-fit:cover;border-radius:12px;background:#151515;cursor:pointer}
+.cvg-card .tx{flex:1;min-width:0}.cvg-card .tx b{display:block;font-size:.95rem}.cvg-card .tx .pr{font-weight:700;margin-top:3px}
+.cvg-card .tx .zl{font-size:.74rem;color:rgba(247,247,244,.75);margin-top:6px}.cvg-card .tx .zl b{display:inline;font-size:inherit}.cvg-card .tx .zl.bad{color:#ffb4a8}
+.cvg-card .ck{position:absolute;top:10px;right:10px;width:28px;height:28px;border-radius:50%;border:1px solid rgba(247,247,244,.4);background:transparent;color:#050505;font-size:15px;cursor:pointer}
+.cvg-card.sel .ck{background:linear-gradient(135deg,#fff,#cfd6db);border-color:transparent}
+.cvg-trust{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px;font-size:.66rem;color:rgba(247,247,244,.7);text-align:center}
+.cvg-trust div{padding:10px 6px;border-radius:14px;border:1px solid rgba(247,247,244,.1);background:rgba(255,255,255,.02)}
+.cvg-bar{position:fixed;left:0;right:0;bottom:0;z-index:3501;padding:12px 18px calc(14px + env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(5,5,5,0),#050505 35%)}
+.cvg-bar button{display:block;width:100%;max-width:520px;margin:0 auto;padding:16px;border:0;border-radius:999px;background:linear-gradient(135deg,#ffffff,#c9ccd1 55%,#f7f7f4);color:#050505;font:800 .92rem Inter,sans-serif;letter-spacing:.03em;cursor:pointer;box-shadow:0 10px 30px rgba(207,227,245,.18)}
+.cvg-bar button[disabled]{opacity:.5}
+.cvg-bar .sub{display:block;text-align:center;margin-top:8px;font-size:.66rem;color:rgba(247,247,244,.55)}
+#cvGiftBan{margin:0 0 10px;padding:10px 12px;border-radius:14px;border:1px solid rgba(207,227,245,.35);background:rgba(207,227,245,.07);font:500 .74rem Inter,sans-serif;color:#f7f7f4}
+#cvGiftBan b{font-weight:700}
+</style>
+<script id="cvregalo">
+// v96 "Pídelo de regalo" (honest, no backend): she builds a wish list (from a garment or her favorites) with HER sizes and
+// sends a link by WhatsApp (?regalo=<base64url JSON>). Whoever opens it sees "La lista de deseos de Laura", the real
+// stock of each size, and buys everything in one tap; the WhatsApp order says it is a gift for her.
+(function(){
+  if(typeof P==='undefined'||typeof productSizes!=='function')return;
+  var SITE='https://canevacol.com',GK='cv_gift_for';
+  function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function stat(k,l){try{if(window.cvStatsPush)cvStatsPush({t:'k',k:k,l:String(l||'').slice(0,40)});}catch(e){}}
+  function img(u,w){return window.cvImg?cvImg(u,w):u;}
+  function ss(k,v){try{if(v===undefined)return sessionStorage.getItem(k)||'';if(v===null)sessionStorage.removeItem(k);else sessionStorage.setItem(k,v);}catch(e){return '';}}
+  function lg(k){try{return localStorage.getItem(k)||'';}catch(e){return '';}}
+  function slug(p){return typeof productSlug==='function'?productSlug(p):'';}
+  function idOf(p){return /^pr[a-z0-9]{6,16}$/.test(p.id||'')?p.id:slug(p);}
+  function findP(k){var i=P.findIndex(function(p){return p.id===k;});if(i<0)i=P.findIndex(function(p){return slug(p)===k;});if(i<0){var nm=String(k).split('--')[0];i=P.findIndex(function(p){return slug(p).split('--')[0]===nm;});}return i;}
+  function q(p,z){return typeof invQty==='function'?invQty(p,z):Infinity;}
+  function okSizes(p){return productSizes(p).filter(function(z){return q(p,z)>0;});}
+  function myName(){var b=null;try{b=window.cvBuyer&&cvBuyer();}catch(e){}if(!b){try{b=JSON.parse(lg('caneva_buyer_v1')||'null');}catch(e){}}return String((b&&b.name)||'').trim().split(/\s+/)[0]||'';}
+  function guessSize(p){var zs=okSizes(p);if(!zs.length)return '';if(zs.length===1)return zs[0];
+    try{var f=window.cvFit&&cvFit(p);if(f&&f.ok&&f.z)return f.z;}catch(e){}
+    var cur=typeof currentProductIndex!=='undefined'&&P[currentProductIndex]===p&&typeof getSelectedSize==='function'?getSelectedSize():'';return zs.indexOf(cur)>=0?cur:'';}
+  function enc(o){var s=unescape(encodeURIComponent(JSON.stringify(o)));return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
+  function dec(t){try{t=String(t).replace(/-/g,'+').replace(/_/g,'/');while(t.length%4)t+='=';return JSON.parse(decodeURIComponent(escape(atob(t))));}catch(e){return null;}}
+  function sheet(html){var old=document.querySelector('.cvx');if(old)old.remove();var d=document.createElement('div');d.className='cvx';d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');
+    d.innerHTML='<div class="cvx-b"><button type="button" class="cvx-x" aria-label="Cerrar">×</button>'+html+'</div>';document.body.appendChild(d);requestAnimationFrame(function(){d.classList.add('on');});
+    d.addEventListener('click',function(e){if(e.target===d||e.target.closest('.cvx-x'))d.close();});d.close=function(){d.classList.remove('on');setTimeout(function(){d.remove();},250);};return d;}
+
+  // ---------------- 1) she asks for it ----------------
+  function compose(list,src){
+    var items=list.map(function(i){var p=P[i];return {i:i,z:guessSize(p)};}).filter(function(x){return P[x.i];});
+    if(!items.length)return;
+    var d=sheet('<h3>🎁 Pídelo de regalo</h3><p class="s">Le mandamos tu lista a quien quieras (tu pareja, tu mamá, tus amigas) con tus tallas exactas. Solo tiene que abrir el enlace y regalártelo.</p><div id="cvgList"></div>'+
+      '<label class="t">Tu nombre</label><input class="cvg-in" id="cvgName" maxlength="30" placeholder="Laura" value="'+esc(myName())+'">'+
+      '<label class="t">Un mensajito (opcional)</label><textarea class="cvg-in" id="cvgMsg" maxlength="120" placeholder="Para Navidad 🎄 me haría muy feliz 💖"></textarea>'+
+      '<div class="cvg-row"><button type="button" class="wa" data-g="wa">Enviar por WhatsApp</button>'+(navigator.share?'<button type="button" class="sh" data-g="sh">Compartir</button>':'')+'<button type="button" class="cp" data-g="cp">Copiar</button></div>'+
+      '<p class="note">Elige tu talla en cada prenda para que te llegue perfecta.</p>');
+    stat('regalo_pedir',src);
+    function paint(){var box=d.querySelector('#cvgList');box.innerHTML=items.map(function(x,k){var p=P[x.i],zs=productSizes(p);
+      return '<div class="cvg-it"><img src="'+esc(img(p.imagen,200))+'" alt=""><div class="tx"><b>'+esc(p.nombre)+'</b><small>'+esc(p.precio||'')+'</small>'+
+        (zs.length>1||(zs.length===1&&q(p,zs[0])<=0)?'<div class="zz">'+zs.map(function(z){var out=q(p,z)<=0;return '<button type="button" data-k="'+k+'" data-z="'+esc(z)+'"'+(z===x.z?' class="on"':'')+(out?' disabled':'')+'>'+esc(z)+'</button>';}).join('')+'</div>':(zs.length===1?'<small> · Talla '+esc(zs[0])+'</small>':''))+'</div>'+
+        (items.length>1?'<button type="button" class="x" data-rm="'+k+'" aria-label="Quitar">×</button>':'')+'</div>';}).join('');}
+    paint();
+    d.addEventListener('click',function(e){
+      var z=e.target.closest('[data-z]');if(z&&!z.disabled){items[+z.dataset.k].z=z.dataset.z;paint();return;}
+      var rm=e.target.closest('[data-rm]');if(rm){items.splice(+rm.dataset.rm,1);paint();return;}
+      var g=e.target.closest('[data-g]');if(!g)return;
+      var need=items.filter(function(x){return productSizes(P[x.i]).length>1&&!x.z;});
+      if(need.length){var it0=d.querySelector('#cvgList .zz');if(it0)it0.scrollIntoView({behavior:'smooth',block:'center'});var n0=d.querySelector('.note');n0.textContent='Elige tu talla en '+P[need[0].i].nombre+' 👆';n0.style.color='#ffb4a8';return;}
+      var name=d.querySelector('#cvgName').value.trim().slice(0,30),m=d.querySelector('#cvgMsg').value.trim().slice(0,120);
+      var url=SITE+'/?regalo='+enc({n:name,m:m,i:items.map(function(x){return [idOf(P[x.i]),x.z||''];})});
+      var txt='🎁 '+(name?name+' te comparte':'Te comparto')+' su lista de deseos de CΛNEVΛ'+(m?': “'+m+'”':'')+'\n\nAhí están sus tallas exactas, solo tienes que regalárselo 💎\n'+url;
+      stat('regalo_link',g.dataset.g);
+      if(g.dataset.g==='wa')window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');
+      if(g.dataset.g==='sh')navigator.share({title:'Mi lista de deseos CΛNEVΛ',text:txt.replace(url,'').trim(),url:url}).catch(function(){});
+      if(g.dataset.g==='cp'){(navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(function(){g.textContent='✓ Copiado';}).catch(function(){prompt('Copia tu enlace:',url);});}
+    });
+  }
+  window.cvGiftAsk=compose;
+  // entry 1: inside each garment, under the buy buttons
+  function paintBtn(){
+    var act=document.querySelector('#pmodal .pm-actions');if(!act)return;var b=document.getElementById('cvGiftBtn');
+    if(!b){b=document.createElement('button');b.type='button';b.id='cvGiftBtn';b.className='cvg-btn';b.innerHTML='🎁 Pídela de regalo';act.parentNode.insertBefore(b,act.nextSibling);
+      b.addEventListener('click',function(){var i=typeof currentProductIndex!=='undefined'?currentProductIndex:-1;if(i>=0)compose([i],'prenda');});}
+  }
+  if(typeof openProductModal==='function'){var oOpen=openProductModal;window.openProductModal=openProductModal=function(){var r=oOpen.apply(this,arguments);try{paintBtn();}catch(e){}return r;};}
+  // entry 2: on top of "Mis favoritas"
+  function favIdx(){var ks=window.cvFavs?cvFavs():[];return ks.map(function(k){return P.findIndex(function(p){return p.nombre+'|'+p.categoria===k;});}).filter(function(i){return i>=0;});}
+  if(window.MutationObserver)new MutationObserver(function(){var l=document.querySelector('.cv-fl');if(!l||l.parentNode.querySelector('.cvg-fav'))return;var ix=favIdx();if(!ix.length)return;
+    var b=document.createElement('button');b.type='button';b.className='cvg-btn cvg-fav';b.innerHTML='🎁 Pide tus favoritas de regalo ('+ix.length+')';l.parentNode.insertBefore(b,l);
+    b.addEventListener('click',function(){compose(favIdx().slice(0,8),'favoritas');});}).observe(document.body,{childList:true,subtree:true});
+
+  // ---------------- 2) whoever opens the link ----------------
+  function giftPage(o){
+    var rows=(o.i||[]).slice(0,12).map(function(x){var i=findP(x[0]);if(i<0)return null;var p=P[i],z=x[1]||'',zs=productSizes(p),avail=zs.length?(z?q(p,z)>0:okSizes(p).length>0):q(p,'')>0;
+      return {i:i,z:z,ok:avail,sel:avail};}).filter(Boolean);
+    var name=String(o.n||'').slice(0,30)||'alguien especial';
+    var v=document.createElement('div');v.className='cvg';v.setAttribute('role','dialog');v.setAttribute('aria-modal','true');document.body.appendChild(v);
+    function total(){return rows.reduce(function(s,r){return s+(r.sel?(typeof priceNum==='function'?priceNum(P[r.i].precio):0):0);},0);}
+    function paint(){
+      v.innerHTML='<div class="cvg-in"><div class="cvg-top"><span class="wm">CΛNEVΛ</span><button type="button" data-x aria-label="Cerrar">×</button></div>'+
+        '<div class="cvg-hd"><span class="bow">🎁</span><small>Lista de deseos</small><h1>Lo que <em>'+esc(name)+'</em> sueña</h1>'+(o.m?'<q>'+esc(o.m)+'</q>':'')+'</div>'+
+        (rows.length?rows.map(function(r,k){var p=P[r.i],zs=productSizes(p),alt=okSizes(p);
+          var zl=!zs.length?'':(r.z?(q(p,r.z)>0?'Su talla: <b>'+esc(r.z)+'</b> ✓ disponible':'Su talla '+esc(r.z)+' se agotó'+(alt.length?' · hay '+esc(alt.join(', ')):'')):'Tallas: '+esc(alt.join(', ')));
+          return '<div class="cvg-card'+(r.sel?' sel':'')+(r.ok?'':' off')+'"><img src="'+esc(img(p.imagen,300))+'" alt="" data-open="'+r.i+'"><div class="tx"><b>'+esc(p.nombre)+'</b><div class="pr">'+esc(p.precio||'')+'</div><div class="zl'+(r.ok?'':' bad')+'">'+zl+'</div></div>'+(r.ok?'<button type="button" class="ck" data-k="'+k+'" aria-label="Incluir">'+(r.sel?'✓':'')+'</button>':'')+'</div>';}).join(''):
+          '<p style="text-align:center;color:rgba(247,247,244,.7)">Estas prendas ya no están disponibles, pero hay más en la tienda ✨</p>')+
+        '<div class="cvg-trust"><div>🚚<br>Envío a toda Colombia</div><div>🔒<br>Pago protegido</div><div>🔁<br>Cambio de talla</div></div></div>'+
+        '<div class="cvg-bar"><button type="button" data-buy'+(total()>0?'':' disabled')+'>🎁 Regalárselo · '+(typeof moneyCOP==='function'?moneyCOP(total()):'$'+total())+'</button><span class="sub">Se agrega a tu carrito con sus tallas · tú eliges cómo pagar</span></div>';
+    }
+    paint();requestAnimationFrame(function(){v.classList.add('on');});stat('regalo_abrir',rows.length+' prendas');
+    function close(){v.classList.remove('on');setTimeout(function(){v.remove();},300);}
+    v.addEventListener('click',function(e){
+      if(e.target.closest('[data-x]')){close();return;}
+      var c=e.target.closest('[data-k]');if(c){var r=rows[+c.dataset.k];r.sel=!r.sel;paint();return;}
+      var op=e.target.closest('[data-open]');if(op){close();openProductModal(+op.dataset.open);return;}
+      if(e.target.closest('[data-buy]')){
+        var n=0;rows.forEach(function(r){if(!r.sel)return;var p=P[r.i],z=r.z&&q(p,r.z)>0?r.z:(okSizes(p).length===1?okSizes(p)[0]:r.z);var key=typeof productKey==='function'?productKey(p,z||''):'';
+          if(!(window.CART||[]).some(function(x){return x.key===key;})){addToCartByIndex(r.i,false,z||'');n++;}});
+        ss(GK,name);stat('regalo_agregar',n+' prendas');close();setTimeout(function(){paintBan();if(typeof openCart==='function')openCart();},320);
+      }
+    });
+  }
+  // the gift travels with the order: banner in the cart and a line in the WhatsApp message
+  function paintBan(){var who=ss(GK),foot=document.querySelector('#cartDrawer .cart-foot');var b=document.getElementById('cvGiftBan');
+    if(!who||!foot||!(window.CART||[]).length){if(b)b.remove();return;}
+    if(!b){b=document.createElement('div');b.id='cvGiftBan';foot.insertBefore(b,foot.firstChild);}
+    b.innerHTML='🎁 Estás comprando un regalo para <b>'+esc(who)+'</b>. Si quieres que sea sorpresa, cuéntanos por WhatsApp 🤫';}
+  if(typeof renderCart==='function'){var oRc=renderCart;window.renderCart=renderCart=function(){var r=oRc.apply(this,arguments);try{paintBan();}catch(e){}return r;};}
+  if(typeof cartWhatsText==='function'){var oTxt=cartWhatsText;window.cartWhatsText=cartWhatsText=function(){var t=oTxt.apply(this,arguments),who=ss(GK);if(!who)return t;
+    var line='\n🎁 Es un regalo para '+who+' (de su lista de deseos CΛNEVΛ)\n',k=t.lastIndexOf('\n¿Me confirmas');return k>=0?t.slice(0,k)+line+t.slice(k):t+line;};}
+  // open the gift page once the live catalog (real stock) is in
+  var m=location.search.match(/[?&]regalo=([^&#]+)/);
+  if(m){var o=dec(decodeURIComponent(m[1]));if(o&&o.i&&o.i.length){var t0=Date.now(),first=P;(function wait(){if(window.CV_LIVE||P!==first||Date.now()-t0>3500){try{document.querySelectorAll('.cv-wel,#cvSheet,.cv-gone').forEach(function(x){x.remove();});}catch(e){}giftPage(o);return;}setTimeout(wait,150);})();}}
+})();
+</script>
+
 </body>
 </html>

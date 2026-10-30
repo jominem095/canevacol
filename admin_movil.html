@@ -327,6 +327,7 @@ main{padding:14px 16px 120px}
       <button type="button" data-tab="pedidos">📦 Pedidos<b id="pendCount"></b></button>
       <button type="button" data-tab="avisame">🔔 Avísame<b id="awCount"></b></button>
       <button type="button" data-tab="clientas">⭐ Clientas</button>
+      <button type="button" data-tab="historias">🎬 Historias</button>
       <button type="button" data-tab="ventas">💵 Ventas</button>
       <button type="button" data-tab="bajopedido">🧵 Bajo pedido</button>
       <button type="button" data-tab="proveedores">🤝 Proveedores</button>
@@ -377,6 +378,7 @@ main{padding:14px 16px 120px}
     <div id="pvView" class="hidden"><div id="pvBody"></div></div>
     <div id="awView" class="hidden"><div id="awBody"></div></div>
     <div id="clView" class="hidden"><div id="clBody"></div></div>
+    <div id="ktView" class="hidden"><div id="ktBody"></div></div>
     <div id="lbView" class="hidden"><div id="lbBody"></div></div>
     <div id="prodView">
     <button id="portadaInfo" class="promo" type="button"></button>
@@ -591,6 +593,7 @@ main{padding:14px 16px 120px}
 <script src="admin_proveedores.js?v=1"></script>
 <script src="admin_avisame.js?v=1"></script>
 <script src="admin_clientas.js?v=1"></script>
+<script src="admin_kit.js?v=1"></script>
 <script src="admin_ia.js?v=5"></script>
 <script src="admin_stock.js?v=4"></script>
 <script>
@@ -1419,6 +1422,7 @@ function showTab(t){
   $("mkView").classList.toggle("hidden",t!=="bajopedido"); if(t==="bajopedido"&&window.CanevaMade){ if(!$("mkBody").firstChild) CanevaMade.mount($("mkBody"),{api:API_BASE,token:token,products:()=>products,goPedidos:()=>{showTab("pedidos");loadOrders();}}); else CanevaMade.reload(); }
   $("lbView").classList.toggle("hidden",t!=="libretas"); if(t==="libretas"&&window.CanevaLibretas){ if(!$("lbBody").firstChild) CanevaLibretas.mount($("lbBody")); else CanevaLibretas.reload(); }
   $("pvView").classList.toggle("hidden",t!=="proveedores"); if(t==="proveedores"&&window.CanevaProveedores){ if(!$("pvBody").firstChild) CanevaProveedores.mount($("pvBody"),{api:API_BASE,token:token,goTaller:()=>showTab("bajopedido")}); else CanevaProveedores.reload(); }
+  $("ktView").classList.toggle("hidden",t!=="historias"); if(t==="historias"&&window.CanevaKit){ if(!$("ktBody").firstChild) CanevaKit.mount($("ktBody"),{api:API_BASE,token:token}); }
   $("clView").classList.toggle("hidden",t!=="clientas"); if(t==="clientas"&&window.CanevaClientas) CanevaClientas.mount($("clBody"),{api:API_BASE,token:token,products:()=>products});
   $("awView").classList.toggle("hidden",t!=="avisame"); if(t==="avisame"&&window.CanevaAvisame) CanevaAvisame.mount($("awBody"),{api:API_BASE,token:token});
   $("rsView").classList.toggle("hidden",t!=="respuestas"); if(t==="respuestas"&&window.CanevaRespuestas&&!$("rsBody").firstChild) CanevaRespuestas.mount($("rsBody"),{api:API_BASE,token:token,products:()=>products});

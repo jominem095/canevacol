@@ -8007,5 +8007,388 @@ body.product-open .cv-wel{display:none!important}
 })();
 </script>
 
+<style id="cvatrapa-css">
+/* ===== v95 "Atrapa": my size (filter + badges) and the real customers wall ===== */
+.cvf{margin:.2rem 0 1rem;font-family:Inter,sans-serif}
+.cvf-ask{display:flex;align-items:center;gap:.8rem;width:100%;padding:.85rem 1rem;border-radius:16px;cursor:pointer;text-align:left;color:#f7f7f4;
+  background:linear-gradient(135deg,rgba(255,255,255,.07),rgba(255,255,255,.02));border:1px solid rgba(247,247,244,.16);position:relative;overflow:hidden}
+.cvf-ask::after{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.09) 50%,transparent 70%);background-size:250% 100%;animation:cvfSheen 4.5s ease-in-out infinite}
+@keyframes cvfSheen{0%{background-position:120% 0}60%,100%{background-position:-60% 0}}
+.cvf-ask .ic{flex:0 0 38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:1.05rem;background:rgba(255,255,255,.08);border:1px solid rgba(247,247,244,.2)}
+.cvf-ask b{display:block;font-weight:600;font-size:.86rem}.cvf-ask span{display:block;font-size:.7rem;color:rgba(247,247,244,.6);margin-top:2px}
+.cvf-ask i{margin-left:auto;font-style:normal;font-size:1.3rem;color:rgba(247,247,244,.5)}
+.cvf-on{display:flex;align-items:center;flex-wrap:wrap;gap:.55rem .8rem;padding:.7rem .9rem;border-radius:16px;border:1px solid rgba(247,247,244,.16);background:rgba(255,255,255,.035);color:#f7f7f4;font-size:.76rem}
+.cvf-on .me b{font-weight:700;letter-spacing:.04em}
+.cvf-sw{display:inline-flex;align-items:center;gap:.5rem;cursor:pointer;user-select:none}
+.cvf-sw input{position:absolute;opacity:0;pointer-events:none}
+.cvf-sw i{width:38px;height:22px;border-radius:999px;background:rgba(255,255,255,.18);position:relative;transition:background .25s}
+.cvf-sw i::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#f7f7f4;transition:transform .25s}
+.cvf-sw input:checked+i{background:linear-gradient(135deg,#e9edf1,#9aa5ad)}
+.cvf-sw input:checked+i::after{transform:translateX(16px);background:#050505}
+.cvf-ch{margin-left:auto;background:none;border:0;color:rgba(247,247,244,.6);font:500 .7rem Inter,sans-serif;text-decoration:underline;cursor:pointer}
+.cvf-b{position:absolute;left:8px;bottom:8px;z-index:3;font:700 .5rem Inter,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#050505;background:linear-gradient(135deg,#fff,#cfd6db);padding:.32rem .5rem;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.cvf-none{grid-column:1/-1;text-align:center;padding:2.2rem 1rem;color:rgba(247,247,244,.7);font:400 .85rem Inter,sans-serif}
+.cvf-none button{margin-top:.9rem;border:1px solid rgba(247,247,244,.3);background:none;color:#f7f7f4;border-radius:999px;padding:.7rem 1.2rem;font:600 .7rem Inter,sans-serif;letter-spacing:.12em;text-transform:uppercase;cursor:pointer}
+.cvx{position:fixed;inset:0;z-index:3300;background:rgba(0,0,0,.62);display:flex;align-items:flex-end;justify-content:center;opacity:0;transition:opacity .25s}
+.cvx.on{opacity:1}
+.cvx-b{position:relative;width:min(480px,100%);max-height:92vh;overflow:auto;background:linear-gradient(180deg,#121214,#070708);color:#f7f7f4;border:1px solid rgba(247,247,244,.18);border-bottom:0;border-radius:22px 22px 0 0;padding:22px 18px calc(18px + env(safe-area-inset-bottom));font-family:Inter,sans-serif;transform:translateY(24px);transition:transform .3s cubic-bezier(.16,1,.3,1)}
+.cvx.on .cvx-b{transform:none}
+.cvx-x{position:absolute;top:10px;right:12px;width:32px;height:32px;border-radius:50%;border:1px solid rgba(247,247,244,.2);background:transparent;color:#f7f7f4;font-size:18px;cursor:pointer}
+.cvx h3{margin:0 40px 4px 0;font-family:'Cormorant Garamond',Georgia,serif;font-weight:400;font-size:1.65rem;line-height:1.1}
+.cvx p.s{margin:0 0 14px;font-size:.78rem;color:rgba(247,247,244,.62)}
+.cvx label.t{display:block;margin:14px 0 8px;font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(247,247,244,.6)}
+.cvx .chips{display:flex;flex-wrap:wrap;gap:7px}
+.cvx .chips button{min-width:48px;padding:10px 12px;border-radius:12px;border:1px solid rgba(247,247,244,.24);background:transparent;color:#f7f7f4;font:600 .85rem Inter,sans-serif;cursor:pointer;transition:all .2s}
+.cvx .chips button.on{background:linear-gradient(135deg,#fff,#cfd6db);color:#050505;border-color:transparent;transform:translateY(-1px)}
+.cvx .go{width:100%;margin-top:18px;padding:14px;border:0;border-radius:999px;background:linear-gradient(135deg,#ffffff,#c9ccd1 55%,#f7f7f4);color:#050505;font:700 .86rem Inter,sans-serif;letter-spacing:.04em;cursor:pointer}
+.cvx .go[disabled]{opacity:.45}
+.cvx .note{margin:10px 0 0;font-size:.7rem;color:rgba(247,247,244,.5);text-align:center}
+/* real customers */
+.cvr{padding:3.2rem 0 2.6rem;color:#f7f7f4;font-family:Inter,sans-serif;max-width:1200px;margin:0 auto}
+.cvr-h{text-align:center;padding:0 18px;margin-bottom:1.3rem}
+.cvr-h small{font-size:.56rem;letter-spacing:.32em;text-transform:uppercase;color:rgba(247,247,244,.55)}
+.cvr-h h2{margin:.5rem 0 .3rem;font-family:'Cormorant Garamond',Georgia,serif;font-weight:300;font-size:clamp(2rem,8vw,3rem);line-height:1}
+.cvr-h h2 em{font-style:italic;background:linear-gradient(100deg,#fff 20%,#cfe3f5 50%,#fff 80%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.cvr-h p{margin:0;font-size:.78rem;color:rgba(247,247,244,.6)}
+.cvr-row{display:flex;gap:12px;overflow-x:auto;padding:4px 18px 8px;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.cvr-row::-webkit-scrollbar{display:none}
+.cvr-c{flex:0 0 min(64vw,250px);scroll-snap-align:start;position:relative;border-radius:18px;overflow:hidden;background:#111;border:1px solid rgba(247,247,244,.14);cursor:pointer;padding:0;color:#f7f7f4;text-align:left}
+.cvr-c img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block}
+.cvr-c .cvr-ov{position:absolute;left:0;right:0;bottom:0;padding:34px 12px 12px;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.88))}
+.cvr-c .cvr-st{color:#f3e6c4;font-size:.7rem;letter-spacing:2px}
+.cvr-c b{display:block;font-size:.8rem;margin-top:3px}.cvr-c b span{font-weight:400;color:rgba(247,247,244,.65)}
+.cvr-c q{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:.72rem;color:rgba(247,247,244,.85);margin-top:4px;quotes:"“" "”"}
+.cvr-c .cvr-tag{position:absolute;top:10px;left:10px;font:700 .48rem Inter,sans-serif;letter-spacing:.16em;text-transform:uppercase;background:rgba(5,5,5,.72);border:1px solid rgba(247,247,244,.25);padding:.3rem .5rem;border-radius:999px}
+.cvr-v{position:fixed;inset:0;z-index:3400;background:#000;display:flex;flex-direction:column;opacity:0;transition:opacity .25s;font-family:Inter,sans-serif;color:#f7f7f4}
+.cvr-v.on{opacity:1}
+.cvr-v .cvr-tp{display:flex;align-items:center;justify-content:space-between;padding:calc(12px + env(safe-area-inset-top)) 14px 8px}
+.cvr-v .cvr-tp span{font-size:.62rem;letter-spacing:.24em;text-transform:uppercase;color:rgba(247,247,244,.6)}
+.cvr-v .cvr-tp button{width:36px;height:36px;border-radius:50%;border:1px solid rgba(247,247,244,.25);background:transparent;color:#f7f7f4;font-size:18px;cursor:pointer}
+.cvr-v .cvr-im{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;position:relative}
+.cvr-v .cvr-im img{max-width:100%;max-height:100%;object-fit:contain}
+.cvr-v .cvr-nv{position:absolute;top:0;bottom:0;width:35%;background:none;border:0;cursor:pointer}
+.cvr-v .cvr-nv.l{left:0}.cvr-v .cvr-nv.r{right:0}
+.cvr-v .cvr-bt{padding:14px 18px calc(16px + env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(0,0,0,0),#000 30%)}
+.cvr-v .cvr-bt .cvr-st{color:#f3e6c4;letter-spacing:2px;font-size:.8rem}
+.cvr-v .cvr-bt b{display:block;margin-top:4px;font-size:.9rem}
+.cvr-v .cvr-bt p{margin:6px 0 0;font-size:.82rem;color:rgba(247,247,244,.82);line-height:1.45}
+.cvr-v .cvr-bt .go{display:block;width:100%;margin-top:12px;padding:13px;border:0;border-radius:999px;background:linear-gradient(135deg,#fff,#cfd6db);color:#050505;font:700 .78rem Inter,sans-serif;letter-spacing:.06em;cursor:pointer}
+.cvr-pm{margin:14px 0 4px;padding:12px;border-radius:16px;border:1px solid rgba(247,247,244,.14);background:rgba(255,255,255,.03);font-family:Inter,sans-serif}
+.cvr-pm b{display:block;font-size:.78rem;color:#f7f7f4;margin-bottom:8px}
+.cvr-pm .cvr-r{display:flex;gap:8px}
+.cvr-pm button{flex:0 0 64px;height:84px;border-radius:10px;overflow:hidden;border:1px solid rgba(247,247,244,.18);padding:0;background:#111;cursor:pointer}
+.cvr-pm img{width:100%;height:100%;object-fit:cover;display:block}
+.cvr-pm q{display:block;font-size:.72rem;color:rgba(247,247,244,.75);margin-top:8px;quotes:"“" "”"}
+</style>
+<script id="cvatrapa">
+// v95 "Atrapa" (all real data, nothing invented):
+// 1) "Mi talla": she says her size once (jeans number + tops letter); the catalog can show only what fits her
+//    (with real stock per size) and every garment in her size gets a "✓ Tu talla" badge. Saved in cv_my_size (shared with cvbuy).
+// 2) "Clientas CΛNEVΛ": real photos / messages from customers that the owner uploads in the admin (GET /reviews),
+//    as a wall after the catalog and inside each garment that has one ("Así le quedó a Laura").
+(function(){
+  if(typeof P==='undefined'||typeof productSizes!=='function')return;
+  var API=typeof API_BASE==='string'?API_BASE:'https://caneva-ai.canevacol.workers.dev';
+  function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function lg(k){try{return localStorage.getItem(k)||'';}catch(e){return '';}}
+  function ls(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+  function stat(k,l){try{if(window.cvStatsPush)cvStatsPush({t:'k',k:k,l:String(l||'').slice(0,40)});}catch(e){}}
+  function img(u,w){return window.cvImg?cvImg(u,w):u;}
+  function nk(t){return String(t||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\s+/g,' ').trim();}
+  function keyOf(p){return p.id||('n:'+nk(p.nombre));}
+  function idxOf(k){for(var i=0;i<P.length;i++){if(keyOf(P[i])===k)return i;}return -1;}
+  function sheet(html){
+    var old=document.querySelector('.cvx');if(old)old.remove();
+    var d=document.createElement('div');d.className='cvx';d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');
+    d.innerHTML='<div class="cvx-b"><button type="button" class="cvx-x" aria-label="Cerrar">×</button>'+html+'</div>';
+    document.body.appendChild(d);requestAnimationFrame(function(){d.classList.add('on');});
+    d.addEventListener('click',function(e){if(e.target===d||e.target.closest('.cvx-x'))close();});
+    function close(){d.classList.remove('on');setTimeout(function(){d.remove();},250);}
+    d.close=close;return d;
+  }
+
+  // ================= 1) MI TALLA =================
+  var NUMS=['6','8','10','12','14','16'],LETS=['XS','S','M','L','XL'];
+  function mine(){var m={};try{m=JSON.parse(lg('cv_my_size')||'{}')||{};}catch(e){}return m;}
+  function isNum(z){return /^\d+$/.test(String(z).split('/')[0]);}
+  // {known: her size can be compared, ok: the garment has her size with stock}
+  function fit(p){
+    var zs=productSizes(p);if(!zs.length)return {known:true,ok:true,z:''};
+    var m=mine(),want=zs.some(isNum)?m.n:m.l;if(!want)return {known:false,ok:true,z:''};
+    want=String(want).toUpperCase();
+    var z=zs.find(function(s){return String(s).toUpperCase().split('/').indexOf(want)>=0;});
+    if(!z)return {known:true,ok:false,z:''};
+    var q=typeof invQty==='function'?invQty(p,z):Infinity;
+    return {known:true,ok:q>0,z:z};
+  }
+  window.cvFit=fit;
+  function fitOn(){return lg('cv_fit_on')==='1'&&!!(mine().n||mine().l);}
+  var prevMatch=window.cvMatch;
+  window.cvMatch=function(p){
+    var base=prevMatch?prevMatch(p):(typeof acat==='undefined'||acat==='Todos'||p.categoria===acat);
+    if(!base||!fitOn())return base;
+    return fit(p).ok;
+  };
+  function label(){var m=mine();return [m.l,m.n].filter(Boolean).join(' · ');}
+  function paintBar(){
+    var cat=document.getElementById('catalogo'),sb=cat&&cat.querySelector('.sbar');if(!sb)return;
+    var b=document.getElementById('cvFit');
+    if(!b){b=document.createElement('div');b.id='cvFit';b.className='cvf';sb.parentNode.insertBefore(b,sb.nextSibling);
+      b.addEventListener('click',function(e){
+        if(e.target.closest('.cvf-ask')||e.target.closest('.cvf-ch')){openFit();return;}
+        var sw=e.target.closest('.cvf-sw input');if(sw){ls('cv_fit_on',sw.checked?'1':'0');stat(sw.checked?'mi_talla_on':'mi_talla_off');rerender();}
+      });}
+    var l=label();
+    b.innerHTML=l?'<div class="cvf-on"><span class="me">📏 Tu talla <b>'+esc(l)+'</b></span><label class="cvf-sw"><input type="checkbox"'+(fitOn()?' checked':'')+'><i></i>Solo lo que me queda</label><button type="button" class="cvf-ch">Cambiar</button></div>'
+      :'<button type="button" class="cvf-ask"><span class="ic">📏</span><span><b>¿Cuál es tu talla?</b><span>Dinos una vez y te mostramos solo lo que te queda</span></span><i>›</i></button>';
+  }
+  function openFit(){
+    var m=mine(),n=m.n||'',l=m.l||'';
+    var d=sheet('<h3>Tu talla en 2 toques</h3><p class="s">Así marcamos las prendas que hay en tu talla y puedes ver solo lo que te queda.</p>'+
+      '<label class="t">En jeans y pantalones</label><div class="chips" data-k="n">'+NUMS.map(function(z){return '<button type="button" data-z="'+z+'"'+(z===n?' class="on"':'')+'>'+z+'</button>';}).join('')+'</div>'+
+      '<label class="t">En blusas, vestidos y sets</label><div class="chips" data-k="l">'+LETS.map(function(z){return '<button type="button" data-z="'+z+'"'+(z===l?' class="on"':'')+'>'+z+'</button>';}).join('')+'</div>'+
+      '<button type="button" class="go"'+(n||l?'':' disabled')+'>Ver lo que me queda ✨</button><p class="note">¿No estás segura? Escríbenos y te asesoramos por WhatsApp. Tu talla queda guardada solo en este celular.</p>');
+    stat('mi_talla_abrir');
+    d.addEventListener('click',function(e){
+      var c=e.target.closest('.chips button');
+      if(c){var row=c.parentNode,k=row.dataset.k,on=c.classList.contains('on');row.querySelectorAll('button').forEach(function(x){x.classList.remove('on');});if(!on)c.classList.add('on');
+        if(k==='n')n=on?'':c.dataset.z;else l=on?'':c.dataset.z;d.querySelector('.go').disabled=!(n||l);return;}
+      if(e.target.closest('.go')){var mm=mine();if(n)mm.n=n;else delete mm.n;if(l)mm.l=l;else delete mm.l;ls('cv_my_size',JSON.stringify(mm));ls('cv_fit_on','1');
+        stat('mi_talla_ok',[l,n].filter(Boolean).join(' '));d.close();rerender();
+        var cat=document.getElementById('catalogo');if(cat)setTimeout(function(){cat.scrollIntoView({behavior:'smooth',block:'start'});},260);}
+    });
+  }
+  function rerender(){paintBar();try{if(typeof render==='function')render();}catch(e){}}
+  // badges on the cards + count + empty state (survives every re-render)
+  function decorate(){
+    var g=document.getElementById('pgrid');if(!g)return;var has=!!(mine().n||mine().l),n=0;
+    g.querySelectorAll('.pc').forEach(function(c){n++;if(c.querySelector('.cvf-b')||!has)return;var p=P[parseInt(c.dataset.pid,10)];if(!p)return;var f=fit(p);
+      if(f.known&&f.ok&&f.z){var im=c.querySelector('.pimg');if(im){var t=document.createElement('div');t.className='cvf-b';t.textContent='✓ Tu talla '+f.z;im.appendChild(t);}}});
+    if(fitOn()){var cnt=document.getElementById('cnt');if(cnt&&!/tu talla/.test(cnt.textContent))cnt.textContent=n+' en tu talla';
+      var nor=g.querySelector('.nor');if(nor&&!g.querySelector('.cvf-none')){nor.outerHTML='<div class="cvf-none">En esta sección no hay prendas en tu talla ('+esc(label())+') por ahora.<br><button type="button" data-cvf-all>Ver todas las tallas</button></div>';}}
+  }
+  document.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('[data-cvf-all]')){ls('cv_fit_on','0');rerender();}});
+  var grid=document.getElementById('pgrid');
+  if(grid&&window.MutationObserver)new MutationObserver(function(){try{decorate();}catch(e){}}).observe(grid,{childList:true});
+
+  // the garment window shows real customers who bought it
+  if(typeof openProductModal==='function'){var oOpen=openProductModal;window.openProductModal=openProductModal=function(i){var r=oOpen.apply(this,arguments);
+    try{paintModalRev(P[i]);}catch(e){}
+    return r;};}
+
+  // ================= 3) CLIENTAS CΛNEVΛ =================
+  var REV=[];
+  function stars(n){var s='';for(var i=0;i<5;i++)s+=i<(n||5)?'★':'☆';return s;}
+  function revProductIdx(r){if(r.pid){var i=P.findIndex(function(p){return p.id===r.pid;});if(i>=0)return i;}if(r.product){var n=nk(r.product);return P.findIndex(function(p){return nk(p.nombre)===n;});}return -1;}
+  function paintWall(){
+    var cat=document.getElementById('catalogo');if(!cat||!REV.length)return;var s=document.getElementById('cvRevs');
+    if(!s){s=document.createElement('section');s.id='cvRevs';s.className='cvr';cat.parentNode.insertBefore(s,cat.nextSibling);
+      s.addEventListener('click',function(e){var c=e.target.closest('[data-r]');if(c)viewer(+c.dataset.r,REV,'muro');});}
+    s.innerHTML='<div class="cvr-h"><small>Clientas reales</small><h2>Ellas ya <em>brillan</em> con CΛNEVΛ</h2><p>'+REV.length+' clienta'+(REV.length>1?'s compartieron':' compartió')+' cómo le quedó su compra</p></div>'+
+      '<div class="cvr-row">'+REV.map(function(r,k){var pi=revProductIdx(r);return '<button type="button" class="cvr-c" data-r="'+k+'"><img src="'+esc(img(r.img,520))+'" alt="Foto de clienta" loading="lazy">'+(pi>=0?'<span class="cvr-tag">'+esc(P[pi].nombre)+'</span>':'')+
+        '<div class="cvr-ov"><div class="cvr-st">'+stars(r.stars)+'</div><b>'+esc(r.name||'Clienta CΛNEVΛ')+(r.city?' <span>· '+esc(r.city)+'</span>':'')+'</b>'+(r.text?'<q>'+esc(r.text)+'</q>':'')+'</div></button>';}).join('')+'</div>';
+  }
+  function viewer(k,list,src){
+    var old=document.querySelector('.cvr-v');if(old)old.remove();
+    var v=document.createElement('div');v.className='cvr-v';v.setAttribute('role','dialog');v.setAttribute('aria-modal','true');document.body.appendChild(v);
+    function paint(){var r=list[k],pi=revProductIdx(r);
+      v.innerHTML='<div class="cvr-tp"><span>Clienta real · '+(k+1)+' / '+list.length+'</span><button type="button" data-x aria-label="Cerrar">×</button></div>'+
+        '<div class="cvr-im"><img src="'+esc(img(r.img,1100))+'" alt="Foto de clienta">'+(list.length>1?'<button type="button" class="cvr-nv l" data-n="-1" aria-label="Anterior"></button><button type="button" class="cvr-nv r" data-n="1" aria-label="Siguiente"></button>':'')+'</div>'+
+        '<div class="cvr-bt"><div class="cvr-st">'+stars(r.stars)+'</div><b>'+esc(r.name||'Clienta CΛNEVΛ')+(r.city?' · '+esc(r.city):'')+'</b>'+(r.text?'<p>“'+esc(r.text)+'”</p>':'')+
+        (pi>=0?'<button type="button" class="go" data-p="'+pi+'">Ver '+esc(P[pi].nombre)+' · '+esc(P[pi].precio||'')+'</button>':'')+'</div>';}
+    paint();requestAnimationFrame(function(){v.classList.add('on');});stat('resena_ver',src);
+    var x0=null;v.addEventListener('touchstart',function(e){x0=e.touches[0].clientX;},{passive:true});
+    v.addEventListener('touchend',function(e){if(x0===null)return;var dx=e.changedTouches[0].clientX-x0;x0=null;if(Math.abs(dx)>50&&list.length>1){k=(k+(dx<0?1:-1)+list.length)%list.length;paint();}},{passive:true});
+    v.addEventListener('click',function(e){
+      if(e.target.closest('[data-x]')){v.classList.remove('on');setTimeout(function(){v.remove();},250);return;}
+      var n=e.target.closest('[data-n]');if(n){k=(k+(+n.dataset.n)+list.length)%list.length;paint();return;}
+      var g=e.target.closest('[data-p]');if(g){var i=+g.dataset.p;v.remove();stat('resena_a_prenda',P[i]&&P[i].nombre);if(document.querySelector('.pmodal.open')&&typeof closeProductModal==='function')closeProductModal();openProductModal(i);}
+    });
+  }
+  function revsFor(p){if(!p)return [];var n=nk(p.nombre);return REV.filter(function(r){return (r.pid&&r.pid===p.id)||(r.product&&nk(r.product)===n);});}
+  function paintModalRev(p){
+    var old=document.getElementById('cvRevPm');if(old)old.remove();var rs=revsFor(p);if(!rs.length)return;
+    var anchor=document.getElementById('cvQty')||document.querySelector('#pmodal .pm-actions');if(!anchor)return;
+    var b=document.createElement('div');b.id='cvRevPm';b.className='cvr-pm';
+    b.innerHTML='<b>📸 Así le quedó a '+esc(rs[0].name||'una clienta')+(rs.length>1?' y '+(rs.length-1)+' más':'')+'</b><div class="cvr-r">'+rs.slice(0,4).map(function(r,k){return '<button type="button" data-k="'+k+'" aria-label="Ver foto de clienta"><img src="'+esc(img(r.img,200))+'" alt="" loading="lazy"></button>';}).join('')+'</div>'+(rs[0].text?'<q>'+esc(rs[0].text)+'</q>':'');
+    anchor.parentNode.insertBefore(b,anchor);
+    b.addEventListener('click',function(e){var t=e.target.closest('[data-k]');if(t)viewer(+t.dataset.k,rs,'prenda');});
+  }
+  function loadRev(){fetch(API+'/reviews').then(function(r){return r.json();}).then(function(d){REV=(d&&d.list)||[];paintWall();var cur=typeof currentProductIndex!=='undefined'?P[currentProductIndex]:null;if(cur&&document.querySelector('.pmodal.open'))paintModalRev(cur);}).catch(function(){});}
+
+  // ---- start ----
+  function start(){paintBar();decorate();}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+  // the live catalog replaces P: paint again with the real stock
+  var tries=0,iv=setInterval(function(){tries++;if(window.CV_LIVE||tries>20){clearInterval(iv);start();try{decorate();}catch(e){}}},500);
+  setTimeout(loadRev,1200);
+})();
+</script>
+
+<style id="cvregalo-css">
+/* ===== v96 "Pídelo de regalo": she sends her wish list; whoever opens the link buys it in her sizes ===== */
+.cvg-btn{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;margin:.6rem 0 0;padding:.8rem 1rem;border-radius:999px;cursor:pointer;
+  border:1px solid rgba(247,247,244,.28);background:linear-gradient(135deg,rgba(255,255,255,.06),rgba(255,255,255,.015));color:#f7f7f4;font:600 .74rem Inter,sans-serif;letter-spacing:.06em}
+.cvg-btn:hover{border-color:rgba(247,247,244,.55)}
+.cvg-fav{margin:0 0 12px}
+.cvg-it{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid rgba(255,255,255,.07)}
+.cvg-it img{flex:0 0 64px;width:64px;height:84px;object-fit:cover;border-radius:10px;background:#151515}
+.cvg-it .tx{flex:1;min-width:0;font-size:.78rem}.cvg-it .tx b{display:block;font-size:.84rem}.cvg-it .tx small{color:rgba(247,247,244,.6)}
+.cvg-it .zz{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.cvg-it .zz button{min-width:36px;padding:6px 8px;border-radius:9px;border:1px solid rgba(247,247,244,.24);background:transparent;color:#f7f7f4;font:600 .7rem Inter,sans-serif;cursor:pointer}
+.cvg-it .zz button.on{background:linear-gradient(135deg,#fff,#cfd6db);color:#050505;border-color:transparent}
+.cvg-it .zz button[disabled]{opacity:.3;text-decoration:line-through;cursor:default}
+.cvg-it .x{background:none;border:0;color:rgba(247,247,244,.45);font-size:18px;cursor:pointer}
+.cvx input.cvg-in,.cvx textarea.cvg-in{width:100%;box-sizing:border-box;padding:12px 13px;border-radius:12px;border:1px solid rgba(247,247,244,.22);background:#050505;color:#f7f7f4;font:16px Inter,sans-serif;outline:none}
+.cvx textarea.cvg-in{min-height:64px;resize:none}
+.cvg-row{display:flex;gap:8px;margin-top:14px}
+.cvg-row button{flex:1;padding:13px 8px;border-radius:999px;border:0;font:700 .78rem Inter,sans-serif;cursor:pointer}
+.cvg-row .wa{background:#25d366;color:#04140a}.cvg-row .sh{background:linear-gradient(135deg,#fff,#cfd6db);color:#050505}
+.cvg-row .cp{background:transparent;color:#f7f7f4;border:1px solid rgba(247,247,244,.3)}
+/* the gift page for whoever opens the link */
+.cvg{position:fixed;inset:0;z-index:3500;overflow:auto;background:radial-gradient(900px 500px at 50% -10%,rgba(207,227,245,.14),transparent 60%),#050505;color:#f7f7f4;font-family:Inter,sans-serif;opacity:0;transition:opacity .35s}
+.cvg.on{opacity:1}
+.cvg-in{max-width:520px;margin:0 auto;padding:calc(18px + env(safe-area-inset-top)) 18px calc(120px + env(safe-area-inset-bottom))}
+.cvg-top{display:flex;justify-content:space-between;align-items:center}
+.cvg-top .wm{font-family:Montserrat,sans-serif;font-weight:300;letter-spacing:.5em;font-size:.8rem}
+.cvg-top button{width:36px;height:36px;border-radius:50%;border:1px solid rgba(247,247,244,.25);background:transparent;color:#f7f7f4;font-size:18px;cursor:pointer}
+.cvg-hd{text-align:center;margin:26px 0 18px}
+.cvg-hd .bow{font-size:2.6rem;display:inline-block;animation:cvgFloat 3s ease-in-out infinite}
+@keyframes cvgFloat{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-6px) rotate(4deg)}}
+.cvg-hd small{display:block;margin-top:8px;font-size:.58rem;letter-spacing:.3em;text-transform:uppercase;color:rgba(247,247,244,.55)}
+.cvg-hd h1{margin:.4rem 0 0;font-family:'Cormorant Garamond',Georgia,serif;font-weight:300;font-size:clamp(2.2rem,10vw,3rem);line-height:1}
+.cvg-hd h1 em{font-style:italic;background:linear-gradient(100deg,#fff 20%,#cfe3f5 50%,#fff 80%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.cvg-hd q{display:block;margin:14px auto 0;max-width:420px;font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-size:1.25rem;color:rgba(247,247,244,.85);quotes:"“" "”"}
+.cvg-card{display:flex;gap:12px;padding:12px;margin-top:10px;border-radius:18px;border:1px solid rgba(247,247,244,.14);background:rgba(255,255,255,.03);position:relative}
+.cvg-card.off{opacity:.45}
+.cvg-card img{flex:0 0 96px;width:96px;height:128px;object-fit:cover;border-radius:12px;background:#151515;cursor:pointer}
+.cvg-card .tx{flex:1;min-width:0}.cvg-card .tx b{display:block;font-size:.95rem}.cvg-card .tx .pr{font-weight:700;margin-top:3px}
+.cvg-card .tx .zl{font-size:.74rem;color:rgba(247,247,244,.75);margin-top:6px}.cvg-card .tx .zl b{display:inline;font-size:inherit}.cvg-card .tx .zl.bad{color:#ffb4a8}
+.cvg-card .ck{position:absolute;top:10px;right:10px;width:28px;height:28px;border-radius:50%;border:1px solid rgba(247,247,244,.4);background:transparent;color:#050505;font-size:15px;cursor:pointer}
+.cvg-card.sel .ck{background:linear-gradient(135deg,#fff,#cfd6db);border-color:transparent}
+.cvg-trust{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px;font-size:.66rem;color:rgba(247,247,244,.7);text-align:center}
+.cvg-trust div{padding:10px 6px;border-radius:14px;border:1px solid rgba(247,247,244,.1);background:rgba(255,255,255,.02)}
+.cvg-bar{position:fixed;left:0;right:0;bottom:0;z-index:3501;padding:12px 18px calc(14px + env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(5,5,5,0),#050505 35%)}
+.cvg-bar button{display:block;width:100%;max-width:520px;margin:0 auto;padding:16px;border:0;border-radius:999px;background:linear-gradient(135deg,#ffffff,#c9ccd1 55%,#f7f7f4);color:#050505;font:800 .92rem Inter,sans-serif;letter-spacing:.03em;cursor:pointer;box-shadow:0 10px 30px rgba(207,227,245,.18)}
+.cvg-bar button[disabled]{opacity:.5}
+.cvg-bar .sub{display:block;text-align:center;margin-top:8px;font-size:.66rem;color:rgba(247,247,244,.55)}
+#cvGiftBan{margin:0 0 10px;padding:10px 12px;border-radius:14px;border:1px solid rgba(207,227,245,.35);background:rgba(207,227,245,.07);font:500 .74rem Inter,sans-serif;color:#f7f7f4}
+#cvGiftBan b{font-weight:700}
+</style>
+<script id="cvregalo">
+// v96 "Pídelo de regalo" (honest, no backend): she builds a wish list (from a garment or her favorites) with HER sizes and
+// sends a link by WhatsApp (?regalo=<base64url JSON>). Whoever opens it sees "La lista de deseos de Laura", the real
+// stock of each size, and buys everything in one tap; the WhatsApp order says it is a gift for her.
+(function(){
+  if(typeof P==='undefined'||typeof productSizes!=='function')return;
+  var SITE='https://canevacol.com',GK='cv_gift_for';
+  function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function stat(k,l){try{if(window.cvStatsPush)cvStatsPush({t:'k',k:k,l:String(l||'').slice(0,40)});}catch(e){}}
+  function img(u,w){return window.cvImg?cvImg(u,w):u;}
+  function ss(k,v){try{if(v===undefined)return sessionStorage.getItem(k)||'';if(v===null)sessionStorage.removeItem(k);else sessionStorage.setItem(k,v);}catch(e){return '';}}
+  function lg(k){try{return localStorage.getItem(k)||'';}catch(e){return '';}}
+  function slug(p){return typeof productSlug==='function'?productSlug(p):'';}
+  function idOf(p){return /^pr[a-z0-9]{6,16}$/.test(p.id||'')?p.id:slug(p);}
+  function findP(k){var i=P.findIndex(function(p){return p.id===k;});if(i<0)i=P.findIndex(function(p){return slug(p)===k;});if(i<0){var nm=String(k).split('--')[0];i=P.findIndex(function(p){return slug(p).split('--')[0]===nm;});}return i;}
+  function q(p,z){return typeof invQty==='function'?invQty(p,z):Infinity;}
+  function okSizes(p){return productSizes(p).filter(function(z){return q(p,z)>0;});}
+  function myName(){var b=null;try{b=window.cvBuyer&&cvBuyer();}catch(e){}if(!b){try{b=JSON.parse(lg('caneva_buyer_v1')||'null');}catch(e){}}return String((b&&b.name)||'').trim().split(/\s+/)[0]||'';}
+  function guessSize(p){var zs=okSizes(p);if(!zs.length)return '';if(zs.length===1)return zs[0];
+    try{var f=window.cvFit&&cvFit(p);if(f&&f.ok&&f.z)return f.z;}catch(e){}
+    var cur=typeof currentProductIndex!=='undefined'&&P[currentProductIndex]===p&&typeof getSelectedSize==='function'?getSelectedSize():'';return zs.indexOf(cur)>=0?cur:'';}
+  function enc(o){var s=unescape(encodeURIComponent(JSON.stringify(o)));return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
+  function dec(t){try{t=String(t).replace(/-/g,'+').replace(/_/g,'/');while(t.length%4)t+='=';return JSON.parse(decodeURIComponent(escape(atob(t))));}catch(e){return null;}}
+  function sheet(html){var old=document.querySelector('.cvx');if(old)old.remove();var d=document.createElement('div');d.className='cvx';d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');
+    d.innerHTML='<div class="cvx-b"><button type="button" class="cvx-x" aria-label="Cerrar">×</button>'+html+'</div>';document.body.appendChild(d);requestAnimationFrame(function(){d.classList.add('on');});
+    d.addEventListener('click',function(e){if(e.target===d||e.target.closest('.cvx-x'))d.close();});d.close=function(){d.classList.remove('on');setTimeout(function(){d.remove();},250);};return d;}
+
+  // ---------------- 1) she asks for it ----------------
+  function compose(list,src){
+    var items=list.map(function(i){var p=P[i];return {i:i,z:guessSize(p)};}).filter(function(x){return P[x.i];});
+    if(!items.length)return;
+    var d=sheet('<h3>🎁 Pídelo de regalo</h3><p class="s">Le mandamos tu lista a quien quieras (tu pareja, tu mamá, tus amigas) con tus tallas exactas. Solo tiene que abrir el enlace y regalártelo.</p><div id="cvgList"></div>'+
+      '<label class="t">Tu nombre</label><input class="cvg-in" id="cvgName" maxlength="30" placeholder="Laura" value="'+esc(myName())+'">'+
+      '<label class="t">Un mensajito (opcional)</label><textarea class="cvg-in" id="cvgMsg" maxlength="120" placeholder="Para Navidad 🎄 me haría muy feliz 💖"></textarea>'+
+      '<div class="cvg-row"><button type="button" class="wa" data-g="wa">Enviar por WhatsApp</button>'+(navigator.share?'<button type="button" class="sh" data-g="sh">Compartir</button>':'')+'<button type="button" class="cp" data-g="cp">Copiar</button></div>'+
+      '<p class="note">Elige tu talla en cada prenda para que te llegue perfecta.</p>');
+    stat('regalo_pedir',src);
+    function paint(){var box=d.querySelector('#cvgList');box.innerHTML=items.map(function(x,k){var p=P[x.i],zs=productSizes(p);
+      return '<div class="cvg-it"><img src="'+esc(img(p.imagen,200))+'" alt=""><div class="tx"><b>'+esc(p.nombre)+'</b><small>'+esc(p.precio||'')+'</small>'+
+        (zs.length>1||(zs.length===1&&q(p,zs[0])<=0)?'<div class="zz">'+zs.map(function(z){var out=q(p,z)<=0;return '<button type="button" data-k="'+k+'" data-z="'+esc(z)+'"'+(z===x.z?' class="on"':'')+(out?' disabled':'')+'>'+esc(z)+'</button>';}).join('')+'</div>':(zs.length===1?'<small> · Talla '+esc(zs[0])+'</small>':''))+'</div>'+
+        (items.length>1?'<button type="button" class="x" data-rm="'+k+'" aria-label="Quitar">×</button>':'')+'</div>';}).join('');}
+    paint();
+    d.addEventListener('click',function(e){
+      var z=e.target.closest('[data-z]');if(z&&!z.disabled){items[+z.dataset.k].z=z.dataset.z;paint();return;}
+      var rm=e.target.closest('[data-rm]');if(rm){items.splice(+rm.dataset.rm,1);paint();return;}
+      var g=e.target.closest('[data-g]');if(!g)return;
+      var need=items.filter(function(x){return productSizes(P[x.i]).length>1&&!x.z;});
+      if(need.length){var it0=d.querySelector('#cvgList .zz');if(it0)it0.scrollIntoView({behavior:'smooth',block:'center'});var n0=d.querySelector('.note');n0.textContent='Elige tu talla en '+P[need[0].i].nombre+' 👆';n0.style.color='#ffb4a8';return;}
+      var name=d.querySelector('#cvgName').value.trim().slice(0,30),m=d.querySelector('#cvgMsg').value.trim().slice(0,120);
+      var url=SITE+'/?regalo='+enc({n:name,m:m,i:items.map(function(x){return [idOf(P[x.i]),x.z||''];})});
+      var txt='🎁 '+(name?name+' te comparte':'Te comparto')+' su lista de deseos de CΛNEVΛ'+(m?': “'+m+'”':'')+'\n\nAhí están sus tallas exactas, solo tienes que regalárselo 💎\n'+url;
+      stat('regalo_link',g.dataset.g);
+      if(g.dataset.g==='wa')window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');
+      if(g.dataset.g==='sh')navigator.share({title:'Mi lista de deseos CΛNEVΛ',text:txt.replace(url,'').trim(),url:url}).catch(function(){});
+      if(g.dataset.g==='cp'){(navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(function(){g.textContent='✓ Copiado';}).catch(function(){prompt('Copia tu enlace:',url);});}
+    });
+  }
+  window.cvGiftAsk=compose;
+  // entry 1: inside each garment, under the buy buttons
+  function paintBtn(){
+    var act=document.querySelector('#pmodal .pm-actions');if(!act)return;var b=document.getElementById('cvGiftBtn');
+    if(!b){b=document.createElement('button');b.type='button';b.id='cvGiftBtn';b.className='cvg-btn';b.innerHTML='🎁 Pídela de regalo';act.parentNode.insertBefore(b,act.nextSibling);
+      b.addEventListener('click',function(){var i=typeof currentProductIndex!=='undefined'?currentProductIndex:-1;if(i>=0)compose([i],'prenda');});}
+  }
+  if(typeof openProductModal==='function'){var oOpen=openProductModal;window.openProductModal=openProductModal=function(){var r=oOpen.apply(this,arguments);try{paintBtn();}catch(e){}return r;};}
+  // entry 2: on top of "Mis favoritas"
+  function favIdx(){var ks=window.cvFavs?cvFavs():[];return ks.map(function(k){return P.findIndex(function(p){return p.nombre+'|'+p.categoria===k;});}).filter(function(i){return i>=0;});}
+  if(window.MutationObserver)new MutationObserver(function(){var l=document.querySelector('.cv-fl');if(!l||l.parentNode.querySelector('.cvg-fav'))return;var ix=favIdx();if(!ix.length)return;
+    var b=document.createElement('button');b.type='button';b.className='cvg-btn cvg-fav';b.innerHTML='🎁 Pide tus favoritas de regalo ('+ix.length+')';l.parentNode.insertBefore(b,l);
+    b.addEventListener('click',function(){compose(favIdx().slice(0,8),'favoritas');});}).observe(document.body,{childList:true,subtree:true});
+
+  // ---------------- 2) whoever opens the link ----------------
+  function giftPage(o){
+    var rows=(o.i||[]).slice(0,12).map(function(x){var i=findP(x[0]);if(i<0)return null;var p=P[i],z=x[1]||'',zs=productSizes(p),avail=zs.length?(z?q(p,z)>0:okSizes(p).length>0):q(p,'')>0;
+      return {i:i,z:z,ok:avail,sel:avail};}).filter(Boolean);
+    var name=String(o.n||'').slice(0,30)||'alguien especial';
+    var v=document.createElement('div');v.className='cvg';v.setAttribute('role','dialog');v.setAttribute('aria-modal','true');document.body.appendChild(v);
+    function total(){return rows.reduce(function(s,r){return s+(r.sel?(typeof priceNum==='function'?priceNum(P[r.i].precio):0):0);},0);}
+    function paint(){
+      v.innerHTML='<div class="cvg-in"><div class="cvg-top"><span class="wm">CΛNEVΛ</span><button type="button" data-x aria-label="Cerrar">×</button></div>'+
+        '<div class="cvg-hd"><span class="bow">🎁</span><small>Lista de deseos</small><h1>Lo que <em>'+esc(name)+'</em> sueña</h1>'+(o.m?'<q>'+esc(o.m)+'</q>':'')+'</div>'+
+        (rows.length?rows.map(function(r,k){var p=P[r.i],zs=productSizes(p),alt=okSizes(p);
+          var zl=!zs.length?'':(r.z?(q(p,r.z)>0?'Su talla: <b>'+esc(r.z)+'</b> ✓ disponible':'Su talla '+esc(r.z)+' se agotó'+(alt.length?' · hay '+esc(alt.join(', ')):'')):'Tallas: '+esc(alt.join(', ')));
+          return '<div class="cvg-card'+(r.sel?' sel':'')+(r.ok?'':' off')+'"><img src="'+esc(img(p.imagen,300))+'" alt="" data-open="'+r.i+'"><div class="tx"><b>'+esc(p.nombre)+'</b><div class="pr">'+esc(p.precio||'')+'</div><div class="zl'+(r.ok?'':' bad')+'">'+zl+'</div></div>'+(r.ok?'<button type="button" class="ck" data-k="'+k+'" aria-label="Incluir">'+(r.sel?'✓':'')+'</button>':'')+'</div>';}).join(''):
+          '<p style="text-align:center;color:rgba(247,247,244,.7)">Estas prendas ya no están disponibles, pero hay más en la tienda ✨</p>')+
+        '<div class="cvg-trust"><div>🚚<br>Envío a toda Colombia</div><div>🔒<br>Pago protegido</div><div>🔁<br>Cambio de talla</div></div></div>'+
+        '<div class="cvg-bar"><button type="button" data-buy'+(total()>0?'':' disabled')+'>🎁 Regalárselo · '+(typeof moneyCOP==='function'?moneyCOP(total()):'$'+total())+'</button><span class="sub">Se agrega a tu carrito con sus tallas · tú eliges cómo pagar</span></div>';
+    }
+    paint();requestAnimationFrame(function(){v.classList.add('on');});stat('regalo_abrir',rows.length+' prendas');
+    function close(){v.classList.remove('on');setTimeout(function(){v.remove();},300);}
+    v.addEventListener('click',function(e){
+      if(e.target.closest('[data-x]')){close();return;}
+      var c=e.target.closest('[data-k]');if(c){var r=rows[+c.dataset.k];r.sel=!r.sel;paint();return;}
+      var op=e.target.closest('[data-open]');if(op){close();openProductModal(+op.dataset.open);return;}
+      if(e.target.closest('[data-buy]')){
+        var n=0;rows.forEach(function(r){if(!r.sel)return;var p=P[r.i],z=r.z&&q(p,r.z)>0?r.z:(okSizes(p).length===1?okSizes(p)[0]:r.z);var key=typeof productKey==='function'?productKey(p,z||''):'';
+          if(!(window.CART||[]).some(function(x){return x.key===key;})){addToCartByIndex(r.i,false,z||'');n++;}});
+        ss(GK,name);stat('regalo_agregar',n+' prendas');close();setTimeout(function(){paintBan();if(typeof openCart==='function')openCart();},320);
+      }
+    });
+  }
+  // the gift travels with the order: banner in the cart and a line in the WhatsApp message
+  function paintBan(){var who=ss(GK),foot=document.querySelector('#cartDrawer .cart-foot');var b=document.getElementById('cvGiftBan');
+    if(!who||!foot||!(window.CART||[]).length){if(b)b.remove();return;}
+    if(!b){b=document.createElement('div');b.id='cvGiftBan';foot.insertBefore(b,foot.firstChild);}
+    b.innerHTML='🎁 Estás comprando un regalo para <b>'+esc(who)+'</b>. Si quieres que sea sorpresa, cuéntanos por WhatsApp 🤫';}
+  if(typeof renderCart==='function'){var oRc=renderCart;window.renderCart=renderCart=function(){var r=oRc.apply(this,arguments);try{paintBan();}catch(e){}return r;};}
+  if(typeof cartWhatsText==='function'){var oTxt=cartWhatsText;window.cartWhatsText=cartWhatsText=function(){var t=oTxt.apply(this,arguments),who=ss(GK);if(!who)return t;
+    var line='\n🎁 Es un regalo para '+who+' (de su lista de deseos CΛNEVΛ)\n',k=t.lastIndexOf('\n¿Me confirmas');return k>=0?t.slice(0,k)+line+t.slice(k):t+line;};}
+  // open the gift page once the live catalog (real stock) is in
+  var m=location.search.match(/[?&]regalo=([^&#]+)/);
+  if(m){var o=dec(decodeURIComponent(m[1]));if(o&&o.i&&o.i.length){var t0=Date.now(),first=P;(function wait(){if(window.CV_LIVE||P!==first||Date.now()-t0>3500){try{document.querySelectorAll('.cv-wel,#cvSheet,.cv-gone').forEach(function(x){x.remove();});}catch(e){}giftPage(o);return;}setTimeout(wait,150);})();}}
+})();
+</script>
+
 </body>
 </html>
