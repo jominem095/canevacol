@@ -5807,8 +5807,11 @@ body.cv-has-pbar .ann-bar{display:none!important}
   function cname(c){for(var i=0;i<CTRY.length;i++)if(CTRY[i][0]===c)return CTRY[i][1];return c;}
   var IC='CO',CAR='';
   var FIELDS=[['name','Nombre y apellido','text','name'],['doc','Cédula','tel','off'],['phone','Celular (WhatsApp)','tel','tel'],['email','Correo','email','email'],['dept','Departamento','select','address-level1'],['city','Ciudad / municipio','select','address-level2'],['address','Dirección','text','street-address'],['barrio','Barrio (opcional)','text','off'],['notes','Indicaciones (opcional)','text','off']];
+  // v93: WhatsApp needs only name + WhatsApp (the rest is confirmed in the chat); Bold needs the address; Bre-B also the ID
+  var FT='',REQ={cartWhats:{name:1,phone:1},cartBold:{name:1,phone:1,dept:1,city:1,address:1},cartBreb:{name:1,doc:1,phone:1,dept:1,city:1,address:1}};
   function valid(k,v){v=String(v||'').trim();
-    if(k==='name')return v.length>=4&&/\s/.test(v);
+    var rq=REQ[FT]||REQ.cartBold;if(!rq[k]&&!v)return true;
+    if(k==='name')return v.length>=3;
     if(k==='doc')return IC!=='CO'?/^[A-Za-z0-9-]{5,20}$/.test(v.replace(/[.\s]/g,'')):/^\d{5,12}$/.test(v.replace(/[.\s-]/g,''));
     if(k==='phone')return IC!=='CO'?/^\d{8,15}$/.test(v.replace(/[^\d]/g,'')):/^\d{10}$/.test(v.replace(/[^\d]/g,'').replace(/^57(?=\d{10}$)/,''));
     if((k==='dept'||k==='city')&&IC!=='CO')return true;
@@ -5820,6 +5823,7 @@ body.cv-has-pbar .ann-bar{display:none!important}
   var MSG={dept:'Elige el departamento',name:'Escribe nombre y apellido',doc:'Solo números, sin puntos',phone:'Celular de 10 dígitos',email:'Revisa el correo',city:'¿En qué ciudad?',address:'Escribe la dirección'};
   var pendingTarget=null,PASS=false;
   function openForm(target){
+    FT=target;
     var b=loadBuyer(),cu=null;try{cu=window.clubUser?clubUser():null;}catch(e){}
     // Club member: her profile fills what this phone does not remember (her last address is kept in the Club)
     if(cu){var dv=cu.delivery||{};['name','doc','phone','city','address','barrio','notes'].forEach(function(k){if(!b[k]&&dv[k])b[k]=dv[k];});if(!b.name&&cu.name)b.name=cu.name;if(!b.email&&cu.email)b.email=cu.email;if(!b.phone&&cu.phone)b.phone=String(cu.phone).replace(/[^\d]/g,'').replace(/^57(?=\d{10}$)/,'');}
@@ -5840,6 +5844,14 @@ body.cv-has-pbar .ann-bar{display:none!important}
       '<button type="submit" class="cv-go">'+(target==='cartBreb'?'💎 Continuar al pago con Bre-B':bold?'💳 Continuar al pago':'Enviar pedido por WhatsApp')+'</button><button type="button" class="cv-stay" data-sh="x">Volver al carrito</button>'+
       '<div class="cv-priv">Usamos tus datos solo para tu pedido y envío. <a href="privacidad.html" target="_blank" rel="noopener">Privacidad</a></div></form>','cv-formbox');
     push({t:'k',k:'checkout_form',l:target==='cartBreb'?'breb':bold?'bold':'whatsapp'});
+    // v93: WhatsApp order = 2 fields. Address, ID and e-mail are optional and folded away
+    if(target==='cartWhats'){(function(fm){var opt=[].slice.call(fm.querySelectorAll('.cv-f')).filter(function(l){return !REQ.cartWhats[l.dataset.fk];});
+      var rows=[].slice.call(fm.querySelectorAll('.cv-row2'));opt.forEach(function(l){l.classList.add('cv-optf');});rows.forEach(function(r){if(!r.querySelector('[data-fk="name"],[data-fk="phone"]'))r.classList.add('cv-optf');});
+      var sub=fm.querySelector('.cv-sub');if(sub)sub.textContent='Solo tu nombre y tu WhatsApp: la dirección y el envío te los confirmamos por el chat.';
+      var nl=fm.querySelector('[data-fk="name"] span');if(nl)nl.textContent='Tu nombre';
+      var t=document.createElement('button');t.type='button';t.className='cv-optt';t.textContent='📦 Agregar dirección de envío ahora (opcional)';
+      t.onclick=function(){fm.classList.add('cv-optshow');t.remove();};var go=fm.querySelector('.cv-go');if(go)go.parentNode.insertBefore(t,go);
+      var hp=fm.querySelector('.cv-intlsum');if(hp)hp.classList.add('cv-optf');})(s.querySelector('form'));}
     var form=s.querySelector('form');
     s.addEventListener('click',function(e){if(e.target.closest('[data-sh="x"]'))closeSheet();});
     form.elements.dept.addEventListener('change',function(){form.elements.city.innerHTML=cityOpts(this.value,'');form.elements.city.disabled=!CO[this.value];});
@@ -5867,7 +5879,7 @@ body.cv-has-pbar .ann-bar{display:none!important}
       if(first){first.focus();return;}
       if(form.elements.hp&&form.elements.hp.value){closeSheet();return;}
       if(IC!=='CO'){data.country=IC;data.city=data.icity+', '+cname(IC);data.phone='+'+data.phone;data.carrier=CAR;delete data.dept;}
-      else{data.city=data.city+', '+data.dept;delete data.dept;delete data.zip;delete data.icity;}
+      else{data.city=data.city?data.city+', '+data.dept:'';delete data.dept;delete data.zip;delete data.icity;}
       try{if(form.elements.keep.checked)localStorage.setItem(BKEY,JSON.stringify(data));else localStorage.removeItem(BKEY);}catch(x){}
       CURRENT=data;closeSheet();push({t:'k',k:'checkout_datos_ok'});
       var btn=document.getElementById(target);if(btn){PASS=true;try{btn.click();}finally{PASS=false;}}
@@ -5883,7 +5895,7 @@ body.cv-has-pbar .ann-bar{display:none!important}
     e.preventDefault();e.stopImmediatePropagation();openForm(t.id);
   },true);
   // ---- send the details with the order ----
-  function block(b){return '📦 Datos de entrega:\n'+['Nombre: '+b.name,(b.country?'Documento: ':'Cédula: ')+b.doc,'Celular: '+b.phone,b.country?'🌎 País: '+cname(b.country)+(b.zip?' · CP '+b.zip:''):'',b.country&&b.carrier&&window.CV_INTL&&CV_INTL.carriers&&CV_INTL.carriers[b.carrier]?'🚚 Envío: '+CV_INTL.carriers[b.carrier].name+' ('+CV_INTL.carriers[b.carrier].days+')':'','Correo: '+b.email,'Dirección: '+b.address+(b.barrio?', '+b.barrio:'')+', '+b.city,b.notes?'Indicaciones: '+b.notes:''].filter(Boolean).join('\n');}
+  function block(b){return '📦 Datos de entrega:\n'+['Nombre: '+b.name,(b.country?'Documento: ':'Cédula: ')+b.doc,'Celular: '+b.phone,b.country?'🌎 País: '+cname(b.country)+(b.zip?' · CP '+b.zip:''):'',b.country&&b.carrier&&window.CV_INTL&&CV_INTL.carriers&&CV_INTL.carriers[b.carrier]?'🚚 Envío: '+CV_INTL.carriers[b.carrier].name+' ('+CV_INTL.carriers[b.carrier].days+')':'','Correo: '+b.email,'Dirección: '+b.address+(b.barrio?', '+b.barrio:'')+', '+b.city,b.notes?'Indicaciones: '+b.notes:''].filter(function(x){return x&&!/:\s*(,\s*)?$/.test(x);}).join('\n');}
   if(typeof cartWhatsText==='function'){var oTxt=cartWhatsText;cartWhatsText=function(){var t=oTxt.apply(this,arguments);try{if(!CURRENT)return t;var k=t.lastIndexOf('\n¿Me confirmas');var add='\n'+block(CURRENT)+'\n';return k>=0?t.slice(0,k)+add+t.slice(k):t+add;}catch(e){}return t;};}
   if(typeof postOrder==='function'){postOrder=function(id,items){try{fetch(API_BASE+'/order',{method:'POST',headers:{'Content-Type':'text/plain;charset=UTF-8'},body:JSON.stringify({id:id,items:items,token:(window.clubToken&&clubToken())||undefined,email:(CURRENT&&CURRENT.email)||(window.clubGuestEmail&&clubGuestEmail())||undefined,buyer:CURRENT||undefined}),keepalive:true}).catch(function(){});}catch(e){}};}
 })();
@@ -7830,6 +7842,41 @@ body.product-open .cv-wel{display:none!important}
   // the welcome is added hidden and gets "show" a frame later: watch each one as it arrives
   new MutationObserver(function(ms){ms.forEach(function(m){[].forEach.call(m.addedNodes,function(n){if(n.nodeType===1&&n.classList.contains('cv-wel'))new MutationObserver(hold).observe(n,{attributes:true,attributeFilter:['class']});});});}).observe(document.body,{childList:true});
   setInterval(hold,1500);
+})();
+</script>
+
+<style id="cvcart-css">
+/* v93: short WhatsApp form + cart that always shows how to finish */
+.cv-form:not(.cv-optshow) .cv-optf{display:none!important}
+.cv-form:not(.cv-optshow) .cv-row2{grid-template-columns:1fr!important}
+.cv-optt{width:100%;margin:4px 0 10px;border:1px dashed rgba(217,196,155,.45);background:none;color:#e9dcc1;border-radius:14px;padding:12px;font:600 13px Inter,sans-serif;cursor:pointer}
+#cvPayBar{position:sticky;bottom:0;z-index:5;display:flex;align-items:center;gap:10px;padding:12px 14px calc(12px + env(safe-area-inset-bottom));margin-top:auto;
+  background:linear-gradient(180deg,rgba(8,7,6,.86),#080706 40%);border-top:1px solid rgba(217,196,155,.3);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:transform .25s,opacity .25s}
+#cvPayBar.off{transform:translateY(110%);opacity:0;pointer-events:none}
+#cvPayBar .t{flex:0 0 auto;font-family:Inter,sans-serif;color:#f7f7f4}#cvPayBar .t small{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(247,247,244,.55)}#cvPayBar .t b{font-size:18px}
+#cvPayBar button{flex:1;border:0;border-radius:999px;padding:15px 14px;font:800 14px Inter,sans-serif;cursor:pointer;background:linear-gradient(120deg,#e6cf9f,#fff 45%,#e8dcc0);color:#050505;box-shadow:0 10px 30px rgba(230,207,159,.25)}
+#cartDrawer .cart-actions.cv-flash{animation:cvuxFlash 1.2s ease}
+</style>
+<script id="cvcart">
+// v93: the pay buttons were ~800 px down in the cart on the phone (after "¿Te la guardo?", upsells, shipping and Club notes).
+// The pay options now come right after the subtotal, and a sticky "Finalizar compra" bar jumps to them.
+(function(){
+  var d=document.getElementById('cartDrawer');if(!d)return;
+  function push(k){try{if(window.cvStatsPush)cvStatsPush({t:'k',k:k});}catch(e){}}
+  function money(n){try{return moneyCOP(n);}catch(e){return '$'+Math.round(n).toLocaleString('es-CO');}}
+  function arrange(){var f=d.querySelector('.cart-foot'),a=f&&f.querySelector('.cart-actions'),row=f&&f.querySelector('.cart-row');
+    if(!f||!a)return;var ref=row||f.firstChild;if(ref&&ref.nextSibling!==a)f.insertBefore(a,ref.nextSibling);}
+  var bar=document.createElement('div');bar.id='cvPayBar';bar.className='off';bar.innerHTML='<div class="t"><small>Total</small><b>$0</b></div><button type="button">Finalizar compra ➜</button>';
+  d.appendChild(bar);
+  function total(){try{return cartTotal();}catch(e){return 0;}}
+  function seen(){var a=d.querySelector('.cart-actions');if(!a)return true;var r=a.getBoundingClientRect(),dr=d.getBoundingClientRect();return r.top<dr.bottom-90&&r.bottom>dr.top;}
+  function paint(){var n=(window.CART||[]).length;bar.querySelector('b').textContent=money(total());bar.classList.toggle('off',!n||!document.body.classList.contains('cart-open')||seen());}
+  bar.querySelector('button').addEventListener('click',function(){var a=d.querySelector('.cart-actions');if(!a)return;push('finalizar_compra');
+    d.scrollTop+=a.getBoundingClientRect().top-d.getBoundingClientRect().top-90;a.classList.remove('cv-flash');void a.offsetWidth;a.classList.add('cv-flash');paint();});
+  d.addEventListener('scroll',paint,{passive:true});
+  new MutationObserver(function(){arrange();paint();}).observe(document.body,{attributes:true,attributeFilter:['class']});
+  var it=document.getElementById('cartItems');if(it)new MutationObserver(function(){setTimeout(paint,50);}).observe(it,{childList:true,subtree:true});
+  arrange();paint();
 })();
 </script>
 
