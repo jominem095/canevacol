@@ -7880,5 +7880,127 @@ body.product-open .cv-wel{display:none!important}
 })();
 </script>
 
+<style id="cvwait-css">
+.cvw-link{display:inline-flex;align-items:center;gap:6px;margin:8px 0 2px;padding:7px 12px;border-radius:999px;border:1px dashed rgba(247,247,244,.38);background:transparent;color:#f7f7f4;font:500 .74rem Inter,sans-serif;letter-spacing:.02em;cursor:pointer}
+.cvw-link:hover{border-style:solid;background:rgba(247,247,244,.06)}
+.cv-gone-b .cvw-link{margin:12px 0 0;width:100%;justify-content:center;padding:10px 12px}
+.cvw{position:fixed;inset:0;z-index:3200;background:rgba(0,0,0,.62);display:flex;align-items:flex-end;justify-content:center;opacity:0;transition:opacity .25s}
+.cvw.on{opacity:1}
+.cvw-b{position:relative;width:min(480px,100%);background:linear-gradient(180deg,#121214,#070708);color:#f7f7f4;border:1px solid rgba(247,247,244,.18);border-bottom:0;border-radius:22px 22px 0 0;padding:20px 18px calc(18px + env(safe-area-inset-bottom));font-family:Inter,sans-serif;box-shadow:0 -20px 50px rgba(0,0,0,.5);transform:translateY(20px);transition:transform .25s}
+.cvw.on .cvw-b{transform:none}
+.cvw-x{position:absolute;top:10px;right:12px;width:32px;height:32px;border-radius:50%;border:1px solid rgba(247,247,244,.2);background:transparent;color:#f7f7f4;font-size:18px;cursor:pointer}
+.cvw-h{display:flex;gap:12px;align-items:center;margin-right:36px}
+.cvw-h img{width:56px;height:72px;object-fit:cover;border-radius:10px;background:#1a1a1c;flex:0 0 auto}
+.cvw-h b{display:block;font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:1.3rem;line-height:1.1}
+.cvw-h small{display:block;margin-top:3px;font-size:.76rem;color:rgba(247,247,244,.65)}
+.cvw-sz{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 2px}
+.cvw-sz button{min-width:44px;padding:8px 10px;border-radius:10px;border:1px solid rgba(247,247,244,.25);background:transparent;color:#f7f7f4;font:600 .8rem Inter,sans-serif;cursor:pointer}
+.cvw-sz button.on{background:linear-gradient(135deg,#f7f7f4,#c9ccd1);color:#050505;border-color:transparent}
+.cvw label{display:block;margin:12px 0 5px;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(247,247,244,.6)}
+.cvw input{width:100%;box-sizing:border-box;padding:12px 13px;border-radius:12px;border:1px solid rgba(247,247,244,.22);background:#050505;color:#f7f7f4;font:16px Inter,sans-serif;outline:none}
+.cvw input:focus{border-color:rgba(247,247,244,.6)}
+.cvw input.bad{border-color:#ff8f80}
+.cvw-go{width:100%;margin-top:16px;padding:14px;border:0;border-radius:999px;background:linear-gradient(135deg,#ffffff,#c9ccd1 55%,#f7f7f4);color:#050505;font:700 .9rem Inter,sans-serif;letter-spacing:.04em;cursor:pointer}
+.cvw-go[disabled]{opacity:.6}
+.cvw-err{min-height:1em;margin:8px 0 0;font-size:.76rem;color:#ffb4a8}
+.cvw-note{margin:10px 0 0;font-size:.72rem;color:rgba(247,247,244,.5);text-align:center}
+.cvw-ok{text-align:center;padding:10px 0 4px}
+.cvw-ok i{display:block;font-style:normal;font-size:2rem}
+.cvw-ok b{display:block;margin-top:6px;font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:1.45rem}
+.cvw-ok p{margin:6px 0 0;font-size:.82rem;color:rgba(247,247,244,.7)}
+</style>
+<script id="cvwait">
+// v93 "Avísame cuando llegue": sold-out sizes (product sheet) and garments no longer in the store (ad / shared links)
+// let the customer leave name + WhatsApp. The Worker saves it (/waitlist) and tells the owner; when the garment
+// comes back the owner sees it in Caneva Admin → 🔔 Avísame with a ready WhatsApp message. Nothing fake, no countdowns.
+(function(){
+  var API=typeof API_BASE==='string'?API_BASE:'https://caneva-ai.canevacol.workers.dev',DONE_KEY='cv_wait_done';
+  function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function stat(k,l){try{if(window.cvStatsPush)cvStatsPush({t:'k',k:k,l:String(l||'').slice(0,40)});}catch(e){}}
+  function buyer(){var b=null;try{b=window.cvBuyer&&cvBuyer();}catch(e){}if(!b){try{b=JSON.parse(localStorage.getItem('caneva_buyer_v1')||'null');}catch(e){}}return b||{};}
+  function remember(name,phone){try{var b=JSON.parse(localStorage.getItem('caneva_buyer_v1')||'null')||{};if(!b.name)b.name=name;if(!b.phone)b.phone=phone;localStorage.setItem('caneva_buyer_v1',JSON.stringify(b));}catch(e){}}
+  function done(){try{return JSON.parse(localStorage.getItem(DONE_KEY)||'{}')||{};}catch(e){return {};}}
+  function markDone(k){try{var d=done();d[k]=Date.now();localStorage.setItem(DONE_KEY,JSON.stringify(d));}catch(e){}}
+  function phoneOk(v){var d=String(v||'').replace(/\D/g,'');if(/^573\d{9}$/.test(d))d=d.slice(2);return /^3\d{9}$/.test(d)||(d.length>=11&&d.length<=15)?d:'';}
+  function titleFromSlug(s){var n=String(s||'').split('--')[0].replace(/-/g,' ');return n.charAt(0).toUpperCase()+n.slice(1);}
+
+  // o: {pid, slug, product, image, sizes:[out sizes], size, src}
+  function open(o){
+    var old=document.querySelector('.cvw');if(old)old.remove();
+    var b=buyer(),sizes=(o.sizes||[]).filter(Boolean),size=o.size||(sizes.length===1?sizes[0]:'');
+    var d=document.createElement('div');d.className='cvw';d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');d.setAttribute('aria-label','Avísame cuando llegue');
+    d.innerHTML='<div class="cvw-b"><button type="button" class="cvw-x" aria-label="Cerrar">×</button>'+
+      '<div class="cvw-h">'+(o.image?'<img src="'+esc(window.cvImg?cvImg(o.image,200):o.image)+'" alt="">':'')+'<div><b>🔔 Te avisamos cuando llegue</b><small>'+esc(o.product)+(sizes.length?'':' · Te escribimos por WhatsApp apenas vuelva')+'</small></div></div>'+
+      (sizes.length?'<label>¿Qué talla buscas?</label><div class="cvw-sz">'+sizes.map(function(s){return '<button type="button" data-s="'+esc(s)+'"'+(s===size?' class="on"':'')+'>'+esc(s)+'</button>';}).join('')+'</div>':'')+
+      '<label for="cvwN">Tu nombre</label><input id="cvwN" autocomplete="given-name" maxlength="60" value="'+esc(String(b.name||'').split(' ')[0])+'">'+
+      '<label for="cvwP">Tu WhatsApp</label><input id="cvwP" type="tel" inputmode="tel" autocomplete="tel" maxlength="16" placeholder="300 123 4567" value="'+esc(b.phone||'')+'">'+
+      '<p class="cvw-err" id="cvwE"></p><button type="button" class="cvw-go" id="cvwGo">Avísame</button>'+
+      '<p class="cvw-note">Solo te escribimos por esta prenda. Sin spam 💛</p></div>';
+    document.body.appendChild(d);requestAnimationFrame(function(){d.classList.add('on');});
+    stat('avisame_abrir',o.product);
+    function close(){d.classList.remove('on');setTimeout(function(){d.remove();},250);}
+    d.addEventListener('click',function(e){
+      if(e.target===d||e.target.closest('.cvw-x')){close();return;}
+      var sb=e.target.closest('.cvw-sz button');if(sb){size=sb.dataset.s;d.querySelectorAll('.cvw-sz button').forEach(function(x){x.classList.toggle('on',x===sb);});}
+    });
+    var go=d.querySelector('#cvwGo'),err=d.querySelector('#cvwE'),nI=d.querySelector('#cvwN'),pI=d.querySelector('#cvwP');
+    go.addEventListener('click',function(){
+      var name=nI.value.trim(),phone=phoneOk(pI.value);
+      nI.classList.toggle('bad',name.length<2);pI.classList.toggle('bad',!phone);
+      if(sizes.length&&!size){err.textContent='Elige la talla que buscas';return;}
+      if(name.length<2){err.textContent='Escribe tu nombre';nI.focus();return;}
+      if(!phone){err.textContent='Escribe tu WhatsApp (10 dígitos, empieza por 3)';pI.focus();return;}
+      err.textContent='';go.disabled=true;go.textContent='Guardando…';
+      fetch(API+'/waitlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pid:o.pid||'',slug:o.slug||'',product:o.product||'',size:size||'',name:name,phone:phone,src:o.src||''})})
+        .then(function(r){return r.json().then(function(j){if(!r.ok||!j.ok)throw new Error(j.error||'No se pudo guardar');return j;});})
+        .then(function(){
+          remember(name,phone);markDone((o.pid||o.slug)+'|'+(size||''));stat('avisame_ok',o.product+(size?' '+size:''));
+          d.querySelector('.cvw-b').innerHTML='<button type="button" class="cvw-x" aria-label="Cerrar">×</button><div class="cvw-ok"><i>💛</i><b>¡Listo, '+esc(name.split(' ')[0])+'!</b><p>Apenas llegue '+esc(o.product)+(size?' en talla '+esc(size):'')+' te escribimos por WhatsApp.</p></div>';
+          setTimeout(close,3800);
+        })
+        .catch(function(e){go.disabled=false;go.textContent='Avísame';err.textContent=e&&e.message&&e.message.length<90?e.message:'No se pudo guardar. Intenta de nuevo.';});
+    });
+  }
+  window.cvWaitOpen=open;
+
+  // 1) Product sheet: if some sizes are sold out (struck), offer the notice under the sizes
+  function addSizeLink(p){
+    try{
+      var opts=document.getElementById('pmSizeOptions');if(!opts||!p)return;
+      var old=document.getElementById('cvwSizeLink');if(old)old.remove();
+      if(typeof invOf!=='function'||!invOf(p)||typeof productSizes!=='function')return;
+      var out=productSizes(p).filter(function(s){return invQty(p,s)<=0;});if(!out.length)return;
+      var b=document.createElement('button');b.type='button';b.id='cvwSizeLink';b.className='cvw-link';
+      b.innerHTML='🔔 ¿Tu talla está agotada? <u>Avísame cuando llegue</u>';
+      b.addEventListener('click',function(){open({pid:p.id||'',slug:typeof productSlug==='function'?productSlug(p):'',product:p.nombre,image:p.imagen,sizes:out,src:'talla_agotada'});});
+      opts.insertAdjacentElement('afterend',b);
+    }catch(e){}
+  }
+  if(typeof renderSizeSelector==='function'){
+    var rs=renderSizeSelector;
+    window.renderSizeSelector=renderSizeSelector=function(p){var r=rs.apply(this,arguments);addSizeLink(p);return r;};
+  }
+
+  // 2) Link to a garment that is no longer in the store: "Avísame si vuelve" inside the "ya no está disponible" sheet
+  if(typeof cvGone==='function'){
+    var cg=cvGone;
+    window.cvGone=cvGone=function(slug){
+      var r=cg.apply(this,arguments);
+      try{
+        var parts=String(slug||'').split('--'),nm=parts[0];if(window.CV_ALIAS&&CV_ALIAS[nm])nm=CV_ALIAS[nm];
+        var s2=[nm].concat(parts.slice(1)).join('--'),prod=titleFromSlug(s2);
+        var all=document.querySelectorAll('.cv-gone .cv-gone-b'),box=all[all.length-1];
+        if(box&&!box.querySelector('.cvw-link')){
+          var b=document.createElement('button');b.type='button';b.className='cvw-link';b.innerHTML='🔔 <u>Avísame por WhatsApp si vuelve</u>';
+          b.addEventListener('click',function(){var g=box.closest('.cv-gone');if(g)g.remove();open({slug:s2,product:prod,src:'prenda_agotada'});});
+          var p=box.querySelector('p');if(p)p.insertAdjacentElement('beforebegin',b);else box.appendChild(b);
+        }
+      }catch(e){}
+      return r;
+    };
+  }
+})();
+</script>
+
 </body>
 </html>
