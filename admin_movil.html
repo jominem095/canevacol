@@ -2003,5 +2003,124 @@ token()?showList():showLogin();
   upd();setTimeout(function(){upd();center();},300);
 })();
 </script>
+<style id="cvnotif-css">
+/* v96: order notices that never get lost */
+.cvn{border-radius:18px;padding:12px 14px;margin:0 0 12px;background:linear-gradient(135deg,rgba(255,231,168,.08),rgba(207,230,255,.05));border:1px solid rgba(255,231,168,.3)}
+.cvn-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.cvn-h b{font-size:14px}.cvn-h small{display:block;color:var(--dim,rgba(246,247,248,.6));font-size:11.5px;margin-top:2px}
+.cvn-h .go{margin-left:auto;border:0;border-radius:999px;padding:10px 14px;font:800 12.5px Inter,sans-serif;background:linear-gradient(120deg,#ffe7a8,#fff 45%,#e6cf9f);color:#050505;cursor:pointer}
+.cvn-h .go:disabled{opacity:.55}
+.cvn details{margin-top:8px}.cvn summary{cursor:pointer;font-size:12px;color:rgba(246,247,248,.7)}
+.cvn-l{display:flex;flex-direction:column;gap:6px;margin-top:8px}.cvn-r{font-size:12px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.04)}
+.cvn-r em{font-style:normal;color:rgba(246,247,248,.55);font-size:11px}.cvn-c{display:inline-block;margin:4px 4px 0 0;padding:2px 8px;border-radius:999px;font-size:10.5px;background:rgba(142,240,200,.14);color:#8ef0c8}.cvn-c.bad{background:rgba(255,120,100,.14);color:#ffb4a8}.cvn-c.old{background:rgba(255,255,255,.08);color:rgba(246,247,248,.6)}
+.cvn-one{border:1px solid rgba(255,231,168,.45)!important;background:none!important;color:#ffe7a8!important}
+</style>
+<script id="cvnotif">
+// v96: Pedidos shows whether order notices reach the phones, re-sends them (all pending or one order),
+// and the Worker reminds by itself an order nobody opened (20 min and 3 h, never at night).
+(function(){
+  if(typeof paintOrders!=="function"||typeof adminFetch!=="function")return;
+  const PEND=["por_cobrar","pagando","breb"];
+  function e(t){return String(t==null?"":t).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
+  function chip(r){const t=String(r||"");const ok=/: ok$/.test(t),old=/vencida/.test(t);const m=t.match(/📱\s*(\d+)?/),k=m&&m[1]?+m[1]-1:0,names=(LOG&&LOG.devices)||[];const dev=(names[k]?(/iphone|android|celular/i.test(names[k])?"📱 ":"💻 ")+names[k]:"📱 "+(k+1));return `<span class="cvn-c${ok?"":old?" old":" bad"}">${e(dev)} ${ok?"✓":old?"vencido":"✗"}</span>`;}
+  let LOG=null;
+  async function loadLog(){try{LOG=await adminFetch("/admin/notify/log");}catch(x){LOG={error:x.message};}paint();}
+  function pending(){return (typeof ORD!=="undefined"?ORD:[]).filter(o=>PEND.includes(o.bucket));}
+  function card(){
+    const n=pending().length,dev=LOG&&LOG.devices?LOG.devices.length:null,last=LOG&&LOG.list&&LOG.list[0];
+    const devTxt=LOG&&LOG.error?(/404|Ruta/.test(LOG.error)?"Pega el Worker v96 para ver los avisos":e(LOG.error)):dev===null?"Revisando…":dev?`Avisos activos en <b>${dev}</b> dispositivo${dev>1?"s":""}`:"⚠️ Ningún celular recibe avisos: actívalos en Libretas";
+    return `<div class="cvn" id="cvNotif"><div class="cvn-h"><span style="font-size:22px">🔔</span><div><b>Avisos de pedidos</b><small>${devTxt}${last?` · último: ${e(when(last.at))}`:""}</small></div>`+
+      `<button type="button" class="go" data-renotify ${n?"":"disabled"}>🔔 Reenviar pendientes${n?" ("+n+")":""}</button></div>`+
+      (LOG&&LOG.list&&LOG.list.length?`<details><summary>Ver los últimos avisos y a qué celulares llegaron</summary><div class="cvn-l">${LOG.list.slice(0,12).map(x=>`<div class="cvn-r"><b>${e(x.title)}</b> <em>${e(when(x.at))}</em><div>${(x.sent||[]).filter(s=>/Caneva Admin/.test(s)).map(chip).join("")||`<span class="cvn-c bad">${e(x.skipped||"sin dispositivos")}</span>`}</div></div>`).join("")}</div></details>`:"")+`</div>`;
+  }
+  function paint(){
+    const box=document.getElementById("ordKpis");if(!box)return;
+    const old=document.getElementById("cvNotif");const h=card();
+    if(old)old.outerHTML=h;else box.insertAdjacentHTML("afterbegin",h);
+    // one button per pending order
+    const st=typeof ordStatus!=="undefined"?ordStatus:"";if(!PEND.includes(st))return;
+    const l=(typeof ORD!=="undefined"?ORD:[]).filter(o=>o.bucket===st),cards=document.querySelectorAll("#ordersList .ocard");
+    cards.forEach((c,k)=>{const o=l[k];if(!o||c.querySelector("[data-renotify-one]"))return;const a=c.querySelector(".oact")||c;
+      a.insertAdjacentHTML("beforeend",`<button type="button" class="cvn-one" data-renotify-one="${e(o.id)}">🔔 Reenviar aviso</button>`);});
+  }
+  const oPaint=paintOrders;
+  paintOrders=window.paintOrders=function(){const r=oPaint.apply(this,arguments);try{paint();if(!LOG)loadLog();}catch(x){}return r;};
+  document.addEventListener("click",async function(ev){
+    const b=ev.target.closest&&ev.target.closest("[data-renotify],[data-renotify-one]");if(!b)return;
+    const id=b.getAttribute("data-renotify-one")||"";b.disabled=true;const t0=b.textContent;b.textContent="Enviando…";
+    try{const d=await adminFetch("/admin/orders/renotify",{method:"POST",body:id?{id}:{all:1}});
+      const res=(d.sent||[]).flatMap(x=>Array.isArray(x.result)?x.result:[x.result]),ok=res.filter(r=>/: ok$/.test(r)).length;
+      toast(d.count?`🔔 Reenviado${d.count>1?"s":""} ${d.count} aviso${d.count>1?"s":""} · ${ok} llegada${ok===1?"":"s"} a celulares`:"No hay pedidos pendientes");
+      LOG=null;loadLog();
+    }catch(x){toast(/404|Ruta/.test(x.message)?"Falta pegar el Worker v96 en Cloudflare":"⚠️ "+x.message);}
+    b.disabled=false;b.textContent=t0;
+  });
+})();
+</script>
+<style id="cvradar-css">
+/* v96: Radar de ventas de hoy */
+.rdr{margin:14px 0;border-radius:24px;padding:16px;position:relative;overflow:hidden;background:radial-gradient(520px 220px at 100% 0%,rgba(142,240,200,.14),transparent 60%),radial-gradient(420px 220px at 0% 100%,rgba(255,231,168,.12),transparent 60%),#0b0b0d;border:1px solid rgba(142,240,200,.32)}
+.rdr:before{content:'';position:absolute;right:-60px;top:-60px;width:180px;height:180px;border-radius:50%;border:1px solid rgba(142,240,200,.25);box-shadow:0 0 0 30px rgba(142,240,200,.04),0 0 0 60px rgba(142,240,200,.025);animation:rdrPulse 3.2s ease-out infinite;pointer-events:none}
+@keyframes rdrPulse{0%{transform:scale(.6);opacity:1}100%{transform:scale(1.25);opacity:0}}
+.rdr-h{position:relative;display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}.rdr-h small{display:block;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:#8ef0c8}
+.rdr-h h3{margin:4px 0 0;font-family:'Cormorant Garamond',Georgia,serif;font-weight:400;font-size:30px;line-height:1}.rdr-h h3 b{color:#ffe7a8;font-weight:500}
+.rdr-h .sum{margin-left:auto;text-align:right}.rdr-h .sum b{display:block;font-size:22px;color:#8ef0c8}.rdr-h .sum span{font-size:11px;color:rgba(246,247,248,.6)}
+.rdr-bar{position:relative;height:5px;border-radius:5px;background:rgba(255,255,255,.08);margin:12px 0 4px;overflow:hidden}.rdr-bar i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#8ef0c8,#ffe7a8);border-radius:5px;transition:width .6s}
+.rdr-note{font-size:11.5px;color:rgba(246,247,248,.6)}
+.rdr-l{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.rdr-c{display:grid;grid-template-columns:54px 1fr;gap:10px;padding:10px;border-radius:18px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);transition:transform .35s,opacity .35s,max-height .4s;max-height:260px}
+.rdr-c.gone{transform:translateX(40px);opacity:0;max-height:0;padding:0 10px;margin:-4px 0;border-width:0}
+.rdr-c .ph{width:54px;height:68px;border-radius:12px;background:#1b1b1f center/cover;display:grid;place-items:center;font-size:24px}
+.rdr-c .k{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.04em;border-radius:999px;padding:2px 8px;background:rgba(255,231,168,.14);color:#ffe7a8}
+.rdr-c .k.cobrar{background:rgba(142,240,200,.15);color:#8ef0c8}.rdr-c .k.volvio{background:rgba(207,230,255,.15);color:#cfe6ff}.rdr-c .k.cumple{background:rgba(230,220,255,.15);color:#e6dcff}
+.rdr-c b.n{display:block;font-size:14.5px;margin-top:4px}.rdr-c .r{font-size:12px;color:rgba(246,247,248,.65);margin-top:2px}.rdr-c .v{font-size:12px;color:#8ef0c8;font-weight:700}
+.rdr-c .a{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.rdr-c .a a,.rdr-c .a button{border:1px solid rgba(246,247,248,.2);background:none;color:#f6f7f8;border-radius:999px;padding:7px 11px;font:700 11.5px Inter,sans-serif;cursor:pointer;text-decoration:none}
+.rdr-c .a .w{background:#25d366;border-color:#25d366;color:#04140a}.rdr-c .a .s{color:#8ef0c8;border-color:rgba(142,240,200,.4)}.rdr-c .a .o{color:rgba(246,247,248,.5)}
+.rdr-more{width:100%;margin-top:8px;border:1px dashed rgba(246,247,248,.2);background:none;color:rgba(246,247,248,.75);border-radius:14px;padding:9px;font-size:12px;cursor:pointer}
+.rdr-empty{position:relative;margin-top:10px;padding:14px;border-radius:16px;background:rgba(255,255,255,.04);font-size:13px;color:rgba(246,247,248,.75)}
+</style>
+<script id="cvradar">
+// v96: "Radar de ventas de hoy" on top of Hoy: each person with a real reason to be written today and the message ready.
+(function(){
+  if(typeof hoyPaint!=="function"||typeof adminFetch!=="function")return;
+  let R=null,ALL=false,busy=false;
+  const KIND={cobrar:"Pedido sin cobrar",volvio:"Volvió su talla",bolsa:"Dejó su carrito",rescatar:"Pedido que se quedó",cumple:"Cumpleaños",recompra:"Llegó algo en su talla"};
+  function e(t){return String(t==null?"":t).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
+  function m(n){return "$"+Math.round(Number(n)||0).toLocaleString("es-CO");}
+  async function load(){if(busy)return;busy=true;try{R=await adminFetch("/admin/radar");}catch(x){R={error:x.message};}busy=false;paint();}
+  function card(c){const ph=c.img?`<span class="ph" style="background-image:url('${e(c.img)}')"></span>`:`<span class="ph">${e(c.emoji||"💎")}</span>`;
+    return `<div class="rdr-c" data-rk="${e(c.key)}">${ph}<div><span class="k ${e(c.kind)}">${e(c.emoji)} ${e(c.title||KIND[c.kind]||"")}</span><b class="n">${e(c.name)}</b><div class="r">${e(c.reason||"")}</div>${c.value?`<div class="v">${m(c.value)}</div>`:""}`+
+      `<div class="a"><a class="w" href="https://wa.me/${e(c.phone)}?text=${encodeURIComponent(c.msg||"")}" target="_blank" rel="noopener" data-rw>💬 Escribirle</a><button type="button" class="s" data-ra="vendio">✓ Vendió</button><button type="button" class="o" data-ra="omitir">Omitir</button></div></div></div>`;}
+  function html(){
+    if(!R)return `<div class="rdr" id="cvRadar"><div class="rdr-h"><div><small>📡 Radar de ventas</small><h3>Buscando ventas para hoy…</h3></div></div></div>`;
+    if(R.error)return /404|Ruta/.test(R.error)?"":`<div class="rdr" id="cvRadar"><div class="rdr-empty">⚠️ ${e(R.error)}</div></div>`;
+    const it=R.items||[],n=it.length,done=R.doneToday||0,pct=n+done?Math.round(done/(n+done)*100):100,show=ALL?it:it.slice(0,4);
+    return `<div class="rdr" id="cvRadar"><div class="rdr-h"><div><small>📡 Radar de ventas de hoy</small><h3>${n?`Tienes <b>${n}</b> venta${n>1?"s":""} posible${n>1?"s":""}`:"Todo al día ✨"}</h3></div>`+
+      (n?`<div class="sum"><b>~${m(R.total)}</b><span>esperando un mensaje tuyo</span></div>`:"")+`</div>`+
+      `<div class="rdr-bar"><i style="width:${pct}%"></i></div><div class="rdr-note">${done?`Hoy ya escribiste a <b>${done}</b> 💪`:"Un toque abre WhatsApp con el mensaje listo. Solo personas que ya te compraron o dejaron su WhatsApp."}</div>`+
+      (n?`<div class="rdr-l">${show.map(card).join("")}</div>${n>4?`<button type="button" class="rdr-more" data-rall>${ALL?"Ver menos":"Ver las "+n}</button>`:""}`:`<div class="rdr-empty">Nadie está esperando respuesta. Buen momento para subir una historia con el 🎬 Kit de historias.</div>`)+`</div>`;
+  }
+  function paint(){const v=document.getElementById("hoyView");if(!v||v.classList.contains("hidden"))return;
+    const h=html(),old=document.getElementById("cvRadar");
+    if(old){if(h)old.outerHTML=h;else old.remove();return;}
+    if(!h)return;const hero=v.querySelector(".hy-hero");if(hero)hero.insertAdjacentHTML("afterend",h);else v.insertAdjacentHTML("afterbegin",h);}
+  async function mark(c,action){const k=c.getAttribute("data-rk");c.classList.add("gone");
+    try{await adminFetch("/admin/radar",{method:"POST",body:{key:k,action}});}catch(x){}
+    if(R&&R.items){R.items=R.items.filter(i=>i.key!==k);R.count=R.items.length;R.total=R.items.reduce((a,i)=>a+(Number(i.value)||0),0);if(action!=="omitir")R.doneToday=(R.doneToday||0)+1;}
+    if(action==="vendio")try{if(typeof hoyConfetti==="function")hoyConfetti();toast("💰 ¡Venta! Regístrala en 💵 Ventas si fue por WhatsApp");}catch(x){}
+    setTimeout(paint,380);}
+  document.addEventListener("click",function(ev){
+    const c=ev.target.closest&&ev.target.closest("#cvRadar .rdr-c");
+    if(ev.target.closest&&ev.target.closest("[data-rall]")){ALL=!ALL;paint();return;}
+    if(!c)return;
+    if(ev.target.closest("[data-rw]")){setTimeout(()=>mark(c,"escrito"),600);return;}
+    const b=ev.target.closest("[data-ra]");if(b)mark(c,b.getAttribute("data-ra"));
+  });
+  const oPaint=hoyPaint;
+  hoyPaint=window.hoyPaint=function(){const r=oPaint.apply(this,arguments);try{paint();}catch(x){}return r;};
+  const oLoad=typeof loadHoy==="function"?loadHoy:null;
+  if(oLoad){loadHoy=window.loadHoy=function(){load();return oLoad.apply(this,arguments);};}
+  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&typeof currentTab!=="undefined"&&currentTab==="hoy")load();});
+})();
+</script>
 </body>
 </html>
