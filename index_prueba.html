@@ -8390,5 +8390,107 @@ body.product-open .cv-wel{display:none!important}
 })();
 </script>
 
+<style id="cvrecep-css">
+/* v97 "La recepción": one elegant line that greets her like a shop assistant at the door (real data only) */
+#cvRecep{position:fixed;left:50%;top:var(--cvr-top,78px);z-index:9050;width:min(560px,calc(100% - 24px));transform:translate(-50%,-14px);opacity:0;pointer-events:none;transition:opacity .45s ease,transform .55s cubic-bezier(.2,.9,.3,1.15)}
+#cvRecep.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+#cvRecep .b{position:relative;display:flex;align-items:center;gap:11px;padding:10px 12px 10px 10px;border-radius:22px;background:linear-gradient(135deg,rgba(18,17,15,.94),rgba(6,6,7,.94));backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(230,207,159,.42);box-shadow:0 18px 50px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.03) inset;color:#f7f7f4;font-family:Inter,system-ui,sans-serif;overflow:hidden}
+#cvRecep .b:after{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,231,168,.13) 50%,transparent 70%);transform:translateX(-100%);animation:cvrShine 2.6s ease .5s 1 forwards;pointer-events:none}
+@keyframes cvrShine{to{transform:translateX(100%)}}
+#cvRecep .av{position:relative;flex:0 0 auto;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font:500 13px 'Cormorant Garamond',Georgia,serif;letter-spacing:.08em;color:#050505;background:radial-gradient(circle at 30% 25%,#fff,#ffe7a8 55%,#c9a96e)}
+#cvRecep .av i{position:absolute;right:-1px;bottom:-1px;width:11px;height:11px;border-radius:50%;background:#25d366;border:2px solid #0b0b0c;animation:cvrDot 2s ease infinite}
+@keyframes cvrDot{50%{box-shadow:0 0 0 5px rgba(37,211,102,.18)}}
+#cvRecep .tx{flex:1;min-width:0;font-size:13.2px;line-height:1.35}#cvRecep .tx b{color:#ffe7a8;font-weight:600}#cvRecep .tx small{display:block;font-size:11px;color:rgba(247,247,244,.6);margin-top:2px}
+#cvRecep .tx small a{color:#8ef0c8;text-decoration:none}
+#cvRecep .go{flex:0 0 auto;border:0;border-radius:999px;padding:9px 13px;font:700 12px Inter,sans-serif;background:linear-gradient(120deg,#ffe7a8,#fff 45%,#e6cf9f);color:#070604;cursor:pointer;white-space:nowrap}
+#cvRecep .x{flex:0 0 auto;width:26px;height:26px;border-radius:50%;border:1px solid rgba(247,247,244,.2);background:none;color:rgba(247,247,244,.7);font-size:14px;line-height:1;cursor:pointer}
+#cvRecep .ch{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}#cvRecep .ch button{border:1px solid rgba(230,207,159,.38);background:rgba(255,231,168,.06);color:#f7f7f4;border-radius:999px;padding:6px 10px;font:600 11.5px Inter,sans-serif;cursor:pointer}
+#cvRecep .ch button:active,#cvRecep .go:active{transform:scale(.96)}
+#cvRecep .bar{position:absolute;left:0;bottom:0;height:2px;background:linear-gradient(90deg,#e6cf9f,#8ef0c8);width:100%;transform-origin:left;animation:cvrTime 14s linear forwards}
+#cvRecep:hover .bar,#cvRecep.hold .bar{animation-play-state:paused}
+@keyframes cvrTime{to{transform:scaleX(0)}}
+@media(max-width:420px){#cvRecep .tx{font-size:12.6px}#cvRecep .go{padding:8px 11px}}
+</style>
+<script id="cvrecep">
+// v97 "La recepción": as she comes in, one line greets her with what is true for her right now:
+//  - she comes back with something in her cart  -> "Volviste 💎 tu X sigue guardado" (real stock of her size)
+//  - she chose her size before and new garments arrived in it since her last visit -> "llegaron N en tu talla"
+//  - new garments since her last visit  -> "llegaron N prendas nuevas"
+//  - first visit -> greeting by the hour in Barranquilla + 4 shortcuts
+// Plus a green dot "Mayra atiende ahora" only inside business hours. Once per visit, never over another window, never on deep links.
+(function(){
+  if(!window.P||typeof catalogProducts!=='function')return;
+  function lg(k){try{return localStorage.getItem(k)||'';}catch(e){return '';}}
+  function ls(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+  function ss(k,v){try{if(v===undefined)return sessionStorage.getItem(k)||'';sessionStorage.setItem(k,v);}catch(e){return '';}}
+  function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function push(k,l){try{if(window.cvStatsPush)cvStatsPush({t:'k',k:k,l:l||''});}catch(e){}}
+  // visits: a new visit starts after 30 minutes away
+  var now=Date.now(),V={};try{V=JSON.parse(lg('cv_visit')||'{}')||{};}catch(e){}
+  if(!V.at||now-V.at>30*60000){V.prev=V.at||0;V.n=(V.n||0)+1;}
+  V.at=now;ls('cv_visit',JSON.stringify(V));
+  if(ss('cv_recep'))return; // already greeted in this visit
+  if(/[?&](p|regalo|bold-order-id|pago|home)=/.test(location.search))return; // she came for something specific
+  var returning=!!V.prev,last=V.prev||0;
+  function first(){var n='';try{var b=JSON.parse(lg('caneva_buyer_v1')||'{}');n=b&&b.name;}catch(e){}try{var u=window.clubUser&&clubUser();if(!n&&u)n=u.firstName||u.name;}catch(e){}n=String(n||'').trim().split(/\s+/)[0]||'';return n?n.charAt(0).toUpperCase()+n.slice(1).toLowerCase():'';}
+  function bogH(){return (new Date().getUTCHours()+19)%24;}
+  function hello(){var h=bogH();return h<12?'Buenos días':h<19?'Buenas tardes':'Buenas noches';}
+  function hours(){var c=window.SITE_CONFIG&&SITE_CONFIG.hours||{};var f=+c.from>=0?+c.from:8,t=+c.to>0?+c.to:20,h=bogH();return h>=f&&h<t?t:0;}
+  function mine(){var m={};try{m=JSON.parse(lg('cv_my_size')||'{}')||{};}catch(e){}return m;}
+  function sizeOk(p,z){try{var q=invQty(p,z);if(q!==Infinity)return q>0;return productSizes(p).indexOf(z)>=0;}catch(e){return false;}}
+  function soldOut(p){try{return typeof invTotalSite==='function'&&invTotalSite(p)===0;}catch(e){return false;}}
+  function addedMs(p){return Date.parse(p&&p.addedAt||'')||0;}
+  function fresh(){return last?catalogProducts().filter(function(p){return addedMs(p)>last&&!soldOut(p);}):[];}
+  function catLike(re){var c={};catalogProducts().forEach(function(p){if(re.test(String(p.categoria||'')+' '+p.nombre))c[p.categoria]=(c[p.categoria]||0)+1;});var k=Object.keys(c).sort(function(a,b){return c[b]-c[a];})[0];return k||'';}
+  function goCat(k){try{if(window.cvSetCat)cvSetCat(k);}catch(e){}var c=document.getElementById('catalogo');if(c)try{c.scrollIntoView({behavior:'smooth',block:'start'});}catch(e){}}
+  function pick(){
+    var name=first(),cart=(window.CART||[]).filter(function(x){return x&&x.nombre;});
+    if(returning&&cart.length){
+      var it=cart[0],p=P.find(function(x){return (it.pid&&x.id===it.pid)||x.nombre===it.nombre;}),q=Infinity;try{if(p)q=invQty(p,it.size||'');}catch(e){}
+      var low=q!==Infinity&&q>0&&q<=2?' Quedan <b>'+q+'</b>'+(it.size?' en tu talla '+esc(it.size):'')+'.':'';
+      return {k:'carrito',t:'Volviste'+(name?', '+esc(name):'')+' 💎 Tu <b>'+esc(it.nombre)+'</b>'+(cart.length>1?' y '+(cart.length-1)+' más':'')+' sigue'+(cart.length>1?'n':'')+' en tu carrito.'+low,go:'Ver carrito',act:function(){if(window.openCart)openCart();}};}
+    var f=fresh(),sz=mine();
+    if(returning&&f.length&&(sz.n||sz.l)){var inS=f.filter(function(p){return (sz.n&&sizeOk(p,sz.n))||(sz.l&&sizeOk(p,sz.l));}),label=[sz.n,sz.l].filter(Boolean).join(' / ');
+      if(inS.length)return {k:'talla',t:'Hola'+(name?' '+esc(name):'')+' ✨ Desde tu última visita llegaron <b>'+inS.length+' prenda'+(inS.length>1?'s':'')+'</b> en tu talla '+esc(label)+'.',go:'Verlas',act:function(){ls('cv_fit_on','1');goCat('Nuevo');}};}
+    if(returning&&f.length)return {k:'nuevo',t:'Hola de nuevo'+(name?', '+esc(name):'')+' ✨ Llegaron <b>'+f.length+' prenda'+(f.length>1?'s':'')+' nueva'+(f.length>1?'s':'')+'</b> desde tu última visita.',go:'Ver lo nuevo',act:function(){goCat('Nuevo');}};
+    var jeans=catLike(/jean|denim|pant/i),salir=catLike(/vestido|set|enterizo/i),ch=[['✨ Lo nuevo','Nuevo']];
+    if(jeans)ch.push(['👖 Jeans',jeans]);if(salir)ch.push(['💃 Para salir',salir]);ch.push(['💸 Bajo $80k','__cheap']);
+    var h=bogH(),sky=h>=6&&h<18?'☀️':'🌙';
+    return {k:returning?'regreso':'bienvenida',t:(returning?'Qué bueno verte otra vez'+(name?', '+esc(name):'')+' 💎':hello()+' desde Barranquilla '+sky)+' <b>¿Qué te provoca hoy?</b>',chips:ch};
+  }
+  function busy(){return !!document.querySelector('.pmodal.open,.ai-dock.open,#cvGeo,#cvIg,#cvLuxIntro,#cvSheet,#cvqsOv,#cvwqOv,#cvBPay,.cv-wel.show,.cvr-ov,#cvGiftPage')||document.body.classList.contains('cart-open')||document.body.classList.contains('product-open');}
+  var el=null,timer=0;
+  function top(){var n=document.getElementById('nav')||document.querySelector('nav');var r=n?n.getBoundingClientRect():null;var t=r&&r.bottom>0&&r.bottom<200?r.bottom+8:12;var a=document.querySelector('.ann:not([hidden]),#annBar:not([hidden])');document.documentElement.style.setProperty('--cvr-top',Math.round(t)+'px');}
+  function hide(why){if(!el)return;el.classList.remove('on');clearTimeout(timer);var e2=el;el=null;setTimeout(function(){if(e2.parentNode)e2.remove();},500);if(why)push('recep_cerrar',why);}
+  function show(){
+    var m=pick();if(!m)return;ss('cv_recep','1');top();
+    var open=hours(),wa='https://wa.me/'+(window.WA_PHONE||'573057637089')+'?text='+encodeURIComponent('Hola Mayra ✨ Estoy viendo la tienda y quiero que me ayudes a elegir.');
+    el=document.createElement('div');el.id='cvRecep';el.setAttribute('role','status');
+    el.innerHTML='<div class="b"><span class="av">CΛ'+(open?'<i></i>':'')+'</span><div class="tx">'+m.t+
+      (m.chips?'<div class="ch">'+m.chips.map(function(c,i){return '<button type="button" data-rc="'+i+'">'+esc(c[0])+'</button>';}).join('')+'</div>':'')+
+      (open?'<small>🟢 <a href="'+wa+'" target="_blank" rel="noopener" data-rwa>Mayra atiende ahora por WhatsApp</a></small>':'')+'</div>'+
+      (m.go?'<button type="button" class="go" data-rgo>'+esc(m.go)+'</button>':'')+'<button type="button" class="x" aria-label="Cerrar" data-rx>×</button><span class="bar"></span></div>';
+    document.body.appendChild(el);requestAnimationFrame(function(){requestAnimationFrame(function(){if(el)el.classList.add('on');});});
+    push('recep_ver',m.k);
+    el.addEventListener('click',function(e){
+      if(e.target.closest('[data-rx]')){hide('x');return;}
+      if(e.target.closest('[data-rwa]')){push('recep_whatsapp',m.k);hide();return;}
+      if(e.target.closest('[data-rgo]')){push('recep_ir',m.k);hide();try{m.act();}catch(x){}return;}
+      var c=e.target.closest('[data-rc]');if(c){var k=m.chips[+c.dataset.rc];push('recep_chip',k[0]);hide();goCat(k[1]);}
+    });
+    el.addEventListener('pointerenter',function(){clearTimeout(timer);el&&el.classList.add('hold');});
+    timer=setTimeout(function(){hide();},14000);
+  }
+  // after the page settles and the live catalog is in (real stock and arrival dates); never over another window
+  var tries=0,t0=Date.now();
+  function wait(){if(ss('cv_recep'))return;tries++;
+    if((window.CV_LIVE||Date.now()-t0>4000)&&!busy()&&Date.now()-t0>1800){show();return;}
+    if(tries<40)setTimeout(wait,500);}
+  setTimeout(wait,900);
+  addEventListener('scroll',function(){if(el&&window.scrollY>700)hide();},{passive:true});
+  // another window opens: the line steps aside
+  setInterval(function(){if(el&&busy())hide();},700);
+})();
+</script>
 </body>
 </html>
