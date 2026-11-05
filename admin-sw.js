@@ -1,4 +1,5 @@
-// Caneva Admin service worker (v88): shows the store notices and puts the red number on the app icon.
+// Caneva Admin service worker (v97): shows the store notices and puts the red number on the app icon.
+// v97: notices carry the CΛNEVΛ diamond (large icon) and a diamond silhouette in the Android status bar.
 // v88: reminders from Libretas ring with buttons "✓ Hecho" and "⏰ +1 hora" (work even with the app closed, Android/PC;
 // on iPhone tapping the notice opens Libretas). Only handles push and taps; it does not cache pages.
 const API = "https://caneva-ai.canevacol.workers.dev";
@@ -10,8 +11,8 @@ self.addEventListener("push", e => {
   try { d = e.data ? e.data.json() : {}; } catch (x) { d = { title: "CANEVA", body: e.data ? e.data.text() : "" }; }
   const opts = {
     body: d.body || "",
-    icon: "admin-icon-192.png",
-    badge: "admin-icon-192.png",
+    icon: d.icon || "admin-push-icon.png",
+    badge: "admin-push-badge.png",
     tag: d.tag || "caneva",
     renotify: true,
     data: Object.assign({ url: d.url || "admin_movil.html?app=1" }, d.data || {})
@@ -34,7 +35,7 @@ self.addEventListener("notificationclick", e => {
   if (e.action && data.rem) {
     e.waitUntil(fetch(API + "/rem/act", { method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: data.rem.id, col: data.rem.col, sig: data.rem.sig, act: e.action === "snooze" ? "snooze" : "done" }) })
-      .then(r => r.ok ? null : self.registration.showNotification("CΛNEVΛ", { body: "No se pudo guardar. Ábrelo en Libretas.", icon: "admin-icon-192.png", tag: "rem-err" }))
+      .then(r => r.ok ? null : self.registration.showNotification("CΛNEVΛ", { body: "No se pudo guardar. Ábrelo en Libretas.", icon: "admin-push-icon.png", badge: "admin-push-badge.png", tag: "rem-err" }))
       .catch(() => null)
       .then(() => self.clients.matchAll({ type: "window", includeUncontrolled: true }))
       .then(list => { (list || []).forEach(c => c.postMessage({ cv: "refresh", tab: "libretas" })); }));
