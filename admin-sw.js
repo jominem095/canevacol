@@ -1,7 +1,10 @@
-// Caneva Admin service worker (v100): shows the store notices and puts the red number on the app icon.
+// Caneva Admin service worker (v101): auto-update without manual restart + the store notices + the red number on the icon.
+// v101: when a new version activates it RELOADS every open Caneva Admin (client.navigate), and the app shell (the page
+// navigation) is served network-first, so a new version comes in by itself with the next open — no "cerrar y abrir". The
+// service worker itself updates on its own (the browser re-fetches it on open and ~every 24 h), which is what pulls v101 in.
 // v100: "Dónde está cada uno" (Reportes) with the normal notices (a new order, for example): every notice that arrives or
 // is tapped leaves a mark (Cache Storage "cv-meta"); Caneva Admin, on screen, sends this phone's location with the
-// permission it already gave (admin_push.js v5). A service worker has no GPS, so with the app closed it waits for it.
+// permission it already gave. A service worker has no GPS, so with the app closed it waits for the next open.
 // v98: a notice can carry the location of whoever sent it: tapping it opens Caneva Admin with the map
 // (iPhone too); on Android the buttons "🗺️ Ver en el mapa" / "🧭 Cómo llegar" go straight to Google Maps.
 // v97: notices carry the CΛNEVΛ diamond (large icon) and a diamond silhouette in the Android status bar.
@@ -10,8 +13,32 @@
 const API = "https://caneva-ai.canevacol.workers.dev";
 const markNotice = () => caches.open("cv-meta").then(c => c.put("/cv-last-notice", new Response(String(Date.now())))).catch(() => {});
 const adminClients = () => self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(l => (l || []).filter(c => c.url.includes("admin_movil.html"))).catch(() => []);
+const SHELL = "cv-shell-v101";
 self.addEventListener("install", () => self.skipWaiting());
-self.addEventListener("activate", e => e.waitUntil(self.clients.claim()));
+self.addEventListener("activate", e => e.waitUntil((async () => {
+  await self.clients.claim();
+  for (const k of await caches.keys()) if (k.startsWith("cv-shell-") && k !== SHELL) await caches.delete(k).catch(() => {});
+  // v101: a new version just activated -> reload every open Caneva Admin so it runs the new code, no manual restart
+  const list = await self.clients.matchAll({ type: "window", includeUncontrolled: true }).catch(() => []);
+  // not awaited: awaiting navigate() inside activate deadlocks (the reload waits for activate to finish)
+  for (const c of (list || [])) if (c.url.includes("admin_movil.html")) { try { c.navigate(c.url.split("#")[0]); } catch (e) {} }
+})()));
+
+// v101: the page itself (navigation) always comes from the network when online, so the newest version loads by itself;
+// the cache is only an offline fallback. The versioned scripts (admin_push.js?v=N) refresh on their own via the ?v=.
+self.addEventListener("fetch", e => {
+  const req = e.request;
+  if (req.method !== "GET" || req.mode !== "navigate") return;
+  e.respondWith((async () => {
+    try {
+      const fresh = await fetch(req, { cache: "no-store" });
+      try { (await caches.open(SHELL)).put("shell", fresh.clone()); } catch (x) {}
+      return fresh;
+    } catch (err) {
+      return (await caches.match("shell")) || fetch(req);
+    }
+  })());
+});
 
 self.addEventListener("push", e => {
   let d = {};

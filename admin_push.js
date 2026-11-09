@@ -1,7 +1,7 @@
 /* CANEVA admin · Avisos personalizados y "Dónde está cada uno" (v5)
    - Hoy › Avisos a tu celular: write a title + message, choose which Caneva Admin phones get it and which tab opens when
      they tap it, and send it as a real notification (Web Push, POST /admin/push/custom).
-   - v7: auto-update, no manual restart. CV_VER is read from this file's own "?v=N"; on a notice, on focus, on start and
+   - v8: more reliable GPS read (high accuracy, then a fast wifi/cell fix as fallback). v7: auto-update, no manual restart. CV_VER is read from this file's own "?v=N"; on a notice, on focus, on start and
      every 15 min it fetches "admin_ver.txt" (no-store) and, if it is newer, reloads admin_movil.html with a cache-busting
      query (once per version, guarded against loops). So a new version comes in by itself with the next order notice.
    - v6: "Dónde está cada uno" (Reportes): when a Caneva Admin notice (a new order, for example) is opened, or arrives
@@ -94,11 +94,17 @@
   // OpenStreetMap embed (free, no key): the less precise the GPS, the wider the view
   function osm(l){var d=Math.min(0.03,Math.max(0.0018,(+l.acc||0)/111000*2.2)),e=d*1.6;
     return "https://www.openstreetmap.org/export/embed.html?bbox="+[l.lng-e,l.lat-d,l.lng+e,l.lat+d].map(function(x){return x.toFixed(6);}).join("%2C")+"&layer=mapnik&marker="+l.lat+"%2C"+l.lng;}
-  function getPos(maxAge){return new Promise(function(ok,ko){
+  function getOnce(opts){return new Promise(function(ok,ko){
     if(!navigator.geolocation)return ko(new Error("Este celular no deja leer la ubicación"));
     navigator.geolocation.getCurrentPosition(function(p){var c=p.coords;ok({lat:Math.round(c.latitude*1e6)/1e6,lng:Math.round(c.longitude*1e6)/1e6,acc:Math.round(c.accuracy||0)});},
-      function(er){ko(new Error(er&&er.code===1?"Caneva Admin no tiene permiso de ubicación":er&&er.code===3?"El GPS tardó demasiado":"No se pudo leer la ubicación"));},
-      {enableHighAccuracy:true,timeout:15000,maximumAge:maxAge});});}
+      function(er){ko(new Error(er&&er.code===1?"Caneva Admin no tiene permiso de ubicación":er&&er.code===3?"El GPS tardó demasiado":"No se pudo leer la ubicación"));},opts);});}
+  // v8: high accuracy first (GPS); if it is slow/fails (common on iPhone indoors), fall back to a fast wifi/cell fix
+  function getPos(maxAge){
+    return getOnce({enableHighAccuracy:true,timeout:12000,maximumAge:maxAge}).catch(function(e){
+      if(/permiso/.test(e.message))throw e;                 // permission denied: do not retry
+      return getOnce({enableHighAccuracy:false,timeout:10000,maximumAge:Math.max(maxAge||0,300000)});
+    });
+  }
   function geoHint(){return IOS?"En el iPhone: Ajustes › Privacidad y seguridad › Localización › Sitios web de Safari › “Al usar la app”, y Ajustes › Safari (o Apps › Safari) › Ubicación › “Permitir”.":"En Android: Chrome › Configuración › Configuración de sitios › Ubicación › permite canevacol.com.";}
   // street + neighbourhood + city from OpenStreetMap (Nominatim); "" if it does not answer in time
   function place(l){
