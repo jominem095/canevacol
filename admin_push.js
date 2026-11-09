@@ -1,7 +1,8 @@
 /* CANEVA admin · Avisos personalizados y "Dónde está cada uno" (v5)
    - Hoy › Avisos a tu celular: write a title + message, choose which Caneva Admin phones get it and which tab opens when
      they tap it, and send it as a real notification (Web Push, POST /admin/push/custom).
-   - v10: shares when Caneva Admin is OPENED or focused (not only around a notice), at most every 5 min.
+   - v11: on iPhone (or any phone not yet granted) a small one-time "Activar" chip grants location with one tap instead of
+     the OS dialog popping on its own; once granted it is silent forever. v10: shares when Caneva Admin is OPENED or focused (not only around a notice), at most every 5 min.
      v9: never opens the OS location dialog by itself (reads only when already granted) and the card sits at the end of
      Reportes. v8: more reliable GPS read (high accuracy, then a fast wifi/cell fix as fallback). v7: auto-update, no manual restart. CV_VER is read from this file's own "?v=N"; on a notice, on focus, on start and
      every 15 min it fetches "admin_ver.txt" (no-store) and, if it is newer, reloads admin_movil.html with a cache-busting
@@ -67,6 +68,7 @@
     ".cvtst{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:100001;display:flex;align-items:flex-start;gap:10px;width:max-content;max-width:calc(100% - 32px);box-sizing:border-box;padding:12px 12px 12px 14px;border-radius:16px;background:#0c0c0d;border:1px solid rgba(246,247,248,.22);color:#f6f7f8;font:13px/1.45 Inter,sans-serif;box-shadow:0 12px 40px rgba(0,0,0,.6);animation:cvtIn .25s ease-out}"+
     "@keyframes cvtIn{from{opacity:0;transform:translate(-50%,16px)}to{opacity:1;transform:translate(-50%,0)}}.cvtst span{flex:1;min-width:0}.cvtst small{display:block;opacity:.7;font-size:11.5px;margin-top:3px}"+
     ".cvtst button{flex:0 0 auto;width:26px;height:26px;border-radius:50%;border:1px solid rgba(246,247,248,.3);background:transparent;color:#f6f7f8;font-size:11px;cursor:pointer}"+
+    ".cvact{font:600 12px/1.35 Inter,sans-serif;padding:9px 10px 9px 13px;gap:8px}.cvtst .cvt-go{flex:0 0 auto;width:auto;height:auto;border:0;border-radius:999px;padding:7px 13px;font:800 12px Inter,sans-serif;background:linear-gradient(120deg,#cfd6db,#ffffff 45%,#e8eef2 60%,#c3ccd2);color:#050505;cursor:pointer}"+
     ".cvtst.sm{padding:7px 10px 7px 12px;font:600 11px/1.3 Inter,sans-serif;opacity:.92;background:rgba(12,12,13,.92);gap:7px;box-shadow:0 8px 22px rgba(0,0,0,.5)}.cvtst.sm button{width:18px;height:18px;font-size:8px}"+
     /* Reportes › Dónde está cada uno */
     "#cvTeam{margin:18px 0 8px}.cvt{border-radius:18px;padding:14px;background:linear-gradient(160deg,#141414,#070707);border:1px solid rgba(246,247,248,.16);color:#f6f7f8}"+
@@ -160,33 +162,44 @@
   // "Dónde está cada uno": the location goes out by itself around a notice, with the permission this phone already gave
   function geoState(){if(!navigator.geolocation)return Promise.resolve("denied");if(!navigator.permissions||!navigator.permissions.query)return Promise.resolve("unknown");
     return navigator.permissions.query({name:"geolocation"}).then(function(p){return p.state;},function(){return "unknown";});}
-  var capBusy=false;
+  var capBusy=false,activateShown=false;
+  // read the GPS and send it (used by the automatic capture and by the one-time "Activar" tap)
+  async function sendLocation(){
+    var l=await getPos(60000);
+    lsSet("cv_geo_ok","1"); // this phone can read location without asking -> silent from now on
+    var label=await Promise.race([place(l),new Promise(function(r){setTimeout(function(){r("");},4000);})]);
+    var ep=await myEndpoint();
+    await api("/admin/team/loc",{method:"POST",body:{did:did(),endpoint:ep||undefined,device:devName(),name:lsGet("cv_team_name")||"",lat:l.lat,lng:l.lng,acc:l.acc,label:label}});
+    lsSet("cv_loc_at",String(Date.now()));
+    cvToast("📍 Loc. shared with team",3500,"",true); // small, abbreviated English, for transparency
+    T.prev="";if(teamVisible())teamLoad();
+  }
+  // iPhone needs a user TAP to grant location the first time (the OS dialog won't appear on its own, by design).
+  // So instead of popping the OS dialog, show a small one-time chip; one tap grants it and then it is silent forever.
+  function showActivate(){
+    if(activateShown||document.getElementById("cvActivate")||lsGet("cv_geo_ok"))return;
+    activateShown=true;css();
+    var el=document.createElement("div");el.id="cvActivate";el.className="cvtst cvact";el.setAttribute("role","status");
+    el.innerHTML='<span>📍 Comparte tu ubicación con el equipo</span><button type="button" class="cvt-go" data-act="go">Activar</button><button type="button" data-act="x" aria-label="Cerrar">✕</button>';
+    document.body.appendChild(el);el._h=setTimeout(function(){if(el.isConnected)el.remove();},20000);
+  }
+  async function doActivate(b){
+    var el=document.getElementById("cvActivate");if(el)clearTimeout(el._h);
+    if(b){b.disabled=true;b.textContent="…";}
+    try{await sendLocation();if(el)el.remove();}
+    catch(e){if(el){el.querySelector("span").textContent=(/permiso/.test(e.message)?"Activa la ubicación en Ajustes del iPhone":"No se pudo leer, intenta de nuevo");var g=el.querySelector('[data-act="go"]');if(g){g.disabled=false;g.textContent="Reintentar";}}}
+  }
   async function maybeCapture(){
     if(document.hidden||capBusy)return;
     var tk="";try{tk=typeof token==="function"?token():"";}catch(e){}if(!tk)return;
     // v10: share when they OPEN or focus Caneva Admin, and also when a notice arrives; at most once every 5 min
     if(Date.now()-(+lsGet("cv_loc_at")||0)<5*60000)return;
-    // v9: never open the OS location dialog on its own. Read only when the permission is already granted;
-    // if it is not clearly granted, do nothing (at most one quiet first try on phones that can't report the state).
     var gs=await geoState();
-    if(gs==="denied")return;
-    if(gs!=="granted"){
-      if(!lsGet("cv_geo_ok")){ if(lsGet("cv_geo_tried"))return; lsSet("cv_geo_tried","1"); }
-    }
-    capBusy=true;
-    try{
-      var l=await getPos(60000);
-      lsSet("cv_geo_ok","1"); // this phone can read location without asking -> keep it silent from now on
-      var label=await Promise.race([place(l),new Promise(function(r){setTimeout(function(){r("");},4000);})]);
-      var ep=await myEndpoint();
-      await api("/admin/team/loc",{method:"POST",body:{did:did(),endpoint:ep||undefined,device:devName(),name:lsGet("cv_team_name")||"",lat:l.lat,lng:l.lng,acc:l.acc,label:label}});
-      lsSet("cv_loc_at",String(Date.now()));
-      // small discreet note, abbreviated English, each time it shares: the team stays aware (transparencia)
-      cvToast("📍 Loc. shared with team",3500,"",true);
-      T.prev="";if(teamVisible())teamLoad();
-    }catch(e){}
-    capBusy=false;
+    if(gs==="denied")return;                                        // the phone said no: never nag
+    if(gs!=="granted"&&!lsGet("cv_geo_ok")){showActivate();return;} // iPhone/first time: one small tap, not the OS dialog by itself
+    capBusy=true;try{await sendLocation();}catch(e){}capBusy=false; // already granted: silent
   }
+  document.addEventListener("click",function(e){var b=e.target.closest&&e.target.closest("#cvActivate [data-act]");if(!b)return;if(b.getAttribute("data-act")==="x"){var a=document.getElementById("cvActivate");if(a){clearTimeout(a._h);a.remove();}}else doActivate(b);});
   document.addEventListener("visibilitychange",function(){if(!document.hidden){maybeCapture();checkVersion();}});
   function copyTxt(t){if(navigator.clipboard&&navigator.clipboard.writeText)return navigator.clipboard.writeText(t);
     return new Promise(function(ok,ko){var a=document.createElement("textarea");a.value=t;a.setAttribute("readonly","");a.style.cssText="position:fixed;opacity:0";document.body.appendChild(a);a.select();var r=false;try{r=document.execCommand("copy");}catch(e){}a.remove();r?ok():ko();});}
