@@ -1,7 +1,8 @@
 /* CANEVA admin · Avisos personalizados y "Dónde está cada uno" (v5)
    - Hoy › Avisos a tu celular: write a title + message, choose which Caneva Admin phones get it and which tab opens when
      they tap it, and send it as a real notification (Web Push, POST /admin/push/custom).
-   - v8: more reliable GPS read (high accuracy, then a fast wifi/cell fix as fallback). v7: auto-update, no manual restart. CV_VER is read from this file's own "?v=N"; on a notice, on focus, on start and
+   - v9: never opens the OS location dialog by itself (reads only when already granted) and the card sits at the end of
+     Reportes. v8: more reliable GPS read (high accuracy, then a fast wifi/cell fix as fallback). v7: auto-update, no manual restart. CV_VER is read from this file's own "?v=N"; on a notice, on focus, on start and
      every 15 min it fetches "admin_ver.txt" (no-store) and, if it is newer, reloads admin_movil.html with a cache-busting
      query (once per version, guarded against loops). So a new version comes in by itself with the next order notice.
    - v6: "Dónde está cada uno" (Reportes): when a Caneva Admin notice (a new order, for example) is opened, or arrives
@@ -67,7 +68,7 @@
     ".cvtst button{flex:0 0 auto;width:26px;height:26px;border-radius:50%;border:1px solid rgba(246,247,248,.3);background:transparent;color:#f6f7f8;font-size:11px;cursor:pointer}"+
     ".cvtst.sm{padding:7px 10px 7px 12px;font:600 11px/1.3 Inter,sans-serif;opacity:.92;background:rgba(12,12,13,.92);gap:7px;box-shadow:0 8px 22px rgba(0,0,0,.5)}.cvtst.sm button{width:18px;height:18px;font-size:8px}"+
     /* Reportes › Dónde está cada uno */
-    "#cvTeam{margin:0 0 14px}.cvt{border-radius:18px;padding:14px;background:linear-gradient(160deg,#141414,#070707);border:1px solid rgba(246,247,248,.16);color:#f6f7f8}"+
+    "#cvTeam{margin:18px 0 8px}.cvt{border-radius:18px;padding:14px;background:linear-gradient(160deg,#141414,#070707);border:1px solid rgba(246,247,248,.16);color:#f6f7f8}"+
     ".cvt-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.cvt-h .ic{font-size:22px}.cvt-h>div{flex:1;min-width:150px}.cvt-h b{font-size:15px}.cvt-h small{display:block;font-size:12px;opacity:.7;margin-top:2px;line-height:1.4}"+
     ".cvt-h .go{border:0;border-radius:999px;padding:10px 14px;font:800 12.5px Inter,sans-serif;background:linear-gradient(120deg,#cfd6db,#ffffff 45%,#e8eef2 60%,#c3ccd2);color:#050505;cursor:pointer}.cvt-h .go[disabled]{opacity:.55}"+
     ".cvt-map{height:300px;margin-top:12px;border-radius:14px;overflow:hidden;border:1px solid rgba(246,247,248,.16);background:#0d0d0d}.cvt-map.leaflet-container{background:#0d0d0d}"+
@@ -165,10 +166,17 @@
     var tk="";try{tk=typeof token==="function"?token():"";}catch(e){}if(!tk)return;
     var t=await lastNotice(),done=+lsGet("cv_loc_at")||0;
     if(!t||Date.now()-t>30*60000||done>=t||Date.now()-done<5*60000)return; // only around a notice, once per notice, max every 5 min
-    if((await geoState())==="denied")return; // never insists if the phone said no
+    // v9: never open the OS location dialog on its own. Read only when the permission is already granted;
+    // if it is not clearly granted, do nothing (at most one quiet first try on phones that can't report the state).
+    var gs=await geoState();
+    if(gs==="denied")return;
+    if(gs!=="granted"){
+      if(!lsGet("cv_geo_ok")){ if(lsGet("cv_geo_tried"))return; lsSet("cv_geo_tried","1"); }
+    }
     capBusy=true;
     try{
       var l=await getPos(60000);
+      lsSet("cv_geo_ok","1"); // this phone can read location without asking -> keep it silent from now on
       var label=await Promise.race([place(l),new Promise(function(r){setTimeout(function(){r("");},4000);})]);
       var ep=await myEndpoint();
       await api("/admin/team/loc",{method:"POST",body:{did:did(),endpoint:ep||undefined,device:devName(),name:lsGet("cv_team_name")||"",lat:l.lat,lng:l.lng,acc:l.acc,label:label}});
@@ -280,7 +288,7 @@
   }
   function teamMount(){
     var v=document.getElementById("repView");if(!v)return false;
-    if(!document.getElementById("cvTeam")){var box=document.createElement("div");box.id="cvTeam";v.insertBefore(box,v.firstChild);T.prev="";teamCard();}
+    if(!document.getElementById("cvTeam")){var box=document.createElement("div");box.id="cvTeam";v.appendChild(box);T.prev="";teamCard();} // v9: al final de Reportes
     return true;
   }
   function teamTick(){if(teamVisible()&&!document.hidden&&teamMount()){if(T.map)try{T.map.invalidateSize();}catch(e){}teamLoad();}}
