@@ -1,7 +1,8 @@
 /* CANEVA admin · Avisos personalizados y "Dónde está cada uno" (v5)
    - Hoy › Avisos a tu celular: write a title + message, choose which Caneva Admin phones get it and which tab opens when
      they tap it, and send it as a real notification (Web Push, POST /admin/push/custom).
-   - v9: never opens the OS location dialog by itself (reads only when already granted) and the card sits at the end of
+   - v10: shares when Caneva Admin is OPENED or focused (not only around a notice), at most every 5 min.
+     v9: never opens the OS location dialog by itself (reads only when already granted) and the card sits at the end of
      Reportes. v8: more reliable GPS read (high accuracy, then a fast wifi/cell fix as fallback). v7: auto-update, no manual restart. CV_VER is read from this file's own "?v=N"; on a notice, on focus, on start and
      every 15 min it fetches "admin_ver.txt" (no-store) and, if it is newer, reloads admin_movil.html with a cache-busting
      query (once per version, guarded against loops). So a new version comes in by itself with the next order notice.
@@ -157,15 +158,14 @@
     setTimeout(function(){try{location.replace(location.pathname+"?app=1&v="+latest);}catch(e){location.reload();}},1200);
   }
   // "Dónde está cada uno": the location goes out by itself around a notice, with the permission this phone already gave
-  function lastNotice(){if(!window.caches)return Promise.resolve(0);return caches.open("cv-meta").then(function(c){return c.match("/cv-last-notice");}).then(function(r){return r?r.text():"0";}).then(function(t){return +t||0;}).catch(function(){return 0;});}
   function geoState(){if(!navigator.geolocation)return Promise.resolve("denied");if(!navigator.permissions||!navigator.permissions.query)return Promise.resolve("unknown");
     return navigator.permissions.query({name:"geolocation"}).then(function(p){return p.state;},function(){return "unknown";});}
   var capBusy=false;
   async function maybeCapture(){
     if(document.hidden||capBusy)return;
     var tk="";try{tk=typeof token==="function"?token():"";}catch(e){}if(!tk)return;
-    var t=await lastNotice(),done=+lsGet("cv_loc_at")||0;
-    if(!t||Date.now()-t>30*60000||done>=t||Date.now()-done<5*60000)return; // only around a notice, once per notice, max every 5 min
+    // v10: share when they OPEN or focus Caneva Admin, and also when a notice arrives; at most once every 5 min
+    if(Date.now()-(+lsGet("cv_loc_at")||0)<5*60000)return;
     // v9: never open the OS location dialog on its own. Read only when the permission is already granted;
     // if it is not clearly granted, do nothing (at most one quiet first try on phones that can't report the state).
     var gs=await geoState();
