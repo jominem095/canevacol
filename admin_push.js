@@ -1,11 +1,11 @@
 /* CANEVA admin · Avisos personalizados y "Dónde está cada uno" (v5)
    - Hoy › Avisos a tu celular: write a title + message, choose which Caneva Admin phones get it and which tab opens when
      they tap it, and send it as a real notification (Web Push, POST /admin/push/custom).
-   - v5: "Dónde está cada uno" (Reportes) needs no extra message: when a Caneva Admin notice (a new order, for example)
-     is opened, or arrives with the app on screen, or the app is opened within 30 min after it, this phone sends its
-     location using the permission it already gave (admin-sw.js v100 leaves the mark of the notice). Nothing pops up:
-     only the very first time a small notice explains it. Never asks for the permission by itself. At most every 5 min.
-     Web apps cannot read the GPS with the app closed. Worker v99: /admin/team/loc, /admin/team/where, name, clear.
+   - v6: "Dónde está cada uno" (Reportes): when a Caneva Admin notice (a new order, for example) is opened, or arrives
+     with the app on screen, or the app is opened within 30 min after it, this phone sends its location using the
+     permission it already gave (admin-sw.js v100 leaves the mark of the notice). Each time it shares, a small discreet
+     note in abbreviated English ("Loc. shared with team") shows, so the team stays aware. Never asks for the permission
+     by itself. At most every 5 min. Web apps cannot read the GPS with the app closed. Worker v99: /admin/team/*.
    - The map sheet (#cvloc) opens any point with Google Maps, Waze and Apple Maps.
    Wraps hoyNotifyCard() from admin_movil.html, so the form shows up every time that card is painted. */
 (function(){
@@ -60,6 +60,7 @@
     ".cvtst{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:100001;display:flex;align-items:flex-start;gap:10px;width:max-content;max-width:calc(100% - 32px);box-sizing:border-box;padding:12px 12px 12px 14px;border-radius:16px;background:#0c0c0d;border:1px solid rgba(246,247,248,.22);color:#f6f7f8;font:13px/1.45 Inter,sans-serif;box-shadow:0 12px 40px rgba(0,0,0,.6);animation:cvtIn .25s ease-out}"+
     "@keyframes cvtIn{from{opacity:0;transform:translate(-50%,16px)}to{opacity:1;transform:translate(-50%,0)}}.cvtst span{flex:1;min-width:0}.cvtst small{display:block;opacity:.7;font-size:11.5px;margin-top:3px}"+
     ".cvtst button{flex:0 0 auto;width:26px;height:26px;border-radius:50%;border:1px solid rgba(246,247,248,.3);background:transparent;color:#f6f7f8;font-size:11px;cursor:pointer}"+
+    ".cvtst.sm{padding:7px 10px 7px 12px;font:600 11px/1.3 Inter,sans-serif;opacity:.92;background:rgba(12,12,13,.92);gap:7px;box-shadow:0 8px 22px rgba(0,0,0,.5)}.cvtst.sm button{width:18px;height:18px;font-size:8px}"+
     /* Reportes › Dónde está cada uno */
     "#cvTeam{margin:0 0 14px}.cvt{border-radius:18px;padding:14px;background:linear-gradient(160deg,#141414,#070707);border:1px solid rgba(246,247,248,.16);color:#f6f7f8}"+
     ".cvt-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.cvt-h .ic{font-size:22px}.cvt-h>div{flex:1;min-width:150px}.cvt-h b{font-size:15px}.cvt-h small{display:block;font-size:12px;opacity:.7;margin-top:2px;line-height:1.4}"+
@@ -126,7 +127,8 @@
     document.body.appendChild(el);
   }
   // small notice at the bottom (the person always sees when the location was shared)
-  function cvToast(msg,ms,hint){css();var t=document.getElementById("cvToast");if(!t){t=document.createElement("div");t.id="cvToast";t.className="cvtst";t.setAttribute("role","status");document.body.appendChild(t);}
+  function cvToast(msg,ms,hint,small){css();var t=document.getElementById("cvToast");if(!t){t=document.createElement("div");t.id="cvToast";t.setAttribute("role","status");document.body.appendChild(t);}
+    t.className="cvtst"+(small?" sm":"");
     t.innerHTML="<span>"+esc(msg)+(hint?"<small>"+esc(hint)+"</small>":"")+'</span><button type="button" data-cvt="x" aria-label="Cerrar">✕</button>';
     clearTimeout(t._h);if(ms)t._h=setTimeout(function(){if(t.isConnected)t.remove();},ms);}
   document.addEventListener("click",function(e){var b=e.target.closest&&e.target.closest("#cvToast [data-cvt]");if(b){var t=document.getElementById("cvToast");if(t)t.remove();}});
@@ -148,8 +150,8 @@
       var ep=await myEndpoint();
       await api("/admin/team/loc",{method:"POST",body:{did:did(),endpoint:ep||undefined,device:devName(),name:lsGet("cv_team_name")||"",lat:l.lat,lng:l.lng,acc:l.acc,label:label}});
       lsSet("cv_loc_at",String(Date.now()));
-      // only the first time on this phone: say what happens (nothing pops up after that)
-      if(!lsGet("cv_loc_info")){lsSet("cv_loc_info","1");cvToast("📍 Caneva Admin comparte la ubicación de este celular con el equipo cuando abres un aviso (como el de un pedido nuevo). Se ve en 📈 Reportes.",9000);}
+      // small discreet note, abbreviated English, each time it shares: the team stays aware (transparencia)
+      cvToast("📍 Loc. shared with team",3500,"",true);
       T.prev="";if(teamVisible())teamLoad();
     }catch(e){}
     capBusy=false;
