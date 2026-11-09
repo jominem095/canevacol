@@ -2030,7 +2030,7 @@ token()?showList():showLogin();
     const devTxt=LOG&&LOG.error?(/404|Ruta/.test(LOG.error)?"Pega el Worker v96 para ver los avisos":e(LOG.error)):dev===null?"Revisando…":dev?`Avisos activos en <b>${dev}</b> dispositivo${dev>1?"s":""}`:"⚠️ Ningún celular recibe avisos: actívalos en Libretas";
     return `<div class="cvn" id="cvNotif"><div class="cvn-h"><span style="font-size:22px">🔔</span><div><b>Avisos de pedidos</b><small>${devTxt}${last?` · último: ${e(when(last.at))}`:""}</small></div>`+
       `<button type="button" class="go" data-renotify ${n?"":"disabled"}>🔔 Reenviar pendientes${n?" ("+n+")":""}</button></div>`+
-      (LOG&&LOG.list&&LOG.list.length?`<details><summary>Ver los últimos avisos y a qué celulares llegaron</summary><div class="cvn-l">${LOG.list.slice(0,12).map(x=>`<div class="cvn-r"><b>${e(x.title)}</b> <em>${e(when(x.at))}</em><div>${(x.sent||[]).filter(s=>/Caneva Admin/.test(s)).map(chip).join("")||`<span class="cvn-c bad">${e(x.skipped||"sin dispositivos")}</span>`}</div></div>`).join("")}</div></details>`:"")+`</div>`;
+      (LOG&&LOG.list&&LOG.list.length?`<details><summary>Ver los últimos avisos y a qué celulares llegaron</summary><div class="cvn-l">${LOG.list.slice(0,12).map(x=>`<div class="cvn-r"><b>${e(x.title)}</b> <em>${e(when(x.at))}</em>${x.map?` <a href="${e(x.map)}" target="_blank" rel="noopener" style="color:#ffe7a8;font-size:11px">📍 ver mapa</a>`:""}<div>${(x.sent||[]).filter(s=>/Caneva Admin/.test(s)).map(chip).join("")||`<span class="cvn-c bad">${e(x.skipped||"sin dispositivos")}</span>`}</div></div>`).join("")}</div></details>`:"")+`</div>`;
   }
   function paint(){
     const box=document.getElementById("ordKpis");if(!box)return;
@@ -2122,6 +2122,6 @@ token()?showList():showLogin();
   document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&typeof currentTab!=="undefined"&&currentTab==="hoy")load();});
 })();
 </script>
-<script src="admin_push.js?v=1"></script>
+<script src="admin_push.js?v=5"></script>
 </body>
 </html>
