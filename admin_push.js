@@ -1,6 +1,9 @@
 /* CANEVA admin · Avisos personalizados y "Dónde está cada uno" (v5)
    - Hoy › Avisos a tu celular: write a title + message, choose which Caneva Admin phones get it and which tab opens when
      they tap it, and send it as a real notification (Web Push, POST /admin/push/custom).
+   - v7: auto-update, no manual restart. CV_VER is read from this file's own "?v=N"; on a notice, on focus, on start and
+     every 15 min it fetches "admin_ver.txt" (no-store) and, if it is newer, reloads admin_movil.html with a cache-busting
+     query (once per version, guarded against loops). So a new version comes in by itself with the next order notice.
    - v6: "Dónde está cada uno" (Reportes): when a Caneva Admin notice (a new order, for example) is opened, or arrives
      with the app on screen, or the app is opened within 30 min after it, this phone sends its location using the
      permission it already gave (admin-sw.js v100 leaves the mark of the notice). Each time it shares, a small discreet
@@ -18,6 +21,8 @@
   function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
   function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
   var S={dev:null,open:false,sending:false,t:"",b:"",tab:"",off:{},gem:true,mine:""};
+  // version this phone is running (the "?v=N" that loaded this file); compared with admin_ver.txt to auto-update
+  var CV_VER=(function(){try{return (document.currentScript&&document.currentScript.src.match(/[?&]v=(\d+)/)||[])[1]||"0";}catch(e){return "0";}})();
   var IOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
   var LCSS="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css",LJS="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js";
   function esc(t){return String(t==null?"":t).replace(/[&<>"']/g,function(m){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m];});}
@@ -132,6 +137,18 @@
     t.innerHTML="<span>"+esc(msg)+(hint?"<small>"+esc(hint)+"</small>":"")+'</span><button type="button" data-cvt="x" aria-label="Cerrar">✕</button>';
     clearTimeout(t._h);if(ms)t._h=setTimeout(function(){if(t.isConnected)t.remove();},ms);}
   document.addEventListener("click",function(e){var b=e.target.closest&&e.target.closest("#cvToast [data-cvt]");if(b){var t=document.getElementById("cvToast");if(t)t.remove();}});
+  // auto-update: no need to close and reopen the app; a new version comes in by itself and refreshes
+  var verAt=0;
+  async function checkVersion(){
+    if(document.hidden||(navigator.onLine===false)||Date.now()-verAt<15000)return;verAt=Date.now();
+    var latest="";try{latest=(await fetch("admin_ver.txt?ts="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.text():"";})).trim();}catch(e){return;}
+    if(!/^\d{1,6}$/.test(latest)||latest===CV_VER)return;       // no version file, or already up to date
+    var tried="";try{tried=sessionStorage.getItem("cv_relv")||"";}catch(e){}
+    if(tried===latest)return;                                    // already reloaded for this version (avoid a loop)
+    try{sessionStorage.setItem("cv_relv",latest);}catch(e){}
+    cvToast("🔄 Updating Caneva Admin…",5000,"",true);
+    setTimeout(function(){try{location.replace(location.pathname+"?app=1&v="+latest);}catch(e){location.reload();}},1200);
+  }
   // "Dónde está cada uno": the location goes out by itself around a notice, with the permission this phone already gave
   function lastNotice(){if(!window.caches)return Promise.resolve(0);return caches.open("cv-meta").then(function(c){return c.match("/cv-last-notice");}).then(function(r){return r?r.text():"0";}).then(function(t){return +t||0;}).catch(function(){return 0;});}
   function geoState(){if(!navigator.geolocation)return Promise.resolve("denied");if(!navigator.permissions||!navigator.permissions.query)return Promise.resolve("unknown");
@@ -156,7 +173,7 @@
     }catch(e){}
     capBusy=false;
   }
-  document.addEventListener("visibilitychange",function(){if(!document.hidden)maybeCapture();});
+  document.addEventListener("visibilitychange",function(){if(!document.hidden){maybeCapture();checkVersion();}});
   function copyTxt(t){if(navigator.clipboard&&navigator.clipboard.writeText)return navigator.clipboard.writeText(t);
     return new Promise(function(ok,ko){var a=document.createElement("textarea");a.value=t;a.setAttribute("readonly","");a.style.cssText="position:fixed;opacity:0";document.body.appendChild(a);a.select();var r=false;try{r=document.execCommand("copy");}catch(e){}a.remove();r?ok():ko();});}
   document.addEventListener("keydown",function(e){if(e.key==="Escape")closeSheet();});
@@ -167,7 +184,7 @@
     if(k==="copy")copyTxt(u).then(function(){b.textContent="✅ Ubicación copiada";},function(){b.textContent=u;});
   });
   // admin-sw.js: "seen" = a notice arrived with the app open (or was tapped); "map" / #cvloc=… = open a point on the map
-  if("serviceWorker" in navigator)navigator.serviceWorker.addEventListener("message",function(e){var d=e.data||{};if(d.cv==="map")showMap(d.loc);else if(d.cv==="seen")maybeCapture();});
+  if("serviceWorker" in navigator)navigator.serviceWorker.addEventListener("message",function(e){var d=e.data||{};if(d.cv==="map")showMap(d.loc);else if(d.cv==="seen"){maybeCapture();checkVersion();}});
   function fromHash(){var m=/[#&]cvloc=([^&]+)/.exec(location.hash||"");if(!m)return;var l=null;
     try{l=JSON.parse(decodeURIComponent(m[1]));}catch(x){}
     try{history.replaceState(history.state,"",location.pathname+location.search);}catch(x){}
@@ -334,6 +351,6 @@
     w.__cpu=true;window.hoyNotifyCard=w;try{hoyNotifyCard=w;}catch(e){}
     var c=document.getElementById("hyNotify");if(c){css();paint(c);}
   }
-  function start(){fromHash();hook();teamWatch();setTimeout(maybeCapture,2500);}
+  function start(){fromHash();hook();teamWatch();setTimeout(maybeCapture,2500);setTimeout(checkVersion,3500);setInterval(checkVersion,900000);}
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start);else start();
 })();
