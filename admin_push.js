@@ -1,4 +1,8 @@
 /* CANEVA admin · Avisos personalizados y "Dónde está cada uno" (v5)
+   - v13: "Dónde está cada uno" pide clave (una vez por sesión de la app); en el código solo va el SHA-256 de la clave.
+   - v12: Reportes › "Dónde está cada uno" queda BUSCANDO ubicaciones: radar en vivo, la lista se revisa cada 10 s, este celular
+     actualiza su punto cada minuto (en silencio) mientras la tarjeta está abierta, botón "Buscar ahora" y "Pedir ubicación a todos"
+     (manda un aviso; al tocarlo cada celular comparte). Sin cambios en el Worker.
    - Hoy › Avisos a tu celular: write a title + message, choose which Caneva Admin phones get it and which tab opens when
      they tap it, and send it as a real notification (Web Push, POST /admin/push/custom).
    - v11: on iPhone (or any phone not yet granted) a small one-time "Activar" chip grants location with one tap instead of
@@ -85,6 +89,8 @@
     ".cvt-r .tx{flex:1;min-width:0}.cvt-r .tx b{font-size:14px}.cvt-r .tx small{display:block;font-size:11px;opacity:.6;margin-top:1px}.cvt-r .ln{font-size:12px;margin-top:3px;line-height:1.45;overflow-wrap:anywhere}.cvt-r .ln .live{color:#5ef0a0}.cvt-r.off .ln{opacity:.75}"+
     ".cvt-r .ed{border:0;background:none;color:#f6f7f8;cursor:pointer;font-size:12px;padding:0 4px;opacity:.75}.cvt-r .see{flex:0 0 auto;border:1px solid rgba(246,247,248,.25);background:transparent;color:#f6f7f8;border-radius:999px;padding:8px 12px;font:700 12px Inter,sans-serif;cursor:pointer}"+
     ".cvt-ed{display:flex;gap:6px}.cvt-ed input{flex:1;min-width:0;background:#050505;border:1px solid rgba(246,247,248,.3);border-radius:10px;color:#f6f7f8;padding:6px 9px;font:14px Inter,sans-serif}.cvt-ed button{border:0;border-radius:10px;padding:6px 10px;background:#f6f7f8;color:#050505;font:700 12px Inter,sans-serif;cursor:pointer}"+
+    ".cvt-scan{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;color:#5ef0a0}.cvt-scan .rd{position:relative;width:9px;height:9px;border-radius:50%;background:#5ef0a0;flex:0 0 auto}.cvt-scan .rd::after{content:'';position:absolute;inset:-5px;border-radius:50%;border:2px solid #5ef0a0;animation:cvtp 1.6s ease-out infinite}"+
+    ".cvt-bt{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.cvt-bt button{min-height:40px;border-radius:999px;border:1px solid rgba(246,247,248,.25);background:rgba(255,255,255,.04);color:#f6f7f8;font:700 12px Inter,sans-serif;cursor:pointer;padding:0 10px}.cvt-bt .go{border:0;background:linear-gradient(120deg,#cfd6db,#ffffff 45%,#e8eef2 60%,#c3ccd2);color:#050505;font-weight:800}.cvt-bt button[disabled]{opacity:.6}"+
     ".cvt-msg{font-size:12px;margin-top:10px;line-height:1.5}.cvt-msg:empty{display:none}.cvt-e{font-size:12px;opacity:.75;padding:10px}"+
     ".cvt-ft{font-size:11px;opacity:.6;margin-top:10px;line-height:1.5}.cvt-ft button{border:0;background:none;color:#f6f7f8;text-decoration:underline;font:inherit;cursor:pointer;padding:0}";
     document.head.appendChild(s);}
@@ -164,14 +170,14 @@
     return navigator.permissions.query({name:"geolocation"}).then(function(p){return p.state;},function(){return "unknown";});}
   var capBusy=false,activateShown=false;
   // read the GPS and send it (used by the automatic capture and by the one-time "Activar" tap)
-  async function sendLocation(){
+  async function sendLocation(quiet){
     var l=await getPos(60000);
     lsSet("cv_geo_ok","1"); // this phone can read location without asking -> silent from now on
     var label=await Promise.race([place(l),new Promise(function(r){setTimeout(function(){r("");},4000);})]);
     var ep=await myEndpoint();
     await api("/admin/team/loc",{method:"POST",body:{did:did(),endpoint:ep||undefined,device:devName(),name:lsGet("cv_team_name")||"",lat:l.lat,lng:l.lng,acc:l.acc,label:label}});
     lsSet("cv_loc_at",String(Date.now()));
-    cvToast("📍 Loc. shared with team",3500,"",true); // small, abbreviated English, for transparency
+    if(!quiet)cvToast("📍 Loc. shared with team",3500,"",true); // small, abbreviated English, for transparency
     T.prev="";if(teamVisible())teamLoad();
   }
   // iPhone needs a user TAP to grant location the first time (the OS dialog won't appear on its own, by design).
@@ -219,7 +225,7 @@
   window.addEventListener("hashchange",fromHash);
 
   /* ---------- Reportes › Dónde está cada uno ---------- */
-  var T={data:null,map:null,marks:{},pinSig:"",edit:"",msg:"",prev:"",loading:false,lp:null,mine:"",geo:""};
+  var T={data:null,map:null,marks:{},pinSig:"",edit:"",msg:"",prev:"",loading:false,lp:null,mine:"",geo:"",chk:0,scan:false,liveBusy:false};
   function rowsOf(d){
     // one row per phone: phones with notices (devices) + phones that shared (people), joined by the push endpoint hash
     var rows=[],used={},people=d.people||[];
@@ -239,26 +245,69 @@
     return '<div class="cvt-r'+(r.has?"":" off")+'"><i class="av">'+esc(ini)+'</i><div class="tx">'+nm+"<small>"+sub+'</small><div class="ln">'+line+"</div></div>"+
       (r.has?'<button type="button" class="see" data-tm="see" data-did="'+esc(k)+'">🗺️ Ver</button>':"")+"</div>";
   }
+  // v13: the card is locked with a key (asked once per app session); only the SHA-256 of the key is in the code
+  var TKEY="4d3257b2be4f4586c7b8b40b77206dd618dedea4d71fc5637376c480980383fe";
+  function tOpen(){try{return sessionStorage.getItem("cv_team_ok")===TKEY;}catch(e){return !!T.ok;}}
+  function lockHtml(){return '<div class="cvt"><div class="cvt-h"><span class="ic">🔒</span><div><b>Dónde está cada uno</b><small>Escribe la clave para ver las ubicaciones del equipo</small></div></div>'+
+    '<div class="cvt-ed" style="margin-top:12px"><input type="password" id="cvtKey" maxlength="40" placeholder="Clave" autocomplete="off"><button type="button" data-tm="unlock">Entrar</button></div>'+
+    '<div class="cvt-msg">'+esc(T.kmsg||"")+'</div></div>';}
+  async function tryKey(){
+    var i=document.getElementById("cvtKey");if(!i)return;var v=i.value.trim();
+    var h=await sha256(v);
+    if(h===TKEY){T.ok=true;try{sessionStorage.setItem("cv_team_ok",TKEY);}catch(e){}T.kmsg="";T.prev="";T.data=null;teamCard();teamLoad();}
+    else{T.kmsg="❌ Clave incorrecta";teamCard();var j=document.getElementById("cvtKey");if(j)j.focus();}
+  }
+  function sha256(t){if(!window.crypto||!crypto.subtle)return Promise.resolve("");return crypto.subtle.digest("SHA-256",new TextEncoder().encode(t)).then(function(b){return [].map.call(new Uint8Array(b),function(x){return ("0"+x.toString(16)).slice(-2);}).join("");});}
+  function lockNow(){T.ok=false;try{sessionStorage.removeItem("cv_team_ok");}catch(e){}if(T.map){try{T.map.remove();}catch(e){}T.map=null;T.marks={};T.pinSig="";}T.data=null;T.prev="";teamCard();}
   function teamCard(){
     var box=document.getElementById("cvTeam");if(!box)return;css();
+    if(!tOpen()){if(T.map){try{T.map.remove();}catch(e){}T.map=null;T.marks={};T.pinSig="";}box.innerHTML=lockHtml();return;}
     var d=T.data,head='<div class="cvt-h"><span class="ic">📍</span><div><b>Dónde está cada uno</b><small>';
     if(!d){box.innerHTML='<div class="cvt">'+head+"Cargando…</small></div></div></div>";return;}
     if(d.error){box.innerHTML='<div class="cvt">'+head+esc(/Worker/.test(needWorker(d.error))?"Falta pegar el Worker v99 en Cloudflare para ver la ubicación del equipo.":"⚠️ "+d.error)+"</small></div></div></div>";return;}
     var rows=rowsOf(d).rows,pins=rows.filter(function(r){return r.has;});
     var sub=rows.length?pins.length+" de "+rows.length+" celular"+(rows.length===1?"":"es")+" con ubicación · se actualiza cuando abren un aviso, como el de un pedido nuevo":"Ningún celular tiene Caneva Admin con avisos activos";
+    sub=rows.length?pins.length+" de "+rows.length+" celular"+(rows.length===1?"":"es")+" con ubicación":sub;
     // the map stays (same zoom) while the points do not change; only the labels are refreshed
     var sig=JSON.stringify(pins.map(function(r){return [r.p.did,r.p.lat,r.p.lng,r.p.acc,r.name];})),keep=null;
     if(T.map&&T.pinSig===sig&&pins.length){keep=document.getElementById("cvtMap");if(keep)keep.remove();}
     else if(T.map){try{T.map.remove();}catch(e){}T.map=null;T.marks={};T.pinSig="";}
-    box.innerHTML='<div class="cvt">'+head+esc(sub)+"</small></div></div>"+
+    box.innerHTML='<div class="cvt">'+head+esc(sub)+"</small></div></div>"+scanBar()+
       (pins.length?'<div class="cvt-map" id="cvtMap"></div>':"")+
       '<div class="cvt-l">'+(rows.length?rows.map(rowHtml).join(""):'<div class="cvt-e">Activa las notificaciones de Caneva Admin en cada celular (✨ Hoy › Avisos a tu celular).</div>')+"</div>"+
       '<div class="cvt-msg">'+esc(T.msg)+"</div>"+
-      '<div class="cvt-ft">🔒 Cada celular manda su ubicación solo cuando abre un aviso de Caneva Admin, con el permiso de ubicación que ya dio (máximo cada 5 minutos). Se borra sola a los 7 días.'+(pins.length?' <button type="button" data-tm="clear">Borrar ubicaciones</button>':"")+
+      '<div class="cvt-ft">🔒 Cada celular manda su ubicación cuando abre Caneva Admin o un aviso, con el permiso que ya dio. Mientras esta tarjeta está abierta, este celular se actualiza cada minuto y la lista se revisa cada 10 s. Se borra sola a los 7 días.'+(pins.length?' <button type="button" data-tm="clear">Borrar ubicaciones</button>':"")+' · <button type="button" data-tm="lock">🔒 Bloquear</button>'+
         (T.geo==="denied"?'<br>⚠️ Este celular no deja leer la ubicación. '+esc(geoHint()):"")+"</div></div>";
     if(!pins.length)return;
     if(keep){var slot=document.getElementById("cvtMap");if(slot)slot.replaceWith(keep);pinIcons(pins);try{T.map.invalidateSize();}catch(e){}}
     else drawMap(pins,sig);
+  }
+  // v12: "Buscando ubicaciones": live radar while Reportes is open + buttons to search now / ask the team
+  function scanTxt(){return T.scan?"Buscando ubicaciones…":"Buscando ubicaciones"+(T.chk?" · revisado "+(Date.now()-T.chk<5000?"ahora":"hace "+Math.round((Date.now()-T.chk)/1000)+" s"):"…");}
+  function scanBar(){return '<div class="cvt-scan"><span class="rd"></span><span id="cvtScanTx">'+esc(scanTxt())+'</span></div>'+
+    '<div class="cvt-bt"><button type="button" class="go" data-tm="scan"'+(T.scan?" disabled":"")+'>'+(T.scan?"🔎 Buscando…":"🔄 Buscar ahora")+'</button><button type="button" data-tm="ask">📣 Pedir ubicación a todos</button></div>';}
+  function scanPaint(){var x=document.getElementById("cvtScanTx");if(x)x.textContent=scanTxt();}
+  async function scanNow(b){
+    if(T.scan)return;T.scan=true;if(b){b.disabled=true;b.textContent="🔎 Buscando…";}scanPaint();
+    try{await sendLocation(true);T.msg="📍 Tu ubicación se actualizó.";}
+    catch(e){T.msg="⚠️ "+(/permiso/.test(e.message)?e.message+". "+geoHint():needWorker(e.message));}
+    T.scan=false;T.prev="";await teamLoad();
+  }
+  async function askAll(b){
+    if(b.getAttribute("data-sure")!=="1"){b.setAttribute("data-sure","1");b.textContent="¿Enviar aviso a todos? Toca otra vez";setTimeout(function(){if(b.isConnected){b.removeAttribute("data-sure");b.textContent="📣 Pedir ubicación a todos";}},4000);return;}
+    b.disabled=true;b.textContent="Enviando…";
+    try{var d=await api("/admin/push/custom",{method:"POST",body:{title:"📍 ¿Dónde estás?",body:"Toca este aviso para compartir tu ubicación con el equipo CΛNEVΛ",tab:"reportes"}});
+      var ok=(d.sent||[]).filter(function(x){return x.result==="ok";}).length;
+      T.msg=ok?"📣 Aviso enviado a "+ok+" celular"+(ok===1?"":"es")+". Su ubicación aparece aquí cuando lo toquen.":"⚠️ No se pudo enviar el aviso a ningún celular.";}
+    catch(e){T.msg="⚠️ "+needWorker(e.message);}
+    T.prev="";teamLoad();
+  }
+  // while the card is on screen, this phone keeps its own point fresh (silent, at most every minute)
+  async function liveShare(){
+    if(T.liveBusy||T.scan||document.hidden||!teamVisible()||!tOpen())return;
+    if(Date.now()-(+lsGet("cv_loc_at")||0)<60000)return;
+    var gs=await geoState();if(gs==="denied"||(gs!=="granted"&&!lsGet("cv_geo_ok")))return;
+    T.liveBusy=true;try{await sendLocation(true);}catch(e){}T.liveBusy=false;
   }
   function pinIcon(r){var age=Date.now()-r.p.at;return L.divIcon({className:"cvt-pw",html:'<div class="cvt-pin'+(age<15*60000?" live":"")+(age>6*3600000?" old":"")+'">'+esc(String(r.name||"?").trim().charAt(0).toUpperCase())+"</div>",iconSize:[34,34],iconAnchor:[17,17]});}
   function pinIcons(pins){pins.forEach(function(r){var m=(T.marks||{})[r.p.did];if(!m)return;try{m.setIcon(pinIcon(r));m.setTooltipContent(esc(r.name)+" · "+esc(ago(r.p.at)));}catch(e){}});}
@@ -292,19 +341,19 @@
   function findRow(k){if(!T.data||T.data.error)return null;return rowsOf(T.data).rows.filter(function(r){return r.p&&r.p.did===k;})[0]||null;}
   function teamVisible(){var v=document.getElementById("repView");return !!(v&&!v.classList.contains("hidden"));}
   async function teamLoad(){
-    if(T.loading)return;T.loading=true;
+    if(T.loading||!tOpen())return;T.loading=true;
     try{T.mine=await myEp();T.geo=await geoState();T.data=await api("/admin/team/where");}catch(e){T.data={error:needWorker(e.message)};}
-    T.loading=false;
+    T.loading=false;T.chk=Date.now();scanPaint();
     var sig=JSON.stringify(T.data)+"|"+T.mine+"|"+T.msg+"|"+T.geo+"|"+Math.floor(Date.now()/60000);
     if(T.edit||sig===T.prev)return; // do not repaint while a name is being typed or when nothing changed
-    T.prev=sig;teamCard();
+    T.prev=sig;teamCard();scanPaint();
   }
   function teamMount(){
     var v=document.getElementById("repView");if(!v)return false;
     if(!document.getElementById("cvTeam")){var box=document.createElement("div");box.id="cvTeam";v.appendChild(box);T.prev="";teamCard();} // v9: al final de Reportes
     return true;
   }
-  function teamTick(){if(teamVisible()&&!document.hidden&&teamMount()){if(T.map)try{T.map.invalidateSize();}catch(e){}teamLoad();}}
+  function teamTick(){if(teamVisible()&&!document.hidden&&teamMount()){if(T.map)try{T.map.invalidateSize();}catch(e){}liveShare();teamLoad();}}
   async function saveName(k){
     var i=document.getElementById("cvtName");if(!i||!k)return;var name=i.value.trim().slice(0,30);
     try{await api("/admin/team/name",{method:"POST",body:{did:k,name:name}});if(k===did()&&name)lsSet("cv_team_name",name);T.msg="";}catch(e){T.msg="⚠️ "+needWorker(e.message);}
@@ -317,14 +366,18 @@
   }
   document.addEventListener("click",function(e){var b=e.target.closest&&e.target.closest("#cvTeam [data-tm]");if(!b)return;var k=b.getAttribute("data-tm"),id=b.getAttribute("data-did")||"";
     if(k==="clear")clearAll(b);
+    else if(k==="scan")scanNow(b);
+    else if(k==="unlock")tryKey();
+    else if(k==="lock")lockNow();
+    else if(k==="ask")askAll(b);
     else if(k==="edit"){T.edit=id;teamCard();var i=document.getElementById("cvtName");if(i){i.focus();i.select();}}
     else if(k==="save")saveName(id);
     else if(k==="see"){var r=findRow(id);if(r)openPerson(r);}
   });
-  document.addEventListener("keydown",function(e){if(!e.target||e.target.id!=="cvtName")return;if(e.key==="Enter")saveName(T.edit);else if(e.key==="Escape"){T.edit="";T.prev="";teamCard();}});
+  document.addEventListener("keydown",function(e){if(e.target&&e.target.id==="cvtKey"&&e.key==="Enter"){tryKey();return;}if(!e.target||e.target.id!=="cvtName")return;if(e.key==="Enter")saveName(T.edit);else if(e.key==="Escape"){T.edit="";T.prev="";teamCard();}});
   function teamWatch(){var v=document.getElementById("repView");if(!v)return;
     new MutationObserver(function(){if(teamVisible())teamTick();}).observe(v,{attributes:true,attributeFilter:["class"]});
-    setInterval(teamTick,20000);document.addEventListener("visibilitychange",teamTick);teamTick();}
+    setInterval(teamTick,10000);setInterval(function(){if(teamVisible())scanPaint();},1000);document.addEventListener("visibilitychange",teamTick);teamTick();}
 
   /* ---------- Hoy › Aviso personalizado ---------- */
   function form(){
